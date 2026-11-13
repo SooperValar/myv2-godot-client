@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheLastGate.Tools.SpriteCompiler</RootNamespace>
+    <!-- Run through dotnet run, so no SpriteCompiler.exe launcher is needed. -->
+    <UseAppHost>false</UseAppHost>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../../src/TheLastGate.Core/TheLastGate.Core.csproj" />
+  </ItemGroup>
+</Project>
