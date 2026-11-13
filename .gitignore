@@ -1,0 +1,17 @@
+# Godot
+.godot/
+/game/android/
+
+# .NET build output
+bin/
+obj/
+*.user
+
+# Local settings and credentials
+user-config.cfg
+.claude/settings.local.json
+
+# Local-only plans and tool state
+docs/superpowers/
+.superpowers/
+.remember/

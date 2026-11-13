@@ -1,0 +1,6 @@
+<Project>
+  <!-- Makes the code style rules in .editorconfig part of every build, so an error there fails it. -->
+  <PropertyGroup>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+  </PropertyGroup>
+</Project>
