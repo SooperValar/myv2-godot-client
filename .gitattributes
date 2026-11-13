@@ -1,2 +1,11 @@
 # Normalize EOL for all files that Git considers text files.
 * text=auto eol=lf
+
+# Game data and source art are binary and large: keep them in Git LFS.
+data/**/*.dat filter=lfs diff=lfs merge=lfs -text
+data/**/*.idx filter=lfs diff=lfs merge=lfs -text
+data/**/*.[pP][nN][gG] filter=lfs diff=lfs merge=lfs -text
+data/**/*.[bB][mM][pP] filter=lfs diff=lfs merge=lfs -text
+data/**/*.wav filter=lfs diff=lfs merge=lfs -text
+art/**/*.[pP][nN][gG] filter=lfs diff=lfs merge=lfs -text
+art/**/*.[bB][mM][pP] filter=lfs diff=lfs merge=lfs -text
