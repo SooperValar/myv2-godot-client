@@ -20,5 +20,8 @@ public enum MapFlags : uint
     Stunned = 1u << 11,
     Tomb = 0x1Fu << 12,
     Death = 0x1Fu << 17,
+    RedMagic = 7u << 22,
+    GreenMagic = 7u << 25,
+    BlueMagic = 7u << 28,
     CriticallyHit = 1u << 31,
 }
