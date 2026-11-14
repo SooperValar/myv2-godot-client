@@ -14,6 +14,11 @@ public static class MapCommandPackets
         return packet;
     }
 
-    public static byte[] ForCharacter(ClientCommand command, int characterNumber) =>
-        throw new NotImplementedException();
+    public static byte[] ForCharacter(ClientCommand command, int characterNumber)
+    {
+        var packet = new byte[Protocol.PacketSize];
+        packet[0] = (byte)command;
+        BinaryPrimitives.WriteUInt32LittleEndian(packet.AsSpan(1), (uint)characterNumber);
+        return packet;
+    }
 }
