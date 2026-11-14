@@ -21,6 +21,8 @@ public partial class WorldView : Node2D
     private const string NameplateScenePath = "res://World/nameplate.tscn";
     private const int PlayerTile = WorldMap.Size / 2 * WorldMap.Size + WorldMap.Size / 2;
     private const int PlayerNameplateLayer = 1;
+    private readonly Sprite2D actionMarker = new() { Centered = false, Visible = false };
+    private readonly Sprite2D attackMarker = new() { Centered = false, Visible = false };
 
     private readonly Vector2I[] characterOffsets = new Vector2I[TileCount];
     private readonly SpriteLayer characters = new();
@@ -28,12 +30,14 @@ public partial class WorldView : Node2D
     private readonly Dictionary<MapCursor, Texture2D> cursorTextures = [];
     private readonly SpriteLayer floors = new();
     private readonly Stack<Nameplate> freeNameplates = [];
+    private readonly Sprite2D giveMarker = new() { Centered = false, Visible = false };
     private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
     private readonly Sprite2D[] shadowNodes = new Sprite2D[TileCount];
     private readonly int[] shownShadows = new int[TileCount];
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
+    private readonly Sprite2D walkMarker = new() { Centered = false, Visible = false };
     private Node2D floorLayer = null!;
     private MapAction hover = MapAction.Nothing;
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
@@ -148,15 +152,19 @@ public partial class WorldView : Node2D
         var clock = Stopwatch.StartNew();
         var selectedIsShown = false;
         charactersShown.Clear();
+        var target = State.Player.Target;
+        var markerTiles = new MarkerTiles(NoTile, NoTile, NoTile, NoTile, 0);
         for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
         {
             selectedIsShown |= ShowTile(tileIndex);
+            markerTiles = FindMarkers(markerTiles, tileIndex, target);
             ref readonly var tile = ref State.Map.Tiles[tileIndex];
             PlaceCharacter(tileIndex, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
             ShowNameplate(tileIndex);
         }
 
         ReleaseUnusedNameplates();
+        PlaceMarkers(markerTiles);
         if (nameRequests.Tick(State.Names) is { } request)
         {
             SendCommand(request);
@@ -322,6 +330,100 @@ public partial class WorldView : Node2D
             ShowHealthBars);
     }
 
+    private MarkerTiles FindMarkers(MarkerTiles found, int tileIndex, PlayerTarget target)
+    {
+        var (column, row) = (tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
+        ref readonly var tile = ref State.Map.Tiles[tileIndex];
+        if (found.WalkTile == NoTile && MapMarkers.IsWalkTarget(tile, target))
+        {
+            found = found with { WalkTile = tileIndex };
+        }
+
+        if (MapSpriteRules.HidesObjectsAndCharacters(tile, column, row))
+        {
+            return found;
+        }
+
+        if (found.AttackTile == NoTile && characters.ShownSprites[tileIndex] != 0
+            && MapMarkers.IsAttackTarget(tile, target))
+        {
+            found = found with { AttackTile = tileIndex };
+        }
+
+        if (found.GiveTile == NoTile && characters.ShownSprites[tileIndex] != 0
+            && MapMarkers.IsGiveTarget(tile, target))
+        {
+            found = found with { GiveTile = tileIndex };
+        }
+
+        if (found.ActionTile == NoTile && MapMarkers.ActionMarker(tile, target) is var actionSprite and not 0)
+        {
+            found = found with { ActionTile = tileIndex, ActionSprite = actionSprite };
+        }
+
+        return found;
+    }
+
+    private void PlaceMarkers(MarkerTiles found)
+    {
+        PlaceOnGround(walkMarker, MapMarkers.WalkTarget, found.WalkTile, floors);
+        PlaceOnCharacter(attackMarker, MapMarkers.AttackTarget, found.AttackTile, 1);
+        PlaceOnCharacter(
+            giveMarker,
+            MapMarkers.GiveTarget,
+            found.GiveTile,
+            found.GiveTile == found.AttackTile ? 2 : 1);
+        PlaceOnGround(actionMarker, found.ActionSprite, found.ActionTile, characters);
+    }
+
+    // Ground markers are drawn right after the tile's node in its layer, at the tile's own position.
+    private void PlaceOnGround(Sprite2D marker, int spriteNumber, int tileIndex, SpriteLayer after)
+    {
+        if (tileIndex == NoTile || Sprites.GetTexture(spriteNumber) is not { } texture)
+        {
+            marker.Visible = false;
+            return;
+        }
+
+        var anchor = after.Nodes[tileIndex];
+        if (marker.GetParent() != anchor.GetParent())
+        {
+            marker.GetParent()?.RemoveChild(marker);
+            anchor.GetParent().AddChild(marker);
+        }
+
+        anchor.GetParent().MoveChild(marker, anchor.GetIndex() + (marker.GetIndex() < anchor.GetIndex() ? 0 : 1));
+        var (x, y) = IsometricProjection.TilePosition(tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
+        var (offsetX, offsetY) = IsometricProjection.SpriteOffset(texture.GetWidth(), texture.GetHeight());
+        marker.Texture = texture;
+        marker.Position = new Vector2(x, y);
+        marker.Offset = new Vector2(offsetX, offsetY);
+        marker.Visible = true;
+    }
+
+    // Character markers are children of the character's sprite, after its shadow and before its nameplate.
+    private void PlaceOnCharacter(Sprite2D marker, int spriteNumber, int tileIndex, int childIndex)
+    {
+        if (tileIndex == NoTile || Sprites.GetTexture(spriteNumber) is not { } texture)
+        {
+            marker.Visible = false;
+            return;
+        }
+
+        var characterNode = characters.Nodes[tileIndex];
+        if (marker.GetParent() != characterNode)
+        {
+            marker.GetParent()?.RemoveChild(marker);
+            characterNode.AddChild(marker);
+        }
+
+        characterNode.MoveChild(marker, childIndex);
+        var (offsetX, offsetY) = IsometricProjection.SpriteOffset(texture.GetWidth(), texture.GetHeight());
+        marker.Texture = texture;
+        marker.Offset = new Vector2(offsetX, offsetY);
+        marker.Visible = true;
+    }
+
     private void ReleaseUnusedNameplates()
     {
         foreach (var (characterNumber, nameplate) in nameplatesByCharacter)
@@ -420,6 +522,13 @@ public partial class WorldView : Node2D
         tintMaterials[(tint, highlighted, selected)] = material;
         return material;
     }
+
+    private readonly record struct MarkerTiles(
+        int WalkTile,
+        int AttackTile,
+        int GiveTile,
+        int ActionTile,
+        int ActionSprite);
 
     private readonly record struct SpriteLook(int Light, SpriteTint Tint, bool Highlighted, bool Selected);
 

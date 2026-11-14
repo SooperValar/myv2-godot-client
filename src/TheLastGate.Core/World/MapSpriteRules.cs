@@ -41,7 +41,7 @@ public static class MapSpriteRules
 
     public static int ObjectSprite(in MapTile tile, int column, int row, PlayerState player, bool hideWalls)
     {
-        if (tile.AnimatedItemSprite == 0 || IsHidden(tile, column, row))
+        if (tile.AnimatedItemSprite == 0 || HidesObjectsAndCharacters(tile, column, row))
         {
             return 0;
         }
@@ -64,7 +64,7 @@ public static class MapSpriteRules
     }
 
     public static int CharacterSprite(in MapTile tile, int column, int row) =>
-        IsHidden(tile, column, row) ? 0 : tile.AnimatedCharacterSprite;
+        HidesObjectsAndCharacters(tile, column, row) ? 0 : tile.AnimatedCharacterSprite;
 
     public static SpriteTint EnvironmentTint(in MapTile tile)
     {
@@ -81,7 +81,7 @@ public static class MapSpriteRules
             | (flags.HasFlag(MapFlags.Bloody) ? SpriteTint.Infrared : SpriteTint.None);
     }
 
-    private static bool IsHidden(in MapTile tile, int column, int row) =>
+    public static bool HidesObjectsAndCharacters(in MapTile tile, int column, int row) =>
         ((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible) || IsInHiddenCorner(column, row);
 
     // The current client draws no objects or characters in this corner of the map, which lies along the bottom edge of

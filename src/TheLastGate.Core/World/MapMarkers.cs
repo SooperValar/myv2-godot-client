@@ -1,4 +1,3 @@
-using System;
 using TheLastGate.State;
 
 namespace TheLastGate.World;
@@ -9,11 +8,36 @@ public static class MapMarkers
     public const int AttackTarget = 34;
     public const int GiveTarget = 45;
 
-    public static bool IsWalkTarget(in MapTile tile, PlayerTarget target) => throw new NotImplementedException();
+    private const int Drop = 1;
+    private const int PickUp = 2;
+    private const int Give = 3;
+    private const int Use = 4;
+    private const int DropMarker = 32;
+    private const int PickUpMarker = 33;
+    private const int UseMarker = 45;
 
-    public static bool IsAttackTarget(in MapTile tile, PlayerTarget target) => throw new NotImplementedException();
+    public static bool IsWalkTarget(in MapTile tile, PlayerTarget target) =>
+        tile.X == target.GotoX && tile.Y == target.GotoY;
 
-    public static bool IsGiveTarget(in MapTile tile, PlayerTarget target) => throw new NotImplementedException();
+    public static bool IsAttackTarget(in MapTile tile, PlayerTarget target) =>
+        target.AttackCharacter != 0 && target.AttackCharacter == tile.CharacterNumber;
 
-    public static int ActionMarker(in MapTile tile, PlayerTarget target) => throw new NotImplementedException();
+    public static bool IsGiveTarget(in MapTile tile, PlayerTarget target) =>
+        target.MiscAction == Give && target.MiscTarget1 == tile.CharacterId;
+
+    public static int ActionMarker(in MapTile tile, PlayerTarget target)
+    {
+        if (target.MiscTarget1 != tile.X || target.MiscTarget2 != tile.Y)
+        {
+            return 0;
+        }
+
+        return target.MiscAction switch
+        {
+            Drop => DropMarker,
+            PickUp => PickUpMarker,
+            Use => UseMarker,
+            _ => 0,
+        };
+    }
 }
