@@ -37,12 +37,12 @@ public sealed class ClientSettings
         CharacterHistory.RemoveMissingFiles();
     }
 
-    private bool Windowed { get; }
-    private bool Shadows { get; }
-    private bool DarkMode { get; }
-    private bool SoundEnabled { get; }
-    private int SoundVolume { get; }
-    private CharacterHistory CharacterHistory { get; }
+    public bool Windowed { get; set; }
+    public bool Shadows { get; set; }
+    public bool DarkMode { get; set; }
+    public bool SoundEnabled { get; set; }
+    public int SoundVolume { get; set; }
+    public CharacterHistory CharacterHistory { get; }
 
     public static ClientSettings Load()
     {
