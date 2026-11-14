@@ -1,3 +1,4 @@
+using System.Buffers.Binary;
 using System.Net;
 using System.Net.Sockets;
 using TheLastGate.Net;
@@ -52,6 +53,27 @@ public sealed class LoopbackServer : IDisposable
         using var timeout = new CancellationTokenSource(Timeout);
         await Stream.ReadExactlyAsync(packet, timeout.Token);
         return packet;
+    }
+
+    public Task SendPacketAsync(ServerCommand command, params uint[] values)
+    {
+        var packet = new byte[Protocol.PacketSize];
+        packet[0] = (byte)command;
+        for (var valueIndex = 0; valueIndex < values.Length; valueIndex++)
+        {
+            BinaryPrimitives.WriteUInt32LittleEndian(packet.AsSpan(1 + valueIndex * sizeof(uint)), values[valueIndex]);
+        }
+
+        return SendRawAsync(packet);
+    }
+
+    public async Task CompleteLoginAsync()
+    {
+        await ReadPacketAsync();
+        await SendPacketAsync(ServerCommand.Challenge, 1);
+        await ReadPacketAsync();
+        await ReadPacketAsync();
+        await SendPacketAsync(ServerCommand.LoginOk, Protocol.NetworkingVersion);
     }
 
     public void CloseConnection() => client?.Dispose();

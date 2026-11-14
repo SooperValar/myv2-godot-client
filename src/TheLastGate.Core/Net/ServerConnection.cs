@@ -24,7 +24,7 @@ public sealed class ServerConnection : IDisposable
 
     public void Dispose() => Disconnect();
 
-    public void Start(ServerAddress address)
+    public void Start(ServerAddress address, LoginHandshake handshake)
     {
         if (runTask != null)
         {
