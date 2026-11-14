@@ -1,0 +1,387 @@
+[gd_scene format=3]
+
+[ext_resource type="Theme" path="res://themes/LauncherTheme.tres" id="1_theme"]
+[ext_resource type="Texture2D" uid="uid://cxiy108mu58wx" path="res://images/launcher-background.png" id="2_background"]
+
+[node name="Launcher" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme = ExtResource("1_theme")
+
+[node name="Background" type="TextureRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+texture = ExtResource("2_background")
+
+[node name="CharacterHeader" type="Label" parent="."]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 74.0
+offset_right = 636.0
+offset_bottom = 110.0
+theme_type_variation = &"HeaderLabel"
+text = "Character Selection"
+horizontal_alignment = 1
+
+[node name="AccountRow" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 177.0
+offset_top = 146.0
+offset_right = 575.0
+offset_bottom = 168.0
+theme_override_constants/separation = 8
+
+[node name="AccountName" type="Label" parent="AccountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "New Account"
+vertical_alignment = 1
+
+[node name="CreateAccountButton" type="Button" parent="AccountRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+text = "Create New Account"
+
+[node name="CharacterForm" type="GridContainer" parent="."]
+layout_mode = 0
+offset_left = 177.0
+offset_top = 176.0
+offset_right = 575.0
+offset_bottom = 412.0
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="NameLabel" type="Label" parent="CharacterForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Name"
+vertical_alignment = 1
+
+[node name="NameField" type="LineEdit" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+max_length = 79
+
+[node name="PasswordLabel" type="Label" parent="CharacterForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Password"
+vertical_alignment = 1
+
+[node name="PasswordField" type="LineEdit" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+max_length = 14
+secret = true
+
+[node name="DescriptionLabel" type="Label" parent="CharacterForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+size_flags_vertical = 0
+text = "Description"
+vertical_alignment = 1
+
+[node name="DescriptionField" type="TextEdit" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(240, 80)
+layout_mode = 2
+size_flags_horizontal = 0
+wrap_mode = 1
+
+[node name="ClassLabel" type="Label" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Class"
+vertical_alignment = 1
+
+[node name="ClassOption" type="OptionButton" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+selected = 0
+item_count = 3
+popup/item_0/text = "Templar"
+popup/item_0/id = 0
+popup/item_1/text = "Mercenary"
+popup/item_1/id = 1
+popup/item_2/text = "Harakim"
+popup/item_2/id = 2
+
+[node name="BodyLabel" type="Label" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Body"
+vertical_alignment = 1
+
+[node name="BodyOption" type="OptionButton" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+selected = 0
+item_count = 2
+popup/item_0/text = "Masculine"
+popup/item_0/id = 0
+popup/item_1/text = "Feminine"
+popup/item_1/id = 1
+
+[node name="GameModeLabel" type="Label" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Game Mode"
+vertical_alignment = 1
+
+[node name="GameModeOption" type="OptionButton" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+selected = 0
+item_count = 2
+popup/item_0/text = "Normal"
+popup/item_0/id = 0
+popup/item_1/text = "Hard Mode"
+popup/item_1/id = 1
+
+[node name="SeasonLabel" type="Label" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Season"
+vertical_alignment = 1
+
+[node name="SeasonOption" type="OptionButton" parent="CharacterForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+selected = 1
+item_count = 2
+popup/item_0/text = "Legacy"
+popup/item_0/id = 0
+popup/item_1/text = "Current"
+popup/item_1/id = 1
+
+[node name="PreviousCharacters" type="PanelContainer" parent="."]
+layout_mode = 0
+offset_left = 110.0
+offset_top = 452.0
+offset_right = 636.0
+offset_bottom = 652.0
+
+[node name="Contents" type="VBoxContainer" parent="PreviousCharacters"]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="Title" type="Label" parent="PreviousCharacters/Contents"]
+layout_mode = 2
+theme_type_variation = &"SubheaderLabel"
+text = "Previous Characters"
+horizontal_alignment = 1
+
+[node name="Scroll" type="ScrollContainer" parent="PreviousCharacters/Contents"]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="PreviousCharacterList" type="VBoxContainer" parent="PreviousCharacters/Contents/Scroll"]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="OptionsHeader" type="Label" parent="."]
+layout_mode = 0
+offset_left = 644.0
+offset_top = 74.0
+offset_right = 1170.0
+offset_bottom = 94.0
+theme_type_variation = &"SectionLabel"
+text = "Options"
+horizontal_alignment = 1
+
+[node name="OptionsForm" type="GridContainer" parent="."]
+layout_mode = 0
+offset_left = 711.0
+offset_top = 130.0
+offset_right = 1025.0
+offset_bottom = 256.0
+theme_override_constants/h_separation = 8
+theme_override_constants/v_separation = 4
+columns = 2
+
+[node name="WindowTypeLabel" type="Label" parent="OptionsForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Window Type"
+vertical_alignment = 1
+
+[node name="WindowTypeOption" type="OptionButton" parent="OptionsForm"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+selected = 1
+item_count = 2
+popup/item_0/text = "Fullscreen"
+popup/item_0/id = 0
+popup/item_1/text = "Windowed"
+popup/item_1/id = 1
+
+[node name="ShadowsLabel" type="Label" parent="OptionsForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Shadows"
+vertical_alignment = 1
+
+[node name="ShadowsCheck" type="CheckBox" parent="OptionsForm"]
+unique_name_in_owner = true
+texture_filter = 2
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+button_pressed = true
+
+[node name="SoundLabel" type="Label" parent="OptionsForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Sounds Enabled?"
+vertical_alignment = 1
+
+[node name="SoundCheck" type="CheckBox" parent="OptionsForm"]
+unique_name_in_owner = true
+texture_filter = 2
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+button_pressed = true
+
+[node name="VolumeLabel" type="Label" parent="OptionsForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Volume Level"
+vertical_alignment = 1
+
+[node name="VolumeFrame" type="PanelContainer" parent="OptionsForm"]
+custom_minimum_size = Vector2(156, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+theme_type_variation = &"SliderFrame"
+
+[node name="VolumeSlider" type="HSlider" parent="OptionsForm/VolumeFrame"]
+unique_name_in_owner = true
+layout_mode = 2
+max_value = 10.0
+value = 10.0
+
+[node name="VolumeValue" type="Label" parent="OptionsForm/VolumeFrame"]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0, 0, 0, 1)
+text = "10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="DarkGuiLabel" type="Label" parent="OptionsForm"]
+custom_minimum_size = Vector2(150, 22)
+layout_mode = 2
+text = "Dark GUI"
+vertical_alignment = 1
+
+[node name="DarkGuiCheck" type="CheckBox" parent="OptionsForm"]
+unique_name_in_owner = true
+texture_filter = 2
+custom_minimum_size = Vector2(22, 22)
+layout_mode = 2
+size_flags_horizontal = 0
+
+[node name="ButtonRow" type="HBoxContainer" parent="."]
+layout_mode = 0
+offset_left = 315.0
+offset_top = 659.0
+offset_right = 955.0
+offset_bottom = 689.0
+theme_override_constants/separation = 10
+
+[node name="StartButton" type="Button" parent="ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+disabled = true
+text = "Start"
+
+[node name="LoadButton" type="Button" parent="ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Load"
+
+[node name="SaveButton" type="Button" parent="ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Save"
+
+[node name="DiscordButton" type="Button" parent="ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Discord"
+
+[node name="ExitButton" type="Button" parent="ButtonRow"]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+text = "Exit"
+
+[node name="MessageDialog" type="AcceptDialog" parent="."]
+unique_name_in_owner = true
+title = "FYI"
+initial_position = 2
+size = Vector2i(400, 160)
+dialog_autowrap = true
+
+[node name="ConfirmDialog" type="ConfirmationDialog" parent="."]
+unique_name_in_owner = true
+title = "Are you sure?"
+initial_position = 2
+size = Vector2i(400, 160)
+ok_button_text = "Yes"
+dialog_autowrap = true
+
+[node name="LoadDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Select your MOA"
+ok_button_text = "Open"
+file_mode = 0
+access = 2
+filters = PackedStringArray("*.moa ; Astonia Save File")
+use_native_dialog = true
+
+[node name="SaveDialog" type="FileDialog" parent="."]
+unique_name_in_owner = true
+title = "Save your character"
+access = 2
+filters = PackedStringArray("*.moa ; Astonia Save File")
+use_native_dialog = true
