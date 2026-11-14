@@ -1,9 +1,13 @@
+using System;
 using System.Diagnostics;
+using System.IO;
 using Godot;
+using TheLastGate.Assets;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Net;
 using TheLastGate.State;
+using TheLastGate.World;
 
 namespace TheLastGate.Game;
 
@@ -11,6 +15,8 @@ public partial class GameScreen : Control
 {
     private const string LauncherScene = "res://scenes/Launcher.tscn";
     private const int MaximumPowerSlot = 5;
+    private const long SpriteCacheBudgetBytes = 256L * 1024 * 1024;
+    private const int WorldViewIndex = 1;
 
     private readonly ServerConnection connection = new();
     private readonly GameState gameState = new();
@@ -19,8 +25,10 @@ public partial class GameScreen : Control
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
     private GameSession session = null!;
+    private SpriteLoader? sprites;
     private RichTextLabel statusLog = null!;
     private Label tickCounts = null!;
+    private WorldView? worldView;
 
     public override void _Ready()
     {
@@ -36,6 +44,7 @@ public partial class GameScreen : Control
         }
 
         session = startedSession;
+        AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
         gameState.Player.NameReceived += SaveCharacterName;
@@ -65,7 +74,19 @@ public partial class GameScreen : Control
 
         try
         {
-            playback.PlayDueTicks(NowMilliseconds(), payload => processor.Process(payload), connection.SendCommand);
+            var played = false;
+            playback.PlayDueTicks(
+                NowMilliseconds(),
+                payload =>
+                {
+                    processor.Process(payload);
+                    played = true;
+                },
+                connection.SendCommand);
+            if (played)
+            {
+                worldView?.Refresh();
+            }
         }
         catch (ProtocolDesyncException exception)
         {
@@ -76,12 +97,34 @@ public partial class GameScreen : Control
         var player = gameState.Player;
         tickCounts.Text = $"{player.Name} in {player.Location}   "
             + $"HP {player.ActiveHitPoints}/{player.HitPoints[MaximumPowerSlot]}   "
-            + $"Ticks played: {pacer.TicksPlayed}   Queued: {playback.QueuedTicks}";
+            + $"Ticks played: {pacer.TicksPlayed}   Queued: {playback.QueuedTicks}   "
+            + $"World refresh: {worldView?.LastRefreshMilliseconds:F2} ms";
     }
 
-    public override void _ExitTree() => connection.Dispose();
+    public override void _ExitTree()
+    {
+        connection.Dispose();
+        sprites?.Dispose();
+    }
 
     private static long NowMilliseconds() => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
+
+    private void AddWorldView()
+    {
+        try
+        {
+            sprites = new SpriteLoader(DataPaths.Root(), SpriteCacheBudgetBytes);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            statusLog.AppendText($"Couldn't open the sprite archives: {exception.Message}\n");
+            return;
+        }
+
+        worldView = new WorldView { State = gameState, Sprites = sprites };
+        AddChild(worldView);
+        MoveChild(worldView, WorldViewIndex);
+    }
 
     private void SaveNewCharacter(LoginKey createdKey)
     {
