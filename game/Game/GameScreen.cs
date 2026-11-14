@@ -3,18 +3,21 @@ using Godot;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Net;
+using TheLastGate.State;
 
 namespace TheLastGate.Game;
 
 public partial class GameScreen : Control
 {
     private const string LauncherScene = "res://scenes/Launcher.tscn";
+    private const int MaximumPowerSlot = 5;
 
     private readonly ServerConnection connection = new();
+    private readonly GameState gameState = new();
     private readonly TickPacer pacer = new();
-    private long commandsRead;
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
+    private TickProcessor processor = null!;
     private GameSession session = null!;
     private RichTextLabel statusLog = null!;
     private Label tickCounts = null!;
@@ -34,6 +37,8 @@ public partial class GameScreen : Control
 
         session = startedSession;
         playback = new TickPlayback(pacer);
+        processor = new TickProcessor(gameState);
+        gameState.Player.NameReceived += SaveCharacterName;
         connection.Start(session.Server, session.Handshake);
     }
 
@@ -57,7 +62,7 @@ public partial class GameScreen : Control
 
         try
         {
-            playback.PlayDueTicks(NowMilliseconds(), ReadCommands, connection.SendCommand);
+            playback.PlayDueTicks(NowMilliseconds(), payload => processor.Process(payload), connection.SendCommand);
         }
         catch (ProtocolDesyncException exception)
         {
@@ -65,22 +70,15 @@ public partial class GameScreen : Control
             connection.Disconnect();
         }
 
-        tickCounts.Text =
-            $"Ticks played: {pacer.TicksPlayed}   Queued: {playback.QueuedTicks}   Commands: {commandsRead}";
+        var player = gameState.Player;
+        tickCounts.Text = $"{player.Name} in {player.Location}   "
+            + $"HP {player.ActiveHitPoints}/{player.HitPoints[MaximumPowerSlot]}   "
+            + $"Ticks played: {pacer.TicksPlayed}   Queued: {playback.QueuedTicks}";
     }
 
     public override void _ExitTree() => connection.Dispose();
 
     private static long NowMilliseconds() => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
-
-    private void ReadCommands(byte[] payload)
-    {
-        var reader = new TickCommandReader(payload);
-        while (reader.TryReadNext(out _))
-        {
-            commandsRead++;
-        }
-    }
 
     private void SaveNewCharacter(LoginKey createdKey)
     {
@@ -90,6 +88,13 @@ public partial class GameScreen : Control
         var settings = record.Settings();
         settings.SetStartingHotbar(CharacterRace.FromNumber(createdKey.Race).Class);
         record.Store(settings);
+        CharacterStore.Save(record);
+    }
+
+    private void SaveCharacterName()
+    {
+        var record = session.Record;
+        record.Key = record.Key with { Name = gameState.Player.Name, Race = gameState.Player.Race };
         CharacterStore.Save(record);
     }
 
