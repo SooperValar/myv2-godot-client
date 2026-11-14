@@ -12,10 +12,14 @@ public partial class WorldView : Node2D
     private const int TintShift = 4;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
 
+    private readonly Vector2I[] characterOffsets = new Vector2I[TileCount];
     private readonly SpriteLayer characters = new();
     private readonly SpriteLayer floors = new();
     private readonly SpriteLayer objects = new();
     private readonly Dictionary<SpriteTint, ShaderMaterial> tintMaterials = [];
+    private Node2D floorLayer = null!;
+    private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
+    private Node2D objectLayer = null!;
     private Shader? tintShader;
 
     public GameState State { get; set; } = null!;
@@ -25,8 +29,8 @@ public partial class WorldView : Node2D
 
     public override void _Ready()
     {
-        var floorLayer = AddLayer();
-        var objectLayer = AddLayer();
+        floorLayer = AddLayer();
+        objectLayer = AddLayer();
         for (var row = WorldMap.Size - 1; row >= 0; row--)
         {
             for (var column = 0; column < WorldMap.Size; column++)
@@ -68,9 +72,11 @@ public partial class WorldView : Node2D
                     MapSpriteRules.CharacterSprite(tile, column, row),
                     tile.Light,
                     MapSpriteRules.CharacterTint(tile));
+                PlaceCharacter(tileIndex, column, row, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
             }
         }
 
+        ShiftMapUnderPlayer();
         LastRefreshMilliseconds = clock.Elapsed.TotalMilliseconds;
     }
 
@@ -84,9 +90,35 @@ public partial class WorldView : Node2D
 
     private Node2D AddLayer()
     {
-        var layer = new Node2D { Position = new Vector2(IsometricProjection.CameraOffsetX, 0) };
+        var layer = new Node2D { Position = mapShift };
         AddChild(layer);
         return layer;
+    }
+
+    private void PlaceCharacter(int tileIndex, int column, int row, Vector2I offset)
+    {
+        if (characterOffsets[tileIndex] == offset)
+        {
+            return;
+        }
+
+        characterOffsets[tileIndex] = offset;
+        var (x, y) = IsometricProjection.TilePosition(column, row);
+        characters.Nodes[tileIndex].Position = new Vector2(x + offset.X, y + offset.Y);
+    }
+
+    private void ShiftMapUnderPlayer()
+    {
+        var (x, y) = IsometricProjection.MapShift(State.Map);
+        var offset = new Vector2I(x, y);
+        if (offset == mapShift)
+        {
+            return;
+        }
+
+        mapShift = offset;
+        floorLayer.Position = offset;
+        objectLayer.Position = offset;
     }
 
     private void Show(SpriteLayer layer, int tileIndex, int spriteNumber, int light, SpriteTint tint)

@@ -26,11 +26,11 @@ public class IsometricProjectionTests
     }
 
     [Fact]
-    public void TilePosition_PutsThePlayersTileInTheMiddleOnceTheCameraShifts()
+    public void TilePosition_PutsThePlayersTileInTheMiddleOnceTheMapShifts()
     {
         var (x, y) = IsometricProjection.TilePosition(Centre, Centre);
 
-        Assert.Equal((638, 460), (x + IsometricProjection.CameraOffsetX, y));
+        Assert.Equal((638, 460), (x + IsometricProjection.BaseMapShiftX, y));
     }
 
     [Theory]
@@ -44,15 +44,15 @@ public class IsometricProjectionTests
     }
 
     [Fact]
-    public void CameraOffset_StaysPutWhileThePlayerStandsStill()
+    public void MapShift_StaysPutWhileThePlayerStandsStill()
     {
-        Assert.Equal((IsometricProjection.CameraOffsetX, 0), IsometricProjection.CameraOffset(MapWithPlayer(1)));
+        Assert.Equal((IsometricProjection.BaseMapShiftX, 0), IsometricProjection.MapShift(MapWithPlayer(1)));
     }
 
     [Fact]
-    public void CameraOffset_MovesTheWorldAgainstThePlayersWalk()
+    public void MapShift_SlidesTheMapAgainstThePlayersWalk()
     {
-        Assert.Equal((IsometricProjection.CameraOffsetX + 6, -3), IsometricProjection.CameraOffset(MapWithPlayer(19)));
+        Assert.Equal((IsometricProjection.BaseMapShiftX + 6, -3), IsometricProjection.MapShift(MapWithPlayer(19)));
     }
 
     private static WorldMap MapWithPlayer(int status)

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using Godot;
@@ -21,6 +22,7 @@ public partial class GameScreen : Control
     private readonly ServerConnection connection = new();
     private readonly GameState gameState = new();
     private readonly TickPacer pacer = new();
+    private readonly HashSet<string> reportedUnusualData = [];
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
@@ -51,6 +53,7 @@ public partial class GameScreen : Control
         gameState.Chat.LineAdded += line => statusLog.AppendText(line.Text + "\n");
         gameState.UniqueIdReceived += UniqueIdStore.Save;
         gameState.ExitRequested += LeaveOnServerExit;
+        gameState.UnusualDataSeen += ReportUnusualDataOnce;
         connection.Start(session.Server, session.Handshake);
     }
 
@@ -142,6 +145,14 @@ public partial class GameScreen : Control
         var record = session.Record;
         record.Key = record.Key with { Name = gameState.Player.Name, Race = gameState.Player.Race };
         CharacterStore.Save(record);
+    }
+
+    private void ReportUnusualDataOnce(string description)
+    {
+        if (reportedUnusualData.Add(description))
+        {
+            GD.PushWarning(description);
+        }
     }
 
     private void LeaveOnServerExit(ServerExit exit)
