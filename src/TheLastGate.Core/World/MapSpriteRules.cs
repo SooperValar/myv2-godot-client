@@ -51,7 +51,7 @@ public static class MapSpriteRules
     }
 
     public static int CharacterSprite(in MapTile tile, int column, int row) =>
-        IsHidden(tile, column, row) ? 0 : tile.CharacterSprite;
+        IsHidden(tile, column, row) ? 0 : tile.AnimatedCharacterSprite;
 
     public static SpriteTint EnvironmentTint(in MapTile tile)
     {

@@ -2,12 +2,15 @@ using System;
 using System.Diagnostics;
 using TheLastGate.Net.Handlers;
 using TheLastGate.State;
+using TheLastGate.World;
 
 namespace TheLastGate.Net;
 
 public sealed class TickProcessor(GameState state)
 {
     private const byte SetMapFlag = 0x80;
+
+    private readonly Action<string> reportUnusualData = state.ReportUnusualData;
 
     public void Process(ReadOnlySpan<byte> payload)
     {
@@ -112,6 +115,12 @@ public sealed class TickProcessor(GameState state)
                 default:
                     throw new UnreachableException();
             }
+        }
+
+        var tiles = state.Map.Tiles;
+        for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)
+        {
+            CharacterAnimation.Advance(ref tiles[tileIndex], state.ServerTick, reportUnusualData);
         }
     }
 }
