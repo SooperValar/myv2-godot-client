@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
 using TheLastGate.Assets;
-using TheLastGate.Net;
 using TheLastGate.State;
 
 namespace TheLastGate.World;
@@ -11,23 +10,26 @@ namespace TheLastGate.World;
 public partial class WorldView : Node2D
 {
     private const int TileCount = WorldMap.TileCount;
+    private const int NoTile = MapAction.NoTile;
     private const int TintShift = 4;
     private const int HighlightBit = 1 << 7;
+    private const int SelectedBit = 1 << 8;
     private const float HighlightBrightness = 2f;
-    private const int NoTile = -1;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
-    private const string DefaultCursorPath = "res://images/cursors/cursor1.png";
-    private const string WalkCursorPath = "res://images/cursors/cursor6.png";
+    private const string CursorPathFormat = "res://images/cursors/cursor{0}.png";
 
     private readonly Vector2I[] characterOffsets = new Vector2I[TileCount];
     private readonly SpriteLayer characters = new();
+    private readonly Dictionary<MapCursor, Texture2D> cursorTextures = [];
     private readonly SpriteLayer floors = new();
     private readonly SpriteLayer objects = new();
-    private readonly Dictionary<(SpriteTint Tint, bool Highlighted), ShaderMaterial> tintMaterials = [];
+    private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private Node2D floorLayer = null!;
-    private int hoveredTile = NoTile;
+    private MapAction hover = MapAction.Nothing;
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
     private Node2D objectLayer = null!;
+    private int selectedCharacter;
+    private MapCursor? shownCursor;
     private Shader? tintShader;
 
     public GameState State { get; set; } = null!;
@@ -52,106 +54,100 @@ public partial class WorldView : Node2D
             }
         }
 
-        Input.SetCustomMouseCursor(GD.Load<Texture2D>(DefaultCursorPath), Input.CursorShape.Arrow, Vector2.Zero);
-        Input.SetCustomMouseCursor(GD.Load<Texture2D>(WalkCursorPath), Input.CursorShape.Move, Vector2.Zero);
+        ShowCursor(MapCursor.None);
     }
 
-    public override void _ExitTree()
-    {
-        Input.SetCustomMouseCursor(null);
-        Input.SetCustomMouseCursor(null, Input.CursorShape.Move);
-    }
+    public override void _ExitTree() => Input.SetCustomMouseCursor(null);
 
     public override void _Process(double delta)
     {
-        var tileIndex = IsModifierHeld() || GetViewport().GuiGetHoveredControl() != null
-            ? NoTile
-            : TileUnder(GetViewport().GetMousePosition());
-        if (tileIndex == hoveredTile)
+        var action = GetViewport().GuiGetHoveredControl() != null
+            ? MapAction.Nothing
+            : MapActions.Decide(
+                State,
+                PointUnder(GetViewport().GetMousePosition()),
+                HeldKeys(),
+                MapButton.None,
+                selectedCharacter);
+        ShowCursor(action.Cursor);
+        if (action.HighlightedTile == hover.HighlightedTile && action.HighlightedLayer == hover.HighlightedLayer)
         {
             return;
         }
 
-        var previousTile = hoveredTile;
-        hoveredTile = tileIndex;
-        Input.SetDefaultCursorShape(tileIndex == NoTile ? Input.CursorShape.Arrow : Input.CursorShape.Move);
+        var previousTile = hover.HighlightedTile;
+        hover = action;
         if (previousTile != NoTile)
         {
-            ShowFloor(previousTile);
+            ShowTile(previousTile);
         }
 
-        if (tileIndex != NoTile)
+        if (hover.HighlightedTile != NoTile)
         {
-            ShowFloor(tileIndex);
+            ShowTile(hover.HighlightedTile);
         }
     }
 
     public override void _UnhandledInput(InputEvent inputEvent)
     {
-        if (inputEvent is not InputEventMouseButton { Pressed: false } click
-            || click.ShiftPressed
-            || click.CtrlPressed
-            || click.AltPressed)
+        if (inputEvent is not InputEventMouseButton { Pressed: false } click)
         {
             return;
         }
 
-        var tileIndex = TileUnder(click.Position);
-        if (tileIndex == NoTile)
+        var button = click.ButtonIndex switch
         {
-            return;
-        }
-
-        ref readonly var tile = ref State.Map.Tiles[tileIndex];
-        var command = click.ButtonIndex switch
-        {
-            MouseButton.Left => MapCommandPackets.ForTile(ClientCommand.Move, tile.X, tile.Y),
-            MouseButton.Right => MapCommandPackets.ForTile(ClientCommand.Turn, tile.X, tile.Y),
-            _ => null,
+            MouseButton.Left => MapButton.Left,
+            MouseButton.Right => MapButton.Right,
+            _ => MapButton.None,
         };
-        if (command == null)
+        if (button == MapButton.None)
         {
             return;
         }
 
-        SendCommand(command);
-        GetViewport().SetInputAsHandled();
+        var keys = (click.ShiftPressed ? MapKeys.Shift : MapKeys.None)
+            | (click.CtrlPressed ? MapKeys.Ctrl : MapKeys.None)
+            | (click.AltPressed ? MapKeys.Alt : MapKeys.None);
+        var action = MapActions.Decide(State, PointUnder(click.Position), keys, button, selectedCharacter);
+        if (action.Command is { } command)
+        {
+            SendCommand(command);
+            GetViewport().SetInputAsHandled();
+        }
+
+        if (action.NewSelection is { } selection)
+        {
+            selectedCharacter = selection;
+            Refresh();
+            GetViewport().SetInputAsHandled();
+        }
     }
 
     public void Refresh()
     {
         var clock = Stopwatch.StartNew();
-        var tiles = State.Map.Tiles;
-        for (var row = 0; row < WorldMap.Size; row++)
+        var selectedIsShown = false;
+        for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
         {
-            for (var column = 0; column < WorldMap.Size; column++)
-            {
-                var tileIndex = column + row * WorldMap.Size;
-                ref readonly var tile = ref tiles[tileIndex];
-                var environmentTint = MapSpriteRules.EnvironmentTint(tile);
-                ShowFloor(tileIndex);
-                Show(
-                    objects,
-                    tileIndex,
-                    MapSpriteRules.ObjectSprite(tile, column, row, State.Player, HideWalls),
-                    tile.Light,
-                    environmentTint);
-                Show(
-                    characters,
-                    tileIndex,
-                    MapSpriteRules.CharacterSprite(tile, column, row),
-                    tile.Light,
-                    MapSpriteRules.CharacterTint(tile));
-                PlaceCharacter(tileIndex, column, row, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
-            }
+            selectedIsShown |= ShowTile(tileIndex);
+            ref readonly var tile = ref State.Map.Tiles[tileIndex];
+            PlaceCharacter(tileIndex, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
+        }
+
+        if (!selectedIsShown)
+        {
+            selectedCharacter = 0;
         }
 
         ShiftMapUnderPlayer();
         LastRefreshMilliseconds = clock.Elapsed.TotalMilliseconds;
     }
 
-    private static bool IsModifierHeld() =>
-        Input.IsKeyPressed(Key.Shift) || Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
+    private static MapKeys HeldKeys() =>
+        (Input.IsKeyPressed(Key.Shift) ? MapKeys.Shift : MapKeys.None)
+        | (Input.IsKeyPressed(Key.Ctrl) ? MapKeys.Ctrl : MapKeys.None)
+        | (Input.IsKeyPressed(Key.Alt) ? MapKeys.Alt : MapKeys.None);
 
     private static Sprite2D AddSpriteNode(Node2D layer, int column, int row)
     {
@@ -168,28 +164,65 @@ public partial class WorldView : Node2D
         return layer;
     }
 
-    private int TileUnder(Vector2 screenPosition)
+    private (float Column, float Row)? PointUnder(Vector2 screenPosition)
     {
         var (x, y) = ((int)screenPosition.X, (int)screenPosition.Y);
-        var picked = PickTileDrawnUnderMouse
-            ? MapPicking.TileAt(x, y, IsometricProjection.BaseMapShiftX - mapShift.X, -mapShift.Y)
-            : MapPicking.TileAt(x, y);
-        return picked is var (column, row) ? column + row * WorldMap.Size : NoTile;
+        return PickTileDrawnUnderMouse
+            ? MapPicking.PointAt(x, y, IsometricProjection.BaseMapShiftX - mapShift.X, -mapShift.Y)
+            : MapPicking.PointAt(x, y);
     }
 
-    private void ShowFloor(int tileIndex)
+    private void ShowCursor(MapCursor cursor)
     {
+        if (cursor == shownCursor)
+        {
+            return;
+        }
+
+        shownCursor = cursor;
+        if (!cursorTextures.TryGetValue(cursor, out var texture))
+        {
+            texture = GD.Load<Texture2D>(string.Format(CursorPathFormat, (int)cursor));
+            cursorTextures[cursor] = texture;
+        }
+
+        Input.SetCustomMouseCursor(texture, Input.CursorShape.Arrow, Vector2.Zero);
+    }
+
+    // Returns whether the selected character is drawn on this tile.
+    private bool ShowTile(int tileIndex)
+    {
+        var (column, row) = (tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
         ref readonly var tile = ref State.Map.Tiles[tileIndex];
+        var environmentTint = MapSpriteRules.EnvironmentTint(tile);
         Show(
             floors,
             tileIndex,
             MapSpriteRules.FloorSprite(tile, State.ClientTick),
-            tile.Light,
-            MapSpriteRules.EnvironmentTint(tile),
-            tileIndex == hoveredTile);
+            new SpriteLook(tile.Light, environmentTint, IsHighlighted(tileIndex, MapLayer.Floor), false));
+        Show(
+            objects,
+            tileIndex,
+            MapSpriteRules.ObjectSprite(tile, column, row, State.Player, HideWalls),
+            new SpriteLook(tile.Light, environmentTint, IsHighlighted(tileIndex, MapLayer.Object), false));
+        var character = MapSpriteRules.CharacterSprite(tile, column, row);
+        var selected = character != 0 && selectedCharacter != 0 && tile.CharacterNumber == selectedCharacter;
+        Show(
+            characters,
+            tileIndex,
+            character,
+            new SpriteLook(
+                tile.Light,
+                MapSpriteRules.CharacterTint(tile),
+                IsHighlighted(tileIndex, MapLayer.Character),
+                selected));
+        return selected;
     }
 
-    private void PlaceCharacter(int tileIndex, int column, int row, Vector2I offset)
+    private bool IsHighlighted(int tileIndex, MapLayer layer) =>
+        hover.HighlightedTile == tileIndex && hover.HighlightedLayer == layer;
+
+    private void PlaceCharacter(int tileIndex, Vector2I offset)
     {
         if (characterOffsets[tileIndex] == offset)
         {
@@ -197,7 +230,7 @@ public partial class WorldView : Node2D
         }
 
         characterOffsets[tileIndex] = offset;
-        var (x, y) = IsometricProjection.TilePosition(column, row);
+        var (x, y) = IsometricProjection.TilePosition(tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
         characters.Nodes[tileIndex].Position = new Vector2(x + offset.X, y + offset.Y);
     }
 
@@ -215,13 +248,7 @@ public partial class WorldView : Node2D
         objectLayer.Position = offset;
     }
 
-    private void Show(
-        SpriteLayer layer,
-        int tileIndex,
-        int spriteNumber,
-        int light,
-        SpriteTint tint,
-        bool highlighted = false)
+    private void Show(SpriteLayer layer, int tileIndex, int spriteNumber, SpriteLook look)
     {
         var node = layer.Nodes[tileIndex];
         if (layer.ShownSprites[tileIndex] != spriteNumber)
@@ -237,26 +264,30 @@ public partial class WorldView : Node2D
             }
         }
 
-        var effect = light | ((int)tint << TintShift) | (highlighted ? HighlightBit : 0);
+        var effect = look.Light
+            | ((int)look.Tint << TintShift)
+            | (look.Highlighted ? HighlightBit : 0)
+            | (look.Selected ? SelectedBit : 0);
         if (layer.ShownEffects[tileIndex] == effect)
         {
             return;
         }
 
         layer.ShownEffects[tileIndex] = effect;
-        var brightness = SpriteLighting.Brightness(light);
-        if (highlighted && tint == SpriteTint.None)
+        var needsShader = look.Tint != SpriteTint.None || look.Selected;
+        var brightness = SpriteLighting.Brightness(look.Light);
+        if (look.Highlighted && !needsShader)
         {
             brightness *= HighlightBrightness;
         }
 
         node.Modulate = new Color(brightness, brightness, brightness);
-        node.Material = tint == SpriteTint.None ? null : TintMaterial(tint, highlighted);
+        node.Material = needsShader ? TintMaterial(look.Tint, look.Highlighted, look.Selected) : null;
     }
 
-    private ShaderMaterial TintMaterial(SpriteTint tint, bool highlighted)
+    private ShaderMaterial TintMaterial(SpriteTint tint, bool highlighted, bool selected)
     {
-        if (tintMaterials.TryGetValue((tint, highlighted), out var material))
+        if (tintMaterials.TryGetValue((tint, highlighted, selected), out var material))
         {
             return material;
         }
@@ -267,9 +298,12 @@ public partial class WorldView : Node2D
         material.SetShaderParameter("infrared", tint.HasFlag(SpriteTint.Infrared));
         material.SetShaderParameter("underwater", tint.HasFlag(SpriteTint.Underwater));
         material.SetShaderParameter("highlight", highlighted);
-        tintMaterials[(tint, highlighted)] = material;
+        material.SetShaderParameter("selected", selected);
+        tintMaterials[(tint, highlighted, selected)] = material;
         return material;
     }
+
+    private readonly record struct SpriteLook(int Light, SpriteTint Tint, bool Highlighted, bool Selected);
 
     private sealed class SpriteLayer
     {

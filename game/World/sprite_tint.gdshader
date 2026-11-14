@@ -1,11 +1,12 @@
 shader_type canvas_item;
 
 // The current client's tints, applied after the light has darkened the sprite through its modulate colour, and its
-// highlight, which doubles the brightness after the tints.
+// highlight, which doubles the brightness after the tints, and the selected character's green.
 uniform bool grey = false;
 uniform bool infrared = false;
 uniform bool underwater = false;
 uniform bool highlight = false;
+uniform bool selected = false;
 
 void fragment() {
 	vec4 color = COLOR;
@@ -26,6 +27,9 @@ void fragment() {
 	}
 	if (highlight) {
 		color.rgb *= 2.0;
+	}
+	if (selected) {
+		color.g += 0.5;
 	}
 	COLOR = color;
 }
