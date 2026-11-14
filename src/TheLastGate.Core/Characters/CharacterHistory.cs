@@ -1,0 +1,49 @@
+using System;
+using System.Collections.Generic;
+using System.IO;
+
+namespace TheLastGate.Characters;
+
+public sealed class CharacterHistory
+{
+    public const int MaxEntries = 20;
+
+    private readonly List<PreviousCharacter> entries = [];
+
+    public CharacterHistory()
+    {
+    }
+
+    public CharacterHistory(IEnumerable<PreviousCharacter> mostRecentFirst)
+    {
+        foreach (var entry in mostRecentFirst)
+        {
+            if (entries.Count < MaxEntries && IndexOf(entry.FilePath) < 0)
+            {
+                entries.Add(entry);
+            }
+        }
+    }
+
+    public IReadOnlyList<PreviousCharacter> Entries => entries;
+
+    public void Use(string name, string filePath)
+    {
+        var knownIndex = IndexOf(filePath);
+        if (knownIndex >= 0)
+        {
+            entries.RemoveAt(knownIndex);
+        }
+
+        entries.Insert(0, new PreviousCharacter(name, filePath));
+        if (entries.Count > MaxEntries)
+        {
+            entries.RemoveRange(MaxEntries, entries.Count - MaxEntries);
+        }
+    }
+
+    public void RemoveMissingFiles() => entries.RemoveAll(entry => !File.Exists(entry.FilePath));
+
+    private int IndexOf(string filePath) =>
+        entries.FindIndex(entry => string.Equals(entry.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+}
