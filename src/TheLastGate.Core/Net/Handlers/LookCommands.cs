@@ -7,6 +7,12 @@ namespace TheLastGate.Net.Handlers;
 internal static class LookCommands
 {
     private const int NameBytesSent = 15;
+    private const int ShopItemsPerCommand = 2;
+    private const uint SoulstoneBit = 1u << 30;
+    private const uint EnchantedBit = 1u << 31;
+    private const uint PriceMask = SoulstoneBit - 1;
+    private const byte WeaponSmithSlot = 4;
+    private const byte ArmourSmithSlot = 5;
 
     public static void Apply(GameState state, ReadOnlySpan<byte> command)
     {
@@ -53,6 +59,15 @@ internal static class LookCommands
                 reader.ReadBytes(NameBytesSent).CopyTo(look.NameField);
                 Finish(state, look);
                 break;
+            case ServerCommand.Look6:
+                ReadShopItems(state, ref reader);
+                break;
+            case ServerCommand.Look7:
+                ReadDepotItem(state, ref reader);
+                break;
+            case ServerCommand.Look8:
+                ReadSmith(state, ref reader);
+                break;
             default:
                 throw new UnreachableException();
         }
@@ -73,4 +88,89 @@ internal static class LookCommands
 
         state.Names.Remember(look.Number, look.Id, look.Name);
     }
+
+    private static void ReadShopItems(GameState state, ref PacketReader reader)
+    {
+        var look = state.PendingLook;
+        var firstSlot = reader.ReadByte();
+        Span<int> sprites = stackalloc int[ShopItemsPerCommand];
+        Span<uint> prices = stackalloc uint[ShopItemsPerCommand];
+        for (var offset = 0; offset < ShopItemsPerCommand; offset++)
+        {
+            sprites[offset] = reader.ReadUInt16();
+            prices[offset] = reader.ReadUInt32();
+        }
+
+        var catalysts = reader.ReadBytes(ShopItemsPerCommand);
+        for (var offset = 0; offset < ShopItemsPerCommand && firstSlot + offset < CharacterLook.ShopSlots; offset++)
+        {
+            look.ShopItems[firstSlot + offset] = new ShopItem(
+                sprites[offset],
+                (int)(prices[offset] & PriceMask),
+                (prices[offset] & SoulstoneBit) != 0,
+                (prices[offset] & EnchantedBit) != 0,
+                catalysts[offset]);
+        }
+
+        // The server sends the shop's kind in the first catalyst byte of the pair that reaches the last slot.
+        if (firstSlot is >= CharacterLook.ShopSlots - ShopItemsPerCommand and <= CharacterLook.ShopSlots)
+        {
+            OpenShop(state, ShopKindOf(catalysts[0]), look.Copy());
+        }
+    }
+
+    private static void ReadDepotItem(GameState state, ref PacketReader reader)
+    {
+        var page = reader.ReadByte();
+        var slot = reader.ReadByte();
+        var item = new DepotItem(reader.ReadUInt16(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
+        if (page >= CharacterLook.DepotPages || slot >= CharacterLook.DepotSlotsPerPage)
+        {
+            return;
+        }
+
+        state.PendingLook.Depot[page][slot] = item;
+        if (page == CharacterLook.DepotPages - 1 && slot == CharacterLook.DepotSlotsPerPage - 1)
+        {
+            OpenShop(state, ShopKind.Depot, state.PendingLook.Copy());
+        }
+    }
+
+    private static void ReadSmith(GameState state, ref PacketReader reader)
+    {
+        var slot = reader.ReadByte();
+        state.Shop.Number = reader.ReadUInt16();
+        switch (slot)
+        {
+            case WeaponSmithSlot:
+                OpenShop(state, ShopKind.WeaponSmith, state.Shop);
+                break;
+            case ArmourSmithSlot:
+                OpenShop(state, ShopKind.ArmourSmith, state.Shop);
+                break;
+            case < PlayerState.SmithSlots:
+                state.Player.SmithItems[slot] = new ItemSlot(
+                    reader.ReadUInt16(),
+                    0,
+                    reader.ReadByte(),
+                    reader.ReadByte());
+                break;
+        }
+    }
+
+    private static void OpenShop(GameState state, ShopKind kind, CharacterLook shop)
+    {
+        state.Shop = shop;
+        state.OpenShop = kind;
+        state.ReportShopOpened(kind);
+    }
+
+    private static ShopKind ShopKindOf(byte kindByte) => kindByte switch
+    {
+        101 => ShopKind.BlackStronghold,
+        102 => ShopKind.Casino,
+        103 => ShopKind.Contract,
+        104 => ShopKind.Experience,
+        _ => ShopKind.Merchant,
+    };
 }

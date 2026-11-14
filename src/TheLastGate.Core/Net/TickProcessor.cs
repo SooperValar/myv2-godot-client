@@ -85,7 +85,10 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.Look2
                     or ServerCommand.Look3
                     or ServerCommand.Look4
-                    or ServerCommand.Look5:
+                    or ServerCommand.Look5
+                    or ServerCommand.Look6
+                    or ServerCommand.Look7
+                    or ServerCommand.Look8:
                     LookCommands.Apply(state, command);
                     break;
                 case ServerCommand.Tick:

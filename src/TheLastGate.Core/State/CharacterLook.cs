@@ -53,6 +53,12 @@ public sealed class CharacterLook
         };
         Worn.CopyTo(copy.Worn, 0);
         NameField.CopyTo(copy.NameField, 0);
+        ShopItems.CopyTo(copy.ShopItems, 0);
+        for (var page = 0; page < DepotPages; page++)
+        {
+            Depot[page].CopyTo(copy.Depot[page], 0);
+        }
+
         return copy;
     }
 }
