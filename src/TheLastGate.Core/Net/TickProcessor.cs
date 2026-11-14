@@ -117,9 +117,11 @@ public sealed class TickProcessor(GameState state)
             }
         }
 
+        state.ClientTick++;
         var tiles = state.Map.Tiles;
         for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)
         {
+            ItemAnimation.Advance(ref tiles[tileIndex], state.ServerTick, state.ClientTick, reportUnusualData);
             CharacterAnimation.Advance(ref tiles[tileIndex], state.ServerTick, reportUnusualData);
         }
     }

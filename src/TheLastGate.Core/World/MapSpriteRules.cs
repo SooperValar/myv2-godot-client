@@ -15,6 +15,9 @@ public static class MapSpriteRules
     private const int FacingLeft = 2;
     private const int FacingUp = 3;
     private const int FacingDown = 4;
+    private const int ShimmeringFloor = 16980;
+    private const int FlickerTicks = 10;
+    private const int FlickerCycle = 666;
 
     private static readonly int[] LowMineWalls = [457, 456, 455, 466, 459, 458, 468, 467, 467];
 
@@ -24,12 +27,21 @@ public static class MapSpriteRules
         1006, 1007, 402, 500, 520, 531, 542, 551, 558, 543, 544, 545, 546, 547, 548, 549,
     ];
 
-    public static int FloorSprite(in MapTile tile, int clientTick) =>
-        ((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible) ? 0 : tile.BackgroundSprite;
+    public static int FloorSprite(in MapTile tile, int clientTick)
+    {
+        if (((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible))
+        {
+            return 0;
+        }
+
+        return tile.BackgroundSprite == ShimmeringFloor
+            ? ShimmeringFloor + FlickerStep(tile.X, tile.Y, clientTick) / 2
+            : tile.BackgroundSprite;
+    }
 
     public static int ObjectSprite(in MapTile tile, int column, int row, PlayerState player, bool hideWalls)
     {
-        if (tile.ItemSprite == 0 || IsHidden(tile, column, row))
+        if (tile.AnimatedItemSprite == 0 || IsHidden(tile, column, row))
         {
             return 0;
         }
@@ -37,17 +49,18 @@ public static class MapSpriteRules
         var hidesHere = hideWalls && !IsInFrontOfPlayer(column, row);
         if (hidesHere && !((MapFlags)tile.Flags).HasFlag(MapFlags.IsItem))
         {
-            return tile.ItemSprite + 1;
+            return tile.AnimatedItemSprite + 1;
         }
 
-        if (hidesHere && !IsFacedByPlayer(column, row, player.Direction) && LowMineWall(tile.ItemSprite) is { } lowWall)
+        if (hidesHere && !IsFacedByPlayer(column, row, player.Direction)
+            && LowMineWall(tile.AnimatedItemSprite) is { } lowWall)
         {
             return lowWall;
         }
 
-        return tile.ItemSprite == Waypoint && IsFoundWaypoint(tile.BackgroundSprite, player.Waypoints)
+        return tile.AnimatedItemSprite == Waypoint && IsFoundWaypoint(tile.BackgroundSprite, player.Waypoints)
             ? LitWaypoint
-            : tile.ItemSprite;
+            : tile.AnimatedItemSprite;
     }
 
     public static int CharacterSprite(in MapTile tile, int column, int row) =>
@@ -98,6 +111,14 @@ public static class MapSpriteRules
         return wall is >= FirstMineWall and <= LastMineWall && offset % MineWallsPerLowWall != MineWallsPerLowWall - 1
             ? LowMineWalls[offset / MineWallsPerLowWall]
             : null;
+    }
+
+    // Each shimmering floor tile takes its turn to flicker for ten ticks out of every 6660, picked by a hash of its
+    // position.
+    private static int FlickerStep(int x, int y, int clientTick)
+    {
+        var turn = (x * 43 + y * 77 + x * y + x * 24 + y * 39) % FlickerCycle;
+        return clientTick / FlickerTicks % FlickerCycle == turn ? clientTick % FlickerTicks : 0;
     }
 
     private static bool IsFoundWaypoint(int floor, int foundWaypoints)
