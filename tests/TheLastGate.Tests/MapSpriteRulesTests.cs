@@ -26,6 +26,41 @@ public class MapSpriteRulesTests
     }
 
     [Fact]
+    public void FloorSprite_ShowsNothingOnATileOutOfSight()
+    {
+        var (tile, _) = Tile(BehindThePlayer, 1002, flags: MapFlags.Invisible);
+
+        Assert.Equal(0, MapSpriteRules.FloorSprite(tile));
+    }
+
+    [Theory]
+    [InlineData(MapFlags.None, SpriteTint.None)]
+    [InlineData(MapFlags.Infrared, SpriteTint.Infrared)]
+    [InlineData(MapFlags.Underwater, SpriteTint.Underwater)]
+    [InlineData(MapFlags.Infrared | MapFlags.Underwater, SpriteTint.Infrared | SpriteTint.Underwater)]
+    [InlineData(MapFlags.Stoned | MapFlags.Bloody, SpriteTint.None)]
+    public void EnvironmentTint_TintsFloorsAndObjectsForInfraredAndUnderwater(MapFlags flags, SpriteTint tint)
+    {
+        var (tile, _) = Tile(BehindThePlayer, flags: flags);
+
+        Assert.Equal(tint, MapSpriteRules.EnvironmentTint(tile));
+    }
+
+    [Theory]
+    [InlineData(MapFlags.None, SpriteTint.None)]
+    [InlineData(MapFlags.Stoned, SpriteTint.Grey)]
+    [InlineData(MapFlags.Bloody, SpriteTint.Infrared)]
+    [InlineData(MapFlags.Infrared, SpriteTint.Infrared)]
+    [InlineData(MapFlags.Underwater, SpriteTint.Underwater)]
+    [InlineData(MapFlags.Stoned | MapFlags.Underwater, SpriteTint.Grey | SpriteTint.Underwater)]
+    public void CharacterTint_AlsoGreysStonedAndReddensBloodyCharacters(MapFlags flags, SpriteTint tint)
+    {
+        var (tile, _) = Tile(BehindThePlayer, flags: flags, character: 3021);
+
+        Assert.Equal(tint, MapSpriteRules.CharacterTint(tile));
+    }
+
+    [Fact]
     public void ObjectSprite_ShowsTheLowWallBehindThePlayer()
     {
         Assert.Equal(Wall + 1, ObjectAt(BehindThePlayer, Wall));

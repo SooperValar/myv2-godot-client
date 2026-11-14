@@ -52,6 +52,10 @@ public static class MapSpriteRules
     public static int CharacterSprite(in MapTile tile, int column, int row) =>
         IsHidden(tile, column, row) ? 0 : tile.CharacterSprite;
 
+    public static SpriteTint EnvironmentTint(in MapTile tile) => throw new NotImplementedException();
+
+    public static SpriteTint CharacterTint(in MapTile tile) => throw new NotImplementedException();
+
     private static bool IsHidden(in MapTile tile, int column, int row) =>
         ((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible) || IsInHiddenCorner(column, row);
 
