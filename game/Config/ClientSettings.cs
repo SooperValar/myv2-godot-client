@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Godot;
 using TheLastGate.Characters;
+using TheLastGate.Net;
 
 namespace TheLastGate.Config;
 
@@ -15,6 +16,7 @@ public sealed class ClientSettings
     private const string DisplaySection = "display";
     private const string AudioSection = "audio";
     private const string LauncherSection = "launcher";
+    private const string ServerSection = "server";
 
     private readonly ConfigFile file;
 
@@ -33,6 +35,12 @@ public sealed class ClientSettings
         CharacterHistory = new CharacterHistory(
             file.HasSectionKey(LauncherSection, "character_files") ? SavedCharacters(file) : SdlClientCharacters());
         CharacterHistory.RemoveMissingFiles();
+
+        // Never written by the client: a [server] section added by hand points it at another server.
+        Server = new ServerAddress(
+            file.GetValue(ServerSection, "host", ServerAddress.Live.Host).AsString(),
+            file.GetValue(ServerSection, "proxy", ServerAddress.Live.Proxy).AsString(),
+            file.GetValue(ServerSection, "port", ServerAddress.Live.Port).AsInt32());
     }
 
     public bool Windowed { get; set; }
@@ -41,6 +49,7 @@ public sealed class ClientSettings
     public bool SoundEnabled { get; set; }
     public int SoundVolume { get; set; }
     public CharacterHistory CharacterHistory { get; }
+    public ServerAddress Server { get; }
 
     public static ClientSettings Load()
     {
