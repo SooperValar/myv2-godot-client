@@ -32,7 +32,7 @@ public sealed class ServerConnection : IDisposable
         }
 
         state = ConnectionState.Connecting;
-        runTask = Task.Run(() => RunAsync(address, cancellation.Token));
+        runTask = Task.Run(() => RunAsync(address, handshake, cancellation.Token));
     }
 
     // Closing the socket is how the server expects a client to leave: it logs the character out
@@ -57,11 +57,18 @@ public sealed class ServerConnection : IDisposable
 
     public bool TryDequeueMessage(out string message) => messages.TryDequeue(out message!);
 
-    private async Task RunAsync(ServerAddress address, CancellationToken cancellationToken)
+    private async Task RunAsync(ServerAddress address, LoginHandshake handshake, CancellationToken cancellationToken)
     {
         try
         {
             var stream = (await ConnectAsync(address, cancellationToken)).GetStream();
+            state = ConnectionState.LoggingIn;
+            if (!await LogInAsync(stream, handshake, cancellationToken))
+            {
+                state = ConnectionState.Failed;
+                return;
+            }
+
             state = ConnectionState.Connected;
             await ReadTicksAsync(stream, cancellationToken);
             End(ConnectionState.Failed, "The server closed the connection.");
@@ -124,6 +131,35 @@ public sealed class ServerConnection : IDisposable
         }
 
         throw new IOException("Couldn't connect to the host or the proxy.");
+    }
+
+    private async Task<bool> LogInAsync(
+        NetworkStream stream,
+        LoginHandshake handshake,
+        CancellationToken cancellationToken)
+    {
+        foreach (var openingPacket in handshake.CreateOpeningPackets())
+        {
+            await stream.WriteAsync(openingPacket, cancellationToken);
+        }
+
+        var serverPacket = new byte[Protocol.PacketSize];
+        while (handshake.Stage is LoginStage.WaitingForChallenge or LoginStage.WaitingForResult)
+        {
+            await stream.ReadExactlyAsync(serverPacket, cancellationToken);
+            var statusBefore = handshake.Status;
+            foreach (var reply in handshake.Handle(serverPacket))
+            {
+                await stream.WriteAsync(reply, cancellationToken);
+            }
+
+            if (handshake.Status != statusBefore)
+            {
+                messages.Enqueue(handshake.Status);
+            }
+        }
+
+        return handshake.Stage == LoginStage.LoggedIn;
     }
 
     private async Task ReadTicksAsync(NetworkStream stream, CancellationToken cancellationToken)
