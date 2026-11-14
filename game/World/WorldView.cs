@@ -105,8 +105,8 @@ public partial class WorldView : Node2D
         ref readonly var tile = ref State.Map.Tiles[tileIndex];
         var command = click.ButtonIndex switch
         {
-            MouseButton.Left => MapCommandPackets.Move(tile.X, tile.Y),
-            MouseButton.Right => MapCommandPackets.Turn(tile.X, tile.Y),
+            MouseButton.Left => MapCommandPackets.ForTile(ClientCommand.Move, tile.X, tile.Y),
+            MouseButton.Right => MapCommandPackets.ForTile(ClientCommand.Turn, tile.X, tile.Y),
             _ => null,
         };
         if (command == null)

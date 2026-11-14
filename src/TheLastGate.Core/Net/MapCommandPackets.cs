@@ -5,11 +5,7 @@ namespace TheLastGate.Net;
 
 public static class MapCommandPackets
 {
-    public static byte[] Move(int worldX, int worldY) => Create(ClientCommand.Move, worldX, worldY);
-
-    public static byte[] Turn(int worldX, int worldY) => Create(ClientCommand.Turn, worldX, worldY);
-
-    private static byte[] Create(ClientCommand command, int worldX, int worldY)
+    public static byte[] ForTile(ClientCommand command, int worldX, int worldY)
     {
         var packet = new byte[Protocol.PacketSize];
         packet[0] = (byte)command;
@@ -17,4 +13,7 @@ public static class MapCommandPackets
         BinaryPrimitives.WriteUInt32LittleEndian(packet.AsSpan(3), (uint)worldY);
         return packet;
     }
+
+    public static byte[] ForCharacter(ClientCommand command, int characterNumber) =>
+        throw new NotImplementedException();
 }
