@@ -335,8 +335,8 @@ public partial class WorldView : Node2D
             ShowHealthBars);
     }
 
-    // Injuries, deaths, graves and magic glows, drawn after the tile's character and its action marker as the current
-    // client does.
+    // Builder markers, injuries, deaths, graves and magic glows, drawn after the tile's character and its action
+    // marker as the current client does.
     private void ShowEffects(int tileIndex)
     {
         var (column, row) = (tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
@@ -346,10 +346,11 @@ public partial class WorldView : Node2D
         var death = hidden ? 0 : MapEffects.DeathSprite(tile);
         var tomb = hidden ? 0 : MapEffects.TombSprite(tile);
         var glow = hidden ? null : MagicGlow.For(tile);
+        var builderMarkers = hidden ? [] : BuilderMarkers.For(tile);
         var effects = tileEffects[tileIndex];
         if (effects == null)
         {
-            if (injury == 0 && death == 0 && tomb == 0 && glow == null)
+            if (injury == 0 && death == 0 && tomb == 0 && glow == null && builderMarkers.Count == 0)
             {
                 return;
             }
@@ -361,6 +362,7 @@ public partial class WorldView : Node2D
             tileEffects[tileIndex] = effects;
         }
 
+        ShowBuilderMarkers(effects.BuilderMarkers, builderMarkers);
         var characterOffset = new Vector2(tile.CharacterOffsetX, tile.CharacterOffsetY);
         ShowEffect(effects.Injury, injury, characterOffset);
         ShowEffect(effects.Death, death, MapEffects.DeathFollowsCharacter(tile) ? characterOffset : Vector2.Zero);
@@ -390,6 +392,22 @@ public partial class WorldView : Node2D
         material.SetShaderParameter("strength", (float)glow.Strength);
         glowMaterials[glow] = material;
         return material;
+    }
+
+    private void ShowBuilderMarkers(Node2D container, IReadOnlyList<int> spriteNumbers)
+    {
+        while (container.GetChildCount() < spriteNumbers.Count)
+        {
+            container.AddChild(new Sprite2D { Centered = false });
+        }
+
+        for (var markerIndex = 0; markerIndex < container.GetChildCount(); markerIndex++)
+        {
+            ShowEffect(
+                container.GetChild<Sprite2D>(markerIndex),
+                markerIndex < spriteNumbers.Count ? spriteNumbers[markerIndex] : 0,
+                Vector2.Zero);
+        }
     }
 
     private void ShowEffect(Sprite2D node, int spriteNumber, Vector2 position)
@@ -617,6 +635,7 @@ public partial class WorldView : Node2D
     {
         public TileEffects()
         {
+            Root.AddChild(BuilderMarkers);
             Root.AddChild(Injury);
             Root.AddChild(Death);
             Root.AddChild(Tomb);
@@ -624,6 +643,7 @@ public partial class WorldView : Node2D
         }
 
         public Node2D Root { get; } = new();
+        public Node2D BuilderMarkers { get; } = new();
         public Sprite2D Injury { get; } = new() { Centered = false, Visible = false };
         public Sprite2D Death { get; } = new() { Centered = false, Visible = false };
         public Sprite2D Tomb { get; } = new() { Centered = false, Visible = false };
