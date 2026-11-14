@@ -1,4 +1,3 @@
-using System;
 using TheLastGate.Characters;
 
 namespace TheLastGate.State;
@@ -26,5 +25,26 @@ public sealed class CharacterLook
 
     internal byte[] NameField { get; } = new byte[NameLength];
 
-    internal CharacterLook Copy() => throw new NotImplementedException();
+    internal CharacterLook Copy()
+    {
+        var copy = new CharacterLook
+        {
+            Number = Number,
+            Id = Id,
+            Sprite = Sprite,
+            Points = Points,
+            HitPoints = HitPoints,
+            Endurance = Endurance,
+            Mana = Mana,
+            ActiveHitPoints = ActiveHitPoints,
+            ActiveEndurance = ActiveEndurance,
+            ActiveMana = ActiveMana,
+            IsAutoLook = IsAutoLook,
+            Flags = Flags,
+            HeldItemPrice = HeldItemPrice,
+        };
+        Worn.CopyTo(copy.Worn, 0);
+        NameField.CopyTo(copy.NameField, 0);
+        return copy;
+    }
 }

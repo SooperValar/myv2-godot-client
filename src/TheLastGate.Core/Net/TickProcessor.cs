@@ -81,6 +81,13 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.TermMeta:
                     TerminologyCommands.Apply(state.Terminology, command);
                     break;
+                case ServerCommand.Look1
+                    or ServerCommand.Look2
+                    or ServerCommand.Look3
+                    or ServerCommand.Look4
+                    or ServerCommand.Look5:
+                    LookCommands.Apply(state, command);
+                    break;
                 case ServerCommand.Tick:
                     var tickReader = new PacketReader(command);
                     tickReader.Skip(1);
