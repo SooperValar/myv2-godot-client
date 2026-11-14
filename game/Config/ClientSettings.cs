@@ -17,6 +17,7 @@ public sealed class ClientSettings
     private const string AudioSection = "audio";
     private const string LauncherSection = "launcher";
     private const string ServerSection = "server";
+    private const string WorldSection = "world";
 
     private readonly ConfigFile file;
 
@@ -41,6 +42,10 @@ public sealed class ClientSettings
             file.GetValue(ServerSection, "host", ServerAddress.Live.Host).AsString(),
             file.GetValue(ServerSection, "proxy", ServerAddress.Live.Proxy).AsString(),
             file.GetValue(ServerSection, "port", ServerAddress.Live.Port).AsInt32());
+
+        // Also hand-added until the Options window exists: "true" picks the tile drawn under the mouse while the
+        // player is mid-step, where the current client picks as if the map hadn't moved.
+        PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
     }
 
     public bool Windowed { get; set; }
@@ -50,6 +55,7 @@ public sealed class ClientSettings
     public int SoundVolume { get; set; }
     public CharacterHistory CharacterHistory { get; }
     public ServerAddress Server { get; }
+    public bool PickTileDrawnUnderMouse { get; }
 
     public static ClientSettings Load()
     {

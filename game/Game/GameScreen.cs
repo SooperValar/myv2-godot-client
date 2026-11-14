@@ -124,7 +124,13 @@ public partial class GameScreen : Control
             return;
         }
 
-        worldView = new WorldView { State = gameState, Sprites = sprites };
+        worldView = new WorldView
+        {
+            State = gameState,
+            Sprites = sprites,
+            SendCommand = connection.SendCommand,
+            PickTileDrawnUnderMouse = ClientSettings.Load().PickTileDrawnUnderMouse,
+        };
         AddChild(worldView);
         MoveChild(worldView, WorldViewIndex);
     }
