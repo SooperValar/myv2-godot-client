@@ -13,11 +13,17 @@ config_version=5
 config/name="The Last Gate: Godot"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+
 [dotnet]
 
 project/assembly_name="TheLastGate"
 
 [rendering]
 
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"

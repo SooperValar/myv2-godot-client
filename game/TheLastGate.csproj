@@ -5,4 +5,7 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+  <ItemGroup>
+    <ProjectReference Include="../src/TheLastGate.Core/TheLastGate.Core.csproj" />
+  </ItemGroup>
 </Project>
