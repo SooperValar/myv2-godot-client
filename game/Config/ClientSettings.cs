@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using Godot;
 using TheLastGate.Characters;
@@ -28,12 +30,8 @@ public sealed class ClientSettings
             0,
             MaxSoundVolume);
 
-        var names = file.GetValue(LauncherSection, "character_names", Array.Empty<string>()).AsStringArray();
-        var filePaths = file.GetValue(LauncherSection, "character_files", Array.Empty<string>()).AsStringArray();
         CharacterHistory = new CharacterHistory(
-            filePaths.Select((filePath, entryIndex) => new PreviousCharacter(
-                entryIndex < names.Length ? names[entryIndex] : "",
-                filePath)));
+            file.HasSectionKey(LauncherSection, "character_files") ? SavedCharacters(file) : SdlClientCharacters());
         CharacterHistory.RemoveMissingFiles();
     }
 
@@ -67,5 +65,33 @@ public sealed class ClientSettings
             "character_files",
             CharacterHistory.Entries.Select(entry => entry.FilePath).ToArray());
         return file.Save(FilePath);
+    }
+
+    private static IEnumerable<PreviousCharacter> SavedCharacters(ConfigFile file)
+    {
+        var names = file.GetValue(LauncherSection, "character_names", Array.Empty<string>()).AsStringArray();
+        var filePaths = file.GetValue(LauncherSection, "character_files", Array.Empty<string>()).AsStringArray();
+        return filePaths.Select((filePath, entryIndex) => new PreviousCharacter(
+            entryIndex < names.Length ? names[entryIndex] : "",
+            filePath));
+    }
+
+    private static IEnumerable<PreviousCharacter> SdlClientCharacters()
+    {
+        var listPath = SdlClientCharacterList.FilePath();
+        if (!File.Exists(listPath))
+        {
+            return [];
+        }
+
+        try
+        {
+            return SdlClientCharacterList.Parse(File.ReadAllBytes(listPath));
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            GD.PushWarning($"Couldn't read the SDL client's character list: {exception.Message}");
+            return [];
+        }
     }
 }
