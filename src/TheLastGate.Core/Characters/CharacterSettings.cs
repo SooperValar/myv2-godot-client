@@ -18,6 +18,17 @@ public sealed class CharacterSettings
     private const int HotbarEntrySize = 12;
     private const string EmptyHotbarName = "-";
 
+    private static readonly (int Slot, int Skill, string Name)[] EveryClassStartingSkills =
+        [(0, 50, "Light"), (19, 51, "Recall")];
+
+    private static readonly (int Slot, int Skill, string Name)[] TemplarStartingSkills = [(7, 40, "Cleave")];
+
+    private static readonly (int Slot, int Skill, string Name)[] HarakimStartingSkills =
+        [(7, 24, "Blast"), (11, 27, "Ghost C"), (4, 11, "Magic S"), (3, 17, "Protect")];
+
+    private static readonly (int Slot, int Skill, string Name)[] OtherClassStartingSkills =
+        [(11, 37, "Blind"), (3, 17, "Protect")];
+
     public bool HideWalls { get; set; } = true;
     public bool ShowNames { get; set; } = true;
     public bool ShowHealthPercent { get; set; } = true;
@@ -56,7 +67,19 @@ public sealed class CharacterSettings
         return settings;
     }
 
-    public void SetStartingHotbar(CharacterClass characterClass) => throw new NotImplementedException();
+    public void SetStartingHotbar(CharacterClass characterClass)
+    {
+        Array.Fill(HotbarActions, Unassigned);
+        Array.Fill(HotbarNames, EmptyHotbarName);
+        AssignHotbar(EveryClassStartingSkills);
+        AssignHotbar(
+            characterClass switch
+            {
+                CharacterClass.Templar => TemplarStartingSkills,
+                CharacterClass.Harakim => HarakimStartingSkills,
+                _ => OtherClassStartingSkills,
+            });
+    }
 
     public void Write(Span<byte> stored)
     {
@@ -73,6 +96,15 @@ public sealed class CharacterSettings
             var entry = stored.Slice(HotbarOffset + slot * HotbarEntrySize, HotbarEntrySize);
             NulTerminatedText.Write(entry[..HotbarNameLength], HotbarNames[slot]);
             BinaryPrimitives.WriteInt32LittleEndian(entry[HotbarNameLength..], HotbarActions[slot]);
+        }
+    }
+
+    private void AssignHotbar((int Slot, int Skill, string Name)[] skills)
+    {
+        foreach (var (slot, skill, name) in skills)
+        {
+            HotbarActions[slot] = skill;
+            HotbarNames[slot] = name;
         }
     }
 
