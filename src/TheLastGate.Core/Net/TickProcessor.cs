@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using TheLastGate.Net.Handlers;
 using TheLastGate.State;
 
@@ -108,6 +109,8 @@ public sealed class TickProcessor(GameState state)
                     tickReader.Skip(1);
                     state.ServerTick = tickReader.ReadByte();
                     break;
+                default:
+                    throw new UnreachableException();
             }
         }
     }

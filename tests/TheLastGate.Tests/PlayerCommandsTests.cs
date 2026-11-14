@@ -6,16 +6,6 @@ namespace TheLastGate.Tests;
 public class PlayerCommandsTests
 {
     [Fact]
-    public void Process_SkipsCommandsWithNoHandlerYet()
-    {
-        var state = Process(
-            TestCommand.Of(ServerCommand.CloseShop),
-            TestCommand.Of(ServerCommand.SetCharacterMode).Byte(2));
-
-        Assert.Equal(2, state.Player.Mode);
-    }
-
-    [Fact]
     public void SetCharacterName_JoinsTheThreePartsAndTakesTheRaceFromTheLast()
     {
         const string name = "Alexandria, Keeper of the Western Shores";
