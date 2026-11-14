@@ -6,4 +6,6 @@ public sealed class WorldMap
     public const int TileCount = Size * Size;
 
     public MapTile[] Tiles { get; } = new MapTile[TileCount];
+
+    internal int LastUpdatedTile { get; set; }
 }

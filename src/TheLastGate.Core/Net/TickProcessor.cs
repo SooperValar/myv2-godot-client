@@ -10,11 +10,13 @@ public sealed class TickProcessor(GameState state)
 
     public void Process(ReadOnlySpan<byte> payload)
     {
+        state.Map.LastUpdatedTile = -1;
         var reader = new TickCommandReader(payload);
         while (reader.TryReadNext(out var command))
         {
             if ((command[0] & SetMapFlag) != 0)
             {
+                MapCommands.Apply(state.Map, command);
                 continue;
             }
 
@@ -47,6 +49,21 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetCharacterSpell
                     or ServerCommand.SetCharacterHeldItem:
                     ItemCommands.Apply(state.Player, command);
+                    break;
+                case ServerCommand.SetMap3
+                    or ServerCommand.SetMap4
+                    or ServerCommand.SetMap5
+                    or ServerCommand.SetMap6
+                    or ServerCommand.SetOrigin
+                    or ServerCommand.ScrollRight
+                    or ServerCommand.ScrollLeft
+                    or ServerCommand.ScrollDown
+                    or ServerCommand.ScrollUp
+                    or ServerCommand.ScrollLeftUp
+                    or ServerCommand.ScrollLeftDown
+                    or ServerCommand.ScrollRightUp
+                    or ServerCommand.ScrollRightDown:
+                    MapCommands.Apply(state.Map, command);
                     break;
             }
         }
