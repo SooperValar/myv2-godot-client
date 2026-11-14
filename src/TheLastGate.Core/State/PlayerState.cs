@@ -13,6 +13,7 @@ public sealed class PlayerState
     public const int InventorySlots = 60;
     public const int WornSlots = 20;
     public const int BuffSlots = 40;
+    public const int SmithSlots = 4;
 
     private const int NameLength = 40;
     private const int LocationLength = 20;
@@ -53,6 +54,7 @@ public sealed class PlayerState
     public ItemSlot[] Worn { get; } = new ItemSlot[WornSlots];
     public BuffSlot[] Buffs { get; } = new BuffSlot[BuffSlots];
     public ItemSlot HeldItem { get; internal set; }
+    public ItemSlot[] SmithItems { get; } = new ItemSlot[SmithSlots];
 
     internal byte[] NameField { get; } = new byte[NameLength];
     internal byte[] LocationField { get; } = new byte[LocationLength];

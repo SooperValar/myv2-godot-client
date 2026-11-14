@@ -13,11 +13,16 @@ public sealed class GameState
     public Terminology Terminology { get; } = new();
     public CharacterNames Names { get; } = new();
     public CharacterLook? Look { get; internal set; }
+    public CharacterLook Shop { get; internal set; } = new();
+    public ShopKind? OpenShop { get; internal set; }
     public int ServerTick { get; internal set; }
 
     internal CharacterLook PendingLook { get; } = new();
 
     public event Action<CharacterLook>? LookShown;
+    public event Action<ShopKind>? ShopOpened;
 
     internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
+
+    internal void ReportShopOpened(ShopKind kind) => ShopOpened?.Invoke(kind);
 }
