@@ -1,3 +1,4 @@
+using System;
 using TheLastGate.State;
 
 namespace TheLastGate.World;
@@ -22,4 +23,6 @@ public static class IsometricProjection
 
     public static (int X, int Y) SpriteOffset(int width, int height) =>
         (-(width / TileSize) * HalfTile, -(height / TileSize) * TileSize);
+
+    public static (int X, int Y) CameraOffset(WorldMap map) => throw new NotImplementedException();
 }
