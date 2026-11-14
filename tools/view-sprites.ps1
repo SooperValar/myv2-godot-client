@@ -26,4 +26,4 @@ if ($LASTEXITCODE -ne 0) {
     exit $LASTEXITCODE
 }
 
-& $godot --path $gameFolder 'res://scenes/tools/SpriteViewer.tscn'
+& $godot --path $gameFolder 'res://Tools/sprite_viewer.tscn'

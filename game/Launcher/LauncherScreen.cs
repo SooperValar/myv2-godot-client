@@ -310,7 +310,7 @@ public partial class LauncherScreen : Control
             uniqueId.Low,
             uniqueId.High);
         GameSession.Begin(new GameSession(record, handshake, settings.Server));
-        GetTree().ChangeSceneToFile("res://scenes/Game.tscn");
+        GetTree().ChangeSceneToFile("res://Game/game.tscn");
     }
 
     private void OnCreateAccountPressed() =>

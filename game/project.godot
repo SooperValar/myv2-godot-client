@@ -11,7 +11,7 @@ config_version=5
 [application]
 
 config/name="The Last Gate: Godot"
-run/main_scene="res://scenes/Launcher.tscn"
+run/main_scene="res://Launcher/launcher.tscn"
 config/use_custom_user_dir=true
 config/custom_user_dir_name="TheLastGateGodot"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")

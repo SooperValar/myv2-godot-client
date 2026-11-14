@@ -14,7 +14,7 @@ namespace TheLastGate.Game;
 
 public partial class GameScreen : Control
 {
-    private const string LauncherScene = "res://scenes/Launcher.tscn";
+    private const string LauncherScene = "res://Launcher/launcher.tscn";
     private const int MaximumPowerSlot = 5;
     private const long SpriteCacheBudgetBytes = 256L * 1024 * 1024;
     private const int WorldViewIndex = 1;
