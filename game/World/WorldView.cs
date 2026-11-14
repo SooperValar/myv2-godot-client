@@ -17,16 +17,25 @@ public partial class WorldView : Node2D
     private const float HighlightBrightness = 2f;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
     private const string CursorPathFormat = "res://images/cursors/cursor{0}.png";
+    private const string NameplateScenePath = "res://World/nameplate.tscn";
+    private const int PlayerTile = WorldMap.Size / 2 * WorldMap.Size + WorldMap.Size / 2;
+    private const int PlayerNameplateLayer = 1;
 
     private readonly Vector2I[] characterOffsets = new Vector2I[TileCount];
     private readonly SpriteLayer characters = new();
+    private readonly HashSet<int> charactersShown = [];
     private readonly Dictionary<MapCursor, Texture2D> cursorTextures = [];
     private readonly SpriteLayer floors = new();
+    private readonly Stack<Nameplate> freeNameplates = [];
+    private readonly NameRequests nameRequests = new();
+    private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private Node2D floorLayer = null!;
     private MapAction hover = MapAction.Nothing;
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
+    private NameplateFonts nameplateFonts = null!;
+    private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
     private int selectedCharacter;
     private MapCursor? shownCursor;
@@ -35,12 +44,17 @@ public partial class WorldView : Node2D
     public GameState State { get; set; } = null!;
     public SpriteLoader Sprites { get; set; } = null!;
     public bool HideWalls { get; set; } = true;
+    public bool ShowNames { get; set; } = true;
+    public bool ShowHealthPercent { get; set; } = true;
+    public bool ShowHealthBars { get; set; }
     public double LastRefreshMilliseconds { get; private set; }
     public bool PickTileDrawnUnderMouse { get; set; }
     public Action<byte[]> SendCommand { get; set; } = _ => { };
 
     public override void _Ready()
     {
+        nameplateScene = GD.Load<PackedScene>(NameplateScenePath);
+        nameplateFonts = new NameplateFonts(Sprites);
         floorLayer = AddLayer();
         objectLayer = AddLayer();
         for (var row = WorldMap.Size - 1; row >= 0; row--)
@@ -128,11 +142,19 @@ public partial class WorldView : Node2D
     {
         var clock = Stopwatch.StartNew();
         var selectedIsShown = false;
+        charactersShown.Clear();
         for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
         {
             selectedIsShown |= ShowTile(tileIndex);
             ref readonly var tile = ref State.Map.Tiles[tileIndex];
             PlaceCharacter(tileIndex, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
+            ShowNameplate(tileIndex);
+        }
+
+        ReleaseUnusedNameplates();
+        if (nameRequests.Tick(State.Names) is { } request)
+        {
+            SendCommand(request);
         }
 
         if (!selectedIsShown)
@@ -219,6 +241,59 @@ public partial class WorldView : Node2D
         return selected;
     }
 
+    private void ShowNameplate(int tileIndex)
+    {
+        ref readonly var tile = ref State.Map.Tiles[tileIndex];
+        var showText = NameplateText.IsShown(ShowNames, ShowHealthPercent);
+        if (tile.CharacterNumber == 0 || characters.ShownSprites[tileIndex] == 0 || (!showText && !ShowHealthBars))
+        {
+            return;
+        }
+
+        var name = State.Names.NameOf(tile.CharacterNumber, tile.CharacterId);
+        if (showText && name.Length == 0)
+        {
+            nameRequests.NoteUnknown(tile.CharacterNumber, tile.CharacterId);
+        }
+
+        if (!nameplatesByCharacter.TryGetValue(tile.CharacterNumber, out var nameplate))
+        {
+            nameplate = freeNameplates.Count > 0 ? freeNameplates.Pop() : nameplateScene.Instantiate<Nameplate>();
+            nameplatesByCharacter[tile.CharacterNumber] = nameplate;
+        }
+
+        var characterNode = characters.Nodes[tileIndex];
+        if (nameplate.GetParent() != characterNode)
+        {
+            nameplate.GetParent()?.RemoveChild(nameplate);
+            characterNode.AddChild(nameplate);
+        }
+
+        charactersShown.Add(tile.CharacterNumber);
+        nameplate.ZIndex = tileIndex == PlayerTile ? PlayerNameplateLayer : 0;
+        nameplate.Display(
+            NameplateText.For(name, tile.CharacterId, tile.CharacterHealthPercent, ShowNames, ShowHealthPercent),
+            nameplateFonts.For(NameplateText.FontFor(tile.CharacterTextColour)),
+            tile.CharacterHealthPercent,
+            showText,
+            ShowHealthBars);
+    }
+
+    private void ReleaseUnusedNameplates()
+    {
+        foreach (var (characterNumber, nameplate) in nameplatesByCharacter)
+        {
+            if (charactersShown.Contains(characterNumber))
+            {
+                continue;
+            }
+
+            nameplate.GetParent()?.RemoveChild(nameplate);
+            nameplatesByCharacter.Remove(characterNumber);
+            freeNameplates.Push(nameplate);
+        }
+    }
+
     private bool IsHighlighted(int tileIndex, MapLayer layer) =>
         hover.HighlightedTile == tileIndex && hover.HighlightedLayer == layer;
 
@@ -281,7 +356,7 @@ public partial class WorldView : Node2D
             brightness *= HighlightBrightness;
         }
 
-        node.Modulate = new Color(brightness, brightness, brightness);
+        node.SelfModulate = new Color(brightness, brightness, brightness);
         node.Material = needsShader ? TintMaterial(look.Tint, look.Highlighted, look.Selected) : null;
     }
 

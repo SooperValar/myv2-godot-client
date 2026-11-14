@@ -124,12 +124,16 @@ public partial class GameScreen : Control
             return;
         }
 
+        var characterSettings = session.Record.Settings();
         worldView = new WorldView
         {
             State = gameState,
             Sprites = sprites,
             SendCommand = connection.SendCommand,
             PickTileDrawnUnderMouse = ClientSettings.Load().PickTileDrawnUnderMouse,
+            ShowNames = characterSettings.ShowNames,
+            ShowHealthPercent = characterSettings.ShowHealthPercent,
+            ShowHealthBars = characterSettings.ShowHealthBars,
         };
         AddChild(worldView);
         MoveChild(worldView, WorldViewIndex);
