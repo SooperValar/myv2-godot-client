@@ -24,7 +24,8 @@ public static class MapSpriteRules
         1006, 1007, 402, 500, 520, 531, 542, 551, 558, 543, 544, 545, 546, 547, 548, 549,
     ];
 
-    public static int FloorSprite(in MapTile tile) => tile.BackgroundSprite;
+    public static int FloorSprite(in MapTile tile) =>
+        ((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible) ? 0 : tile.BackgroundSprite;
 
     public static int ObjectSprite(in MapTile tile, int column, int row, PlayerState player, bool hideWalls)
     {
@@ -52,9 +53,20 @@ public static class MapSpriteRules
     public static int CharacterSprite(in MapTile tile, int column, int row) =>
         IsHidden(tile, column, row) ? 0 : tile.CharacterSprite;
 
-    public static SpriteTint EnvironmentTint(in MapTile tile) => throw new NotImplementedException();
+    public static SpriteTint EnvironmentTint(in MapTile tile)
+    {
+        var flags = (MapFlags)tile.Flags;
+        return (flags.HasFlag(MapFlags.Infrared) ? SpriteTint.Infrared : SpriteTint.None)
+            | (flags.HasFlag(MapFlags.Underwater) ? SpriteTint.Underwater : SpriteTint.None);
+    }
 
-    public static SpriteTint CharacterTint(in MapTile tile) => throw new NotImplementedException();
+    public static SpriteTint CharacterTint(in MapTile tile)
+    {
+        var flags = (MapFlags)tile.Flags;
+        return EnvironmentTint(tile)
+            | (flags.HasFlag(MapFlags.Stoned) ? SpriteTint.Grey : SpriteTint.None)
+            | (flags.HasFlag(MapFlags.Bloody) ? SpriteTint.Infrared : SpriteTint.None);
+    }
 
     private static bool IsHidden(in MapTile tile, int column, int row) =>
         ((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible) || IsInHiddenCorner(column, row);
