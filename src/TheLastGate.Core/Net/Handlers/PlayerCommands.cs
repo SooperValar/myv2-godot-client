@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using TheLastGate.State;
 
 namespace TheLastGate.Net.Handlers;
@@ -91,6 +92,8 @@ internal static class PlayerCommands
             case ServerCommand.SetCharacterLocation2:
                 reader.ReadBytes(LocationPartLength).CopyTo(player.LocationField.AsSpan(LocationPartLength));
                 break;
+            default:
+                throw new UnreachableException();
         }
     }
 

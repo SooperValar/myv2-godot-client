@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using TheLastGate.State;
 
 namespace TheLastGate.Net.Handlers;
@@ -59,6 +60,8 @@ internal static class MapCommands
             case ServerCommand.ScrollRightDown:
                 ShiftTiles(map, WorldMap.Size + 1);
                 break;
+            default:
+                throw new UnreachableException();
         }
     }
 

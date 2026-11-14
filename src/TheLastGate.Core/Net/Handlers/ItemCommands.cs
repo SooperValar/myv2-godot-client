@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using TheLastGate.State;
 
 namespace TheLastGate.Net.Handlers;
@@ -37,6 +38,8 @@ internal static class ItemCommands
             case ServerCommand.SetCharacterHeldItem:
                 player.HeldItem = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), 0);
                 break;
+            default:
+                throw new UnreachableException();
         }
     }
 
