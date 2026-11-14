@@ -12,4 +12,5 @@ public enum MapFlags : uint
     Bloody = 1u << 6,
     IsItem = 1u << 8,
     Invisible = 1u << 10,
+    Stunned = 1u << 11,
 }

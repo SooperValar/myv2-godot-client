@@ -30,6 +30,7 @@ public sealed class GameState
     public event Action? WaypointsRequested;
     public event Action<WindowRequest>? WindowRequested;
     public event Action<MinimapBox>? MinimapBoxCleared;
+    public event Action<string>? UnusualDataSeen;
 
     internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
 
@@ -48,4 +49,6 @@ public sealed class GameState
     internal void ReportWindowRequested(WindowRequest window) => WindowRequested?.Invoke(window);
 
     internal void ReportMinimapBoxCleared(MinimapBox box) => MinimapBoxCleared?.Invoke(box);
+
+    internal void ReportUnusualData(string description) => UnusualDataSeen?.Invoke(description);
 }
