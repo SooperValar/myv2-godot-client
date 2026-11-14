@@ -1,13 +1,31 @@
 using System;
+using System.IO;
 
 namespace TheLastGate.Net;
 
 public static class UniqueIdFile
 {
-    public static string SdlClientFilePath() => throw new NotImplementedException();
+    public static string SdlClientFilePath() =>
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "TheLastGate",
+            "TheLastGate",
+            "unique.dat");
 
-    public static UniqueId LoadOrCreate(string filePath, string sdlClientFilePath, Random random) =>
-        throw new NotImplementedException();
+    public static UniqueId LoadOrCreate(string filePath, string sdlClientFilePath, Random random)
+    {
+        if (Read(filePath) is { } ownId)
+        {
+            return ownId;
+        }
 
-    public static void Save(string filePath, UniqueId uniqueId) => throw new NotImplementedException();
+        var uniqueId = Read(sdlClientFilePath) ?? UniqueId.CreateRandom(random);
+        Save(filePath, uniqueId);
+        return uniqueId;
+    }
+
+    public static void Save(string filePath, UniqueId uniqueId) => File.WriteAllBytes(filePath, uniqueId.ToBytes());
+
+    private static UniqueId? Read(string filePath) =>
+        File.Exists(filePath) ? UniqueId.Parse(File.ReadAllBytes(filePath)) : null;
 }
