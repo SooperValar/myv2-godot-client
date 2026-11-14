@@ -6,6 +6,9 @@ namespace TheLastGate.World;
 public enum MapFlags : uint
 {
     None = 0,
+    Injured = 1u << 0,
+    Injured1 = 1u << 1,
+    Injured2 = 1u << 2,
     Stoned = 1u << 3,
     Infrared = 1u << 4,
     Underwater = 1u << 5,
@@ -15,4 +18,7 @@ public enum MapFlags : uint
     IsCharacter = 1u << 9,
     Invisible = 1u << 10,
     Stunned = 1u << 11,
+    Tomb = 0x1Fu << 12,
+    Death = 0x1Fu << 17,
+    CriticallyHit = 1u << 31,
 }
