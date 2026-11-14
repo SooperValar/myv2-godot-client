@@ -48,4 +48,63 @@ public class CharacterSettingsTests
 
         Assert.Equal("Magic S", CharacterSettings.Parse(stored).HotbarNames[0]);
     }
+
+    [Fact]
+    public void SetStartingHotbar_GivesATemplarCleave()
+    {
+        AssertStartingHotbar(CharacterClass.Templar, (7, 40, "Cleave"));
+    }
+
+    [Fact]
+    public void SetStartingHotbar_GivesAHarakimBlastGhostCompanionMagicShieldAndProtect()
+    {
+        AssertStartingHotbar(
+            CharacterClass.Harakim,
+            (3, 17, "Protect"),
+            (4, 11, "Magic S"),
+            (7, 24, "Blast"),
+            (11, 27, "Ghost C"));
+    }
+
+    [Theory]
+    [InlineData(CharacterClass.Mercenary)]
+    [InlineData(CharacterClass.Seyan)]
+    [InlineData(CharacterClass.Lycanthrope)]
+    public void SetStartingHotbar_GivesEveryOtherClassBlindAndProtect(CharacterClass characterClass)
+    {
+        AssertStartingHotbar(characterClass, (3, 17, "Protect"), (11, 37, "Blind"));
+    }
+
+    [Fact]
+    public void SetStartingHotbar_ClearsWhatTheHotbarHeldBefore()
+    {
+        var settings = new CharacterSettings();
+        settings.HotbarActions[10] = 105;
+        settings.HotbarNames[10] = "Potion";
+
+        settings.SetStartingHotbar(CharacterClass.Templar);
+
+        Assert.Equal(CharacterSettings.Unassigned, settings.HotbarActions[10]);
+        Assert.Equal("-", settings.HotbarNames[10]);
+    }
+
+    private static void AssertStartingHotbar(
+        CharacterClass characterClass,
+        params (int Slot, int Skill, string Name)[] classSkills)
+    {
+        var settings = new CharacterSettings();
+
+        settings.SetStartingHotbar(characterClass);
+
+        var expectedActions = Enumerable.Repeat(CharacterSettings.Unassigned, CharacterSettings.HotbarSlots).ToArray();
+        var expectedNames = Enumerable.Repeat("-", CharacterSettings.HotbarSlots).ToArray();
+        foreach (var (slot, skill, name) in classSkills.Append((0, 50, "Light")).Append((19, 51, "Recall")))
+        {
+            expectedActions[slot] = skill;
+            expectedNames[slot] = name;
+        }
+
+        Assert.Equal(expectedActions, settings.HotbarActions);
+        Assert.Equal(expectedNames, settings.HotbarNames);
+    }
 }

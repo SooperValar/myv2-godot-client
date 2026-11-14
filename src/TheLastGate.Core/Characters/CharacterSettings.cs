@@ -56,6 +56,8 @@ public sealed class CharacterSettings
         return settings;
     }
 
+    public void SetStartingHotbar(CharacterClass characterClass) => throw new NotImplementedException();
+
     public void Write(Span<byte> stored)
     {
         bool[] toggles = [HideWalls, ShowNames, ShowHealthPercent, ShowHealthBars, ShowStatBase];
