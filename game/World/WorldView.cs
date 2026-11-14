@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
 using TheLastGate.Assets;
@@ -8,13 +9,14 @@ namespace TheLastGate.World;
 public partial class WorldView : Node2D
 {
     private const int TileCount = WorldMap.TileCount;
+    private const int TintShift = 4;
+    private const string TintShaderPath = "res://World/sprite_tint.gdshader";
 
-    private readonly Sprite2D[] characterNodes = new Sprite2D[TileCount];
-    private readonly Sprite2D[] floorNodes = new Sprite2D[TileCount];
-    private readonly Sprite2D[] objectNodes = new Sprite2D[TileCount];
-    private readonly int[] shownCharacters = new int[TileCount];
-    private readonly int[] shownFloors = new int[TileCount];
-    private readonly int[] shownObjects = new int[TileCount];
+    private readonly SpriteLayer characters = new();
+    private readonly SpriteLayer floors = new();
+    private readonly SpriteLayer objects = new();
+    private readonly Dictionary<SpriteTint, ShaderMaterial> tintMaterials = [];
+    private Shader? tintShader;
 
     public GameState State { get; set; } = null!;
     public SpriteLoader Sprites { get; set; } = null!;
@@ -30,9 +32,9 @@ public partial class WorldView : Node2D
             for (var column = 0; column < WorldMap.Size; column++)
             {
                 var tileIndex = column + row * WorldMap.Size;
-                floorNodes[tileIndex] = AddSpriteNode(floorLayer, column, row);
-                objectNodes[tileIndex] = AddSpriteNode(objectLayer, column, row);
-                characterNodes[tileIndex] = AddSpriteNode(objectLayer, column, row);
+                floors.Nodes[tileIndex] = AddSpriteNode(floorLayer, column, row);
+                objects.Nodes[tileIndex] = AddSpriteNode(objectLayer, column, row);
+                characters.Nodes[tileIndex] = AddSpriteNode(objectLayer, column, row);
             }
         }
     }
@@ -47,13 +49,20 @@ public partial class WorldView : Node2D
             {
                 var tileIndex = column + row * WorldMap.Size;
                 ref readonly var tile = ref tiles[tileIndex];
-                Show(floorNodes, shownFloors, tileIndex, MapSpriteRules.FloorSprite(tile));
+                var environmentTint = MapSpriteRules.EnvironmentTint(tile);
+                Show(floors, tileIndex, MapSpriteRules.FloorSprite(tile), tile.Light, environmentTint);
                 Show(
-                    objectNodes,
-                    shownObjects,
+                    objects,
                     tileIndex,
-                    MapSpriteRules.ObjectSprite(tile, column, row, State.Player, HideWalls));
-                Show(characterNodes, shownCharacters, tileIndex, MapSpriteRules.CharacterSprite(tile, column, row));
+                    MapSpriteRules.ObjectSprite(tile, column, row, State.Player, HideWalls),
+                    tile.Light,
+                    environmentTint);
+                Show(
+                    characters,
+                    tileIndex,
+                    MapSpriteRules.CharacterSprite(tile, column, row),
+                    tile.Light,
+                    MapSpriteRules.CharacterTint(tile));
             }
         }
 
@@ -75,22 +84,54 @@ public partial class WorldView : Node2D
         return layer;
     }
 
-    private void Show(Sprite2D[] nodes, int[] shownSprites, int tileIndex, int spriteNumber)
+    private void Show(SpriteLayer layer, int tileIndex, int spriteNumber, int light, SpriteTint tint)
     {
-        if (shownSprites[tileIndex] == spriteNumber)
+        var node = layer.Nodes[tileIndex];
+        if (layer.ShownSprites[tileIndex] != spriteNumber)
+        {
+            layer.ShownSprites[tileIndex] = spriteNumber;
+            var texture = spriteNumber == 0 ? null : Sprites.GetTexture(spriteNumber);
+            node.Texture = texture;
+            node.Visible = texture != null;
+            if (texture != null)
+            {
+                var (offsetX, offsetY) = IsometricProjection.SpriteOffset(texture.GetWidth(), texture.GetHeight());
+                node.Offset = new Vector2(offsetX, offsetY);
+            }
+        }
+
+        var effect = light | ((int)tint << TintShift);
+        if (layer.ShownEffects[tileIndex] == effect)
         {
             return;
         }
 
-        shownSprites[tileIndex] = spriteNumber;
-        var node = nodes[tileIndex];
-        var texture = spriteNumber == 0 ? null : Sprites.GetTexture(spriteNumber);
-        node.Texture = texture;
-        node.Visible = texture != null;
-        if (texture != null)
+        layer.ShownEffects[tileIndex] = effect;
+        var brightness = SpriteLighting.Brightness(light);
+        node.Modulate = new Color(brightness, brightness, brightness);
+        node.Material = tint == SpriteTint.None ? null : TintMaterial(tint);
+    }
+
+    private ShaderMaterial TintMaterial(SpriteTint tint)
+    {
+        if (tintMaterials.TryGetValue(tint, out var material))
         {
-            var (offsetX, offsetY) = IsometricProjection.SpriteOffset(texture.GetWidth(), texture.GetHeight());
-            node.Offset = new Vector2(offsetX, offsetY);
+            return material;
         }
+
+        tintShader ??= GD.Load<Shader>(TintShaderPath);
+        material = new ShaderMaterial { Shader = tintShader };
+        material.SetShaderParameter("grey", tint.HasFlag(SpriteTint.Grey));
+        material.SetShaderParameter("infrared", tint.HasFlag(SpriteTint.Infrared));
+        material.SetShaderParameter("underwater", tint.HasFlag(SpriteTint.Underwater));
+        tintMaterials[tint] = material;
+        return material;
+    }
+
+    private sealed class SpriteLayer
+    {
+        public Sprite2D[] Nodes { get; } = new Sprite2D[TileCount];
+        public int[] ShownSprites { get; } = new int[TileCount];
+        public int[] ShownEffects { get; } = new int[TileCount];
     }
 }
