@@ -19,6 +19,7 @@ public partial class WorldView : Node2D
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
     private const string CursorPathFormat = "res://images/cursors/cursor{0}.png";
     private const string NameplateScenePath = "res://World/nameplate.tscn";
+    private const string MagicGlowShaderPath = "res://World/magic_glow.gdshader";
     private const int PlayerTile = WorldMap.Size / 2 * WorldMap.Size + WorldMap.Size / 2;
     private const int PlayerNameplateLayer = 1;
     private readonly Sprite2D actionMarker = new() { Centered = false, Visible = false };
@@ -31,6 +32,7 @@ public partial class WorldView : Node2D
     private readonly SpriteLayer floors = new();
     private readonly Stack<Nameplate> freeNameplates = [];
     private readonly Sprite2D giveMarker = new() { Centered = false, Visible = false };
+    private readonly Dictionary<MagicGlow, ShaderMaterial> glowMaterials = [];
     private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
@@ -40,6 +42,7 @@ public partial class WorldView : Node2D
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private readonly Sprite2D walkMarker = new() { Centered = false, Visible = false };
     private Node2D floorLayer = null!;
+    private Shader? glowShader;
     private MapAction hover = MapAction.Nothing;
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
     private NameplateFonts nameplateFonts = null!;
@@ -332,7 +335,8 @@ public partial class WorldView : Node2D
             ShowHealthBars);
     }
 
-    // Injuries, deaths and graves, drawn after the tile's character and its action marker as the current client does.
+    // Injuries, deaths, graves and magic glows, drawn after the tile's character and its action marker as the current
+    // client does.
     private void ShowEffects(int tileIndex)
     {
         var (column, row) = (tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
@@ -341,10 +345,11 @@ public partial class WorldView : Node2D
         var injury = hidden ? 0 : MapEffects.InjurySprite(tile);
         var death = hidden ? 0 : MapEffects.DeathSprite(tile);
         var tomb = hidden ? 0 : MapEffects.TombSprite(tile);
+        var glow = hidden ? null : MagicGlow.For(tile);
         var effects = tileEffects[tileIndex];
         if (effects == null)
         {
-            if (injury == 0 && death == 0 && tomb == 0)
+            if (injury == 0 && death == 0 && tomb == 0 && glow == null)
             {
                 return;
             }
@@ -362,6 +367,29 @@ public partial class WorldView : Node2D
         ShowEffect(effects.Tomb, tomb, Vector2.Zero);
         var brightness = SpriteLighting.Brightness(tile.Light);
         effects.Tomb.SelfModulate = new Color(brightness, brightness, brightness);
+        effects.Glow.Visible = glow != null;
+        if (glow is { } shown)
+        {
+            effects.Glow.Material = GlowMaterial(shown);
+            effects.Glow.Position = characterOffset + new Vector2(MagicGlow.Left, MagicGlow.Top);
+        }
+    }
+
+    private ShaderMaterial GlowMaterial(MagicGlow glow)
+    {
+        if (glowMaterials.TryGetValue(glow, out var material))
+        {
+            return material;
+        }
+
+        glowShader ??= GD.Load<Shader>(MagicGlowShaderPath);
+        material = new ShaderMaterial { Shader = glowShader };
+        material.SetShaderParameter(
+            "glow_colour",
+            new Vector3(glow.Red ? 1 : 0, glow.Green ? 1 : 0, glow.Blue ? 1 : 0));
+        material.SetShaderParameter("strength", (float)glow.Strength);
+        glowMaterials[glow] = material;
+        return material;
     }
 
     private void ShowEffect(Sprite2D node, int spriteNumber, Vector2 position)
@@ -592,12 +620,20 @@ public partial class WorldView : Node2D
             Root.AddChild(Injury);
             Root.AddChild(Death);
             Root.AddChild(Tomb);
+            Root.AddChild(Glow);
         }
 
         public Node2D Root { get; } = new();
         public Sprite2D Injury { get; } = new() { Centered = false, Visible = false };
         public Sprite2D Death { get; } = new() { Centered = false, Visible = false };
         public Sprite2D Tomb { get; } = new() { Centered = false, Visible = false };
+
+        public ColorRect Glow { get; } = new()
+        {
+            Size = new Vector2(MagicGlow.Size, MagicGlow.Size),
+            MouseFilter = Control.MouseFilterEnum.Ignore,
+            Visible = false,
+        };
     }
 
     private sealed class SpriteLayer
