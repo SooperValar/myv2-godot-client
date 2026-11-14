@@ -42,7 +42,8 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetCharacterTree
                     or ServerCommand.SetCharacterGold
                     or ServerCommand.SetCharacterLocation1
-                    or ServerCommand.SetCharacterLocation2:
+                    or ServerCommand.SetCharacterLocation2
+                    or ServerCommand.SetTarget:
                     PlayerCommands.Apply(state.Player, command);
                     break;
                 case ServerCommand.SetCharacterItem
@@ -88,8 +89,19 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.Look5
                     or ServerCommand.Look6
                     or ServerCommand.Look7
-                    or ServerCommand.Look8:
+                    or ServerCommand.Look8
+                    or ServerCommand.CloseShop:
                     LookCommands.Apply(state, command);
+                    break;
+                case ServerCommand.PlaySound
+                    or ServerCommand.Exit
+                    or ServerCommand.Load
+                    or ServerCommand.Unique
+                    or ServerCommand.Ignore
+                    or ServerCommand.Waypoints
+                    or ServerCommand.ShowMessageOfTheDay
+                    or ServerCommand.ClearBox:
+                    RequestCommands.Apply(state, command);
                     break;
                 case ServerCommand.Tick:
                     var tickReader = new PacketReader(command);

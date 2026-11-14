@@ -68,6 +68,10 @@ internal static class LookCommands
             case ServerCommand.Look8:
                 ReadSmith(state, ref reader);
                 break;
+            case ServerCommand.CloseShop:
+                state.OpenShop = null;
+                state.ReportShopClosed();
+                break;
             default:
                 throw new UnreachableException();
         }

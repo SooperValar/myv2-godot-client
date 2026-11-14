@@ -11,25 +11,6 @@ public sealed class LoginHandshake
     private const int ModPartLength = 15;
     private const int ModPartCount = ServerCommand.Mod8 - ServerCommand.Mod1 + 1;
 
-    private static readonly string[] ExitReasons =
-    [
-        "unknown",
-        "Client failed challenge.",
-        "Client was idle too long.",
-        "No room to drop character.",
-        "Invalid parameters.",
-        "Character already active or no player character.",
-        "Invalid password.",
-        "Client too slow.",
-        "Receive failure.",
-        "Server is being shutdown.",
-        "You entered a Tavern.",
-        "Client version too old. Update needed.",
-        "Aborting on user request.",
-        "this should never show up",
-        "You have been banned for an hour. Enhance your social behavior before you come back.",
-    ];
-
     private readonly LoginKey? key;
     private readonly byte[] modBytes = new byte[ModPartCount * ModPartLength];
     private readonly string password;
@@ -124,12 +105,8 @@ public sealed class LoginHandshake
                 return [];
 
             case ServerCommand.Exit:
-                var reasonCode = reader.ReadUInt32();
-                var reason = reasonCode >= 1 && reasonCode < ExitReasons.Length
-                    ? ExitReasons[reasonCode]
-                    : "unknown reason";
                 Stage = LoginStage.Failed;
-                Status = $"Server demands exit: {reason}";
+                Status = $"Server demands exit: {ExitReasons.Describe(reader.ReadUInt32())}";
                 return [];
 
             case ServerCommand.Cap:

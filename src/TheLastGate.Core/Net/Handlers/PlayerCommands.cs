@@ -92,6 +92,15 @@ internal static class PlayerCommands
             case ServerCommand.SetCharacterLocation2:
                 reader.ReadBytes(LocationPartLength).CopyTo(player.LocationField.AsSpan(LocationPartLength));
                 break;
+            case ServerCommand.SetTarget:
+                player.Target = new PlayerTarget(
+                    reader.ReadUInt16(),
+                    reader.ReadUInt16(),
+                    reader.ReadUInt16(),
+                    reader.ReadUInt16(),
+                    reader.ReadUInt16(),
+                    reader.ReadUInt16());
+                break;
             default:
                 throw new UnreachableException();
         }
