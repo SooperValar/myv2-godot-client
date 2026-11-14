@@ -1,2 +1,3 @@
 #!/bin/sh
-exec tools/check-godot-files.sh --staged
+tools/check-godot-files.sh --staged || exit 1
+exec tools/check-code-cleanup.sh --staged
