@@ -40,6 +40,8 @@ public partial class GameScreen : Control
         processor = new TickProcessor(gameState);
         gameState.Player.NameReceived += SaveCharacterName;
         gameState.Chat.LineAdded += line => statusLog.AppendText(line.Text + "\n");
+        gameState.UniqueIdReceived += UniqueIdStore.Save;
+        gameState.ExitRequested += LeaveOnServerExit;
         connection.Start(session.Server, session.Handshake);
     }
 
@@ -97,6 +99,12 @@ public partial class GameScreen : Control
         var record = session.Record;
         record.Key = record.Key with { Name = gameState.Player.Name, Race = gameState.Player.Race };
         CharacterStore.Save(record);
+    }
+
+    private void LeaveOnServerExit(ServerExit exit)
+    {
+        statusLog.AppendText($"Server demands exit: {exit.Reason}\n");
+        connection.Disconnect();
     }
 
     private void ReturnToLauncher() => GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, LauncherScene);

@@ -13,4 +13,7 @@ public static class UniqueIdStore
             ProjectSettings.GlobalizePath(FilePath),
             UniqueIdFile.SdlClientFilePath(),
             Random.Shared);
+
+    public static void Save(UniqueId uniqueId) =>
+        UniqueIdFile.Save(ProjectSettings.GlobalizePath(FilePath), uniqueId);
 }
