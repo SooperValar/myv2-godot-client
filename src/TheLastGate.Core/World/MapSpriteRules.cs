@@ -24,7 +24,7 @@ public static class MapSpriteRules
         1006, 1007, 402, 500, 520, 531, 542, 551, 558, 543, 544, 545, 546, 547, 548, 549,
     ];
 
-    public static int FloorSprite(in MapTile tile) =>
+    public static int FloorSprite(in MapTile tile, int clientTick) =>
         ((MapFlags)tile.Flags).HasFlag(MapFlags.Invisible) ? 0 : tile.BackgroundSprite;
 
     public static int ObjectSprite(in MapTile tile, int column, int row, PlayerState player, bool hideWalls)

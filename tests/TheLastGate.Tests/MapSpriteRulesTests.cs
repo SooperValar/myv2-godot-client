@@ -22,7 +22,7 @@ public class MapSpriteRulesTests
     {
         var (tile, _) = Tile(BehindThePlayer, 1002);
 
-        Assert.Equal(1002, MapSpriteRules.FloorSprite(tile));
+        Assert.Equal(1002, MapSpriteRules.FloorSprite(tile, 0));
     }
 
     [Fact]
@@ -30,7 +30,7 @@ public class MapSpriteRulesTests
     {
         var (tile, _) = Tile(BehindThePlayer, 1002, flags: MapFlags.Invisible);
 
-        Assert.Equal(0, MapSpriteRules.FloorSprite(tile));
+        Assert.Equal(0, MapSpriteRules.FloorSprite(tile, 0));
     }
 
     [Theory]

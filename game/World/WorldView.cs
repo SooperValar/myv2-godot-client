@@ -50,7 +50,12 @@ public partial class WorldView : Node2D
                 var tileIndex = column + row * WorldMap.Size;
                 ref readonly var tile = ref tiles[tileIndex];
                 var environmentTint = MapSpriteRules.EnvironmentTint(tile);
-                Show(floors, tileIndex, MapSpriteRules.FloorSprite(tile), tile.Light, environmentTint);
+                Show(
+                    floors,
+                    tileIndex,
+                    MapSpriteRules.FloorSprite(tile, State.ClientTick),
+                    tile.Light,
+                    environmentTint);
                 Show(
                     objects,
                     tileIndex,
