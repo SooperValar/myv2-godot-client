@@ -11,6 +11,8 @@ config_version=5
 [application]
 
 config/name="The Last Gate: Godot"
+config/use_custom_user_dir=true
+config/custom_user_dir_name="TheLastGateGodot"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 
 [display]
