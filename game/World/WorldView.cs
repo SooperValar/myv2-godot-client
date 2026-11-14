@@ -15,6 +15,7 @@ public partial class WorldView : Node2D
     private const int HighlightBit = 1 << 7;
     private const int SelectedBit = 1 << 8;
     private const float HighlightBrightness = 2f;
+    private const float ShadowAlpha = 0.5f;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
     private const string CursorPathFormat = "res://images/cursors/cursor{0}.png";
     private const string NameplateScenePath = "res://World/nameplate.tscn";
@@ -30,6 +31,8 @@ public partial class WorldView : Node2D
     private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
+    private readonly Sprite2D[] shadowNodes = new Sprite2D[TileCount];
+    private readonly int[] shownShadows = new int[TileCount];
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private Node2D floorLayer = null!;
     private MapAction hover = MapAction.Nothing;
@@ -47,6 +50,7 @@ public partial class WorldView : Node2D
     public bool ShowNames { get; set; } = true;
     public bool ShowHealthPercent { get; set; } = true;
     public bool ShowHealthBars { get; set; }
+    public bool ShowShadows { get; set; } = true;
     public double LastRefreshMilliseconds { get; private set; }
     public bool PickTileDrawnUnderMouse { get; set; }
     public Action<byte[]> SendCommand { get; set; } = _ => { };
@@ -65,6 +69,7 @@ public partial class WorldView : Node2D
                 floors.Nodes[tileIndex] = AddSpriteNode(floorLayer, column, row);
                 objects.Nodes[tileIndex] = AddSpriteNode(objectLayer, column, row);
                 characters.Nodes[tileIndex] = AddSpriteNode(objectLayer, column, row);
+                shadowNodes[tileIndex] = AddShadowNode(characters.Nodes[tileIndex]);
             }
         }
 
@@ -179,6 +184,20 @@ public partial class WorldView : Node2D
         return node;
     }
 
+    private static Sprite2D AddShadowNode(Sprite2D characterNode)
+    {
+        var shadow = new Sprite2D
+        {
+            Centered = false,
+            FlipV = true,
+            ShowBehindParent = true,
+            Visible = false,
+            Modulate = new Color(0, 0, 0, ShadowAlpha),
+        };
+        characterNode.AddChild(shadow);
+        return shadow;
+    }
+
     private Node2D AddLayer()
     {
         var layer = new Node2D { Position = mapShift };
@@ -238,7 +257,31 @@ public partial class WorldView : Node2D
                 MapSpriteRules.CharacterTint(tile),
                 IsHighlighted(tileIndex, MapLayer.Character),
                 selected));
+        ShowShadow(tileIndex, character);
         return selected;
+    }
+
+    private void ShowShadow(int tileIndex, int characterSprite)
+    {
+        var spriteNumber = ShowShadows && CharacterShadow.Casts(characterSprite) ? characterSprite : 0;
+        if (shownShadows[tileIndex] == spriteNumber)
+        {
+            return;
+        }
+
+        shownShadows[tileIndex] = spriteNumber;
+        var shadow = shadowNodes[tileIndex];
+        var texture = spriteNumber == 0 ? null : characters.Nodes[tileIndex].Texture;
+        shadow.Visible = texture != null;
+        if (texture == null)
+        {
+            return;
+        }
+
+        var (left, top, height) = CharacterShadow.For(texture.GetWidth(), texture.GetHeight());
+        shadow.Texture = texture;
+        shadow.Position = new Vector2(left, top);
+        shadow.Scale = new Vector2(1, height / (float)texture.GetHeight());
     }
 
     private void ShowNameplate(int tileIndex)

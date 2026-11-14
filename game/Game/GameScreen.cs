@@ -125,12 +125,14 @@ public partial class GameScreen : Control
         }
 
         var characterSettings = session.Record.Settings();
+        var clientSettings = ClientSettings.Load();
         worldView = new WorldView
         {
             State = gameState,
             Sprites = sprites,
             SendCommand = connection.SendCommand,
-            PickTileDrawnUnderMouse = ClientSettings.Load().PickTileDrawnUnderMouse,
+            PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
+            ShowShadows = clientSettings.Shadows,
             ShowNames = characterSettings.ShowNames,
             ShowHealthPercent = characterSettings.ShowHealthPercent,
             ShowHealthBars = characterSettings.ShowHealthBars,
