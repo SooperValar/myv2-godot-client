@@ -1,0 +1,16 @@
+{
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Write|Edit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR/tools/check-godot-files.sh\" --hook",
+            "statusMessage": "Checking the Godot file was saved by the editor"
+          }
+        ]
+      }
+    ]
+  }
+}
