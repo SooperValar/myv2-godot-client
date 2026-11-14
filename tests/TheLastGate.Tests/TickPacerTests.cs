@@ -160,6 +160,19 @@ public class TickPacerTests
         Assert.Equal(2u, pacer.TicksPlayed);
     }
 
+    [Fact]
+    public void TickSkipped_MovesTheScheduleOnWithoutCountingATickPlayed()
+    {
+        var pacer = new TickPacer();
+        pacer.IsTickDue(1000);
+
+        pacer.TickSkipped();
+
+        Assert.False(pacer.IsTickDue(1019));
+        Assert.True(pacer.IsTickDue(1020));
+        Assert.Equal(0u, pacer.TicksPlayed);
+    }
+
     private static TickPacer AdaptivePacer() => new() { Adaptive = true };
 
     private static long FeedSteady(TickPacer pacer, long now, int arrivals, int gapMilliseconds)

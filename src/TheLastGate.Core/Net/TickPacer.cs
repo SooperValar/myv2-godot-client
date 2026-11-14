@@ -120,6 +120,8 @@ public sealed class TickPacer
         TicksPlayed++;
     }
 
+    public void TickSkipped() => throw new NotImplementedException();
+
     private void RecalculateTarget()
     {
         MeasuredPeriodMilliseconds = (double)windowSpanMilliseconds / gapCount;
