@@ -36,6 +36,7 @@ public partial class WorldView : Node2D
     private readonly SpriteLayer objects = new();
     private readonly Sprite2D[] shadowNodes = new Sprite2D[TileCount];
     private readonly int[] shownShadows = new int[TileCount];
+    private readonly TileEffects?[] tileEffects = new TileEffects?[TileCount];
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private readonly Sprite2D walkMarker = new() { Centered = false, Visible = false };
     private Node2D floorLayer = null!;
@@ -158,6 +159,7 @@ public partial class WorldView : Node2D
         {
             selectedIsShown |= ShowTile(tileIndex);
             markerTiles = FindMarkers(markerTiles, tileIndex, target);
+            ShowEffects(tileIndex);
             ref readonly var tile = ref State.Map.Tiles[tileIndex];
             PlaceCharacter(tileIndex, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
             ShowNameplate(tileIndex);
@@ -328,6 +330,57 @@ public partial class WorldView : Node2D
             tile.CharacterHealthPercent,
             showText,
             ShowHealthBars);
+    }
+
+    // Injuries, deaths and graves, drawn after the tile's character and its action marker as the current client does.
+    private void ShowEffects(int tileIndex)
+    {
+        var (column, row) = (tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
+        ref readonly var tile = ref State.Map.Tiles[tileIndex];
+        var hidden = MapSpriteRules.HidesObjectsAndCharacters(tile, column, row);
+        var injury = hidden ? 0 : MapEffects.InjurySprite(tile);
+        var death = hidden ? 0 : MapEffects.DeathSprite(tile);
+        var tomb = hidden ? 0 : MapEffects.TombSprite(tile);
+        var effects = tileEffects[tileIndex];
+        if (effects == null)
+        {
+            if (injury == 0 && death == 0 && tomb == 0)
+            {
+                return;
+            }
+
+            effects = new TileEffects();
+            var (x, y) = IsometricProjection.TilePosition(column, row);
+            effects.Root.Position = new Vector2(x, y);
+            characters.Nodes[tileIndex].AddSibling(effects.Root);
+            tileEffects[tileIndex] = effects;
+        }
+
+        var characterOffset = new Vector2(tile.CharacterOffsetX, tile.CharacterOffsetY);
+        ShowEffect(effects.Injury, injury, characterOffset);
+        ShowEffect(effects.Death, death, MapEffects.DeathFollowsCharacter(tile) ? characterOffset : Vector2.Zero);
+        ShowEffect(effects.Tomb, tomb, Vector2.Zero);
+        var brightness = SpriteLighting.Brightness(tile.Light);
+        effects.Tomb.SelfModulate = new Color(brightness, brightness, brightness);
+    }
+
+    private void ShowEffect(Sprite2D node, int spriteNumber, Vector2 position)
+    {
+        var texture = spriteNumber == 0 ? null : Sprites.GetTexture(spriteNumber);
+        node.Visible = texture != null;
+        if (texture == null)
+        {
+            return;
+        }
+
+        if (node.Texture != texture)
+        {
+            var (offsetX, offsetY) = IsometricProjection.SpriteOffset(texture.GetWidth(), texture.GetHeight());
+            node.Texture = texture;
+            node.Offset = new Vector2(offsetX, offsetY);
+        }
+
+        node.Position = position;
     }
 
     private MarkerTiles FindMarkers(MarkerTiles found, int tileIndex, PlayerTarget target)
@@ -531,6 +584,21 @@ public partial class WorldView : Node2D
         int ActionSprite);
 
     private readonly record struct SpriteLook(int Light, SpriteTint Tint, bool Highlighted, bool Selected);
+
+    private sealed class TileEffects
+    {
+        public TileEffects()
+        {
+            Root.AddChild(Injury);
+            Root.AddChild(Death);
+            Root.AddChild(Tomb);
+        }
+
+        public Node2D Root { get; } = new();
+        public Sprite2D Injury { get; } = new() { Centered = false, Visible = false };
+        public Sprite2D Death { get; } = new() { Centered = false, Visible = false };
+        public Sprite2D Tomb { get; } = new() { Centered = false, Visible = false };
+    }
 
     private sealed class SpriteLayer
     {
