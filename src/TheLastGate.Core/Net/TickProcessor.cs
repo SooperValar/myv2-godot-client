@@ -42,6 +42,12 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetCharacterLocation2:
                     PlayerCommands.Apply(state.Player, command);
                     break;
+                case ServerCommand.SetCharacterItem
+                    or ServerCommand.SetCharacterWorn
+                    or ServerCommand.SetCharacterSpell
+                    or ServerCommand.SetCharacterHeldItem:
+                    ItemCommands.Apply(state.Player, command);
+                    break;
             }
         }
     }
