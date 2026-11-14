@@ -176,6 +176,21 @@ public class PlayerCommandsTests
         Assert.Equal("Aston Temple", state.Player.Location);
     }
 
+    [Fact]
+    public void SetTarget_SetsWhatThePlayerIsDoing()
+    {
+        var state = Process(
+            TestCommand.Of(ServerCommand.SetTarget)
+                .UInt16(812)
+                .UInt16(130)
+                .UInt16(245)
+                .UInt16(4)
+                .UInt16(131)
+                .UInt16(246));
+
+        Assert.Equal(new PlayerTarget(812, 130, 245, 4, 131, 246), state.Player.Target);
+    }
+
     private static TestCommand Powers(ServerCommand commandId) =>
         TestCommand.Of(commandId).UInt16(1).UInt16(2).UInt16(3).UInt16(4).UInt16(5).UInt16(65535);
 

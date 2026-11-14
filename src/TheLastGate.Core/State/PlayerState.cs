@@ -55,6 +55,7 @@ public sealed class PlayerState
     public BuffSlot[] Buffs { get; } = new BuffSlot[BuffSlots];
     public ItemSlot HeldItem { get; internal set; }
     public ItemSlot[] SmithItems { get; } = new ItemSlot[SmithSlots];
+    public PlayerTarget Target { get; internal set; }
 
     internal byte[] NameField { get; } = new byte[NameLength];
     internal byte[] LocationField { get; } = new byte[LocationLength];

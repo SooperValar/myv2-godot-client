@@ -153,6 +153,20 @@ public class ShopCommandsTests
         Assert.All(state.Player.SmithItems, item => Assert.Equal(default, item));
     }
 
+    [Fact]
+    public void CloseShop_ClosesTheOpenShop()
+    {
+        var state = new GameState();
+        var closed = 0;
+        state.ShopClosed += () => closed++;
+        Process(state, SmithCommand(4, 0, 0, 0));
+
+        Process(state, TestCommand.Of(ServerCommand.CloseShop));
+
+        Assert.Null(state.OpenShop);
+        Assert.Equal(1, closed);
+    }
+
     private static TestCommand[] ShopLookCommands() =>
     [
         TestCommand.Of(ServerCommand.Look1),
