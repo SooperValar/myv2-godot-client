@@ -1,15 +1,34 @@
-using System;
-
 namespace TheLastGate.World;
 
 public static class NameplateText
 {
-    public static bool IsShown(bool showNames, bool showPercent) => throw new NotImplementedException();
+    private const int CentringWidthPerLetter = 5;
 
-    public static string For(string name, int characterId, int healthPercent, bool showNames, bool showPercent) =>
-        throw new NotImplementedException();
+    public static bool IsShown(bool showNames, bool showPercent) => showNames || showPercent;
 
-    public static int FontFor(int textColour) => throw new NotImplementedException();
+    public static string For(string name, int characterId, int healthPercent, bool showNames, bool showPercent)
+    {
+        if (characterId == 0)
+        {
+            return name;
+        }
 
-    public static int LeftOffset(string text) => throw new NotImplementedException();
+        return (showNames, showPercent) switch
+        {
+            (true, true) => healthPercent != 0 ? $"{name} {healthPercent}%" : name,
+            (true, false) => name,
+            (false, true) => healthPercent != 0 ? $"{healthPercent}%" : "",
+            _ => "",
+        };
+    }
+
+    public static int FontFor(int textColour) => textColour switch
+    {
+        0 => 1,
+        1 => 0,
+        _ => textColour,
+    };
+
+    // The current client centres at five pixels a letter, although letters are six apart.
+    public static int LeftOffset(string text) => -(text.Length * CentringWidthPerLetter / 2);
 }
