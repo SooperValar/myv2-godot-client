@@ -10,6 +10,7 @@ public sealed class TickProcessor(GameState state)
 
     public void Process(ReadOnlySpan<byte> payload)
     {
+        state.ServerTick = (state.ServerTick + 1) % GameState.ServerTickCycle;
         state.Map.LastUpdatedTile = -1;
         var reader = new TickCommandReader(payload);
         while (reader.TryReadNext(out var command))
@@ -64,6 +65,20 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.ScrollRightUp
                     or ServerCommand.ScrollRightDown:
                     MapCommands.Apply(state.Map, command);
+                    break;
+                case >= ServerCommand.Log0 and <= ServerCommand.Log9:
+                    LogCommands.Apply(state.Chat, command, command[0] - (byte)ServerCommand.Log0);
+                    break;
+                case >= ServerCommand.MessageOfTheDay0 and <= ServerCommand.MessageOfTheDay3:
+                    LogCommands.Apply(
+                        state.MessageOfTheDay,
+                        command,
+                        command[0] - (byte)ServerCommand.MessageOfTheDay0);
+                    break;
+                case ServerCommand.Tick:
+                    var tickReader = new PacketReader(command);
+                    tickReader.Skip(1);
+                    state.ServerTick = tickReader.ReadByte();
                     break;
             }
         }

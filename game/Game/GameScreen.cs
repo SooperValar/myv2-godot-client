@@ -39,6 +39,7 @@ public partial class GameScreen : Control
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
         gameState.Player.NameReceived += SaveCharacterName;
+        gameState.Chat.LineAdded += line => statusLog.AppendText(line.Text + "\n");
         connection.Start(session.Server, session.Handshake);
     }
 
