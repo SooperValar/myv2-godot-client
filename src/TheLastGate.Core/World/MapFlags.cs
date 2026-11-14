@@ -10,7 +10,9 @@ public enum MapFlags : uint
     Infrared = 1u << 4,
     Underwater = 1u << 5,
     Bloody = 1u << 6,
+    IsUsable = 1u << 7,
     IsItem = 1u << 8,
+    IsCharacter = 1u << 9,
     Invisible = 1u << 10,
     Stunned = 1u << 11,
 }

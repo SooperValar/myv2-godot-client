@@ -1,3 +1,4 @@
+using System;
 using TheLastGate.State;
 
 namespace TheLastGate.World;
@@ -13,6 +14,16 @@ public static class MapPicking
     private const int LastTile = WorldMap.Size - FirstTile;
     private const int LowestPosition = FirstTile * TileSize + 12;
     private const int HighestPosition = LastTile * TileSize + 20;
+
+    public static (float Column, float Row)? PointAt(
+        int screenX,
+        int screenY,
+        int walkOffsetX = 0,
+        int walkOffsetY = 0) =>
+        throw new NotImplementedException();
+
+    public static (int Column, int Row)? NearestTile(WorldMap map, MapFlags wanted, (float Column, float Row) point) =>
+        throw new NotImplementedException();
 
     public static (int Column, int Row)? TileAt(int screenX, int screenY, int walkOffsetX = 0, int walkOffsetY = 0)
     {
