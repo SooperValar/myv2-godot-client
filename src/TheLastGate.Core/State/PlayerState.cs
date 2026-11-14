@@ -10,6 +10,9 @@ public sealed class PlayerState
     public const int SkillSlots = 100;
     public const int StatValueCount = 6;
     public const int TreeNodeCount = 12;
+    public const int InventorySlots = 60;
+    public const int WornSlots = 20;
+    public const int BuffSlots = 40;
 
     private const int NameLength = 40;
     private const int LocationLength = 20;
@@ -45,6 +48,11 @@ public sealed class PlayerState
     public int TreePoints { get; internal set; }
     public int OsirisTree { get; internal set; }
     public byte[] TreeNodes { get; } = new byte[TreeNodeCount];
+
+    public ItemSlot[] Inventory { get; } = new ItemSlot[InventorySlots];
+    public ItemSlot[] Worn { get; } = new ItemSlot[WornSlots];
+    public BuffSlot[] Buffs { get; } = new BuffSlot[BuffSlots];
+    public ItemSlot HeldItem { get; internal set; }
 
     internal byte[] NameField { get; } = new byte[NameLength];
     internal byte[] LocationField { get; } = new byte[LocationLength];
