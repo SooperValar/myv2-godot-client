@@ -111,16 +111,14 @@ public sealed class TickPacer
 
     public void TickDone(int ticksStillQueued)
     {
-        if (nextTickAt is not { } scheduled)
-        {
-            throw new InvalidOperationException("Check IsTickDue before marking a tick done.");
-        }
-
-        nextTickAt = scheduled + NextTickMilliseconds(ticksStillQueued);
+        nextTickAt = ScheduledTick() + NextTickMilliseconds(ticksStillQueued);
         TicksPlayed++;
     }
 
-    public void TickSkipped() => throw new NotImplementedException();
+    public void TickSkipped() => nextTickAt = ScheduledTick() + NextTickMilliseconds(0);
+
+    private long ScheduledTick() =>
+        nextTickAt ?? throw new InvalidOperationException("Check IsTickDue before moving on to the next tick.");
 
     private void RecalculateTarget()
     {
