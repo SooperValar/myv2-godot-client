@@ -4,6 +4,8 @@ using System.IO;
 using Godot;
 using TheLastGate.Characters;
 using TheLastGate.Config;
+using TheLastGate.Game;
+using TheLastGate.Net;
 
 namespace TheLastGate.Launcher;
 
@@ -114,6 +116,7 @@ public partial class LauncherScreen : Control
         GetNode<Button>("%SaveButton").Pressed += () => saveDialog.PopupCentered();
         GetNode<Button>("%DiscordButton").Pressed += () => OS.ShellOpen(DiscordInvite);
         GetNode<Button>("%ExitButton").Pressed += () => GetTree().Quit();
+        GetNode<Button>("%StartButton").Pressed += OnStartPressed;
 
         nameField.TextChanged += OnNameChanged;
         descriptionField.TextChanged += OnDescriptionChanged;
@@ -279,6 +282,35 @@ public partial class LauncherScreen : Control
 
         record.Changed = true;
         CharacterStore.Save(record);
+    }
+
+    private void OnStartPressed()
+    {
+        UniqueId uniqueId;
+        try
+        {
+            uniqueId = UniqueIdStore.LoadOrCreate();
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            GD.PushError($"Couldn't read or save the unique id: {exception.Message}");
+            ShowMessage("FYI", "Could not read or save this computer's unique id.");
+            return;
+        }
+
+        var newCharacterRace = new CharacterRace(
+            (CharacterClass)classOption.GetSelectedId(),
+            (Body)bodyOption.GetSelectedId(),
+            (GameMode)gameModeOption.GetSelectedId(),
+            (Season)seasonOption.GetSelectedId());
+        var handshake = new LoginHandshake(
+            record.Key,
+            newCharacterRace.ToNumber(),
+            passwordField.Text,
+            uniqueId.Low,
+            uniqueId.High);
+        GameSession.Begin(new GameSession(record, handshake, settings.Server));
+        GetTree().ChangeSceneToFile("res://scenes/Game.tscn");
     }
 
     private void OnCreateAccountPressed() =>
