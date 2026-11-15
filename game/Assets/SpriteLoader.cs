@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using Godot;
 
@@ -8,10 +9,12 @@ public sealed class SpriteLoader : IDisposable
 {
     private readonly BmpLibrary bmpLibrary;
     private readonly SpriteCache<Texture2D> cache;
+    private readonly IReadOnlyDictionary<int, string> overrides;
     private readonly PngLibrary pngLibrary;
 
     public SpriteLoader(string dataPath, long cacheBudgetBytes)
     {
+        overrides = SpriteOverrides.Find(Path.Combine(dataPath, DataLayout.Overrides));
         var archiveFolder = Path.Combine(dataPath, DataLayout.Archives);
         pngLibrary = new PngLibrary(
             Path.Combine(archiveFolder, DataLayout.PngIndexFile),
@@ -38,9 +41,14 @@ public sealed class SpriteLoader : IDisposable
         bmpLibrary.Dispose();
     }
 
-    // A sprite in both archives is drawn from pnglib, as in the current client.
+    // A loose override comes first, then pnglib, then bmplib, as in the current client.
     public SpriteSource FindSource(int spriteNumber)
     {
+        if (overrides.ContainsKey(spriteNumber))
+        {
+            return SpriteSource.Override;
+        }
+
         if (pngLibrary.Contains(spriteNumber))
         {
             return SpriteSource.PngLibrary;
@@ -73,6 +81,7 @@ public sealed class SpriteLoader : IDisposable
         {
             return FindSource(spriteNumber) switch
             {
+                SpriteSource.Override => DecodeOverride(spriteNumber, overrides[spriteNumber]),
                 SpriteSource.PngLibrary => DecodePng(spriteNumber, pngLibrary.ReadPng(spriteNumber)!),
                 SpriteSource.BmpLibrary => ToImage(bmpLibrary.Read(spriteNumber)!),
                 _ => null,
@@ -85,10 +94,21 @@ public sealed class SpriteLoader : IDisposable
         }
     }
 
-    private static Image? DecodePng(int spriteNumber, byte[] pngBytes)
+    private static Image? DecodeOverride(int spriteNumber, string filePath)
+    {
+        var fileBytes = File.ReadAllBytes(filePath);
+        return Path.GetExtension(filePath).Equals(".png", StringComparison.OrdinalIgnoreCase)
+            ? DecodePng(spriteNumber, fileBytes)
+            : Decode(spriteNumber, image => image.LoadBmpFromBuffer(fileBytes));
+    }
+
+    private static Image? DecodePng(int spriteNumber, byte[] pngBytes) =>
+        Decode(spriteNumber, image => image.LoadPngFromBuffer(pngBytes));
+
+    private static Image? Decode(int spriteNumber, Func<Image, Error> load)
     {
         var image = new Image();
-        var result = image.LoadPngFromBuffer(pngBytes);
+        var result = load(image);
         if (result != Error.Ok)
         {
             GD.PushWarning($"Sprite {spriteNumber} couldn't be decoded: {result}");
