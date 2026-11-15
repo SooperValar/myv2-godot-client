@@ -6,6 +6,7 @@ using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Characters;
 using TheLastGate.Config;
+using TheLastGate.Hud;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.World;
@@ -23,6 +24,7 @@ public partial class GameScreen : Control
     private readonly GameState gameState = new();
     private readonly TickPacer pacer = new();
     private readonly HashSet<string> reportedUnusualData = [];
+    private HudView hudView = null!;
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
@@ -34,6 +36,7 @@ public partial class GameScreen : Control
 
     public override void _Ready()
     {
+        hudView = GetNode<HudView>("%HudView");
         statusLog = GetNode<RichTextLabel>("%StatusLog");
         tickCounts = GetNode<Label>("%TickCounts");
         GetNode<Button>("%DisconnectButton").Pressed += ReturnToLauncher;
@@ -139,6 +142,8 @@ public partial class GameScreen : Control
         };
         AddChild(worldView);
         MoveChild(worldView, WorldViewIndex);
+        hudView.DarkMode = clientSettings.DarkMode;
+        hudView.Sprites = sprites;
     }
 
     private void SaveNewCharacter(LoginKey createdKey)

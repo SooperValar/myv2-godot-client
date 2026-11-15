@@ -2,6 +2,7 @@
 
 [ext_resource type="Theme" uid="uid://cca5jb3y02bv3" path="res://themes/LauncherTheme.tres" id="1_theme"]
 [ext_resource type="Script" uid="uid://dl3tb5fmj5p8y" path="res://Game/GameScreen.cs" id="2_script"]
+[ext_resource type="PackedScene" uid="uid://cryrwimptw87p" path="res://Hud/hud_view.tscn" id="3_hud"]
 
 [node name="Game" type="Control" unique_id=1783224375]
 layout_mode = 3
@@ -23,6 +24,10 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.08, 0.08, 0.1, 1)
+
+[node name="HudView" parent="." unique_id=1324670573 instance=ExtResource("3_hud")]
+unique_name_in_owner = true
+layout_mode = 0
 
 [node name="Layout" type="VBoxContainer" parent="." unique_id=1092816368]
 layout_mode = 1
