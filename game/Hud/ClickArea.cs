@@ -10,7 +10,14 @@ public partial class ClickArea : Control
 
     public override void _GuiInput(InputEvent inputEvent)
     {
-        if (inputEvent is not InputEventMouseButton { Pressed: false } click)
+        if (inputEvent is not InputEventMouseButton click
+            || click.ButtonIndex is MouseButton.WheelUp or MouseButton.WheelDown)
+        {
+            return;
+        }
+
+        AcceptEvent();
+        if (click.Pressed)
         {
             return;
         }

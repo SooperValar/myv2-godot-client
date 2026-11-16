@@ -8,6 +8,15 @@
 [ext_resource type="Script" uid="uid://32wxdmrregok" path="res://Hud/BuffIconsView.cs" id="6_bufficons"]
 [ext_resource type="PackedScene" uid="uid://c6vnyqfwgtfq3" path="res://Hud/item_slot.tscn" id="7_itemslot"]
 [ext_resource type="Script" uid="uid://bsuu4hjc2626f" path="res://Hud/ClickArea.cs" id="8_clickarea"]
+[ext_resource type="Script" uid="uid://bej4bhfsvv64f" path="res://Hud/InventoryGrid.cs" id="9_inventory"]
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grabber"]
+bg_color = Color(0, 0.380392157, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grabber_pressed"]
+bg_color = Color(0, 0.580392157, 0, 1)
 
 [node name="HudView" type="Control" unique_id=1980551908]
 layout_mode = 3
@@ -546,3 +555,129 @@ theme_override_constants/line_separation = 1
 scroll_active = false
 autowrap_mode = 3
 vertical_alignment = 2
+
+[node name="InventoryScrollBackground" type="ColorRect" parent="." unique_id=1161903683]
+layout_mode = 0
+offset_left = 601.0
+offset_top = 6.0
+offset_right = 612.0
+offset_bottom = 106.0
+color = Color(0.0901960784, 0, 0.0196078431, 1)
+
+[node name="InventoryScrollBar" type="VScrollBar" parent="InventoryScrollBackground" unique_id=490208918]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 9.0
+offset_bottom = 98.0
+theme_override_styles/scroll = SubResource("StyleBoxEmpty_scroll")
+theme_override_styles/scroll_focus = SubResource("StyleBoxEmpty_scroll")
+theme_override_styles/grabber = SubResource("StyleBoxFlat_grabber")
+theme_override_styles/grabber_highlight = SubResource("StyleBoxFlat_grabber")
+theme_override_styles/grabber_pressed = SubResource("StyleBoxFlat_grabber_pressed")
+max_value = 4.0
+step = 1.0
+page = 1.0
+
+[node name="Inventory" type="GridContainer" parent="." unique_id=1295486384]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 261.0
+offset_top = 6.0
+offset_right = 599.0
+offset_bottom = 106.0
+theme_override_constants/h_separation = 2
+theme_override_constants/v_separation = 2
+columns = 10
+script = ExtResource("9_inventory")
+ScrollBarPath = NodePath("../InventoryScrollBackground/InventoryScrollBar")
+
+[node name="Cell0" parent="Inventory" unique_id=565516540 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell1" parent="Inventory" unique_id=1838909327 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell2" parent="Inventory" unique_id=788516696 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell3" parent="Inventory" unique_id=729912223 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell4" parent="Inventory" unique_id=789272402 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell5" parent="Inventory" unique_id=1826527988 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell6" parent="Inventory" unique_id=1588564461 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell7" parent="Inventory" unique_id=159531474 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell8" parent="Inventory" unique_id=1144036050 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell9" parent="Inventory" unique_id=867567466 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell10" parent="Inventory" unique_id=871687236 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell11" parent="Inventory" unique_id=239853808 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell12" parent="Inventory" unique_id=970804713 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell13" parent="Inventory" unique_id=1090678428 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell14" parent="Inventory" unique_id=808239128 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell15" parent="Inventory" unique_id=459893100 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell16" parent="Inventory" unique_id=818663936 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell17" parent="Inventory" unique_id=1456774074 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell18" parent="Inventory" unique_id=113572231 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell19" parent="Inventory" unique_id=1179903013 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell20" parent="Inventory" unique_id=1579215916 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell21" parent="Inventory" unique_id=297108904 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell22" parent="Inventory" unique_id=1463178999 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell23" parent="Inventory" unique_id=474274028 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell24" parent="Inventory" unique_id=824877445 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell25" parent="Inventory" unique_id=156648177 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell26" parent="Inventory" unique_id=1030974558 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell27" parent="Inventory" unique_id=1831915609 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell28" parent="Inventory" unique_id=409598476 instance=ExtResource("7_itemslot")]
+layout_mode = 2
+
+[node name="Cell29" parent="Inventory" unique_id=374646689 instance=ExtResource("7_itemslot")]
+layout_mode = 2

@@ -120,6 +120,7 @@ public partial class HudView : Control
         SetSprite("RankBadge", rank.BadgeSprite);
         SetSprite("Portrait", state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
         ShowEquipment(player);
+        GetNode<InventoryGrid>("%Inventory").Show(player);
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
