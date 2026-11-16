@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using TheLastGate.Assets;
 
 namespace TheLastGate.Stats;
@@ -13,7 +14,8 @@ public static class StatLines
     private const int RedSkill = 4;
     private const int NotLearntValue = 300;
 
-    private static readonly string[] AttributeNames = ["Braveness", "Willpower", "Intuition", "Agility", "Strength"];
+    public static readonly IReadOnlyList<string> AttributeNames =
+        ["Braveness", "Willpower", "Intuition", "Agility", "Strength"];
 
     public static StatLine Attribute(int attribute, int[] values, StatPlan plan, int points) =>
         Raisable(AttributeNames[attribute], attribute, values, Score(values), plan, points);
