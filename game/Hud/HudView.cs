@@ -3,6 +3,7 @@ using System.IO;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Config;
+using TheLastGate.State;
 
 namespace TheLastGate.Hud;
 
@@ -35,6 +36,8 @@ public partial class HudView : Control
             ShowSprites(this);
         }
     }
+
+    public void Show(GameState state, ClassicFonts fonts) => GetNode<ChatLog>("%ChatLog").Show(state.Chat, fonts);
 
     public override void _EnterTree()
     {

@@ -19,6 +19,8 @@ public partial class GameScreen : Control
     private const int MaximumPowerSlot = 5;
     private const long SpriteCacheBudgetBytes = 256L * 1024 * 1024;
     private const int WorldViewIndex = 1;
+    private const int ErrorFont = 0;
+    private const int StatusFont = 1;
 
     private readonly ServerConnection connection = new();
     private readonly GameState gameState = new();
@@ -30,14 +32,12 @@ public partial class GameScreen : Control
     private TickProcessor processor = null!;
     private GameSession session = null!;
     private SpriteLoader? sprites;
-    private RichTextLabel statusLog = null!;
     private Label tickCounts = null!;
     private WorldView? worldView;
 
     public override void _Ready()
     {
         hudView = GetNode<HudView>("%HudView");
-        statusLog = GetNode<RichTextLabel>("%StatusLog");
         tickCounts = GetNode<Label>("%TickCounts");
         GetNode<Button>("%DisconnectButton").Pressed += ReturnToLauncher;
 
@@ -53,7 +53,6 @@ public partial class GameScreen : Control
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
         gameState.Player.NameReceived += SaveCharacterName;
-        gameState.Chat.LineAdded += line => statusLog.AppendText(line.Text + "\n");
         gameState.UniqueIdReceived += UniqueIdStore.Save;
         gameState.ExitRequested += LeaveOnServerExit;
         gameState.UnusualDataSeen += ReportUnusualDataOnce;
@@ -64,7 +63,7 @@ public partial class GameScreen : Control
     {
         while (connection.TryDequeueMessage(out var message))
         {
-            statusLog.AppendText(message + "\n");
+            gameState.Chat.Add(new LogLine(message, StatusFont));
         }
 
         if (!newCharacterSaved && connection.State == ConnectionState.Connected
@@ -96,7 +95,7 @@ public partial class GameScreen : Control
         }
         catch (ProtocolDesyncException exception)
         {
-            statusLog.AppendText($"Lost track of the server's data: {exception.Message}\n");
+            gameState.Chat.Add(new LogLine($"Lost track of the server's data: {exception.Message}", ErrorFont));
             connection.Disconnect();
         }
 
@@ -123,17 +122,18 @@ public partial class GameScreen : Control
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
         {
-            statusLog.AppendText($"Couldn't open the sprite archives: {exception.Message}\n");
+            GD.PushError($"Couldn't open the sprite archives: {exception.Message}");
             return;
         }
 
+        var fonts = new ClassicFonts(sprites);
         var characterSettings = session.Record.Settings();
         var clientSettings = ClientSettings.Load();
         worldView = new WorldView
         {
             State = gameState,
             Sprites = sprites,
-            Fonts = new ClassicFonts(sprites),
+            Fonts = fonts,
             SendCommand = connection.SendCommand,
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             ShowShadows = clientSettings.Shadows,
@@ -145,6 +145,7 @@ public partial class GameScreen : Control
         MoveChild(worldView, WorldViewIndex);
         hudView.DarkMode = clientSettings.DarkMode;
         hudView.Sprites = sprites;
+        hudView.Show(gameState, fonts);
     }
 
     private void SaveNewCharacter(LoginKey createdKey)
@@ -175,7 +176,8 @@ public partial class GameScreen : Control
 
     private void LeaveOnServerExit(ServerExit exit)
     {
-        statusLog.AppendText($"Server demands exit: {exit.Reason}\n");
+        gameState.Chat.Add(new LogLine(" ", StatusFont));
+        gameState.Chat.Add(new LogLine($"EXIT: {exit.Reason}", StatusFont));
         connection.Disconnect();
     }
 

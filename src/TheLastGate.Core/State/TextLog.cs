@@ -18,7 +18,7 @@ public sealed class TextLog
 
     public event Action<LogLine>? LineAdded;
 
-    internal void Add(LogLine line)
+    public void Add(LogLine line)
     {
         if (lines.Count == MaxLines)
         {
