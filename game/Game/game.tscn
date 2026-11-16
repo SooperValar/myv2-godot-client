@@ -42,7 +42,6 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 theme_override_constants/separation = 12
-alignment = 2
 
 [node name="TickCounts" type="Label" parent="Layout" unique_id=819483851]
 unique_name_in_owner = true

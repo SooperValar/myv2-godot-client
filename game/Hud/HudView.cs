@@ -3,6 +3,7 @@ using System.Globalization;
 using System.IO;
 using Godot;
 using TheLastGate.Assets;
+using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Cursors;
 using TheLastGate.Game;
@@ -56,6 +57,8 @@ public partial class HudView : Control
         }
     }
 
+    public CharacterSettings Settings { get; set; } = new();
+
     public IFontSet? Fonts
     {
         get => fonts;
@@ -65,6 +68,8 @@ public partial class HudView : Control
             Reload(this);
         }
     }
+
+    public event Action? SettingsChanged;
 
     public static HudView? Containing(Node node)
     {
@@ -91,6 +96,12 @@ public partial class HudView : Control
 
         GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
         GetNode<ClickArea>("%" + TrashCanName).Released += ClickTrashCan;
+        foreach (var node in GetNode("%OptionButtons").GetChildren())
+        {
+            var optionButton = (OptionButtonView)node;
+            optionButton.Released += button => ClickOption(optionButton.Kind, button);
+        }
+
         foreach (var node in GetNode("%MoneyButtons").GetChildren())
         {
             var moneyButton = (MoneyButton)node;
@@ -139,6 +150,12 @@ public partial class HudView : Control
         SetSprite("RankBadge", rank.BadgeSprite);
         SetSprite("Portrait", state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
         ShowEquipment(player);
+        foreach (var node in GetNode("%OptionButtons").GetChildren())
+        {
+            var optionButton = (OptionButtonView)node;
+            optionButton.ShowMarked(OptionButtons.IsMarked(optionButton.Kind, Settings, player.Mode));
+        }
+
         GetNode<InventoryGrid>("%Inventory").Show(player);
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
@@ -282,6 +299,34 @@ public partial class HudView : Control
         state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith
             ? new ShopSale(state.Shop.Number, 0)
             : null;
+
+    private void ClickOption(OptionButton option, MapButton button)
+    {
+        if (button == MapButton.Right)
+        {
+            if (OptionButtons.Help(option) is { } help)
+            {
+                state?.Chat.Add(new LogLine(help, HintFont));
+            }
+
+            return;
+        }
+
+        if (button != MapButton.Left)
+        {
+            return;
+        }
+
+        if (OptionButtons.Packet(option) is { } packet)
+        {
+            sendCommand(packet);
+        }
+
+        if (OptionButtons.Toggle(option, Settings))
+        {
+            SettingsChanged?.Invoke();
+        }
+    }
 
     private void ClickMoney(int silver, MapButton button)
     {

@@ -10,8 +10,17 @@
 [ext_resource type="Script" uid="uid://bsuu4hjc2626f" path="res://Hud/ClickArea.cs" id="8_clickarea"]
 [ext_resource type="Script" uid="uid://bej4bhfsvv64f" path="res://Hud/InventoryGrid.cs" id="9_inventory"]
 [ext_resource type="Script" uid="uid://6buv0wcp8hh8" path="res://Hud/MoneyButton.cs" id="10_money"]
+[ext_resource type="Script" uid="uid://dd5oxqd1g6pxq" path="res://Hud/OptionButtonView.cs" id="11_option"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_marker"]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(1, 0, 0, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grabber"]
 bg_color = Color(0, 0.380392157, 0, 1)
@@ -723,6 +732,170 @@ offset_top = 112.0
 offset_right = 569.0
 offset_bottom = 145.0
 script = ExtResource("8_clickarea")
+
+[node name="OptionButtons" type="GridContainer" parent="." unique_id=795425564]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 1083.0
+offset_top = 666.0
+offset_right = 1275.0
+offset_bottom = 711.0
+mouse_filter = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+columns = 4
+
+[node name="Fast" type="Control" parent="OptionButtons" unique_id=423946139]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 0
+
+[node name="Marker" type="Panel" parent="OptionButtons/Fast" unique_id=947876999]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="Normal" type="Control" parent="OptionButtons" unique_id=1497871144]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 1
+
+[node name="Marker" type="Panel" parent="OptionButtons/Normal" unique_id=203694312]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="Slow" type="Control" parent="OptionButtons" unique_id=255555737]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 2
+
+[node name="Marker" type="Panel" parent="OptionButtons/Slow" unique_id=1863673106]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="HealthPercent" type="Control" parent="OptionButtons" unique_id=1250797845]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 3
+
+[node name="Marker" type="Panel" parent="OptionButtons/HealthPercent" unique_id=302142728]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="StatBase" type="Control" parent="OptionButtons" unique_id=885310972]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 4
+
+[node name="Marker" type="Panel" parent="OptionButtons/StatBase" unique_id=1351527726]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="HideWalls" type="Control" parent="OptionButtons" unique_id=224551738]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 5
+
+[node name="Marker" type="Panel" parent="OptionButtons/HideWalls" unique_id=1189709946]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="Names" type="Control" parent="OptionButtons" unique_id=561060838]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 6
+
+[node name="Marker" type="Panel" parent="OptionButtons/Names" unique_id=180521324]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="HealthBars" type="Control" parent="OptionButtons" unique_id=284570285]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 7
+
+[node name="Marker" type="Panel" parent="OptionButtons/HealthBars" unique_id=1031247021]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 47.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="Options" type="Control" parent="OptionButtons" unique_id=998017869]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 8
+
+[node name="FirstBlank" type="Control" parent="OptionButtons" unique_id=250013383]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 9
+
+[node name="SecondBlank" type="Control" parent="OptionButtons" unique_id=616819858]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 10
+
+[node name="Exit" type="Control" parent="OptionButtons" unique_id=294804716]
+custom_minimum_size = Vector2(48, 15)
+layout_mode = 2
+script = ExtResource("11_option")
+Kind = 11
 
 [node name="HeldItem" parent="." unique_id=1093361542 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true

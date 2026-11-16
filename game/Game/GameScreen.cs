@@ -143,11 +143,14 @@ public partial class GameScreen : Control
             ShowNames = characterSettings.ShowNames,
             ShowHealthPercent = characterSettings.ShowHealthPercent,
             ShowHealthBars = characterSettings.ShowHealthBars,
+            HideWalls = characterSettings.HideWalls,
         };
         AddChild(worldView);
         MoveChild(worldView, WorldViewIndex);
         hudView.DarkMode = clientSettings.DarkMode;
         hudView.Sprites = sprites;
+        hudView.Settings = characterSettings;
+        hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.Show(gameState, fonts, connection.SendCommand);
     }
 
@@ -160,6 +163,21 @@ public partial class GameScreen : Control
         settings.SetStartingHotbar(CharacterRace.FromNumber(createdKey.Race).Class);
         record.Store(settings);
         CharacterStore.Save(record);
+    }
+
+    private void ApplyCharacterSettings(CharacterSettings settings)
+    {
+        if (worldView != null)
+        {
+            worldView.ShowNames = settings.ShowNames;
+            worldView.ShowHealthPercent = settings.ShowHealthPercent;
+            worldView.ShowHealthBars = settings.ShowHealthBars;
+            worldView.HideWalls = settings.HideWalls;
+            worldView.Refresh();
+        }
+
+        session.Record.Store(settings);
+        CharacterStore.Save(session.Record);
     }
 
     private void SaveCharacterName()
