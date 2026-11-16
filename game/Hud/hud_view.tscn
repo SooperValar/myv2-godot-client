@@ -12,6 +12,8 @@
 [ext_resource type="Script" uid="uid://6buv0wcp8hh8" path="res://Hud/MoneyButton.cs" id="10_money"]
 [ext_resource type="Script" uid="uid://dd5oxqd1g6pxq" path="res://Hud/OptionButtonView.cs" id="11_option"]
 [ext_resource type="Shader" uid="uid://bi6mdff1gh8uh" path="res://World/sprite_tint.gdshader" id="12_tint"]
+[ext_resource type="PackedScene" uid="uid://d1q1eo6scq768" path="res://Hud/stat_row.tscn" id="13_statrow"]
+[ext_resource type="Script" uid="uid://bormpdkr4joe5" path="res://Hud/SkillList.cs" id="14_skilllist"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -32,6 +34,18 @@ bg_color = Color(0, 0.380392157, 0, 1)
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grabber_pressed"]
 bg_color = Color(0, 0.580392157, 0, 1)
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skill_grabber"]
+content_margin_top = 5.5
+content_margin_bottom = 5.5
+bg_color = Color(0, 0.380392157, 0, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_skill_grabber_pressed"]
+content_margin_top = 5.5
+content_margin_bottom = 5.5
+bg_color = Color(0, 0.580392157, 0, 1)
+anti_aliasing = false
+
 [node name="HudView" type="Control" unique_id=1980551908]
 layout_mode = 3
 anchors_preset = 0
@@ -46,6 +60,138 @@ mouse_filter = 2
 script = ExtResource("2_6ebvl")
 SpriteNumber = 1
 DarkSpriteNumber = 18001
+
+[node name="SkillPanel" type="TextureRect" parent="." unique_id=925108062]
+layout_mode = 0
+offset_left = 134.0
+offset_top = 3.0
+offset_right = 134.0
+offset_bottom = 3.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+SpriteNumber = 99
+DarkSpriteNumber = 18099
+
+[node name="StatRows" type="VBoxContainer" parent="." unique_id=1128480661]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 8.0
+offset_right = 232.0
+offset_bottom = 101.0
+mouse_filter = 2
+theme_override_constants/separation = 5
+
+[node name="Braveness" parent="StatRows" unique_id=1892120507 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Braveness"
+
+[node name="Willpower" parent="StatRows" unique_id=137262423 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Willpower"
+
+[node name="Intuition" parent="StatRows" unique_id=442327702 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Intuition"
+
+[node name="Agility" parent="StatRows" unique_id=419653536 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Agility"
+
+[node name="Strength" parent="StatRows" unique_id=1067092797 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Strength"
+
+[node name="Hitpoints" parent="StatRows" unique_id=1544905455 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Hitpoints"
+
+[node name="Mana" parent="StatRows" unique_id=1738382547 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Mana"
+
+[node name="SkillRows" type="VBoxContainer" parent="." unique_id=1909496005]
+unique_name_in_owner = true
+layout_mode = 0
+offset_top = 120.0
+offset_right = 232.0
+offset_bottom = 255.0
+theme_override_constants/separation = 5
+script = ExtResource("14_skilllist")
+ScrollBarPath = NodePath("../SkillScrollBar")
+
+[node name="Skill0" parent="SkillRows" unique_id=1401575804 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Hand to Hand"
+
+[node name="Skill1" parent="SkillRows" unique_id=103077222 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Dagger"
+
+[node name="Skill2" parent="SkillRows" unique_id=781075276 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Sword"
+
+[node name="Skill3" parent="SkillRows" unique_id=719932070 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Axe"
+
+[node name="Skill4" parent="SkillRows" unique_id=1647355731 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Staff"
+
+[node name="Skill5" parent="SkillRows" unique_id=868563152 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Two-Handed"
+
+[node name="Skill6" parent="SkillRows" unique_id=575866524 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Bartering"
+
+[node name="Skill7" parent="SkillRows" unique_id=754424911 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Perception"
+
+[node name="Skill8" parent="SkillRows" unique_id=1565761766 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Stealth"
+
+[node name="Skill9" parent="SkillRows" unique_id=383979295 instance=ExtResource("13_statrow")]
+layout_mode = 2
+PreviewName = "Swimming"
+
+[node name="SkillScrollBar" type="VScrollBar" parent="." unique_id=1395506844]
+layout_mode = 0
+offset_left = 234.0
+offset_top = 152.0
+offset_right = 245.0
+offset_bottom = 222.0
+theme_override_styles/scroll = SubResource("StyleBoxEmpty_scroll")
+theme_override_styles/scroll_focus = SubResource("StyleBoxEmpty_scroll")
+theme_override_styles/grabber = SubResource("StyleBoxFlat_skill_grabber")
+theme_override_styles/grabber_highlight = SubResource("StyleBoxFlat_skill_grabber")
+theme_override_styles/grabber_pressed = SubResource("StyleBoxFlat_skill_grabber_pressed")
+max_value = 45.0
+step = 1.0
+
+[node name="UpdateLabel" type="Label" parent="." unique_id=261780883]
+layout_mode = 0
+offset_left = 144.0
+offset_top = 260.0
+offset_right = 180.0
+offset_bottom = 269.0
+text = "Update"
+script = ExtResource("4_hudlabel")
+
+[node name="UpdatePoints" type="Label" parent="." unique_id=554641458]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 189.0
+offset_top = 260.0
+offset_right = 231.0
+offset_bottom = 269.0
+text = "12345"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
 
 [node name="HitPointsLabel" type="Label" parent="." unique_id=945458870]
 layout_mode = 0

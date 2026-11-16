@@ -12,6 +12,7 @@ using TheLastGate.Game;
 using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.State;
+using TheLastGate.Stats;
 using TheLastGate.World;
 
 namespace TheLastGate.Hud;
@@ -29,6 +30,8 @@ public partial class HudView : Control
     private const string TrashCanName = "TrashCan";
     private const int HintFont = 1;
     private const int WarningFont = 0;
+    private const int HitPointsRow = 5;
+    private const int ManaRow = 6;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
@@ -163,6 +166,7 @@ public partial class HudView : Control
         }
 
         GetNode<InventoryGrid>("%Inventory").Show(player);
+        ShowStats(player);
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
@@ -432,6 +436,22 @@ public partial class HudView : Control
         held.Show(item, ItemOverlays.Worn(item), false);
         held.Position = mousePosition - HeldItemOffset;
         held.SetHighlighted(HeldItem.IsHighlighted(CursorShapes.CursorFor(Input.GetCurrentCursorShape())));
+    }
+
+    private void ShowStats(PlayerState player)
+    {
+        var rows = GetNode("%StatRows");
+        var showBase = Settings.ShowStatBase;
+        for (var attribute = 0; attribute < PlayerState.AttributeCount; attribute++)
+        {
+            rows.GetChild<StatRow>(attribute)
+                .Show(StatLines.Attribute(attribute, player.Attributes[attribute], player.Points), showBase);
+        }
+
+        rows.GetChild<StatRow>(HitPointsRow).Show(StatLines.HitPoints(player.HitPoints, player.Points), showBase);
+        rows.GetChild<StatRow>(ManaRow).Show(StatLines.Mana(player.Mana, player.Points), showBase);
+        GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, showBase);
+        SetText("UpdatePoints", Number(player.Points));
     }
 
     private void ShowLook(CharacterLook look)
