@@ -11,6 +11,8 @@ namespace TheLastGate.Config;
 public sealed class ClientSettings
 {
     private const int MaxSoundVolume = 10;
+    private const float SmallestCursorScale = 0.5f;
+    private const float LargestCursorScale = 8f;
 
     private const string FilePath = "user://settings.cfg";
     private const string DisplaySection = "display";
@@ -46,6 +48,10 @@ public sealed class ClientSettings
         // Also hand-added until the Options window exists: "true" picks the tile drawn under the mouse while the
         // player is mid-step, where the current client picks as if the map hadn't moved.
         PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
+        CursorScale = Math.Clamp(
+            file.GetValue(DisplaySection, "cursor_scale", 1f).AsSingle(),
+            SmallestCursorScale,
+            LargestCursorScale);
     }
 
     public bool Windowed { get; set; }
@@ -56,6 +62,7 @@ public sealed class ClientSettings
     public CharacterHistory CharacterHistory { get; }
     public ServerAddress Server { get; }
     public bool PickTileDrawnUnderMouse { get; }
+    public float CursorScale { get; }
 
     public static ClientSettings Load()
     {

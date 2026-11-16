@@ -49,7 +49,7 @@ public partial class GameScreen : Control
         }
 
         session = startedSession;
-        CursorShapes.Register();
+        CursorShapes.Register(ClientSettings.Load().CursorScale);
         AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);

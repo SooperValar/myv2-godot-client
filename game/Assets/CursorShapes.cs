@@ -38,14 +38,16 @@ public static class CursorShapes
         return MouseCursor.None;
     }
 
-    public static void Register()
+    public static void Register(float scale)
     {
         foreach (var (cursor, shape) in Shapes)
         {
-            Input.SetCustomMouseCursor(
-                GD.Load<Texture2D>(string.Format(ImagePathFormat, (int)cursor)),
-                shape,
-                Vector2.Zero);
+            var image = GD.Load<Texture2D>(string.Format(ImagePathFormat, (int)cursor)).GetImage();
+            image.Resize(
+                Mathf.RoundToInt(image.GetWidth() * scale),
+                Mathf.RoundToInt(image.GetHeight() * scale),
+                Image.Interpolation.Nearest);
+            Input.SetCustomMouseCursor(ImageTexture.CreateFromImage(image), shape, Vector2.Zero);
         }
     }
 
