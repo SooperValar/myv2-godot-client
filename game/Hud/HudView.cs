@@ -1,4 +1,5 @@
 using System;
+using System.Globalization;
 using System.IO;
 using Godot;
 using TheLastGate.Assets;
@@ -11,10 +12,16 @@ namespace TheLastGate.Hud;
 public partial class HudView : Control
 {
     private const long EditorCacheBudgetBytes = 64L * 1024 * 1024;
+    private const int MaximumSlot = 5;
+    private const string StrongholdName = "Stronghold";
+    private const string CasinoName = "Casino";
+    private const string ContractName = "Contract";
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
+    private IFontSet? fonts;
     private SpriteLoader? sprites;
+    private GameState? state;
 
     [Export]
     public bool DarkMode
@@ -23,7 +30,7 @@ public partial class HudView : Control
         set
         {
             darkMode = value;
-            ShowSprites(this);
+            Reload(this);
         }
     }
 
@@ -33,11 +40,58 @@ public partial class HudView : Control
         set
         {
             sprites = value;
-            ShowSprites(this);
+            Reload(this);
         }
     }
 
-    public void Show(GameState state, IFontSet fonts) => GetNode<ChatLog>("%ChatLog").Show(state.Chat, fonts);
+    public IFontSet? Fonts
+    {
+        get => fonts;
+        set
+        {
+            fonts = value;
+            Reload(this);
+        }
+    }
+
+    public static HudView? Containing(Node node)
+    {
+        for (var parent = node.GetParent(); parent != null; parent = parent.GetParent())
+        {
+            if (parent is HudView hud)
+            {
+                return hud;
+            }
+        }
+
+        return null;
+    }
+
+    public void Show(GameState shownState, IFontSet fontSet)
+    {
+        state = shownState;
+        Fonts = fontSet;
+        GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
+        Refresh();
+    }
+
+    public void Refresh()
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        var player = state.Player;
+        ShowPool("HitPoints", player.ActiveHitPoints, player.HitPoints[MaximumSlot]);
+        ShowPool("Endurance", player.ActiveEndurance, player.Endurance[MaximumSlot]);
+        ShowPool("Mana", player.ActiveMana, player.Mana[MaximumSlot]);
+        SetText("Money", Currencies.MoneyText(player.Gold));
+        ShowPoints("Stronghold", StrongholdName, player.BlackStrongholdPoints);
+        ShowPoints("Casino", CasinoName, player.Tokens);
+        ShowPoints("Contract", ContractName, player.OsirisPoints);
+        SetText("Location", player.Location);
+    }
 
     public override void _EnterTree()
     {
@@ -50,6 +104,7 @@ public partial class HudView : Control
         {
             editorSprites = new SpriteLoader(DataPaths.Root(), EditorCacheBudgetBytes);
             sprites = editorSprites;
+            fonts = new ClassicFonts(editorSprites);
         }
         catch (Exception exception) when (exception is IOException or InvalidDataException
             or UnauthorizedAccessException)
@@ -68,18 +123,40 @@ public partial class HudView : Control
         editorSprites.Dispose();
         editorSprites = null;
         sprites = null;
+        fonts = null;
     }
 
-    private static void ShowSprites(Node parent)
+    private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
+
+    private static void Reload(Node parent)
     {
         foreach (var child in parent.GetChildren())
         {
-            if (child is ArchiveSprite archiveSprite)
+            switch (child)
             {
-                archiveSprite.LoadSprite();
+                case ArchiveSprite archiveSprite:
+                    archiveSprite.LoadSprite();
+                    break;
+                case HudLabel label:
+                    label.ApplyFont();
+                    break;
             }
 
-            ShowSprites(child);
+            Reload(child);
         }
     }
+
+    private void ShowPool(string name, int current, int maximum)
+    {
+        SetText(name, Number(current));
+        SetText("Max" + name, Number(maximum));
+    }
+
+    private void ShowPoints(string name, string shownName, int points)
+    {
+        SetText(name + "Name", Currencies.RowName(shownName, points));
+        SetText(name, Number(points));
+    }
+
+    private void SetText(string name, string text) => GetNode<Label>("%" + name).Text = text;
 }

@@ -46,24 +46,11 @@ public partial class ArchiveSprite : TextureRect
 
     public void LoadSprite()
     {
-        if (!IsInsideTree() || FindHud() is not { Sprites: { } sprites } hud)
+        if (!IsInsideTree() || HudView.Containing(this) is not { Sprites: { } sprites } hud)
         {
             return;
         }
 
         Texture = sprites.GetTexture(hud.DarkMode && darkSpriteNumber != 0 ? darkSpriteNumber : spriteNumber);
-    }
-
-    private HudView? FindHud()
-    {
-        for (var node = GetParent(); node != null; node = node.GetParent())
-        {
-            if (node is HudView hud)
-            {
-                return hud;
-            }
-        }
-
-        return null;
     }
 }

@@ -3,6 +3,7 @@
 [ext_resource type="Script" uid="uid://c5sfhu1i1psob" path="res://Hud/HudView.cs" id="1_cyccr"]
 [ext_resource type="Script" uid="uid://dns0wvx5gfo6b" path="res://Hud/ArchiveSprite.cs" id="2_6ebvl"]
 [ext_resource type="Script" uid="uid://dcauyrtk0yhkq" path="res://Hud/ChatLog.cs" id="3_chatlog"]
+[ext_resource type="Script" uid="uid://b34mtc82b8qbi" path="res://Hud/HudLabel.cs" id="4_hudlabel"]
 
 [node name="HudView" type="Control" unique_id=1980551908]
 layout_mode = 3
@@ -18,6 +19,196 @@ mouse_filter = 2
 script = ExtResource("2_6ebvl")
 SpriteNumber = 1
 DarkSpriteNumber = 18001
+
+[node name="HitPointsLabel" type="Label" parent="." unique_id=945458870]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 288.0
+offset_right = 63.0
+offset_bottom = 297.0
+text = "Hitpoints"
+script = ExtResource("4_hudlabel")
+
+[node name="HitPoints" type="Label" parent="." unique_id=1963927491]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 117.0
+offset_top = 288.0
+offset_right = 135.0
+offset_bottom = 297.0
+text = "999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="MaxHitPoints" type="Label" parent="." unique_id=185032121]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 141.0
+offset_top = 288.0
+offset_right = 159.0
+offset_bottom = 297.0
+text = "999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="EnduranceLabel" type="Label" parent="." unique_id=1678015742]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 302.0
+offset_right = 63.0
+offset_bottom = 311.0
+text = "Endurance"
+script = ExtResource("4_hudlabel")
+
+[node name="Endurance" type="Label" parent="." unique_id=1801096990]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 117.0
+offset_top = 302.0
+offset_right = 135.0
+offset_bottom = 311.0
+text = "999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="MaxEndurance" type="Label" parent="." unique_id=1901787974]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 141.0
+offset_top = 302.0
+offset_right = 159.0
+offset_bottom = 311.0
+text = "999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="ManaLabel" type="Label" parent="." unique_id=229626845]
+layout_mode = 0
+offset_left = 9.0
+offset_top = 316.0
+offset_right = 63.0
+offset_bottom = 325.0
+text = "Mana"
+script = ExtResource("4_hudlabel")
+
+[node name="Mana" type="Label" parent="." unique_id=1647925322]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 117.0
+offset_top = 316.0
+offset_right = 135.0
+offset_bottom = 325.0
+text = "999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="MaxMana" type="Label" parent="." unique_id=269460927]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 141.0
+offset_top = 316.0
+offset_right = 159.0
+offset_bottom = 325.0
+text = "999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="MoneyName" type="Label" parent="." unique_id=372922641]
+layout_mode = 0
+offset_left = 267.0
+offset_top = 114.0
+offset_right = 333.0
+offset_bottom = 123.0
+text = "Money"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="Money" type="Label" parent="." unique_id=1030938640]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 341.0
+offset_top = 114.0
+offset_right = 425.0
+offset_bottom = 123.0
+text = "999999G 99S"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="StrongholdName" type="Label" parent="." unique_id=1365562404]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 267.0
+offset_top = 128.0
+offset_right = 333.0
+offset_bottom = 137.0
+text = "Stronghold"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="Stronghold" type="Label" parent="." unique_id=1172819782]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 341.0
+offset_top = 128.0
+offset_right = 425.0
+offset_bottom = 137.0
+text = "999999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="CasinoName" type="Label" parent="." unique_id=229170078]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 267.0
+offset_top = 142.0
+offset_right = 333.0
+offset_bottom = 151.0
+text = "Casino"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="Casino" type="Label" parent="." unique_id=1863135163]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 341.0
+offset_top = 142.0
+offset_right = 425.0
+offset_bottom = 151.0
+text = "999999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="ContractName" type="Label" parent="." unique_id=1527457345]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 267.0
+offset_top = 156.0
+offset_right = 333.0
+offset_bottom = 165.0
+text = "Contract"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="Contract" type="Label" parent="." unique_id=776004825]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 341.0
+offset_top = 156.0
+offset_right = 425.0
+offset_bottom = 165.0
+text = "999999"
+horizontal_alignment = 2
+script = ExtResource("4_hudlabel")
+
+[node name="Location" type="Label" parent="." unique_id=1516188764]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 9.0
+offset_top = 570.0
+offset_right = 129.0
+offset_bottom = 579.0
+text = "Aston"
+script = ExtResource("4_hudlabel")
 
 [node name="ChatLog" type="Control" parent="." unique_id=417290385]
 unique_name_in_owner = true
