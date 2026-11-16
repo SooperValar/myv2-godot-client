@@ -34,11 +34,9 @@ public static class HotbarButtons
             : $"Item {action - FirstInventoryAction}";
 
     public static int? GearKeySprite(int[] actions, WornSlot slot) =>
-        Array.LastIndexOf(actions, FirstEquipmentAction + (int)slot) is var button and >= 0
-            ? FirstKeySprite + button
-            : null;
+        KeySprite(actions, FirstEquipmentAction + (int)slot);
 
-    public static int? InventoryKeySprite(int[] actions, int slot) => throw new NotImplementedException();
+    public static int? InventoryKeySprite(int[] actions, int slot) => KeySprite(actions, FirstInventoryAction + slot);
 
     public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
     {
@@ -50,4 +48,7 @@ public static class HotbarButtons
             ClientPackets.ThreeValues(ClientCommand.Skill, action, selectedCharacter, UsedFromHotbar),
         _ => null,
     };
+
+    private static int? KeySprite(int[] actions, int action) =>
+        Array.LastIndexOf(actions, action) is var button and >= 0 ? FirstKeySprite + button : null;
 }
