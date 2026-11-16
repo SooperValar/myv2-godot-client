@@ -20,7 +20,6 @@ public partial class WorldView : Node2D
     private const string CursorPathFormat = "res://images/cursors/cursor{0}.png";
     private const string NameplateScenePath = "res://World/nameplate.tscn";
     private const string MagicGlowShaderPath = "res://World/magic_glow.gdshader";
-    private const int PlayerTile = WorldMap.Size / 2 * WorldMap.Size + WorldMap.Size / 2;
     private const int PlayerNameplateLayer = 1;
     private readonly Sprite2D actionMarker = new() { Centered = false, Visible = false };
     private readonly Sprite2D attackMarker = new() { Centered = false, Visible = false };
@@ -47,7 +46,6 @@ public partial class WorldView : Node2D
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
     private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
-    private int selectedCharacter;
     private MapCursor? shownCursor;
     private Shader? tintShader;
 
@@ -60,6 +58,8 @@ public partial class WorldView : Node2D
     public bool ShowHealthBars { get; set; }
     public bool ShowShadows { get; set; } = true;
     public double LastRefreshMilliseconds { get; private set; }
+    public int SelectedCharacter { get; private set; }
+
     public bool PickTileDrawnUnderMouse { get; set; }
     public Action<byte[]> SendCommand { get; set; } = _ => { };
 
@@ -94,7 +94,7 @@ public partial class WorldView : Node2D
                 PointUnder(GetViewport().GetMousePosition()),
                 HeldKeys(),
                 MapButton.None,
-                selectedCharacter);
+                SelectedCharacter);
         ShowCursor(action.Cursor);
         if (action.HighlightedTile == hover.HighlightedTile && action.HighlightedLayer == hover.HighlightedLayer)
         {
@@ -135,7 +135,7 @@ public partial class WorldView : Node2D
         var keys = (click.ShiftPressed ? MapKeys.Shift : MapKeys.None)
             | (click.CtrlPressed ? MapKeys.Ctrl : MapKeys.None)
             | (click.AltPressed ? MapKeys.Alt : MapKeys.None);
-        var action = MapActions.Decide(State, PointUnder(click.Position), keys, button, selectedCharacter);
+        var action = MapActions.Decide(State, PointUnder(click.Position), keys, button, SelectedCharacter);
         if (action.Command is { } command)
         {
             SendCommand(command);
@@ -144,7 +144,7 @@ public partial class WorldView : Node2D
 
         if (action.NewSelection is { } selection)
         {
-            selectedCharacter = selection;
+            SelectedCharacter = selection;
             Refresh();
             GetViewport().SetInputAsHandled();
         }
@@ -176,7 +176,7 @@ public partial class WorldView : Node2D
 
         if (!selectedIsShown)
         {
-            selectedCharacter = 0;
+            SelectedCharacter = 0;
         }
 
         ShiftMapUnderPlayer();
@@ -259,7 +259,7 @@ public partial class WorldView : Node2D
             MapSpriteRules.ObjectSprite(tile, column, row, State.Player, HideWalls),
             new SpriteLook(tile.Light, environmentTint, IsHighlighted(tileIndex, MapLayer.Object), false));
         var character = MapSpriteRules.CharacterSprite(tile, column, row);
-        var selected = character != 0 && selectedCharacter != 0 && tile.CharacterNumber == selectedCharacter;
+        var selected = character != 0 && SelectedCharacter != 0 && tile.CharacterNumber == SelectedCharacter;
         Show(
             characters,
             tileIndex,
@@ -325,7 +325,7 @@ public partial class WorldView : Node2D
         }
 
         charactersShown.Add(tile.CharacterNumber);
-        nameplate.ZIndex = tileIndex == PlayerTile ? PlayerNameplateLayer : 0;
+        nameplate.ZIndex = tileIndex == WorldMap.PlayerTile ? PlayerNameplateLayer : 0;
         nameplate.Display(
             NameplateText.For(name, tile.CharacterId, tile.CharacterHealthPercent, ShowNames, ShowHealthPercent),
             NameplateFontFor(tile.CharacterTextColour),

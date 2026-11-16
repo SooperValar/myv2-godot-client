@@ -91,7 +91,7 @@ public partial class GameScreen : Control
             if (played)
             {
                 worldView?.Refresh();
-                hudView.Refresh();
+                hudView.Refresh(worldView?.SelectedCharacter ?? 0);
             }
         }
         catch (ProtocolDesyncException exception)

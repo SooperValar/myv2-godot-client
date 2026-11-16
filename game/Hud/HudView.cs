@@ -72,10 +72,10 @@ public partial class HudView : Control
         state = shownState;
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
-        Refresh();
+        Refresh(0);
     }
 
-    public void Refresh()
+    public void Refresh(int selectedCharacter)
     {
         if (state == null)
         {
@@ -91,6 +91,14 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
+        var rank = Ranks.For(player.PointsTotal);
+        SetText(
+            "SelectedName",
+            selectedCharacter == 0 ? player.Name : state.Names.NameOf(selectedCharacter, 0));
+        SetText("PlayerName", player.Name);
+        SetText("RankName", rank.Name);
+        SetSprite("RankBadge", rank.BadgeSprite);
+        SetSprite("Portrait", state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
     }
 
     public override void _EnterTree()
@@ -159,4 +167,7 @@ public partial class HudView : Control
     }
 
     private void SetText(string name, string text) => GetNode<Label>("%" + name).Text = text;
+
+    private void SetSprite(string name, int spriteNumber) =>
+        GetNode<ArchiveSprite>("%" + name).SpriteNumber = spriteNumber;
 }

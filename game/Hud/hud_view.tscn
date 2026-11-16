@@ -210,6 +210,60 @@ offset_bottom = 579.0
 text = "Aston"
 script = ExtResource("4_hudlabel")
 
+[node name="SelectedName" type="Label" parent="." unique_id=606909419]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 846.0
+offset_top = 32.0
+offset_right = 970.0
+offset_bottom = 41.0
+text = "Worldofslaying"
+horizontal_alignment = 1
+script = ExtResource("4_hudlabel")
+
+[node name="RankBadge" type="TextureRect" parent="." unique_id=751328766]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 935.0
+offset_top = 42.0
+offset_right = 935.0
+offset_bottom = 42.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+SpriteNumber = 10
+
+[node name="Portrait" type="TextureRect" parent="." unique_id=321547363]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 874.0
+offset_top = 36.0
+offset_right = 874.0
+offset_bottom = 36.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+
+[node name="PlayerName" type="Label" parent="." unique_id=1648801510]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 846.0
+offset_top = 157.0
+offset_right = 970.0
+offset_bottom = 166.0
+text = "Worldofslaying"
+horizontal_alignment = 1
+script = ExtResource("4_hudlabel")
+
+[node name="RankName" type="Label" parent="." unique_id=950528596]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 846.0
+offset_top = 176.0
+offset_right = 970.0
+offset_bottom = 185.0
+text = "Private First Class"
+horizontal_alignment = 1
+script = ExtResource("4_hudlabel")
+
 [node name="ChatLog" type="Control" parent="." unique_id=417290385]
 unique_name_in_owner = true
 layout_mode = 0
