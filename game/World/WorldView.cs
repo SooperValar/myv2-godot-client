@@ -77,6 +77,11 @@ public partial class WorldView : Node2D
                 shadowNodes[tileIndex] = AddShadowNode(characters.Nodes[tileIndex]);
             }
         }
+
+        foreach (var marker in (Sprite2D[])[walkMarker, attackMarker, giveMarker, actionMarker])
+        {
+            floorLayer.AddChild(marker);
+        }
     }
 
     public override void _Process(double delta)
