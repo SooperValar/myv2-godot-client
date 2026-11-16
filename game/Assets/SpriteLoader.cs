@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.IO;
 using Godot;
 
@@ -11,10 +12,13 @@ public sealed class SpriteLoader : IDisposable
     private readonly SpriteCache<Texture2D> cache;
     private readonly IReadOnlyDictionary<int, string> overrides;
     private readonly PngLibrary pngLibrary;
+    private readonly string uiFolder;
+    private readonly Dictionary<int, Texture2D?> uiPictures = [];
 
     public SpriteLoader(string dataPath, long cacheBudgetBytes)
     {
         overrides = SpriteOverrides.Find(Path.Combine(dataPath, DataLayout.Overrides));
+        uiFolder = Path.Combine(dataPath, DataLayout.Ui);
         var archiveFolder = Path.Combine(dataPath, DataLayout.Archives);
         pngLibrary = new PngLibrary(
             Path.Combine(archiveFolder, DataLayout.PngIndexFile),
@@ -37,6 +41,12 @@ public sealed class SpriteLoader : IDisposable
     public void Dispose()
     {
         cache.Clear();
+        foreach (var picture in uiPictures.Values)
+        {
+            picture?.Dispose();
+        }
+
+        uiPictures.Clear();
         pngLibrary.Dispose();
         bmpLibrary.Dispose();
     }
@@ -73,6 +83,29 @@ public sealed class SpriteLoader : IDisposable
         var texture = ImageTexture.CreateFromImage(image);
         cache.Add(spriteNumber, texture, (long)image.GetWidth() * image.GetHeight() * SpritePixels.Rgba8BytesPerPixel);
         return texture;
+    }
+
+    public Texture2D? GetUiPicture(int pictureNumber)
+    {
+        if (uiPictures.TryGetValue(pictureNumber, out var known))
+        {
+            return known;
+        }
+
+        var path = Path.Combine(uiFolder, pictureNumber.ToString("00000", CultureInfo.InvariantCulture) + ".png");
+        var image = new Image();
+        Texture2D? picture = null;
+        if (File.Exists(path) && image.LoadPngFromBuffer(File.ReadAllBytes(path)) == Error.Ok)
+        {
+            picture = ImageTexture.CreateFromImage(image);
+        }
+        else
+        {
+            GD.PushWarning($"UI picture {pictureNumber} couldn't be loaded from {path}");
+        }
+
+        uiPictures[pictureNumber] = picture;
+        return picture;
     }
 
     private Image? LoadImage(int spriteNumber)

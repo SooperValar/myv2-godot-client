@@ -34,6 +34,8 @@ public partial class HudView : Control
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
     private const int ManaRow = 6;
+    private const int HitScoreMeta = 5;
+    private const int ParryScoreMeta = 6;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
@@ -194,6 +196,7 @@ public partial class HudView : Control
 
         GetNode<InventoryGrid>("%Inventory").Show(player, Settings.HotbarActions);
         ShowStats(player);
+        ShowQuickStats(player);
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
@@ -316,6 +319,12 @@ public partial class HudView : Control
                     break;
                 case HudLabel label:
                     label.ApplyFont();
+                    break;
+                case UiPicture picture:
+                    picture.LoadPicture();
+                    break;
+                case DarkModeShift shift:
+                    shift.ApplyDarkMode();
                     break;
                 case HotbarMenu menu:
                     menu.ApplyFont();
@@ -510,6 +519,17 @@ public partial class HudView : Control
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
         GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    private void ShowQuickStats(PlayerState player)
+    {
+        var metaStats = state!.Terminology.MetaStats;
+        SetText("WeaponValue", Number(player.Weapon));
+        SetText("ArmorValue", Number(player.Armor));
+        SetText("HitScore", Number(metaStats[HitScoreMeta].Value));
+        SetText("ParryScore", Number(metaStats[ParryScoreMeta].Value));
+        SetText("Experience", Number(player.PointsTotal));
+        GetNode<ProgressBar>("%ExperienceBar").Value = Ranks.Progress(player.PointsTotal);
     }
 
     private void ClickHotbar(int slot, MapButton button)
