@@ -11,6 +11,7 @@ namespace TheLastGate.Launcher;
 
 public partial class LauncherScreen : Control
 {
+    private const string StartAsArgument = "--start-as=";
     private const string DiscordInvite = "https://discord.gg/jJbPv2R";
     private const int MaxDescriptionLength = 159;
     private const int WindowedOptionId = 1;
@@ -141,6 +142,7 @@ public partial class LauncherScreen : Control
         confirmDialog.VisibilityChanged += OnConfirmDialogVisibilityChanged;
         messageDialog.VisibilityChanged += ShowModalDim;
         confirmDialog.VisibilityChanged += ShowModalDim;
+        StartIfAsked();
     }
 
     private void ShowOptions()
@@ -282,6 +284,27 @@ public partial class LauncherScreen : Control
 
         record.Changed = true;
         CharacterStore.Save(record);
+    }
+
+    private void StartIfAsked()
+    {
+        foreach (var argument in OS.GetCmdlineUserArgs())
+        {
+            if (!argument.StartsWith(StartAsArgument, StringComparison.Ordinal))
+            {
+                continue;
+            }
+
+            var name = argument[StartAsArgument.Length..];
+            if (record.Key.Name == name)
+            {
+                Callable.From(OnStartPressed).CallDeferred();
+            }
+            else
+            {
+                GD.PushWarning($"Not starting: the loaded character is \"{record.Key.Name}\", not \"{name}\".");
+            }
+        }
     }
 
     private void OnStartPressed()
