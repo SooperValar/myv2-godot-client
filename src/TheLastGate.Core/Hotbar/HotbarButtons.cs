@@ -13,7 +13,6 @@ public static class HotbarButtons
     private const string Keys = "12345QWERTASDFGZXCVB";
     private const int SkillLimit = 60;
     private const int UsedFromHotbar = 1;
-    private const int FirstKeySprite = 4011;
 
     private static readonly string[] GearNames =
     [
@@ -33,10 +32,9 @@ public static class HotbarButtons
             ? GearNames[action - FirstEquipmentAction]
             : $"Item {action - FirstInventoryAction}";
 
-    public static int? GearKeySprite(int[] actions, WornSlot slot) =>
-        KeySprite(actions, FirstEquipmentAction + (int)slot);
+    public static int? GearKeyButton(int[] actions, WornSlot slot) => throw new NotImplementedException();
 
-    public static int? InventoryKeySprite(int[] actions, int slot) => KeySprite(actions, FirstInventoryAction + slot);
+    public static int? InventoryKeyButton(int[] actions, int slot) => throw new NotImplementedException();
 
     public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
     {
@@ -48,7 +46,4 @@ public static class HotbarButtons
             ClientPackets.ThreeValues(ClientCommand.Skill, action, selectedCharacter, UsedFromHotbar),
         _ => null,
     };
-
-    private static int? KeySprite(int[] actions, int action) =>
-        Array.LastIndexOf(actions, action) is var button and >= 0 ? FirstKeySprite + button : null;
 }

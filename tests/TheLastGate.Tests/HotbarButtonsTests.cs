@@ -73,33 +73,33 @@ public class HotbarButtonsTests
     }
 
     [Fact]
-    public void GearKeySprite_ShowsTheKeyOfTheButtonThatUsesTheGear()
+    public void GearKeyButton_FindsTheButtonThatUsesTheGear()
     {
         var actions = new CharacterSettings().HotbarActions;
         actions[3] = 208;
 
-        Assert.Equal(4014, HotbarButtons.GearKeySprite(actions, WornSlot.MainHand));
-        Assert.Null(HotbarButtons.GearKeySprite(actions, WornSlot.Head));
+        Assert.Equal(3, HotbarButtons.GearKeyButton(actions, WornSlot.MainHand));
+        Assert.Null(HotbarButtons.GearKeyButton(actions, WornSlot.Head));
     }
 
     [Fact]
-    public void GearKeySprite_ShowsTheLastButtonWhenSeveralUseTheGear()
+    public void GearKeyButton_FindsTheLastButtonWhenSeveralUseTheGear()
     {
         var actions = new CharacterSettings().HotbarActions;
         actions[3] = 208;
         actions[12] = 208;
 
-        Assert.Equal(4023, HotbarButtons.GearKeySprite(actions, WornSlot.MainHand));
+        Assert.Equal(12, HotbarButtons.GearKeyButton(actions, WornSlot.MainHand));
     }
 
     [Fact]
-    public void InventoryKeySprite_ShowsTheKeyOfTheButtonThatUsesTheInventorySlot()
+    public void InventoryKeyButton_FindsTheButtonThatUsesTheInventorySlot()
     {
         var actions = new CharacterSettings().HotbarActions;
         actions[5] = 105;
 
-        Assert.Equal(4016, HotbarButtons.InventoryKeySprite(actions, 5));
-        Assert.Null(HotbarButtons.InventoryKeySprite(actions, 6));
+        Assert.Equal(5, HotbarButtons.InventoryKeyButton(actions, 5));
+        Assert.Null(HotbarButtons.InventoryKeyButton(actions, 6));
     }
 
     [Fact]
