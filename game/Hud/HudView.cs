@@ -10,6 +10,7 @@ using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Cursors;
 using TheLastGate.Game;
+using TheLastGate.Hotbar;
 using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.State;
@@ -131,6 +132,12 @@ public partial class HudView : Control
         }
 
         GetNode<ClickArea>("%UpdateButton").Released += ClickUpdate;
+        foreach (var node in GetNode("%Hotbar").GetChildren())
+        {
+            var hotbarButton = (HotbarButtonView)node;
+            hotbarButton.Released += button => ClickHotbar(hotbarButton.Slot, button);
+        }
+
         var inventory = GetNode<InventoryGrid>("%Inventory");
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
@@ -177,6 +184,13 @@ public partial class HudView : Control
             optionButton.ShowMarked(OptionButtons.IsMarked(optionButton.Kind, Settings, player.Mode));
         }
 
+        foreach (var node in GetNode("%Hotbar").GetChildren())
+        {
+            var hotbarButton = (HotbarButtonView)node;
+            var slot = hotbarButton.Slot;
+            hotbarButton.ShowName(HotbarButtons.Name(Settings.HotbarActions[slot], Settings.HotbarNames[slot]));
+        }
+
         GetNode<InventoryGrid>("%Inventory").Show(player);
         ShowStats(player);
         var buffIcons = BuffIcons.For(player.Buffs);
@@ -190,6 +204,19 @@ public partial class HudView : Control
         {
             mousePosition = mouse.Position;
         }
+    }
+
+    public override void _UnhandledKeyInput(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventKey { Pressed: true, Echo: false, CtrlPressed: true } key
+            || (long)key.Keycode > char.MaxValue
+            || HotbarButtons.SlotForKey((char)key.Keycode) is not { } slot)
+        {
+            return;
+        }
+
+        GetViewport().SetInputAsHandled();
+        UseHotbar(slot);
     }
 
     public override void _Process(double delta)
@@ -466,6 +493,22 @@ public partial class HudView : Control
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
         GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    private void ClickHotbar(int slot, MapButton button)
+    {
+        if (button == MapButton.Left)
+        {
+            UseHotbar(slot);
+        }
+    }
+
+    private void UseHotbar(int slot)
+    {
+        if (HotbarButtons.UsePacket(Settings.HotbarActions[slot], selectedCharacter) is { } packet)
+        {
+            sendCommand(packet);
+        }
     }
 
     private void ClickStatName(StatRow row, MapButton button)
