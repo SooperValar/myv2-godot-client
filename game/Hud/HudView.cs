@@ -4,6 +4,7 @@ using System.IO;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Config;
+using TheLastGate.Items;
 using TheLastGate.State;
 
 namespace TheLastGate.Hud;
@@ -103,6 +104,7 @@ public partial class HudView : Control
         SetText("RankName", rank.Name);
         SetSprite("RankBadge", rank.BadgeSprite);
         SetSprite("Portrait", state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
+        ShowEquipment(player);
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
@@ -158,6 +160,19 @@ public partial class HudView : Control
             }
 
             Reload(child);
+        }
+    }
+
+    private void ShowEquipment(PlayerState player)
+    {
+        var blocked = Equipment.BlockedSlots(player.HeldItem, player.Worn);
+        var secondCharmWorn = player.Worn[(int)WornSlot.SecondCharm].Sprite != 0;
+        GetNode<CanvasItem>("%SecondCharmFrame").Visible = secondCharmWorn;
+        for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
+        {
+            var item = player.Worn[(int)slot];
+            var showBlocked = blocked.Contains(slot) && (slot != WornSlot.SecondCharm || secondCharmWorn);
+            GetNode<ItemSlotView>("%" + slot).Show(item, ItemOverlays.Worn(item), showBlocked);
         }
     }
 

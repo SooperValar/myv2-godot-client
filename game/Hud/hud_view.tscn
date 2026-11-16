@@ -6,6 +6,7 @@
 [ext_resource type="Script" uid="uid://b34mtc82b8qbi" path="res://Hud/HudLabel.cs" id="4_hudlabel"]
 [ext_resource type="Script" uid="uid://b2ud80uowpc4u" path="res://Hud/PortraitBar.cs" id="5_portraitbar"]
 [ext_resource type="Script" uid="uid://32wxdmrregok" path="res://Hud/BuffIconsView.cs" id="6_bufficons"]
+[ext_resource type="PackedScene" uid="uid://c6vnyqfwgtfq3" path="res://Hud/item_slot.tscn" id="7_itemslot"]
 
 [node name="HudView" type="Control" unique_id=1980551908]
 layout_mode = 3
@@ -211,6 +212,110 @@ offset_right = 129.0
 offset_bottom = 579.0
 text = "Aston"
 script = ExtResource("4_hudlabel")
+
+[node name="SecondCharmFrame" type="TextureRect" parent="." unique_id=1582723311]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 775.0
+offset_top = 15.0
+offset_right = 775.0
+offset_bottom = 15.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+SpriteNumber = 3
+DarkSpriteNumber = 18003
+
+[node name="Head" parent="." unique_id=1907131032 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 739.0
+offset_top = 6.0
+offset_right = 771.0
+offset_bottom = 38.0
+
+[node name="Neck" parent="." unique_id=1688920084 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 701.0
+offset_top = 19.0
+offset_right = 733.0
+offset_bottom = 51.0
+
+[node name="Body" parent="." unique_id=1500227407 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 739.0
+offset_top = 40.0
+offset_right = 771.0
+offset_bottom = 72.0
+
+[node name="Arms" parent="." unique_id=1238251922 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 705.0
+offset_top = 57.0
+offset_right = 737.0
+offset_bottom = 89.0
+
+[node name="Belt" parent="." unique_id=162288247 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 739.0
+offset_top = 74.0
+offset_right = 771.0
+offset_bottom = 106.0
+
+[node name="Charm" parent="." unique_id=1904633855 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 778.0
+offset_top = 18.0
+offset_right = 810.0
+offset_bottom = 50.0
+
+[node name="Feet" parent="." unique_id=1099917037 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 739.0
+offset_top = 108.0
+offset_right = 771.0
+offset_bottom = 140.0
+
+[node name="OffHand" parent="." unique_id=1766358331 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 807.0
+offset_top = 57.0
+offset_right = 839.0
+offset_bottom = 89.0
+
+[node name="MainHand" parent="." unique_id=634836507 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 671.0
+offset_top = 57.0
+offset_right = 703.0
+offset_bottom = 89.0
+
+[node name="Cloak" parent="." unique_id=1493662250 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 773.0
+offset_top = 57.0
+offset_right = 805.0
+offset_bottom = 89.0
+
+[node name="LeftRing" parent="." unique_id=211354012 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 777.0
+offset_top = 95.0
+offset_right = 809.0
+offset_bottom = 127.0
+
+[node name="RightRing" parent="." unique_id=436835654 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 701.0
+offset_top = 95.0
+offset_right = 733.0
+offset_bottom = 127.0
+
+[node name="SecondCharm" parent="." unique_id=343107963 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+offset_left = 802.0
+offset_top = 18.0
+offset_right = 834.0
+offset_bottom = 50.0
 
 [node name="SelectedName" type="Label" parent="." unique_id=606909419]
 unique_name_in_owner = true

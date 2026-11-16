@@ -1,0 +1,31 @@
+[gd_scene format=3 uid="uid://c6vnyqfwgtfq3"]
+
+[ext_resource type="Script" uid="uid://c8s2chfk7ssl2" path="res://Hud/ItemSlotView.cs" id="1_slot"]
+[ext_resource type="Script" uid="uid://dns0wvx5gfo6b" path="res://Hud/ArchiveSprite.cs" id="2_sprite"]
+
+[node name="ItemSlot" type="Control" unique_id=1437671202]
+layout_mode = 3
+anchors_preset = 0
+offset_right = 32.0
+offset_bottom = 32.0
+script = ExtResource("1_slot")
+
+[node name="Highlighted" type="Control" parent="." unique_id=648563996]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Item" type="TextureRect" parent="Highlighted" unique_id=1692975436]
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("2_sprite")
+
+[node name="Overlays" type="Control" parent="Highlighted" unique_id=869949150]
+layout_mode = 0
+mouse_filter = 2
+
+[node name="Blocked" type="TextureRect" parent="." unique_id=1807665179]
+visible = false
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("2_sprite")
+SpriteNumber = 4
