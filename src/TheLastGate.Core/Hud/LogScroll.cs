@@ -10,11 +10,37 @@ public sealed class LogScroll
 
     public static readonly TimeSpan ReturnAfter = TimeSpan.FromSeconds(30);
 
-    public int LinesBack => throw new NotImplementedException();
+    private int oldestLinesBack;
+    private TimeSpan untilReturn;
 
-    public void Scroll(int linesBack) => throw new NotImplementedException();
+    public int LinesBack { get; private set; }
 
-    public void LinesChanged(int linesAdded, int oldestLinesBack) => throw new NotImplementedException();
+    public void Scroll(int linesBack)
+    {
+        LinesBack = Math.Clamp(LinesBack + linesBack, 0, Math.Min(MaxLinesBack, oldestLinesBack));
+        untilReturn = ReturnAfter;
+    }
 
-    public void Advance(TimeSpan elapsed) => throw new NotImplementedException();
+    public void LinesChanged(int linesAdded, int oldestLinesBack)
+    {
+        this.oldestLinesBack = oldestLinesBack;
+        if (LinesBack > 0)
+        {
+            LinesBack = Math.Min(LinesBack + linesAdded, oldestLinesBack);
+        }
+    }
+
+    public void Advance(TimeSpan elapsed)
+    {
+        if (LinesBack == 0)
+        {
+            return;
+        }
+
+        untilReturn -= elapsed;
+        if (untilReturn <= TimeSpan.Zero)
+        {
+            LinesBack = 0;
+        }
+    }
 }
