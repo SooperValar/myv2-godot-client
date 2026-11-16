@@ -1,4 +1,6 @@
+using System;
 using TheLastGate.Characters;
+using TheLastGate.Items;
 using TheLastGate.Net;
 
 namespace TheLastGate.Hotbar;
@@ -7,8 +9,9 @@ public static class HotbarButtons
 {
     private const string Keys = "12345QWERTASDFGZXCVB";
     private const int SkillLimit = 60;
-    private const int FirstInventoryAction = 100;
-    private const int FirstEquipmentAction = 200;
+    public const int FirstInventoryAction = 100;
+    public const int FirstEquipmentAction = 200;
+
     private const int UsedFromHotbar = 1;
 
     public static string KeyLabel(int slot) => $"C-{Keys[slot]}";
@@ -17,6 +20,10 @@ public static class HotbarButtons
 
     public static string Name(int action, string storedName) =>
         action == CharacterSettings.Unassigned ? "-" : storedName;
+
+    public static string ItemName(int action) => throw new NotImplementedException();
+
+    public static int? GearKeySprite(int[] actions, WornSlot slot) => throw new NotImplementedException();
 
     public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
     {

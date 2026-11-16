@@ -1,5 +1,8 @@
+using System;
 using TheLastGate.Assets;
+using TheLastGate.Items;
 using TheLastGate.State;
+using TheLastGate.World;
 
 namespace TheLastGate.Stats;
 
@@ -13,6 +16,8 @@ public sealed class SkillShortcut
     private bool explainedShortcutKeys;
 
     public int? Selected { get; private set; }
+
+    public static bool SelectsItem(MapButton button, MapKeys keys) => throw new NotImplementedException();
 
     public LogLine Toggle(int skillNumber, string name, uint kindred)
     {
@@ -32,6 +37,10 @@ public sealed class SkillShortcut
         explainedShortcutKeys = true;
         return Line(selected + ShortcutKeysHint);
     }
+
+    public LogLine ToggleInventory(int slot) => throw new NotImplementedException();
+
+    public LogLine ToggleEquipment(WornSlot slot) => throw new NotImplementedException();
 
     private static LogLine Line(string text) => new(text, (int)TextColour.Lime);
 }

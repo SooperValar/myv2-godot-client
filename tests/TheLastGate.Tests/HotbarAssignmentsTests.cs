@@ -62,6 +62,18 @@ public class HotbarAssignmentsTests
     }
 
     [Fact]
+    public void Assign_PutsAnItemOnTheButton()
+    {
+        var settings = new CharacterSettings();
+
+        var line = HotbarAssignments.Assign(settings, 0, 105, HotbarButtons.ItemName(105));
+
+        Assert.Equal(105, settings.HotbarActions[0]);
+        Assert.Equal("Item 5", settings.HotbarNames[0]);
+        Assert.Equal(new LogLine("C-1 is now Item 5.", (int)TextColour.Yellow), line);
+    }
+
+    [Fact]
     public void Clear_UnassignsTheButton()
     {
         var settings = new CharacterSettings();

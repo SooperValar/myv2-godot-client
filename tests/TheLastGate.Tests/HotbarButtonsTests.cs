@@ -1,5 +1,6 @@
 using TheLastGate.Characters;
 using TheLastGate.Hotbar;
+using TheLastGate.Items;
 using TheLastGate.Net;
 
 namespace TheLastGate.Tests;
@@ -50,6 +51,45 @@ public class HotbarButtonsTests
     public void Name_ShowsTheStoredNameOfAnAssignedButton()
     {
         Assert.Equal("Light", HotbarButtons.Name(50, "Light"));
+    }
+
+    [Theory]
+    [InlineData(100, "Item 0")]
+    [InlineData(105, "Item 5")]
+    [InlineData(159, "Item 59")]
+    public void ItemName_NamesInventorySlotsByNumber(int action, string name)
+    {
+        Assert.Equal(name, HotbarButtons.ItemName(action));
+    }
+
+    [Theory]
+    [InlineData(200, "*Helmet")]
+    [InlineData(207, "*Offhan")]
+    [InlineData(208, "*Weapon")]
+    [InlineData(212, "*Tarot2")]
+    public void ItemName_NamesEquipmentSlotsByGear(int action, string name)
+    {
+        Assert.Equal(name, HotbarButtons.ItemName(action));
+    }
+
+    [Fact]
+    public void GearKeySprite_ShowsTheKeyOfTheButtonThatUsesTheGear()
+    {
+        var actions = new CharacterSettings().HotbarActions;
+        actions[3] = 208;
+
+        Assert.Equal(4014, HotbarButtons.GearKeySprite(actions, WornSlot.MainHand));
+        Assert.Null(HotbarButtons.GearKeySprite(actions, WornSlot.Head));
+    }
+
+    [Fact]
+    public void GearKeySprite_ShowsTheLastButtonWhenSeveralUseTheGear()
+    {
+        var actions = new CharacterSettings().HotbarActions;
+        actions[3] = 208;
+        actions[12] = 208;
+
+        Assert.Equal(4023, HotbarButtons.GearKeySprite(actions, WornSlot.MainHand));
     }
 
     [Fact]
