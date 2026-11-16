@@ -8,7 +8,8 @@ public readonly record struct StatLine(
     int? Base,
     int? Current,
     bool CanRaise,
-    int? Cost)
+    int? Cost,
+    bool CanLower = false)
 {
     public static StatLine Unknown { get; } = new("-", TextColour.Yellow, null, null, false, null);
 }

@@ -35,6 +35,7 @@ public partial class HudView : Control
     private static readonly Vector2 HeldItemOffset = new(16, 16);
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
+    private readonly StatPlan statPlan = new();
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
@@ -445,12 +446,13 @@ public partial class HudView : Control
         for (var attribute = 0; attribute < PlayerState.AttributeCount; attribute++)
         {
             rows.GetChild<StatRow>(attribute)
-                .Show(StatLines.Attribute(attribute, player.Attributes[attribute], player.Points), showBase);
+                .Show(StatLines.Attribute(attribute, player.Attributes[attribute], statPlan, player.Points), showBase);
         }
 
-        rows.GetChild<StatRow>(HitPointsRow).Show(StatLines.HitPoints(player.HitPoints, player.Points), showBase);
-        rows.GetChild<StatRow>(ManaRow).Show(StatLines.Mana(player.Mana, player.Points), showBase);
-        GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, showBase);
+        rows.GetChild<StatRow>(HitPointsRow)
+            .Show(StatLines.HitPoints(player.HitPoints, statPlan, player.Points), showBase);
+        rows.GetChild<StatRow>(ManaRow).Show(StatLines.Mana(player.Mana, statPlan, player.Points), showBase);
+        GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
         SetText("UpdatePoints", Number(player.Points));
     }
 

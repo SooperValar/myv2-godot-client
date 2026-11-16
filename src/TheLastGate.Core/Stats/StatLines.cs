@@ -18,18 +18,18 @@ public static class StatLines
 
     private static readonly string[] AttributeNames = ["Braveness", "Willpower", "Intuition", "Agility", "Strength"];
 
-    public static StatLine Attribute(int attribute, int[] values, int points)
+    public static StatLine Attribute(int attribute, int[] values, StatPlan plan, int points)
     {
         var value = values[BaseValue];
         var cost = value >= values[Limit] ? (int?)null : value * value * value * values[Difficulty] / 20;
         return Raisable(AttributeNames[attribute], value, Score(values), cost, points);
     }
 
-    public static StatLine HitPoints(int[] values, int points) => Pool("Hitpoints", values, points);
+    public static StatLine HitPoints(int[] values, StatPlan plan, int points) => Pool("Hitpoints", values, points);
 
-    public static StatLine Mana(int[] values, int points) => Pool("Mana", values, points);
+    public static StatLine Mana(int[] values, StatPlan plan, int points) => Pool("Mana", values, points);
 
-    public static StatLine Skill(string name, int show, int[] values, int points)
+    public static StatLine Skill(int number, string name, int show, int[] values, StatPlan plan, int points)
     {
         switch (show)
         {

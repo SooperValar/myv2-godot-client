@@ -37,7 +37,7 @@ public partial class SkillList : VBoxContainer
         }
     }
 
-    public void Show(PlayerState player, Terminology terminology, bool showBase)
+    public void Show(PlayerState player, Terminology terminology, StatPlan plan, bool showBase)
     {
         var order = SkillOrder.Sorted(
             terminology.Skills.Select((text, number) =>
@@ -47,7 +47,7 @@ public partial class SkillList : VBoxContainer
         {
             var number = order[scroll.PositionShownIn(row)];
             var text = terminology.Skills[number];
-            var line = StatLines.Skill(text.Name, text.Show, player.Skills[number], player.Points);
+            var line = StatLines.Skill(number, text.Name, text.Show, player.Skills[number], plan, player.Points);
             GetChild<StatRow>(row).Show(line, showBase);
         }
     }
