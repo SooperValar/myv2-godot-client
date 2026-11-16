@@ -162,9 +162,17 @@ public partial class LauncherScreen : Control
         settings.Save();
     }
 
-    private void ApplyWindowMode() =>
-        DisplayServer.WindowSetMode(
-            settings.Windowed ? DisplayServer.WindowMode.Windowed : DisplayServer.WindowMode.Fullscreen);
+    // Only switch between windowed and fullscreen, so a maximised window keeps its size.
+    private void ApplyWindowMode()
+    {
+        var fullscreen = DisplayServer.WindowGetMode() is DisplayServer.WindowMode.Fullscreen
+            or DisplayServer.WindowMode.ExclusiveFullscreen;
+        if (fullscreen == settings.Windowed)
+        {
+            DisplayServer.WindowSetMode(
+                settings.Windowed ? DisplayServer.WindowMode.Windowed : DisplayServer.WindowMode.Fullscreen);
+        }
+    }
 
     private void AddDescriptions()
     {
