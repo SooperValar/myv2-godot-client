@@ -32,9 +32,10 @@ public static class HotbarButtons
             ? GearNames[action - FirstEquipmentAction]
             : $"Item {action - FirstInventoryAction}";
 
-    public static int? GearKeyButton(int[] actions, WornSlot slot) => throw new NotImplementedException();
+    public static int? GearKeyButton(int[] actions, WornSlot slot) =>
+        ButtonFor(actions, FirstEquipmentAction + (int)slot);
 
-    public static int? InventoryKeyButton(int[] actions, int slot) => throw new NotImplementedException();
+    public static int? InventoryKeyButton(int[] actions, int slot) => ButtonFor(actions, FirstInventoryAction + slot);
 
     public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
     {
@@ -46,4 +47,7 @@ public static class HotbarButtons
             ClientPackets.ThreeValues(ClientCommand.Skill, action, selectedCharacter, UsedFromHotbar),
         _ => null,
     };
+
+    private static int? ButtonFor(int[] actions, int action) =>
+        Array.LastIndexOf(actions, action) is var button and >= 0 ? button : null;
 }
