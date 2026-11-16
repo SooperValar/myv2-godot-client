@@ -1,4 +1,5 @@
 using Godot;
+using TheLastGate.Hotbar;
 using TheLastGate.Items;
 using TheLastGate.State;
 
@@ -38,12 +39,15 @@ public partial class InventoryGrid : GridContainer
 
     public int SlotShownIn(int cell) => scroll.SlotShownIn(cell);
 
-    public void Show(PlayerState player)
+    public void Show(PlayerState player, int[] hotbarActions)
     {
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
-            var item = player.Inventory[scroll.SlotShownIn(cell)];
-            GetChild<ItemSlotView>(cell).Show(item, ItemOverlays.Carried(item), false);
+            var slot = scroll.SlotShownIn(cell);
+            var item = player.Inventory[slot];
+            var slotView = GetChild<ItemSlotView>(cell);
+            slotView.Show(item, ItemOverlays.Carried(item), false);
+            slotView.ShowHotbarKey(HotbarButtons.InventoryKeyButton(hotbarActions, slot));
         }
     }
 }

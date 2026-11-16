@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using TheLastGate.Hotbar;
 using TheLastGate.Items;
 using TheLastGate.State;
 
@@ -51,6 +52,16 @@ public partial class ItemSlotView : ClickArea
         }
 
         GetNode<CanvasItem>("Blocked").Visible = blocked;
+    }
+
+    public void ShowHotbarKey(int? button)
+    {
+        var hotbarKey = GetNode<Label>("HotbarKey");
+        hotbarKey.Visible = button != null;
+        if (button is { } slot)
+        {
+            hotbarKey.Text = HotbarButtons.KeyLabel(slot);
+        }
     }
 
     public void SetHighlighted(bool highlighted)

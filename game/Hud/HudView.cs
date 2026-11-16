@@ -192,7 +192,7 @@ public partial class HudView : Control
             hotbarButton.ShowName(HotbarButtons.Name(Settings.HotbarActions[slot], Settings.HotbarNames[slot]));
         }
 
-        GetNode<InventoryGrid>("%Inventory").Show(player);
+        GetNode<InventoryGrid>("%Inventory").Show(player, Settings.HotbarActions);
         ShowStats(player);
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
@@ -328,6 +328,12 @@ public partial class HudView : Control
 
     private void ClickWorn(WornSlot slot, MapButton button)
     {
+        if (SkillShortcut.SelectsItem(button, HeldKeys.Current()))
+        {
+            state?.Chat.Add(skillShortcut.ToggleEquipment(slot));
+            return;
+        }
+
         if (EquipmentClicks.Packet(slot, button, HeldKeys.Current(), selectedCharacter) is { } packet)
         {
             sendCommand(packet);
@@ -341,13 +347,20 @@ public partial class HudView : Control
             return;
         }
 
+        var keys = HeldKeys.Current();
+        if (SkillShortcut.SelectsItem(button, keys))
+        {
+            state.Chat.Add(skillShortcut.ToggleInventory(slot));
+            return;
+        }
+
         var player = state.Player;
         var packets = InventoryClicks.Packets(
             slot,
             player.Inventory[slot],
             player.HeldItem.Sprite != 0,
             button,
-            HeldKeys.Current(),
+            keys,
             SaleToOpenShop(),
             selectedCharacter);
         foreach (var packet in packets)
@@ -512,9 +525,9 @@ public partial class HudView : Control
             return;
         }
 
-        if (skillShortcut.Selected is { } selectedSkill)
+        if (skillShortcut.Selected is { } selectedAction)
         {
-            AssignHotbar(slot, selectedSkill);
+            AssignHotbar(slot, selectedAction);
             return;
         }
 
@@ -536,10 +549,12 @@ public partial class HudView : Control
         HotbarChanged();
     }
 
-    private void AssignHotbar(int slot, int skill)
+    private void AssignHotbar(int slot, int action)
     {
-        var name = state!.Terminology.Skills[skill].Name;
-        state.Chat.Add(HotbarAssignments.Assign(Settings, slot, skill, name));
+        var name = action < HotbarButtons.FirstInventoryAction
+            ? state!.Terminology.Skills[action].Name
+            : HotbarButtons.ItemName(action);
+        state!.Chat.Add(HotbarAssignments.Assign(Settings, slot, action, name));
         HotbarChanged();
     }
 
@@ -675,7 +690,9 @@ public partial class HudView : Control
         GetNode<CanvasItem>("%SecondCharmFrame").Visible = look.Worn[(int)WornSlot.SecondCharm] != 0;
         for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
         {
-            GetNode<ItemSlotView>("%" + slot).Show(new ItemSlot(look.Worn[(int)slot], 0, 0, 0), [], false);
+            var slotView = GetNode<ItemSlotView>("%" + slot);
+            slotView.Show(new ItemSlot(look.Worn[(int)slot], 0, 0, 0), [], false);
+            slotView.ShowHotbarKey(null);
         }
     }
 
@@ -700,7 +717,10 @@ public partial class HudView : Control
         {
             var item = player.Worn[(int)slot];
             var showBlocked = blocked.Contains(slot) && (slot != WornSlot.SecondCharm || secondCharmWorn);
-            GetNode<ItemSlotView>("%" + slot).Show(item, ItemOverlays.Worn(item), showBlocked);
+            var slotView = GetNode<ItemSlotView>("%" + slot);
+            slotView.Show(item, ItemOverlays.Worn(item), showBlocked);
+            var hotbarKey = item.Sprite != 0 ? HotbarButtons.GearKeyButton(Settings.HotbarActions, slot) : null;
+            slotView.ShowHotbarKey(hotbarKey);
         }
     }
 
