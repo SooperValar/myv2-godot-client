@@ -22,6 +22,7 @@ public partial class HudView : Control
     private const string CasinoName = "Casino";
     private const string ContractName = "Contract";
     private const string SwapSetHint = "Swap equipment with a stored alternate set.";
+    private const string TrashCanName = "TrashCan";
     private const int HintFont = 1;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
 
@@ -89,6 +90,13 @@ public partial class HudView : Control
         }
 
         GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
+        GetNode<ClickArea>("%" + TrashCanName).Released += ClickTrashCan;
+        foreach (var node in GetNode("%MoneyButtons").GetChildren())
+        {
+            var moneyButton = (MoneyButton)node;
+            moneyButton.Released += button => ClickMoney(moneyButton.Silver, button);
+        }
+
         var inventory = GetNode<InventoryGrid>("%Inventory");
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
@@ -153,7 +161,7 @@ public partial class HudView : Control
         }
 
         ShowHeldItem(state.Player.HeldItem);
-        if (GetViewport().GuiGetHoveredControl() is not ItemSlotView hovered)
+        if (GetViewport().GuiGetHoveredControl() is not ClickArea hovered)
         {
             return;
         }
@@ -161,7 +169,11 @@ public partial class HudView : Control
         var player = state.Player;
         var holdingItem = player.HeldItem.Sprite != 0;
         MouseCursor cursor;
-        if (hovered.GetParent() is InventoryGrid inventory)
+        if (hovered.Name == TrashCanName)
+        {
+            cursor = TrashCan.Cursor(holdingItem);
+        }
+        else if (hovered.GetParent() is InventoryGrid inventory)
         {
             var item = player.Inventory[inventory.SlotShownIn(hovered.GetIndex())];
             cursor = InventoryClicks.Cursor(item, holdingItem, HeldKeys.Current());
@@ -270,6 +282,30 @@ public partial class HudView : Control
         state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith
             ? new ShopSale(state.Shop.Number, 0)
             : null;
+
+    private void ClickMoney(int silver, MapButton button)
+    {
+        if (MoneyButtons.Packet(silver, button, selectedCharacter) is { } packet)
+        {
+            sendCommand(packet);
+        }
+        else if (button == MapButton.Right)
+        {
+            state?.Chat.Add(new LogLine(MoneyButtons.Hint(silver), HintFont));
+        }
+    }
+
+    private void ClickTrashCan(MapButton button)
+    {
+        if (TrashCan.Packet(button, selectedCharacter) is { } packet)
+        {
+            sendCommand(packet);
+        }
+        else if (button == MapButton.Right)
+        {
+            state?.Chat.Add(new LogLine(TrashCan.Hint, HintFont));
+        }
+    }
 
     private void ClickSwapSet(MapButton button)
     {

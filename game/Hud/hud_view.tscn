@@ -9,6 +9,7 @@
 [ext_resource type="PackedScene" uid="uid://c6vnyqfwgtfq3" path="res://Hud/item_slot.tscn" id="7_itemslot"]
 [ext_resource type="Script" uid="uid://bsuu4hjc2626f" path="res://Hud/ClickArea.cs" id="8_clickarea"]
 [ext_resource type="Script" uid="uid://bej4bhfsvv64f" path="res://Hud/InventoryGrid.cs" id="9_inventory"]
+[ext_resource type="Script" uid="uid://6buv0wcp8hh8" path="res://Hud/MoneyButton.cs" id="10_money"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -681,6 +682,47 @@ layout_mode = 2
 
 [node name="Cell29" parent="Inventory" unique_id=374646689 instance=ExtResource("7_itemslot")]
 layout_mode = 2
+
+[node name="MoneyButtons" type="Control" parent="." unique_id=1738204011]
+unique_name_in_owner = true
+layout_mode = 0
+mouse_filter = 2
+
+[node name="TenThousandGold" type="Control" parent="MoneyButtons" unique_id=517029318]
+layout_mode = 0
+offset_left = 434.0
+offset_top = 112.0
+offset_right = 467.0
+offset_bottom = 145.0
+script = ExtResource("10_money")
+Silver = 1000000
+
+[node name="ThousandGold" type="Control" parent="MoneyButtons" unique_id=1866209347]
+layout_mode = 0
+offset_left = 468.0
+offset_top = 112.0
+offset_right = 501.0
+offset_bottom = 145.0
+script = ExtResource("10_money")
+Silver = 100000
+
+[node name="HundredGold" type="Control" parent="MoneyButtons" unique_id=942285130]
+layout_mode = 0
+offset_left = 502.0
+offset_top = 112.0
+offset_right = 535.0
+offset_bottom = 145.0
+script = ExtResource("10_money")
+Silver = 10000
+
+[node name="TrashCan" type="Control" parent="." unique_id=1402291776]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 536.0
+offset_top = 112.0
+offset_right = 569.0
+offset_bottom = 145.0
+script = ExtResource("8_clickarea")
 
 [node name="HeldItem" parent="." unique_id=1093361542 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
