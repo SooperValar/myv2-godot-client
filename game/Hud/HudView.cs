@@ -36,6 +36,7 @@ public partial class HudView : Control
     private static readonly Vector2 HeldItemOffset = new(16, 16);
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
+    private readonly SkillShortcut skillShortcut = new();
     private readonly StatPlan statPlan = new();
 
     private bool darkMode;
@@ -124,6 +125,7 @@ public partial class HudView : Control
         foreach (var node in GetNode("%StatRows").GetChildren().Concat(GetNode("%SkillRows").GetChildren()))
         {
             var row = (StatRow)node;
+            row.GetNode<ClickArea>("NameArea").Released += button => ClickStatName(row, button);
             row.GetNode<ClickArea>("RaiseArea").Released += button => ClickStat(row, true, button);
             row.GetNode<ClickArea>("LowerArea").Released += button => ClickStat(row, false, button);
         }
@@ -464,6 +466,42 @@ public partial class HudView : Control
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
         GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    private void ClickStatName(StatRow row, MapButton button)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        if (row.Slot < StatPlan.FirstSkillSlot)
+        {
+            if (button == MapButton.Right)
+            {
+                state.Chat.Add(SkillClicks.StatHelp(row.Slot));
+            }
+
+            return;
+        }
+
+        var player = state.Player;
+        var number = row.Slot - StatPlan.FirstSkillSlot;
+        var text = state.Terminology.Skills[number];
+        var learnt = player.Skills[number][0] != 0;
+        if (button == MapButton.Left)
+        {
+            sendCommand(SkillClicks.Use(number, selectedCharacter, text.Attributes[0]));
+        }
+        else if (button == MapButton.Right && SkillClicks.IsKnown(number, learnt, player.Kindred))
+        {
+            foreach (var line in SkillClicks.Help(text.Name, text.Description, text.Attributes))
+            {
+                state.Chat.Add(line);
+            }
+
+            state.Chat.Add(skillShortcut.Toggle(number, text.Name, player.Kindred));
+        }
     }
 
     private void ClickStat(StatRow row, bool raise, MapButton button)
