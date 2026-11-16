@@ -12,6 +12,7 @@ namespace TheLastGate.Hud;
 public partial class HudView : Control
 {
     private const long EditorCacheBudgetBytes = 64L * 1024 * 1024;
+    private const int ReservedSlot = 4;
     private const int MaximumSlot = 5;
     private const string StrongholdName = "Stronghold";
     private const string CasinoName = "Casino";
@@ -91,6 +92,9 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
+        ShowBar("HitPointBar", player.ActiveHitPoints, player.HitPoints);
+        ShowBar("EnduranceBar", player.ActiveEndurance, player.Endurance);
+        ShowBar("ManaBar", player.ActiveMana, player.Mana);
         var rank = Ranks.For(player.PointsTotal);
         SetText(
             "SelectedName",
@@ -159,6 +163,9 @@ public partial class HudView : Control
         SetText(name, Number(current));
         SetText("Max" + name, Number(maximum));
     }
+
+    private void ShowBar(string name, int current, int[] values) =>
+        GetNode<PortraitBar>("%" + name).Show(PortraitBars.For(current, values[MaximumSlot], values[ReservedSlot]));
 
     private void ShowPoints(string name, string shownName, int points)
     {

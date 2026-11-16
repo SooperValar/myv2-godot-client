@@ -4,6 +4,7 @@
 [ext_resource type="Script" uid="uid://dns0wvx5gfo6b" path="res://Hud/ArchiveSprite.cs" id="2_6ebvl"]
 [ext_resource type="Script" uid="uid://dcauyrtk0yhkq" path="res://Hud/ChatLog.cs" id="3_chatlog"]
 [ext_resource type="Script" uid="uid://b34mtc82b8qbi" path="res://Hud/HudLabel.cs" id="4_hudlabel"]
+[ext_resource type="Script" uid="uid://b2ud80uowpc4u" path="res://Hud/PortraitBar.cs" id="5_portraitbar"]
 
 [node name="HudView" type="Control" unique_id=1980551908]
 layout_mode = 3
@@ -221,6 +222,105 @@ text = "Worldofslaying"
 horizontal_alignment = 1
 script = ExtResource("4_hudlabel")
 
+[node name="HitPointBar" type="Control" parent="." unique_id=777391917]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 845.0
+offset_top = 131.0
+offset_right = 907.0
+offset_bottom = 137.0
+mouse_filter = 2
+script = ExtResource("5_portraitbar")
+
+[node name="Background" type="ColorRect" parent="HitPointBar" unique_id=899829088]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 62.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0, 0.0793650794, 0.516129032, 1)
+
+[node name="Reserved" type="ColorRect" parent="HitPointBar" unique_id=1753279629]
+layout_mode = 0
+offset_left = 62.0
+offset_right = 62.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.516129032, 0.507936508, 0.516129032, 1)
+
+[node name="Current" type="ColorRect" parent="HitPointBar" unique_id=1190918889]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 40.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.0322580645, 0.380952381, 0, 1)
+[node name="EnduranceBar" type="Control" parent="." unique_id=288091721]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 845.0
+offset_top = 138.0
+offset_right = 907.0
+offset_bottom = 144.0
+mouse_filter = 2
+script = ExtResource("5_portraitbar")
+
+[node name="Background" type="ColorRect" parent="EnduranceBar" unique_id=943746242]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 62.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0, 0.0793650794, 0.516129032, 1)
+
+[node name="Reserved" type="ColorRect" parent="EnduranceBar" unique_id=715949606]
+layout_mode = 0
+offset_left = 62.0
+offset_right = 62.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.516129032, 0.507936508, 0.516129032, 1)
+
+[node name="Current" type="ColorRect" parent="EnduranceBar" unique_id=136438214]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 40.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.0322580645, 0.380952381, 0, 1)
+[node name="ManaBar" type="Control" parent="." unique_id=938535383]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 845.0
+offset_top = 145.0
+offset_right = 907.0
+offset_bottom = 151.0
+mouse_filter = 2
+script = ExtResource("5_portraitbar")
+
+[node name="Background" type="ColorRect" parent="ManaBar" unique_id=1773139351]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 62.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0, 0.0793650794, 0.516129032, 1)
+
+[node name="Reserved" type="ColorRect" parent="ManaBar" unique_id=364543312]
+layout_mode = 0
+offset_left = 62.0
+offset_right = 62.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.516129032, 0.507936508, 0.516129032, 1)
+
+[node name="Current" type="ColorRect" parent="ManaBar" unique_id=847524060]
+layout_mode = 0
+offset_left = 0.0
+offset_right = 40.0
+offset_bottom = 6.0
+mouse_filter = 2
+color = Color(0.0322580645, 0.380952381, 0, 1)
 [node name="RankBadge" type="TextureRect" parent="." unique_id=751328766]
 unique_name_in_owner = true
 layout_mode = 0
