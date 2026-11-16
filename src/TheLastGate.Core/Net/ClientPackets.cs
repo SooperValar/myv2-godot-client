@@ -23,4 +23,6 @@ public static class ClientPackets
         BinaryPrimitives.WriteInt32LittleEndian(packet.AsSpan(3), second);
         return packet;
     }
+
+    public static byte[] OneValue(ClientCommand command, int value) => throw new NotImplementedException();
 }

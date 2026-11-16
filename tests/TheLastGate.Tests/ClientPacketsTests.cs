@@ -19,4 +19,12 @@ public class ClientPacketsTests
 
         Assert.Equal(expected, ClientPackets.ShortAndInt(ClientCommand.Mode, 2, 7));
     }
+
+    [Fact]
+    public void OneValue_WritesTheCommandAndOneLittleEndianValue()
+    {
+        byte[] expected = [31, 5, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        Assert.Equal(expected, ClientPackets.OneValue(ClientCommand.Exit, 261));
+    }
 }
