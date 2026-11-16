@@ -24,5 +24,11 @@ public static class ClientPackets
         return packet;
     }
 
-    public static byte[] OneValue(ClientCommand command, int value) => throw new NotImplementedException();
+    public static byte[] OneValue(ClientCommand command, int value)
+    {
+        var packet = new byte[Protocol.PacketSize];
+        packet[0] = (byte)command;
+        BinaryPrimitives.WriteInt32LittleEndian(packet.AsSpan(1), value);
+        return packet;
+    }
 }
