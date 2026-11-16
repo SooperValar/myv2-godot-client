@@ -6,9 +6,6 @@ namespace TheLastGate.Stats;
 
 public static class SkillOrder
 {
-    private const uint SeyanDu = 1u << 1;
-    private const uint Lycanthrope = 1u << 16;
-    private const uint KnowsIdentify = 1u << 18;
     private const int SeyanDuSkill = 44;
     private const int IdentifySkill = 52;
 
@@ -35,13 +32,13 @@ public static class SkillOrder
             return first.Learnt ? -1 : 1;
         }
 
-        var knowsIdentify = (kindred & KnowsIdentify) != 0;
+        var knowsIdentify = (kindred & Kindred.KnowsIdentify) != 0;
         if (!knowsIdentify && Last(first, second, skill => skill.Number == IdentifySkill) is { } identify)
         {
             return identify;
         }
 
-        var isLycanthrope = (kindred & Lycanthrope) != 0;
+        var isLycanthrope = (kindred & Kindred.Lycanthrope) != 0;
         if (!isLycanthrope && Last(first, second, skill => LycanthropeSkills.Contains(skill.Number)) is { } lycanthrope)
         {
             return lycanthrope;
@@ -57,7 +54,7 @@ public static class SkillOrder
             return unlearnt;
         }
 
-        if ((kindred & SeyanDu) == 0)
+        if ((kindred & Kindred.SeyanDu) == 0)
         {
             if (first.Number == SeyanDuSkill)
             {
