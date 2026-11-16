@@ -93,6 +93,16 @@ public class HotbarButtonsTests
     }
 
     [Fact]
+    public void InventoryKeySprite_ShowsTheKeyOfTheButtonThatUsesTheInventorySlot()
+    {
+        var actions = new CharacterSettings().HotbarActions;
+        actions[5] = 105;
+
+        Assert.Equal(4016, HotbarButtons.InventoryKeySprite(actions, 5));
+        Assert.Null(HotbarButtons.InventoryKeySprite(actions, 6));
+    }
+
+    [Fact]
     public void UsePacket_UsesASkillOnTheSelectedCharacter()
     {
         Assert.Equal(ClientPackets.ThreeValues(ClientCommand.Skill, 50, 345, 1), HotbarButtons.UsePacket(50, 345));

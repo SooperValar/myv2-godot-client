@@ -38,6 +38,8 @@ public static class HotbarButtons
             ? FirstKeySprite + button
             : null;
 
+    public static int? InventoryKeySprite(int[] actions, int slot) => throw new NotImplementedException();
+
     public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
     {
         >= FirstEquipmentAction =>
