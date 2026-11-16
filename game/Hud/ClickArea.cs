@@ -17,7 +17,7 @@ public partial class ClickArea : Control
         }
 
         AcceptEvent();
-        if (click.Pressed)
+        if (click.Pressed || !new Rect2(Vector2.Zero, Size).HasPoint(click.Position))
         {
             return;
         }
