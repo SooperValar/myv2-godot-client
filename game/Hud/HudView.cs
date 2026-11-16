@@ -138,6 +138,7 @@ public partial class HudView : Control
             hotbarButton.Released += button => ClickHotbar(hotbarButton.Slot, button);
         }
 
+        GetNode<HotbarMenu>("%HotbarMenu").SkillChosen += ChooseHotbarSkill;
         var inventory = GetNode<InventoryGrid>("%Inventory");
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
@@ -315,6 +316,9 @@ public partial class HudView : Control
                     break;
                 case HudLabel label:
                     label.ApplyFont();
+                    break;
+                case HotbarMenu menu:
+                    menu.ApplyFont();
                     break;
             }
 
@@ -500,7 +504,49 @@ public partial class HudView : Control
         if (button == MapButton.Left)
         {
             UseHotbar(slot);
+            return;
         }
+
+        if (button != MapButton.Right || state == null)
+        {
+            return;
+        }
+
+        if (skillShortcut.Selected is { } selectedSkill)
+        {
+            AssignHotbar(slot, selectedSkill);
+            return;
+        }
+
+        var skillNames = state.Terminology.Skills;
+        var skills = HotbarAssignments.MenuSkills(state.Player.Skills, state.Player.Kindred)
+            .Select(number => (number, skillNames[number].Name));
+        GetNode<HotbarMenu>("%HotbarMenu").Open(slot, skills, mousePosition);
+    }
+
+    private void ChooseHotbarSkill(int slot, int? skill)
+    {
+        if (skill is { } number)
+        {
+            AssignHotbar(slot, number);
+            return;
+        }
+
+        HotbarAssignments.Clear(Settings, slot);
+        HotbarChanged();
+    }
+
+    private void AssignHotbar(int slot, int skill)
+    {
+        var name = state!.Terminology.Skills[skill].Name;
+        state.Chat.Add(HotbarAssignments.Assign(Settings, slot, skill, name));
+        HotbarChanged();
+    }
+
+    private void HotbarChanged()
+    {
+        SettingsChanged?.Invoke();
+        Refresh(selectedCharacter);
     }
 
     private void UseHotbar(int slot)
