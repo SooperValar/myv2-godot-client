@@ -23,10 +23,12 @@ public partial class HudView : Control
     private const string ContractName = "Contract";
     private const string SwapSetHint = "Swap equipment with a stored alternate set.";
     private const int HintFont = 1;
+    private static readonly Vector2 HeldItemOffset = new(16, 16);
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
     private IFontSet? fonts;
+    private Vector2 mousePosition;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
     private SpriteLoader? sprites;
@@ -135,9 +137,23 @@ public partial class HudView : Control
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
     }
 
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (inputEvent is InputEventMouse mouse)
+        {
+            mousePosition = mouse.Position;
+        }
+    }
+
     public override void _Process(double delta)
     {
-        if (state == null || GetViewport().GuiGetHoveredControl() is not ItemSlotView hovered)
+        if (state == null)
+        {
+            return;
+        }
+
+        ShowHeldItem(state.Player.HeldItem);
+        if (GetViewport().GuiGetHoveredControl() is not ItemSlotView hovered)
         {
             return;
         }
@@ -159,7 +175,12 @@ public partial class HudView : Control
             return;
         }
 
-        hovered.MouseDefaultCursorShape = (CursorShape)CursorShapes.For(cursor);
+        var shape = (CursorShape)CursorShapes.For(cursor);
+        if (hovered.MouseDefaultCursorShape != shape)
+        {
+            hovered.MouseDefaultCursorShape = shape;
+            GetViewport().UpdateMouseCursorState();
+        }
     }
 
     public override void _EnterTree()
@@ -260,6 +281,14 @@ public partial class HudView : Control
         {
             state?.Chat.Add(new LogLine(SwapSetHint, HintFont));
         }
+    }
+
+    private void ShowHeldItem(ItemSlot item)
+    {
+        var held = GetNode<ItemSlotView>("%HeldItem");
+        held.Show(item, ItemOverlays.Worn(item), false);
+        held.Position = mousePosition - HeldItemOffset;
+        held.SetHighlighted(HeldItem.IsHighlighted(CursorShapes.CursorFor(Input.GetCurrentCursorShape())));
     }
 
     private void ShowEquipment(PlayerState player)

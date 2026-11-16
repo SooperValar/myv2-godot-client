@@ -681,3 +681,7 @@ layout_mode = 2
 
 [node name="Cell29" parent="Inventory" unique_id=374646689 instance=ExtResource("7_itemslot")]
 layout_mode = 2
+
+[node name="HeldItem" parent="." unique_id=1093361542 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
+mouse_filter = 2

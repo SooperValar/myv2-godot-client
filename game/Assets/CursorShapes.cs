@@ -25,6 +25,19 @@ public static class CursorShapes
 
     public static Input.CursorShape For(MouseCursor cursor) => Shapes[cursor];
 
+    public static MouseCursor CursorFor(Input.CursorShape shape)
+    {
+        foreach (var (cursor, cursorShape) in Shapes)
+        {
+            if (cursorShape == shape)
+            {
+                return cursor;
+            }
+        }
+
+        return MouseCursor.None;
+    }
+
     public static void Register()
     {
         foreach (var (cursor, shape) in Shapes)

@@ -53,7 +53,7 @@ public partial class ItemSlotView : ClickArea
         GetNode<CanvasItem>("Blocked").Visible = blocked;
     }
 
-    private void SetHighlighted(bool highlighted)
+    public void SetHighlighted(bool highlighted)
     {
         var brightness = highlighted ? HighlightBrightness : 1f;
         GetNode<CanvasItem>("Highlighted").Modulate = new Color(brightness, brightness, brightness);
