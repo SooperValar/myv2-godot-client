@@ -1,14 +1,31 @@
-using System;
+using TheLastGate.Characters;
+using TheLastGate.Net;
 
 namespace TheLastGate.Hotbar;
 
 public static class HotbarButtons
 {
-    public static string KeyLabel(int slot) => throw new NotImplementedException();
+    private const string Keys = "12345QWERTASDFGZXCVB";
+    private const int SkillLimit = 60;
+    private const int FirstInventoryAction = 100;
+    private const int FirstEquipmentAction = 200;
+    private const int UsedFromHotbar = 1;
 
-    public static int? SlotForKey(char key) => throw new NotImplementedException();
+    public static string KeyLabel(int slot) => $"C-{Keys[slot]}";
 
-    public static string Name(int action, string storedName) => throw new NotImplementedException();
+    public static int? SlotForKey(char key) => Keys.IndexOf(key) is var slot and >= 0 ? slot : null;
 
-    public static byte[]? UsePacket(int action, int selectedCharacter) => throw new NotImplementedException();
+    public static string Name(int action, string storedName) =>
+        action == CharacterSettings.Unassigned ? "-" : storedName;
+
+    public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
+    {
+        >= FirstEquipmentAction =>
+            InventoryPackets.For(InventoryAction.UseGear, action - FirstEquipmentAction, selectedCharacter),
+        >= FirstInventoryAction =>
+            InventoryPackets.For(InventoryAction.UseItem, action - FirstInventoryAction, selectedCharacter),
+        >= 0 and < SkillLimit =>
+            ClientPackets.ThreeValues(ClientCommand.Skill, action, selectedCharacter, UsedFromHotbar),
+        _ => null,
+    };
 }
