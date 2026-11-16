@@ -16,7 +16,6 @@ namespace TheLastGate.Game;
 public partial class GameScreen : Control
 {
     private const string LauncherScene = "res://Launcher/launcher.tscn";
-    private const int MaximumPowerSlot = 5;
     private const long SpriteCacheBudgetBytes = 256L * 1024 * 1024;
     private const int WorldViewIndex = 1;
     private const int ErrorFont = 0;
@@ -32,14 +31,12 @@ public partial class GameScreen : Control
     private TickProcessor processor = null!;
     private GameSession session = null!;
     private SpriteLoader? sprites;
-    private Label tickCounts = null!;
     private WorldView? worldView;
 
     public override void _Ready()
     {
         hudView = GetNode<HudView>("%HudView");
-        tickCounts = GetNode<Label>("%TickCounts");
-        GetNode<Button>("%DisconnectButton").Pressed += ReturnToLauncher;
+        hudView.LeaveRequested += ReturnToLauncher;
 
         if (GameSession.Take() is not { } startedSession)
         {
@@ -100,12 +97,6 @@ public partial class GameScreen : Control
             gameState.Chat.Add(new LogLine($"Lost track of the server's data: {exception.Message}", ErrorFont));
             connection.Disconnect();
         }
-
-        var player = gameState.Player;
-        tickCounts.Text = $"{player.Name} in {player.Location}   "
-            + $"HP {player.ActiveHitPoints}/{player.HitPoints[MaximumPowerSlot]}   "
-            + $"Ticks played: {pacer.TicksPlayed}   Queued: {playback.QueuedTicks}   "
-            + $"World refresh: {worldView?.LastRefreshMilliseconds:F2} ms";
     }
 
     public override void _ExitTree()
@@ -200,6 +191,7 @@ public partial class GameScreen : Control
         gameState.Chat.Add(new LogLine(" ", StatusFont));
         gameState.Chat.Add(new LogLine($"EXIT: {exit.Reason}", StatusFont));
         connection.Disconnect();
+        hudView.ServerEnded(exit.Code);
     }
 
     private void ReturnToLauncher() => GetTree().CallDeferred(SceneTree.MethodName.ChangeSceneToFile, LauncherScene);

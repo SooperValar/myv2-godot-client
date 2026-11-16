@@ -1,4 +1,6 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using Godot;
@@ -8,6 +10,7 @@ using TheLastGate.Config;
 using TheLastGate.Cursors;
 using TheLastGate.Game;
 using TheLastGate.Items;
+using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.World;
 
@@ -25,7 +28,9 @@ public partial class HudView : Control
     private const string SwapSetHint = "Swap equipment with a stored alternate set.";
     private const string TrashCanName = "TrashCan";
     private const int HintFont = 1;
+    private const int WarningFont = 0;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
+    private readonly ExitSequence exit = new();
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
@@ -70,6 +75,8 @@ public partial class HudView : Control
     }
 
     public event Action? SettingsChanged;
+
+    public event Action? LeaveRequested;
 
     public static HudView? Containing(Node node)
     {
@@ -177,6 +184,7 @@ public partial class HudView : Control
             return;
         }
 
+        exit.Advance(TimeSpan.FromSeconds(delta));
         ShowHeldItem(state.Player.HeldItem);
         if (GetViewport().GuiGetHoveredControl() is not ClickArea hovered)
         {
@@ -317,6 +325,12 @@ public partial class HudView : Control
             return;
         }
 
+        if (option == OptionButton.Exit)
+        {
+            ClickExit();
+            return;
+        }
+
         if (OptionButtons.Packet(option) is { } packet)
         {
             sendCommand(packet);
@@ -325,6 +339,48 @@ public partial class HudView : Control
         if (OptionButtons.Toggle(option, Settings))
         {
             SettingsChanged?.Invoke();
+        }
+    }
+
+    public void ServerEnded(int reasonCode)
+    {
+        if (exit.ServerEnded(reasonCode))
+        {
+            LeaveRequested?.Invoke();
+        }
+    }
+
+    private void ClickExit()
+    {
+        switch (exit.Click())
+        {
+            case ExitStep.Warn:
+                foreach (var packet in ChatPackets.Say(ExitSequence.TavernCommand))
+                {
+                    sendCommand(packet);
+                }
+
+                AddWarnings(ExitSequence.WarningLines);
+                break;
+            case ExitStep.RequestExit:
+                sendCommand(ExitSequence.ExitPacket);
+                AddWarnings(ExitSequence.RequestLines);
+                break;
+            case ExitStep.Leave:
+                LeaveRequested?.Invoke();
+                break;
+            case ExitStep.Wait:
+                break;
+            default:
+                throw new UnreachableException();
+        }
+    }
+
+    private void AddWarnings(IEnumerable<string> lines)
+    {
+        foreach (var line in lines)
+        {
+            state?.Chat.Add(new LogLine(line, WarningFont));
         }
     }
 
