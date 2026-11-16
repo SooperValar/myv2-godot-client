@@ -4,6 +4,7 @@ using System.IO;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Config;
+using TheLastGate.Cursors;
 using TheLastGate.Game;
 using TheLastGate.Items;
 using TheLastGate.State;
@@ -86,6 +87,14 @@ public partial class HudView : Control
         }
 
         GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
+        var inventory = GetNode<InventoryGrid>("%Inventory");
+        for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
+        {
+            var clickedCell = cell;
+            inventory.GetChild<ItemSlotView>(cell).Released +=
+                button => ClickInventory(inventory.SlotShownIn(clickedCell), button);
+        }
+
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
         Refresh(0);
@@ -128,16 +137,28 @@ public partial class HudView : Control
 
     public override void _Process(double delta)
     {
-        if (state == null || GetViewport().GuiGetHoveredControl() is not ItemSlotView hovered
-            || !Enum.TryParse<WornSlot>(hovered.Name, out var slot))
+        if (state == null || GetViewport().GuiGetHoveredControl() is not ItemSlotView hovered)
         {
             return;
         }
 
-        var cursor = EquipmentClicks.Cursor(
-            state.Player.Worn[(int)slot].Sprite != 0,
-            state.Player.HeldItem.Sprite != 0,
-            HeldKeys.Current());
+        var player = state.Player;
+        var holdingItem = player.HeldItem.Sprite != 0;
+        MouseCursor cursor;
+        if (hovered.GetParent() is InventoryGrid inventory)
+        {
+            var item = player.Inventory[inventory.SlotShownIn(hovered.GetIndex())];
+            cursor = InventoryClicks.Cursor(item, holdingItem, HeldKeys.Current());
+        }
+        else if (Enum.TryParse<WornSlot>(hovered.Name, out var slot))
+        {
+            cursor = EquipmentClicks.Cursor(player.Worn[(int)slot].Sprite != 0, holdingItem, HeldKeys.Current());
+        }
+        else
+        {
+            return;
+        }
+
         hovered.MouseDefaultCursorShape = (CursorShape)CursorShapes.For(cursor);
     }
 
@@ -201,6 +222,33 @@ public partial class HudView : Control
             sendCommand(packet);
         }
     }
+
+    private void ClickInventory(int slot, MapButton button)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        var player = state.Player;
+        var packets = InventoryClicks.Packets(
+            slot,
+            player.Inventory[slot],
+            player.HeldItem.Sprite != 0,
+            button,
+            HeldKeys.Current(),
+            SaleToOpenShop(),
+            selectedCharacter);
+        foreach (var packet in packets)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private ShopSale? SaleToOpenShop() =>
+        state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith
+            ? new ShopSale(state.Shop.Number, 0)
+            : null;
 
     private void ClickSwapSet(MapButton button)
     {
