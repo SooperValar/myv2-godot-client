@@ -10,13 +10,13 @@ public sealed class CharacterSettings
 {
     public const int HotbarSlots = 20;
     public const int Unassigned = -1;
+    public const string EmptyHotbarName = "-";
 
     private const int TogglesOffset = 324;
     private const int ToggleCount = 5;
     private const int HotbarOffset = 344;
     private const int HotbarNameLength = 8;
     private const int HotbarEntrySize = 12;
-    private const string EmptyHotbarName = "-";
 
     private static readonly (int Slot, int Skill, string Name)[] EveryClassStartingSkills =
         [(0, 50, "Light"), (19, 51, "Recall")];
