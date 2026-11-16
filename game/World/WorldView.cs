@@ -45,7 +45,6 @@ public partial class WorldView : Node2D
     private Shader? glowShader;
     private MapAction hover = MapAction.Nothing;
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
-    private NameplateFonts nameplateFonts = null!;
     private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
     private int selectedCharacter;
@@ -54,6 +53,7 @@ public partial class WorldView : Node2D
 
     public GameState State { get; set; } = null!;
     public SpriteLoader Sprites { get; set; } = null!;
+    public ClassicFonts Fonts { get; set; } = null!;
     public bool HideWalls { get; set; } = true;
     public bool ShowNames { get; set; } = true;
     public bool ShowHealthPercent { get; set; } = true;
@@ -66,7 +66,6 @@ public partial class WorldView : Node2D
     public override void _Ready()
     {
         nameplateScene = GD.Load<PackedScene>(NameplateScenePath);
-        nameplateFonts = new NameplateFonts(Sprites);
         floorLayer = AddLayer();
         objectLayer = AddLayer();
         for (var row = WorldMap.Size - 1; row >= 0; row--)
@@ -329,7 +328,11 @@ public partial class WorldView : Node2D
         nameplate.ZIndex = tileIndex == PlayerTile ? PlayerNameplateLayer : 0;
         nameplate.Display(
             NameplateText.For(name, tile.CharacterId, tile.CharacterHealthPercent, ShowNames, ShowHealthPercent),
-            nameplateFonts.For(NameplateText.FontFor(tile.CharacterTextColour)),
+            new NameplateFont(
+                Fonts.For(NameplateText.FontFor(tile.CharacterTextColour)),
+                ClassicFonts.FontSize,
+                Colors.White,
+                true),
             tile.CharacterHealthPercent,
             showText,
             ShowHealthBars);

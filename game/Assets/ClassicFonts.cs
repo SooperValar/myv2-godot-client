@@ -1,12 +1,11 @@
 using System.Collections.Generic;
 using Godot;
-using TheLastGate.Assets;
 
-namespace TheLastGate.World;
+namespace TheLastGate.Assets;
 
 // Builds Godot bitmap fonts from the current client's font sheets: one sheet per colour, 96 letters of 6x9 pixels from
 // the second pixel row, for the characters from space to 127.
-public sealed class NameplateFonts(SpriteLoader sprites)
+public sealed class ClassicFonts(SpriteLoader sprites)
 {
     private const int FirstFontSprite = 18100;
     private const int GlyphWidth = 6;
@@ -14,11 +13,12 @@ public sealed class NameplateFonts(SpriteLoader sprites)
     private const int GlyphTop = 1;
     private const int FirstCharacter = 32;
     private const int LastCharacter = 127;
-    private const int FontSize = 9;
 
-    private readonly Dictionary<int, NameplateFont> fonts = [];
+    public const int FontSize = 9;
 
-    public NameplateFont For(int font)
+    private readonly Dictionary<int, Font> fonts = [];
+
+    public Font For(int font)
     {
         if (fonts.TryGetValue(font, out var known))
         {
@@ -54,8 +54,7 @@ public sealed class NameplateFonts(SpriteLoader sprites)
             built.SetGlyphTextureIdx(0, size, character, 0);
         }
 
-        var nameplateFont = new NameplateFont(built, FontSize, Colors.White, true);
-        fonts[font] = nameplateFont;
-        return nameplateFont;
+        fonts[font] = built;
+        return built;
     }
 }

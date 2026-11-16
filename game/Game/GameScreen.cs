@@ -133,6 +133,7 @@ public partial class GameScreen : Control
         {
             State = gameState,
             Sprites = sprites,
+            Fonts = new ClassicFonts(sprites),
             SendCommand = connection.SendCommand,
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             ShowShadows = clientSettings.Shadows,
