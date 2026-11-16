@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://cjd58axjngkjh" path="res://Hud/StatRow.cs" id="1_row"]
 [ext_resource type="Script" uid="uid://b34mtc82b8qbi" path="res://Hud/HudLabel.cs" id="2_label"]
+[ext_resource type="Script" uid="uid://bsuu4hjc2626f" path="res://Hud/ClickArea.cs" id="3_click"]
 
 [node name="StatRow" type="Control" unique_id=1186498757]
 custom_minimum_size = Vector2(232, 9)
@@ -48,6 +49,14 @@ offset_bottom = 9.0
 text = "+"
 script = ExtResource("2_label")
 
+[node name="Lower" type="Label" parent="." unique_id=279358952]
+layout_mode = 0
+offset_left = 177.0
+offset_right = 183.0
+offset_bottom = 9.0
+text = "-"
+script = ExtResource("2_label")
+
 [node name="Cost" type="Label" parent="." unique_id=1241454680]
 layout_mode = 0
 offset_left = 189.0
@@ -56,3 +65,21 @@ offset_bottom = 9.0
 text = "150"
 horizontal_alignment = 2
 script = ExtResource("2_label")
+
+[node name="RaiseArea" type="Control" parent="." unique_id=1368325786]
+layout_mode = 0
+offset_left = 160.0
+offset_top = -6.0
+offset_right = 172.0
+offset_bottom = 8.0
+mouse_filter = 1
+script = ExtResource("3_click")
+
+[node name="LowerArea" type="Control" parent="." unique_id=470171003]
+layout_mode = 0
+offset_left = 172.0
+offset_top = -6.0
+offset_right = 185.0
+offset_bottom = 8.0
+mouse_filter = 1
+script = ExtResource("3_click")

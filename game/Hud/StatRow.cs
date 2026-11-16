@@ -20,10 +20,16 @@ public partial class StatRow : Control
         }
     }
 
+    public StatLine Line { get; private set; }
+
+    public int Slot { get; private set; }
+
     public override void _Ready() => ShowPreview();
 
-    public void Show(StatLine line, bool showBase)
+    public void Show(StatLine line, int slot, bool showBase)
     {
+        Line = line;
+        Slot = slot;
         var name = GetNode<HudLabel>("Name");
         name.Text = line.Name;
         name.Colour = line.Colour;
@@ -31,6 +37,7 @@ public partial class StatRow : Control
         ShowNumber("Current", line.Current);
         GetNode<HudLabel>("Current").Colour = line.Colour;
         GetNode<CanvasItem>("Raise").Visible = line.CanRaise;
+        GetNode<CanvasItem>("Lower").Visible = line.CanLower;
         ShowNumber("Cost", line.Cost);
     }
 

@@ -193,6 +193,15 @@ text = "12345"
 horizontal_alignment = 2
 script = ExtResource("4_hudlabel")
 
+[node name="UpdateButton" type="Control" parent="." unique_id=1568474112]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 137.0
+offset_top = 258.0
+offset_right = 185.0
+offset_bottom = 270.0
+script = ExtResource("8_clickarea")
+
 [node name="HitPointsLabel" type="Label" parent="." unique_id=945458870]
 layout_mode = 0
 offset_left = 9.0

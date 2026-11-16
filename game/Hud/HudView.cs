@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Characters;
@@ -120,6 +121,14 @@ public partial class HudView : Control
             moneyButton.Released += button => ClickMoney(moneyButton.Silver, button);
         }
 
+        foreach (var node in GetNode("%StatRows").GetChildren().Concat(GetNode("%SkillRows").GetChildren()))
+        {
+            var row = (StatRow)node;
+            row.GetNode<ClickArea>("RaiseArea").Released += button => ClickStat(row, true, button);
+            row.GetNode<ClickArea>("LowerArea").Released += button => ClickStat(row, false, button);
+        }
+
+        GetNode<ClickArea>("%UpdateButton").Released += ClickUpdate;
         var inventory = GetNode<InventoryGrid>("%Inventory");
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
@@ -445,15 +454,71 @@ public partial class HudView : Control
         var showBase = Settings.ShowStatBase;
         for (var attribute = 0; attribute < PlayerState.AttributeCount; attribute++)
         {
-            rows.GetChild<StatRow>(attribute)
-                .Show(StatLines.Attribute(attribute, player.Attributes[attribute], statPlan, player.Points), showBase);
+            var line = StatLines.Attribute(attribute, player.Attributes[attribute], statPlan, player.Points);
+            rows.GetChild<StatRow>(attribute).Show(line, attribute, showBase);
         }
 
-        rows.GetChild<StatRow>(HitPointsRow)
-            .Show(StatLines.HitPoints(player.HitPoints, statPlan, player.Points), showBase);
-        rows.GetChild<StatRow>(ManaRow).Show(StatLines.Mana(player.Mana, statPlan, player.Points), showBase);
+        var hitPoints = StatLines.HitPoints(player.HitPoints, statPlan, player.Points);
+        rows.GetChild<StatRow>(HitPointsRow).Show(hitPoints, StatPlan.HitPointsSlot, showBase);
+        var mana = StatLines.Mana(player.Mana, statPlan, player.Points);
+        rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
         GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
-        SetText("UpdatePoints", Number(player.Points));
+        SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    private void ClickStat(StatRow row, bool raise, MapButton button)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        if (button == MapButton.Right)
+        {
+            var help = raise ? StatPlan.RaiseHelp(row.Line.Name) : StatPlan.LowerHelp(row.Line.Name);
+            state.Chat.Add(new LogLine(help, HintFont));
+            return;
+        }
+
+        if (button != MapButton.Left || (raise && !row.Line.CanRaise))
+        {
+            return;
+        }
+
+        var ctrlOrAlt = Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
+        var times = StatPlan.ClickTimes(Input.IsKeyPressed(Key.Shift), ctrlOrAlt);
+        var values = StatPlan.Values(state.Player, row.Slot);
+        if (raise)
+        {
+            statPlan.Raise(row.Slot, values, state.Player.Points, times);
+        }
+        else
+        {
+            statPlan.Lower(row.Slot, values, times);
+        }
+
+        ShowStats(state.Player);
+    }
+
+    private void ClickUpdate(MapButton button)
+    {
+        if (button == MapButton.Right)
+        {
+            state?.Chat.Add(new LogLine(StatPlan.UpdateHelp, HintFont));
+            return;
+        }
+
+        if (button != MapButton.Left || state == null)
+        {
+            return;
+        }
+
+        foreach (var packet in statPlan.Commit())
+        {
+            sendCommand(packet);
+        }
+
+        ShowStats(state.Player);
     }
 
     private void ShowLook(CharacterLook look)
