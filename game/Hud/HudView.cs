@@ -103,6 +103,9 @@ public partial class HudView : Control
         SetText("RankName", rank.Name);
         SetSprite("RankBadge", rank.BadgeSprite);
         SetSprite("Portrait", state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
+        var buffIcons = BuffIcons.For(player.Buffs);
+        GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
+        GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
     }
 
     public override void _EnterTree()

@@ -5,6 +5,7 @@
 [ext_resource type="Script" uid="uid://dcauyrtk0yhkq" path="res://Hud/ChatLog.cs" id="3_chatlog"]
 [ext_resource type="Script" uid="uid://b34mtc82b8qbi" path="res://Hud/HudLabel.cs" id="4_hudlabel"]
 [ext_resource type="Script" uid="uid://b2ud80uowpc4u" path="res://Hud/PortraitBar.cs" id="5_portraitbar"]
+[ext_resource type="Script" uid="uid://32wxdmrregok" path="res://Hud/BuffIconsView.cs" id="6_bufficons"]
 
 [node name="HudView" type="Control" unique_id=1980551908]
 layout_mode = 3
@@ -363,6 +364,51 @@ offset_bottom = 185.0
 text = "Private First Class"
 horizontal_alignment = 1
 script = ExtResource("4_hudlabel")
+
+[node name="BuffArea" type="Control" parent="." unique_id=1862043517]
+layout_mode = 0
+offset_left = 848.0
+offset_top = 8.0
+offset_right = 1008.0
+offset_bottom = 123.0
+mouse_filter = 2
+
+[node name="Buffs" type="VFlowContainer" parent="BuffArea" unique_id=702918334]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+script = ExtResource("6_bufficons")
+PreviewSprites = PackedInt32Array(86, 87, 88)
+
+[node name="DebuffArea" type="Control" parent="." unique_id=1290455861]
+layout_mode = 0
+offset_left = 808.0
+offset_top = 8.0
+offset_right = 968.0
+offset_bottom = 123.0
+mouse_filter = 2
+
+[node name="Debuffs" type="VFlowContainer" parent="DebuffArea" unique_id=563013775]
+unique_name_in_owner = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+layout_direction = 3
+theme_override_constants/h_separation = 0
+theme_override_constants/v_separation = 0
+script = ExtResource("6_bufficons")
+PreviewSprites = PackedInt32Array(89, 91)
 
 [node name="ChatLog" type="Control" parent="." unique_id=417290385]
 unique_name_in_owner = true
