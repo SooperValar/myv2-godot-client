@@ -5,7 +5,7 @@ namespace TheLastGate.Assets;
 
 // Builds Godot bitmap fonts from the current client's font sheets: one sheet per colour, 96 letters of 6x9 pixels from
 // the second pixel row, for the characters from space to 127.
-public sealed class ClassicFonts(SpriteLoader sprites)
+public sealed class ClassicFonts(SpriteLoader sprites) : IFontSet
 {
     private const int FirstFontSprite = 18100;
     private const int GlyphWidth = 6;
@@ -14,13 +14,15 @@ public sealed class ClassicFonts(SpriteLoader sprites)
     private const int FirstCharacter = 32;
     private const int LastCharacter = 127;
 
-    public const int FontSize = 9;
+    private const int FontSize = 9;
 
-    private readonly Dictionary<int, Font> fonts = [];
+    private readonly Dictionary<TextColour, GameFont> fonts = [];
 
-    public Font For(int font)
+    public bool CentresLikeTheCurrentClient => true;
+
+    public GameFont For(TextColour colour)
     {
-        if (fonts.TryGetValue(font, out var known))
+        if (fonts.TryGetValue(colour, out var known))
         {
             return known;
         }
@@ -34,7 +36,7 @@ public sealed class ClassicFonts(SpriteLoader sprites)
             SubpixelPositioning = TextServer.SubpixelPositioning.Disabled,
         };
         var size = new Vector2I(FontSize, 0);
-        if (sprites.GetTexture(FirstFontSprite + font) is { } sheet)
+        if (sprites.GetTexture(FirstFontSprite + (int)colour) is { } sheet)
         {
             built.SetTextureImage(0, size, 0, sheet.GetImage());
         }
@@ -54,7 +56,8 @@ public sealed class ClassicFonts(SpriteLoader sprites)
             built.SetGlyphTextureIdx(0, size, character, 0);
         }
 
-        fonts[font] = built;
-        return built;
+        var font = new GameFont(built, FontSize, Colors.White);
+        fonts[colour] = font;
+        return font;
     }
 }

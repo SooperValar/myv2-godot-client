@@ -8,10 +8,9 @@ namespace TheLastGate.Hud;
 public partial class ChatLog : Control
 {
     private const int VisibleLines = 22;
-    private const int StatusFont = 1;
 
     private readonly LogScroll scroll = new();
-    private ClassicFonts fonts = null!;
+    private IFontSet fonts = null!;
     private bool hasLines;
     private TextLog? log;
     private RichTextLabel text = null!;
@@ -76,12 +75,13 @@ public partial class ChatLog : Control
         }
     }
 
-    public void Show(TextLog shownLog, ClassicFonts classicFonts)
+    public void Show(TextLog shownLog, IFontSet fontSet)
     {
-        fonts = classicFonts;
+        fonts = fontSet;
         log = shownLog;
-        text.AddThemeFontOverride("normal_font", fonts.For(StatusFont));
-        text.AddThemeFontSizeOverride("normal_font_size", ClassicFonts.FontSize);
+        var defaultFont = fonts.For(TextColour.Yellow);
+        text.AddThemeFontOverride("normal_font", defaultFont.Font);
+        text.AddThemeFontSizeOverride("normal_font_size", defaultFont.Size);
         foreach (var line in log.Lines)
         {
             Append(line);
@@ -113,8 +113,11 @@ public partial class ChatLog : Control
             text.Newline();
         }
 
-        text.PushFont(fonts.For(line.Font), ClassicFonts.FontSize);
+        var font = fonts.For((TextColour)line.Font);
+        text.PushFont(font.Font, font.Size);
+        text.PushColor(font.Tint);
         text.AddText(line.Text);
+        text.Pop();
         text.Pop();
         hasLines = true;
     }

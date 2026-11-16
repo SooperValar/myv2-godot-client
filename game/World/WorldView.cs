@@ -53,7 +53,7 @@ public partial class WorldView : Node2D
 
     public GameState State { get; set; } = null!;
     public SpriteLoader Sprites { get; set; } = null!;
-    public ClassicFonts Fonts { get; set; } = null!;
+    public IFontSet Fonts { get; set; } = null!;
     public bool HideWalls { get; set; } = true;
     public bool ShowNames { get; set; } = true;
     public bool ShowHealthPercent { get; set; } = true;
@@ -328,14 +328,16 @@ public partial class WorldView : Node2D
         nameplate.ZIndex = tileIndex == PlayerTile ? PlayerNameplateLayer : 0;
         nameplate.Display(
             NameplateText.For(name, tile.CharacterId, tile.CharacterHealthPercent, ShowNames, ShowHealthPercent),
-            new NameplateFont(
-                Fonts.For(NameplateText.FontFor(tile.CharacterTextColour)),
-                ClassicFonts.FontSize,
-                Colors.White,
-                true),
+            NameplateFontFor(tile.CharacterTextColour),
             tile.CharacterHealthPercent,
             showText,
             ShowHealthBars);
+    }
+
+    private NameplateFont NameplateFontFor(int textColour)
+    {
+        var font = Fonts.For((TextColour)NameplateText.FontFor(textColour));
+        return new NameplateFont(font.Font, font.Size, font.Tint, Fonts.CentresLikeTheCurrentClient);
     }
 
     // Builder markers, injuries, deaths, graves and magic glows, drawn after the tile's character and its action

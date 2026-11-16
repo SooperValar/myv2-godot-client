@@ -37,7 +37,7 @@ public partial class HudView : Control
         }
     }
 
-    public void Show(GameState state, ClassicFonts fonts) => GetNode<ChatLog>("%ChatLog").Show(state.Chat, fonts);
+    public void Show(GameState state, IFontSet fonts) => GetNode<ChatLog>("%ChatLog").Show(state.Chat, fonts);
 
     public override void _EnterTree()
     {
