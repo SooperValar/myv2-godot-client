@@ -149,9 +149,7 @@ public partial class HudView : Control
         ShowBar("EnduranceBar", player.ActiveEndurance, player.Endurance);
         ShowBar("ManaBar", player.ActiveMana, player.Mana);
         var rank = Ranks.For(player.PointsTotal);
-        SetText(
-            "SelectedName",
-            selectedCharacter == 0 ? player.Name : state.Names.NameOf(selectedCharacter, 0));
+        SetText("OwnName", player.Name);
         SetText("PlayerName", player.Name);
         SetText("RankName", rank.Name);
         SetSprite("RankBadge", rank.BadgeSprite);
