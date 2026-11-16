@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TheLastGate.State;
 
@@ -11,9 +12,9 @@ public static class ItemOverlays
     private const int StackSpriteBase = 4000;
     private const int LargestShownStack = 10;
 
-    public static IReadOnlyList<int> Worn(ItemSlot item)
+    public static IReadOnlyList<ItemOverlay> Worn(ItemSlot item)
     {
-        var overlays = new List<int>();
+        var overlays = new List<ItemOverlay>();
         if (item.Sprite == 0)
         {
             return overlays;
@@ -22,24 +23,26 @@ public static class ItemOverlays
         var placement = (ItemPlacement)item.Properties;
         if (placement.HasFlag(ItemPlacement.Soulstoned))
         {
-            overlays.Add(SoulstoneSprite);
+            overlays.Add(new ItemOverlay(SoulstoneSprite, 0));
         }
 
         if (placement.HasFlag(ItemPlacement.Enchanted))
         {
-            overlays.Add(TalismanSprite);
+            overlays.Add(new ItemOverlay(TalismanSprite, 0));
         }
 
         if (placement.HasFlag(ItemPlacement.Corrupted))
         {
-            overlays.Add(CorruptionSprite);
+            overlays.Add(new ItemOverlay(CorruptionSprite, 0));
         }
 
         if (item.Stack is > 0 and <= LargestShownStack)
         {
-            overlays.Add(StackSpriteBase + item.Stack);
+            overlays.Add(new ItemOverlay(StackSpriteBase + item.Stack, 0));
         }
 
         return overlays;
     }
+
+    public static IReadOnlyList<ItemOverlay> Carried(ItemSlot item) => throw new NotImplementedException();
 }

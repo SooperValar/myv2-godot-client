@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using Godot;
+using TheLastGate.Items;
 using TheLastGate.State;
 
 namespace TheLastGate.Hud;
@@ -29,7 +30,7 @@ public partial class ItemSlotView : ClickArea
         ShowPreview();
     }
 
-    public void Show(ItemSlot item, IReadOnlyList<int> overlays, bool blocked)
+    public void Show(ItemSlot item, IReadOnlyList<ItemOverlay> overlays, bool blocked)
     {
         GetNode<ArchiveSprite>("Highlighted/Item").SpriteNumber = item.Sprite;
         var overlayNodes = GetNode<Control>("Highlighted/Overlays");
@@ -44,7 +45,8 @@ public partial class ItemSlotView : ClickArea
             overlay.Visible = index < overlays.Count;
             if (overlay.Visible)
             {
-                overlay.SpriteNumber = overlays[index];
+                overlay.SpriteNumber = overlays[index].Sprite;
+                overlay.Position = new Vector2(overlays[index].OffsetX, 0);
             }
         }
 
