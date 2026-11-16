@@ -14,4 +14,7 @@ public static class ClientPackets
         BinaryPrimitives.WriteInt32LittleEndian(packet.AsSpan(9), third);
         return packet;
     }
+
+    public static byte[] ShortAndInt(ClientCommand command, int first, int second) =>
+        throw new NotImplementedException();
 }

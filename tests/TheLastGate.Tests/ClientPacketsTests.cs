@@ -11,4 +11,12 @@ public class ClientPacketsTests
 
         Assert.Equal(expected, ClientPackets.ThreeValues(ClientCommand.QuickShop, 7, 12, -1));
     }
+
+    [Fact]
+    public void ShortAndInt_WritesASixteenBitThenAThirtyTwoBitValue()
+    {
+        byte[] expected = [8, 2, 0, 7, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        Assert.Equal(expected, ClientPackets.ShortAndInt(ClientCommand.Mode, 2, 7));
+    }
 }
