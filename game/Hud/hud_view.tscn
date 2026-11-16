@@ -11,8 +11,12 @@
 [ext_resource type="Script" uid="uid://bej4bhfsvv64f" path="res://Hud/InventoryGrid.cs" id="9_inventory"]
 [ext_resource type="Script" uid="uid://6buv0wcp8hh8" path="res://Hud/MoneyButton.cs" id="10_money"]
 [ext_resource type="Script" uid="uid://dd5oxqd1g6pxq" path="res://Hud/OptionButtonView.cs" id="11_option"]
+[ext_resource type="Shader" uid="uid://bi6mdff1gh8uh" path="res://World/sprite_tint.gdshader" id="12_tint"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_portrait"]
+shader = ExtResource("12_tint")
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_marker"]
 draw_center = false
@@ -366,6 +370,7 @@ offset_right = 907.0
 offset_bottom = 137.0
 mouse_filter = 2
 script = ExtResource("5_portraitbar")
+LookColour = Color(0.709677419, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="HitPointBar" unique_id=899829088]
 layout_mode = 0
@@ -399,6 +404,7 @@ offset_right = 907.0
 offset_bottom = 144.0
 mouse_filter = 2
 script = ExtResource("5_portraitbar")
+LookColour = Color(0.709677419, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="EnduranceBar" unique_id=943746242]
 layout_mode = 0
@@ -432,6 +438,7 @@ offset_right = 907.0
 offset_bottom = 151.0
 mouse_filter = 2
 script = ExtResource("5_portraitbar")
+LookColour = Color(0.709677419, 0, 0, 1)
 
 [node name="Background" type="ColorRect" parent="ManaBar" unique_id=1773139351]
 layout_mode = 0
@@ -469,6 +476,7 @@ SpriteNumber = 10
 
 [node name="Portrait" type="TextureRect" parent="." unique_id=321547363]
 unique_name_in_owner = true
+material = SubResource("ShaderMaterial_portrait")
 layout_mode = 0
 offset_left = 874.0
 offset_top = 36.0
@@ -477,7 +485,7 @@ offset_bottom = 36.0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
 
-[node name="PlayerName" type="Label" parent="." unique_id=1648801510]
+[node name="PortraitName" type="Label" parent="." unique_id=1648801510]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 846.0

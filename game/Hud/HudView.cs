@@ -31,6 +31,7 @@ public partial class HudView : Control
     private const int WarningFont = 0;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
     private readonly ExitSequence exit = new();
+    private readonly LookPanel lookPanel = new();
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
@@ -123,6 +124,7 @@ public partial class HudView : Control
                 button => ClickInventory(inventory.SlotShownIn(clickedCell), button);
         }
 
+        state.LookShown += ShowLook;
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
         Refresh(0);
@@ -145,16 +147,15 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
-        ShowBar("HitPointBar", player.ActiveHitPoints, player.HitPoints);
-        ShowBar("EnduranceBar", player.ActiveEndurance, player.Endurance);
-        ShowBar("ManaBar", player.ActiveMana, player.Mana);
-        var rank = Ranks.For(player.PointsTotal);
-        SetText("OwnName", player.Name);
-        SetText("PlayerName", player.Name);
-        SetText("RankName", rank.Name);
-        SetSprite("RankBadge", rank.BadgeSprite);
-        SetSprite("Portrait", state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
-        ShowEquipment(player);
+        if (lookPanel.Shown is { } look)
+        {
+            ShowPortrait(look);
+        }
+        else
+        {
+            ShowPortrait(player, state.Map.Tiles[WorldMap.PlayerTile].AnimatedCharacterSprite);
+        }
+
         foreach (var node in GetNode("%OptionButtons").GetChildren())
         {
             var optionButton = (OptionButtonView)node;
@@ -183,6 +184,13 @@ public partial class HudView : Control
         }
 
         exit.Advance(TimeSpan.FromSeconds(delta));
+        var lookWasShown = lookPanel.Shown != null;
+        lookPanel.Advance(TimeSpan.FromSeconds(delta));
+        if (lookWasShown && lookPanel.Shown == null)
+        {
+            Refresh(selectedCharacter);
+        }
+
         ShowHeldItem(state.Player.HeldItem);
         if (GetViewport().GuiGetHoveredControl() is not ClickArea hovered)
         {
@@ -426,6 +434,49 @@ public partial class HudView : Control
         held.SetHighlighted(HeldItem.IsHighlighted(CursorShapes.CursorFor(Input.GetCurrentCursorShape())));
     }
 
+    private void ShowLook(CharacterLook look)
+    {
+        lookPanel.Show(look);
+        Refresh(selectedCharacter);
+    }
+
+    private void ShowPortrait(PlayerState player, int sprite)
+    {
+        ShowBar("HitPointBar", player.ActiveHitPoints, player.HitPoints);
+        ShowBar("EnduranceBar", player.ActiveEndurance, player.Endurance);
+        ShowBar("ManaBar", player.ActiveMana, player.Mana);
+        GetNode<CanvasItem>("%OwnName").Visible = true;
+        SetText("OwnName", player.Name);
+        ShowCharacter(player.Name, player.PointsTotal, sprite, SpriteTint.None);
+        ShowEquipment(player);
+    }
+
+    private void ShowPortrait(CharacterLook look)
+    {
+        ShowLookBar("HitPointBar", look.ActiveHitPoints, look.HitPoints);
+        ShowLookBar("EnduranceBar", look.ActiveEndurance, look.Endurance);
+        ShowLookBar("ManaBar", look.ActiveMana, look.Mana);
+        GetNode<CanvasItem>("%OwnName").Visible = false;
+        ShowCharacter(look.Name, look.Points, look.Sprite, LookPanel.PortraitTint(look.Flags));
+        GetNode<CanvasItem>("%SecondCharmFrame").Visible = look.Worn[(int)WornSlot.SecondCharm] != 0;
+        for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
+        {
+            GetNode<ItemSlotView>("%" + slot).Show(new ItemSlot(look.Worn[(int)slot], 0, 0, 0), [], false);
+        }
+    }
+
+    private void ShowCharacter(string name, int points, int sprite, SpriteTint tint)
+    {
+        var rank = Ranks.For(points);
+        SetText("PortraitName", name);
+        SetText("RankName", rank.Name);
+        SetSprite("RankBadge", rank.BadgeSprite);
+        SetSprite("Portrait", sprite);
+        var material = (ShaderMaterial)GetNode<CanvasItem>("%Portrait").Material;
+        material.SetShaderParameter("grey", tint.HasFlag(SpriteTint.Grey));
+        material.SetShaderParameter("infrared", tint.HasFlag(SpriteTint.Infrared));
+    }
+
     private void ShowEquipment(PlayerState player)
     {
         var blocked = Equipment.BlockedSlots(player.HeldItem, player.Worn);
@@ -446,7 +497,11 @@ public partial class HudView : Control
     }
 
     private void ShowBar(string name, int current, int[] values) =>
-        GetNode<PortraitBar>("%" + name).Show(PortraitBars.For(current, values[MaximumSlot], values[ReservedSlot]));
+        GetNode<PortraitBar>("%" + name)
+            .Show(PortraitBars.For(current, values[MaximumSlot], values[ReservedSlot]), false);
+
+    private void ShowLookBar(string name, int current, int maximum) =>
+        GetNode<PortraitBar>("%" + name).Show(PortraitBars.For(current, maximum, 0), true);
 
     private void ShowPoints(string name, string shownName, int points)
     {
