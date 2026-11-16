@@ -152,6 +152,10 @@ public partial class HudView : Control
         state.LookShown += ShowLook;
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
+        var chatLine = GetNode<ChatLine>("%ChatLine");
+        chatLine.LineSent += Say;
+        chatLine.EscapePressed += () => sendCommand(ClientPackets.ShortAndInt(ClientCommand.Reset, 0, 0));
+        chatLine.GrabFocus();
         Refresh(0);
     }
 
@@ -316,6 +320,9 @@ public partial class HudView : Control
             {
                 case ArchiveSprite archiveSprite:
                     archiveSprite.LoadSprite();
+                    break;
+                case ChatLine chatLine:
+                    chatLine.ApplyFont();
                     break;
                 case HudLabel label:
                     label.ApplyFont();
@@ -519,6 +526,14 @@ public partial class HudView : Control
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
         GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    private void Say(string line)
+    {
+        foreach (var packet in ChatPackets.Say(line))
+        {
+            sendCommand(packet);
+        }
     }
 
     private void ShowQuickStats(PlayerState player)
