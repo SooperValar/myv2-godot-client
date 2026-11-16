@@ -35,14 +35,14 @@ public static class SkillOrder
             return first.Learnt ? -1 : 1;
         }
 
-        if ((kindred & KnowsIdentify) == 0 && Last(first, second, skill => skill.Number == IdentifySkill) is
-            { } identify)
+        var knowsIdentify = (kindred & KnowsIdentify) != 0;
+        if (!knowsIdentify && Last(first, second, skill => skill.Number == IdentifySkill) is { } identify)
         {
             return identify;
         }
 
-        if ((kindred & Lycanthrope) == 0
-            && Last(first, second, skill => LycanthropeSkills.Contains(skill.Number)) is { } lycanthrope)
+        var isLycanthrope = (kindred & Lycanthrope) != 0;
+        if (!isLycanthrope && Last(first, second, skill => LycanthropeSkills.Contains(skill.Number)) is { } lycanthrope)
         {
             return lycanthrope;
         }
