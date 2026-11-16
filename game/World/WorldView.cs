@@ -17,7 +17,6 @@ public partial class WorldView : Node2D
     private const float HighlightBrightness = 2f;
     private const float ShadowAlpha = 0.5f;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
-    private const string CursorPathFormat = "res://images/cursors/cursor{0}.png";
     private const string NameplateScenePath = "res://World/nameplate.tscn";
     private const string MagicGlowShaderPath = "res://World/magic_glow.gdshader";
     private const int PlayerNameplateLayer = 1;
@@ -27,7 +26,6 @@ public partial class WorldView : Node2D
     private readonly Vector2I[] characterOffsets = new Vector2I[TileCount];
     private readonly SpriteLayer characters = new();
     private readonly HashSet<int> charactersShown = [];
-    private readonly Dictionary<MapCursor, Texture2D> cursorTextures = [];
     private readonly SpriteLayer floors = new();
     private readonly Stack<Nameplate> freeNameplates = [];
     private readonly Sprite2D giveMarker = new() { Centered = false, Visible = false };
@@ -46,7 +44,6 @@ public partial class WorldView : Node2D
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
     private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
-    private MapCursor? shownCursor;
     private Shader? tintShader;
 
     public GameState State { get; set; } = null!;
@@ -79,11 +76,7 @@ public partial class WorldView : Node2D
                 shadowNodes[tileIndex] = AddShadowNode(characters.Nodes[tileIndex]);
             }
         }
-
-        ShowCursor(MapCursor.None);
     }
-
-    public override void _ExitTree() => Input.SetCustomMouseCursor(null);
 
     public override void _Process(double delta)
     {
@@ -95,7 +88,7 @@ public partial class WorldView : Node2D
                 HeldKeys(),
                 MapButton.None,
                 SelectedCharacter);
-        ShowCursor(action.Cursor);
+        Input.SetDefaultCursorShape(CursorShapes.For(action.Cursor));
         if (action.HighlightedTile == hover.HighlightedTile && action.HighlightedLayer == hover.HighlightedLayer)
         {
             return;
@@ -223,23 +216,6 @@ public partial class WorldView : Node2D
         return PickTileDrawnUnderMouse
             ? MapPicking.PointAt(x, y, IsometricProjection.BaseMapShiftX - mapShift.X, -mapShift.Y)
             : MapPicking.PointAt(x, y);
-    }
-
-    private void ShowCursor(MapCursor cursor)
-    {
-        if (cursor == shownCursor)
-        {
-            return;
-        }
-
-        shownCursor = cursor;
-        if (!cursorTextures.TryGetValue(cursor, out var texture))
-        {
-            texture = GD.Load<Texture2D>(string.Format(CursorPathFormat, (int)cursor));
-            cursorTextures[cursor] = texture;
-        }
-
-        Input.SetCustomMouseCursor(texture, Input.CursorShape.Arrow, Vector2.Zero);
     }
 
     // Returns whether the selected character is drawn on this tile.

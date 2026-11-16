@@ -49,6 +49,7 @@ public partial class GameScreen : Control
         }
 
         session = startedSession;
+        CursorShapes.Register();
         AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
@@ -109,6 +110,7 @@ public partial class GameScreen : Control
 
     public override void _ExitTree()
     {
+        CursorShapes.Clear();
         connection.Dispose();
         sprites?.Dispose();
     }

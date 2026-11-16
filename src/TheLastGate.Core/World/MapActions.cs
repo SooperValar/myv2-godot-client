@@ -1,3 +1,4 @@
+using TheLastGate.Cursors;
 using TheLastGate.Net;
 using TheLastGate.State;
 
@@ -26,7 +27,7 @@ public static class MapActions
             return new MapAction(
                 mouseTile,
                 MapLayer.Floor,
-                MapCursor.None,
+                MouseCursor.None,
                 ForTile(state.Map, mouseTile, button, ClientCommand.PickUp, ClientCommand.Drop),
                 null);
         }
@@ -36,7 +37,7 @@ public static class MapActions
             MapKeys.None => new MapAction(
                 mouseTile,
                 MapLayer.Floor,
-                MapCursor.Walk,
+                MouseCursor.Walk,
                 ForTile(state.Map, mouseTile, button, ClientCommand.Move, ClientCommand.Turn),
                 null),
             MapKeys.Shift => ItemAction(state.Map, mouse, mouseTile, heldItem != 0, button),
@@ -55,7 +56,7 @@ public static class MapActions
     {
         var tileIndex = mouseTile;
         var highlighted = holdingItem;
-        var cursor = holdingItem ? MapCursor.Drop : MapCursor.None;
+        var cursor = holdingItem ? MouseCursor.Drop : MouseCursor.None;
         if (!holdingItem && MapPicking.NearestTile(map, MapFlags.IsItem, mouse) is var (column, row))
         {
             tileIndex = column + row * WorldMap.Size;
@@ -66,12 +67,12 @@ public static class MapActions
         var usable = flags.HasFlag(MapFlags.IsUsable);
         if (holdingItem && isItem)
         {
-            cursor = usable ? MapCursor.Use : MapCursor.None;
+            cursor = usable ? MouseCursor.Use : MouseCursor.None;
         }
         else if (isItem)
         {
             highlighted = true;
-            cursor = usable ? MapCursor.Use : MapCursor.Take;
+            cursor = usable ? MouseCursor.Use : MouseCursor.Take;
         }
 
         if (isItem)
@@ -123,7 +124,7 @@ public static class MapActions
         return new MapAction(
             tileIndex,
             MapLayer.Character,
-            holdingItem ? MapCursor.Give : MapCursor.Hit,
+            holdingItem ? MouseCursor.Give : MouseCursor.Hit,
             command,
             null);
     }
@@ -146,16 +147,16 @@ public static class MapActions
             MapButton.Left => new MapAction(
                 tileIndex,
                 MapLayer.Character,
-                MapCursor.Select,
+                MouseCursor.Select,
                 null,
                 selectedCharacter == number ? 0 : number),
             MapButton.Right => new MapAction(
                 tileIndex,
                 MapLayer.Character,
-                MapCursor.Select,
+                MouseCursor.Select,
                 MapCommandPackets.ForCharacter(ClientCommand.Look, number),
                 null),
-            _ => new MapAction(tileIndex, MapLayer.Character, MapCursor.Select, null, null),
+            _ => new MapAction(tileIndex, MapLayer.Character, MouseCursor.Select, null, null),
         };
     }
 

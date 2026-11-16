@@ -1,6 +1,6 @@
-namespace TheLastGate.World;
+namespace TheLastGate.Cursors;
 
-public enum MapCursor
+public enum MouseCursor
 {
     None = 1,
     Take = 2,
@@ -9,5 +9,7 @@ public enum MapCursor
     Give = 5,
     Walk = 6,
     Hit = 7,
+    Swap = 8,
     Select = 9,
+    Trash = 10,
 }

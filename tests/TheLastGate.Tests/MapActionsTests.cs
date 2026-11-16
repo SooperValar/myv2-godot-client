@@ -1,3 +1,4 @@
+using TheLastGate.Cursors;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.World;
@@ -22,7 +23,7 @@ public class MapActionsTests
     {
         var action = Decide(new GameState(), OnPlayerTile, MapKeys.None, MapButton.None);
 
-        Assert.Equal(new MapAction(Tile(27, 27), MapLayer.Floor, MapCursor.Walk, null, null), action);
+        Assert.Equal(new MapAction(Tile(27, 27), MapLayer.Floor, MouseCursor.Walk, null, null), action);
     }
 
     [Fact]
@@ -50,7 +51,7 @@ public class MapActionsTests
         var state = State(HeldItem(BuildItem));
 
         var hover = Decide(state, OnPlayerTile, MapKeys.Shift, MapButton.None);
-        Assert.Equal(new MapAction(Tile(27, 27), MapLayer.Floor, MapCursor.None, null, null), hover);
+        Assert.Equal(new MapAction(Tile(27, 27), MapLayer.Floor, MouseCursor.None, null, null), hover);
         Assert.Equal(
             MapCommandPackets.ForTile(ClientCommand.PickUp, OriginX + 27, OriginY + 27),
             Decide(state, OnPlayerTile, MapKeys.None, MapButton.Left).Command);
@@ -64,7 +65,7 @@ public class MapActionsTests
     {
         var action = Decide(State(Item(28, 27)), NearTheNextTile, MapKeys.Shift, MapButton.None);
 
-        Assert.Equal(new MapAction(Tile(28, 27), MapLayer.Object, MapCursor.Take, null, null), action);
+        Assert.Equal(new MapAction(Tile(28, 27), MapLayer.Object, MouseCursor.Take, null, null), action);
     }
 
     [Fact]
@@ -85,7 +86,7 @@ public class MapActionsTests
     {
         var state = State(Item(28, 27, MapFlags.IsUsable));
 
-        Assert.Equal(MapCursor.Use, Decide(state, NearTheNextTile, MapKeys.Shift, MapButton.None).Cursor);
+        Assert.Equal(MouseCursor.Use, Decide(state, NearTheNextTile, MapKeys.Shift, MapButton.None).Cursor);
         Assert.Equal(
             MapCommandPackets.ForTile(ClientCommand.Use, OriginX + 28, OriginY + 27),
             Decide(state, NearTheNextTile, MapKeys.Shift, MapButton.Left).Command);
@@ -99,7 +100,7 @@ public class MapActionsTests
         var action = Decide(state, OnPlayerTile, MapKeys.Shift, MapButton.Left);
 
         Assert.Equal(
-            (Tile(27, 27), MapLayer.Floor, MapCursor.Drop),
+            (Tile(27, 27), MapLayer.Floor, MouseCursor.Drop),
             (action.HighlightedTile, action.HighlightedLayer, action.Cursor));
         Assert.Equal(MapCommandPackets.ForTile(ClientCommand.Drop, OriginX + 27, OriginY + 27), action.Command);
     }
@@ -108,10 +109,10 @@ public class MapActionsTests
     public void Shift_WithAHeldItemOverAnItemShowsTheUseCursorOnlyForUsableItems()
     {
         Assert.Equal(
-            MapCursor.None,
+            MouseCursor.None,
             Decide(State(HeldItem(Candle), Item(27, 27)), OnPlayerTile, MapKeys.Shift, MapButton.None).Cursor);
         Assert.Equal(
-            MapCursor.Use,
+            MouseCursor.Use,
             Decide(
                     State(HeldItem(Candle), Item(27, 27, MapFlags.IsUsable)),
                     OnPlayerTile,
@@ -131,7 +132,7 @@ public class MapActionsTests
     {
         var action = Decide(State(Character(28, 27)), NearTheNextTile, MapKeys.Ctrl, MapButton.None);
 
-        Assert.Equal(new MapAction(Tile(28, 27), MapLayer.Character, MapCursor.Hit, null, null), action);
+        Assert.Equal(new MapAction(Tile(28, 27), MapLayer.Character, MouseCursor.Hit, null, null), action);
     }
 
     [Fact]
@@ -154,7 +155,7 @@ public class MapActionsTests
 
         var action = Decide(state, NearTheNextTile, MapKeys.Ctrl, MapButton.Left);
 
-        Assert.Equal(MapCursor.Give, action.Cursor);
+        Assert.Equal(MouseCursor.Give, action.Cursor);
         Assert.Equal(MapCommandPackets.ForCharacter(ClientCommand.Give, GuardNumber), action.Command);
     }
 
@@ -169,7 +170,7 @@ public class MapActionsTests
     {
         var action = Decide(State(Character(28, 27)), NearTheNextTile, MapKeys.Alt, MapButton.None);
 
-        Assert.Equal(new MapAction(Tile(28, 27), MapLayer.Character, MapCursor.Select, null, null), action);
+        Assert.Equal(new MapAction(Tile(28, 27), MapLayer.Character, MouseCursor.Select, null, null), action);
     }
 
     [Fact]
