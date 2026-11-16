@@ -15,6 +15,12 @@ public static class ClientPackets
         return packet;
     }
 
-    public static byte[] ShortAndInt(ClientCommand command, int first, int second) =>
-        throw new NotImplementedException();
+    public static byte[] ShortAndInt(ClientCommand command, int first, int second)
+    {
+        var packet = new byte[Protocol.PacketSize];
+        packet[0] = (byte)command;
+        BinaryPrimitives.WriteInt16LittleEndian(packet.AsSpan(1), (short)first);
+        BinaryPrimitives.WriteInt32LittleEndian(packet.AsSpan(3), second);
+        return packet;
+    }
 }
