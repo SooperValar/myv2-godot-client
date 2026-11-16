@@ -148,7 +148,7 @@ public partial class GameScreen : Control
         MoveChild(worldView, WorldViewIndex);
         hudView.DarkMode = clientSettings.DarkMode;
         hudView.Sprites = sprites;
-        hudView.Show(gameState, fonts);
+        hudView.Show(gameState, fonts, connection.SendCommand);
     }
 
     private void SaveNewCharacter(LoginKey createdKey)

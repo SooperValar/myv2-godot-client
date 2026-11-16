@@ -5,7 +5,7 @@ using TheLastGate.State;
 namespace TheLastGate.Hud;
 
 [Tool]
-public partial class ItemSlotView : Control
+public partial class ItemSlotView : ClickArea
 {
     private const float HighlightBrightness = 2f;
 

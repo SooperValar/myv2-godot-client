@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using Godot;
 using TheLastGate.Assets;
+using TheLastGate.Game;
 using TheLastGate.State;
 
 namespace TheLastGate.World;
@@ -85,7 +86,7 @@ public partial class WorldView : Node2D
             : MapActions.Decide(
                 State,
                 PointUnder(GetViewport().GetMousePosition()),
-                HeldKeys(),
+                HeldKeys.Current(),
                 MapButton.None,
                 SelectedCharacter);
         Input.SetDefaultCursorShape(CursorShapes.For(action.Cursor));
@@ -175,11 +176,6 @@ public partial class WorldView : Node2D
         ShiftMapUnderPlayer();
         LastRefreshMilliseconds = clock.Elapsed.TotalMilliseconds;
     }
-
-    private static MapKeys HeldKeys() =>
-        (Input.IsKeyPressed(Key.Shift) ? MapKeys.Shift : MapKeys.None)
-        | (Input.IsKeyPressed(Key.Ctrl) ? MapKeys.Ctrl : MapKeys.None)
-        | (Input.IsKeyPressed(Key.Alt) ? MapKeys.Alt : MapKeys.None);
 
     private static Sprite2D AddSpriteNode(Node2D layer, int column, int row)
     {

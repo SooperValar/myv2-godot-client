@@ -4,8 +4,10 @@ using System.IO;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Config;
+using TheLastGate.Game;
 using TheLastGate.Items;
 using TheLastGate.State;
+using TheLastGate.World;
 
 namespace TheLastGate.Hud;
 
@@ -18,10 +20,14 @@ public partial class HudView : Control
     private const string StrongholdName = "Stronghold";
     private const string CasinoName = "Casino";
     private const string ContractName = "Contract";
+    private const string SwapSetHint = "Swap equipment with a stored alternate set.";
+    private const int HintFont = 1;
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
     private IFontSet? fonts;
+    private int selectedCharacter;
+    private Action<byte[]> sendCommand = _ => { };
     private SpriteLoader? sprites;
     private GameState? state;
 
@@ -69,16 +75,25 @@ public partial class HudView : Control
         return null;
     }
 
-    public void Show(GameState shownState, IFontSet fontSet)
+    public void Show(GameState shownState, IFontSet fontSet, Action<byte[]> sendToServer)
     {
         state = shownState;
+        sendCommand = sendToServer;
+        for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
+        {
+            var clickedSlot = slot;
+            GetNode<ItemSlotView>("%" + slot).Released += button => ClickWorn(clickedSlot, button);
+        }
+
+        GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
         Refresh(0);
     }
 
-    public void Refresh(int selectedCharacter)
+    public void Refresh(int selected)
     {
+        selectedCharacter = selected;
         if (state == null)
         {
             return;
@@ -108,6 +123,21 @@ public partial class HudView : Control
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
+    }
+
+    public override void _Process(double delta)
+    {
+        if (state == null || GetViewport().GuiGetHoveredControl() is not ItemSlotView hovered
+            || !Enum.TryParse<WornSlot>(hovered.Name, out var slot))
+        {
+            return;
+        }
+
+        var cursor = EquipmentClicks.Cursor(
+            state.Player.Worn[(int)slot].Sprite != 0,
+            state.Player.HeldItem.Sprite != 0,
+            HeldKeys.Current());
+        hovered.MouseDefaultCursorShape = (CursorShape)CursorShapes.For(cursor);
     }
 
     public override void _EnterTree()
@@ -160,6 +190,26 @@ public partial class HudView : Control
             }
 
             Reload(child);
+        }
+    }
+
+    private void ClickWorn(WornSlot slot, MapButton button)
+    {
+        if (EquipmentClicks.Packet(slot, button, HeldKeys.Current(), selectedCharacter) is { } packet)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private void ClickSwapSet(MapButton button)
+    {
+        if (EquipmentClicks.SwapSetPacket(button, selectedCharacter) is { } packet)
+        {
+            sendCommand(packet);
+        }
+        else if (button == MapButton.Right)
+        {
+            state?.Chat.Add(new LogLine(SwapSetHint, HintFont));
         }
     }
 
