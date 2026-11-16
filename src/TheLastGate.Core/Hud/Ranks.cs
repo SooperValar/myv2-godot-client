@@ -25,14 +25,25 @@ public static class Ranks
 
     public static Rank For(int points)
     {
-        var rank = Array.FindIndex(PointsNeeded, needed => points < needed);
-        if (rank < 0)
-        {
-            rank = PointsNeeded.Length;
-        }
-
+        var rank = RankNumber(points);
         return new Rank(Names[rank], BadgeSprites[rank]);
     }
 
-    public static double Progress(int points) => throw new NotImplementedException();
+    public static double Progress(int points)
+    {
+        var rank = RankNumber(points);
+        if (rank == PointsNeeded.Length)
+        {
+            return 1;
+        }
+
+        var start = rank == 0 ? 0 : PointsNeeded[rank - 1];
+        return Math.Max(0, (double)(points - start) / (PointsNeeded[rank] - start));
+    }
+
+    private static int RankNumber(int points)
+    {
+        var rank = Array.FindIndex(PointsNeeded, needed => points < needed);
+        return rank < 0 ? PointsNeeded.Length : rank;
+    }
 }
