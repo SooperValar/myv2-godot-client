@@ -28,4 +28,24 @@ public class RanksTests
     {
         Assert.Equal(new Rank("Private", 10), Ranks.For(-1));
     }
+
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(125, 0.5)]
+    [InlineData(250, 0)]
+    [InlineData(1000, 0.5)]
+    [InlineData(94185000, 0)]
+    [InlineData(106470000, 0.5)]
+    [InlineData(118755000, 1)]
+    [InlineData(int.MaxValue, 1)]
+    public void Progress_IsHowFarThePointsAreFromThisRankToTheNext(int points, double progress)
+    {
+        Assert.Equal(progress, Ranks.Progress(points), 6);
+    }
+
+    [Fact]
+    public void Progress_TreatsNegativePointsAsNone()
+    {
+        Assert.Equal(0, Ranks.Progress(-1));
+    }
 }

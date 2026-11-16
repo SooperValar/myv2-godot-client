@@ -33,4 +33,6 @@ public static class Ranks
 
         return new Rank(Names[rank], BadgeSprites[rank]);
     }
+
+    public static double Progress(int points) => throw new NotImplementedException();
 }
