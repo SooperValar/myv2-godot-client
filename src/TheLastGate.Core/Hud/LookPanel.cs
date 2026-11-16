@@ -8,11 +8,26 @@ public sealed class LookPanel
 {
     public static readonly TimeSpan ShowFor = TimeSpan.FromSeconds(10);
 
-    public CharacterLook? Shown => throw new NotImplementedException();
+    private TimeSpan shownFor;
 
-    public static SpriteTint PortraitTint(LookFlags flags) => throw new NotImplementedException();
+    public CharacterLook? Shown { get; private set; }
 
-    public void Show(CharacterLook look) => throw new NotImplementedException();
+    public static SpriteTint PortraitTint(LookFlags flags) =>
+        (flags.HasFlag(LookFlags.Shadow) ? SpriteTint.Grey : SpriteTint.None)
+        | (flags.HasFlag(LookFlags.Bloody) ? SpriteTint.Infrared : SpriteTint.None);
 
-    public void Advance(TimeSpan elapsed) => throw new NotImplementedException();
+    public void Show(CharacterLook look)
+    {
+        Shown = look;
+        shownFor = TimeSpan.Zero;
+    }
+
+    public void Advance(TimeSpan elapsed)
+    {
+        shownFor += elapsed;
+        if (shownFor >= ShowFor)
+        {
+            Shown = null;
+        }
+    }
 }
