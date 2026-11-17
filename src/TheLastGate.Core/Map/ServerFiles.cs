@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Linq;
 
 namespace TheLastGate.Map;
@@ -14,9 +15,15 @@ public static class ServerFiles
     }
 
     public static string SdlClientPath(string prefix, string host, int port) =>
-        throw new NotImplementedException();
+        Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "TheLastGate",
+            "TheLastGate",
+            Name(prefix, host, port));
 
-    public static string PathToLoad(string ownPath, string sdlClientPath) => throw new NotImplementedException();
+    // The current client's file is read once, to start from; after that this client keeps to its own.
+    public static string PathToLoad(string ownPath, string sdlClientPath) =>
+        !File.Exists(ownPath) && File.Exists(sdlClientPath) ? sdlClientPath : ownPath;
 
     private static bool IsSafe(char character) =>
         char.IsAsciiLetterOrDigit(character) || character is '.' or '-' or '_';
