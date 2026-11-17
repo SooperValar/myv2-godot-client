@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TheLastGate.State;
 
@@ -17,6 +16,9 @@ public static class ItemOverlays
     private const int CorrupterOverlay = 7799;
     private const int CorrupterDigitBase = 7800;
     private const int CorrupterDigitSpacing = 5;
+    private const byte StoredSoulstone = 1;
+    private const byte StoredTalisman = 2;
+    private const byte StoredCorruption = 4;
 
     public static IReadOnlyList<ItemOverlay> Worn(ItemSlot item)
     {
@@ -72,7 +74,38 @@ public static class ItemOverlays
         return overlays;
     }
 
-    public static IReadOnlyList<ItemOverlay> Stored(DepotItem item) => throw new NotImplementedException();
+    // Depot items carry their marks as plain bits rather than the inventory's flags.
+    public static IReadOnlyList<ItemOverlay> Stored(DepotItem item)
+    {
+        var overlays = new List<ItemOverlay>();
+        if (item.Sprite == 0)
+        {
+            return overlays;
+        }
+
+        if ((item.Flags & StoredSoulstone) != 0)
+        {
+            overlays.Add(new ItemOverlay(SoulstoneSprite, 0));
+        }
+
+        if ((item.Flags & StoredTalisman) != 0)
+        {
+            overlays.Add(new ItemOverlay(TalismanSprite, 0));
+        }
+
+        if ((item.Flags & StoredCorruption) != 0)
+        {
+            overlays.Add(new ItemOverlay(CorruptionSprite, 0));
+        }
+
+        AddCatalyst(overlays, item.Sprite, item.Catalyst);
+        if (item.Stack is > 0 and <= LargestShownStack)
+        {
+            overlays.Add(new ItemOverlay(StackSpriteBase + item.Stack, 0));
+        }
+
+        return overlays;
+    }
 
     public static IReadOnlyList<ItemOverlay> Carried(ItemSlot item)
     {
