@@ -116,6 +116,7 @@ public partial class GameScreen : Control
         soundEffects.Enabled = settings.SoundEnabled;
         soundEffects.Volume = settings.SoundVolume;
         CursorShapes.Register(settings.CursorScale);
+        gameState.Tooltips.Enabled = settings.ItemTooltips;
         if (worldView != null)
         {
             worldView.GlideMovement = settings.GlideMovement;
@@ -171,6 +172,7 @@ public partial class GameScreen : Control
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
         gameState.Tooltips.SendLook = connection.SendCommand;
+        gameState.Tooltips.Enabled = clientSettings.ItemTooltips;
         gameState.ShopRefresh.Send = connection.SendCommand;
     }
 

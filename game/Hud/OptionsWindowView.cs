@@ -135,7 +135,9 @@ public partial class OptionsWindowView : Panel
         GetNode<TabContainer>("Pages").CurrentTab = (int)window.Tab;
         foreach (var row in GeneralOptions.Rows)
         {
-            OptionBox(row.Option).SetPressedNoSignal(settings[row.Option]);
+            var box = OptionBox(row.Option);
+            box.SetPressedNoSignal(settings[row.Option]);
+            box.GetParent<Control>().Visible = GeneralOptions.IsShown(row, option => settings[option]);
         }
 
         CursorScale.SetValueNoSignal(settings.CursorScale);
@@ -177,6 +179,11 @@ public partial class OptionsWindowView : Panel
             var rowNode = rowScene.Instantiate<Control>();
             rowNode.Name = row.Option.ToString();
             rowNode.GetNode<Label>("Text").Text = row.Label;
+            if (row.Under != null)
+            {
+                Indent(rowNode);
+            }
+
             GetNode(row.GodotOnly ? "Pages/General/Rows/GodotOptions" : "Pages/General/Rows/ClientOptions")
                 .AddChild(rowNode);
         }
@@ -234,6 +241,15 @@ public partial class OptionsWindowView : Panel
 
             KeybindSections.AddChild(sectionNode);
         }
+    }
+
+    // The text gives up the indent's width so the row stays inside the page.
+    private static void Indent(Control rowNode)
+    {
+        var indent = rowNode.GetNode<Control>("Indent");
+        indent.Visible = true;
+        var text = rowNode.GetNode<Control>("Text");
+        text.CustomMinimumSize -= new Vector2(indent.CustomMinimumSize.X + rowNode.GetThemeConstant("separation"), 0);
     }
 
     private CheckBox OptionBox(GeneralOption option)

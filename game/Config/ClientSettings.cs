@@ -52,6 +52,8 @@ public sealed class ClientSettings
 
         EscapeClosesWindowsFirst = file.GetValue(GeneralSection, "escape_closes_windows_first", true).AsBool();
         ExpandedQuickStats = file.GetValue(GeneralSection, "expanded_quick_stats", true).AsBool();
+        ItemTooltips = file.GetValue(GeneralSection, "item_tooltips", true).AsBool();
+        ItemTooltipsAlways = file.GetValue(GeneralSection, "item_tooltips_always", true).AsBool();
         PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
         GlideMovement = file.GetValue(WorldSection, "glide_movement", false).AsBool();
         KeyBindings.Load(SavedBindings(file));
@@ -70,6 +72,8 @@ public sealed class ClientSettings
     public ServerAddress Server { get; }
     public bool EscapeClosesWindowsFirst { get; set; }
     public bool ExpandedQuickStats { get; set; }
+    public bool ItemTooltips { get; set; }
+    public bool ItemTooltipsAlways { get; set; }
     public bool PickTileDrawnUnderMouse { get; set; }
     public bool GlideMovement { get; set; }
     public KeyBindings KeyBindings { get; } = new();
@@ -81,6 +85,8 @@ public sealed class ClientSettings
         {
             GeneralOption.EscapeClosesWindowsFirst => EscapeClosesWindowsFirst,
             GeneralOption.ExpandedQuickStats => ExpandedQuickStats,
+            GeneralOption.ItemTooltips => ItemTooltips,
+            GeneralOption.ItemTooltipsAlways => ItemTooltipsAlways,
             GeneralOption.GlideMovement => GlideMovement,
             GeneralOption.PickTileDrawnUnderMouse => PickTileDrawnUnderMouse,
             _ => throw new UnreachableException(),
@@ -94,6 +100,12 @@ public sealed class ClientSettings
                     break;
                 case GeneralOption.ExpandedQuickStats:
                     ExpandedQuickStats = value;
+                    break;
+                case GeneralOption.ItemTooltips:
+                    ItemTooltips = value;
+                    break;
+                case GeneralOption.ItemTooltipsAlways:
+                    ItemTooltipsAlways = value;
                     break;
                 case GeneralOption.GlideMovement:
                     GlideMovement = value;
@@ -124,6 +136,8 @@ public sealed class ClientSettings
         file.SetValue(DisplaySection, "cursor_scale", CursorScale);
         file.SetValue(GeneralSection, "escape_closes_windows_first", EscapeClosesWindowsFirst);
         file.SetValue(GeneralSection, "expanded_quick_stats", ExpandedQuickStats);
+        file.SetValue(GeneralSection, "item_tooltips", ItemTooltips);
+        file.SetValue(GeneralSection, "item_tooltips_always", ItemTooltipsAlways);
         file.SetValue(WorldSection, "pick_tile_drawn_under_mouse", PickTileDrawnUnderMouse);
         file.SetValue(WorldSection, "glide_movement", GlideMovement);
         file.SetValue(

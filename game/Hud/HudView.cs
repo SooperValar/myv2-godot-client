@@ -32,6 +32,7 @@ public partial class HudView : Control
     private const string ContractName = "Contract";
     private const string SwapSetHint = "Swap equipment with a stored alternate set.";
     private const string TrashCanName = "TrashCan";
+    private const string ItemTooltipBinding = "item_tooltip_hotkey";
     private const int HintFont = 1;
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
@@ -54,6 +55,8 @@ public partial class HudView : Control
         ("RightButton", windows => windows.Right()),
     ];
 
+    private static readonly Vector2 OffScreen = new(-1, -1);
+
     // Labels shown in the editor, where no settings are loaded.
     private static readonly KeyBindings DefaultBindings = new();
 
@@ -67,6 +70,7 @@ public partial class HudView : Control
     private SpriteLoader? editorSprites;
     private IFontSet? fonts;
     private int? hoveredShopCell;
+    private bool itemTooltipsShown = true;
     private Vector2 mousePosition;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
@@ -378,6 +382,7 @@ public partial class HudView : Control
             return;
         }
 
+        RecheckTooltipWhenShowingChanges();
         exit.Advance(TimeSpan.FromSeconds(delta));
         var lookWasShown = lookPanel.Shown != null;
         lookPanel.Advance(TimeSpan.FromSeconds(delta));
@@ -1026,9 +1031,33 @@ public partial class HudView : Control
         }
     }
 
+    private bool ItemTooltipsShown() =>
+        ClientSettings is not { } settings
+        || GeneralOptions.ShowsItemTooltips(
+            settings.ItemTooltips,
+            settings.ItemTooltipsAlways,
+            KeyBindings.For(ItemTooltipBinding) is { } chord && HotkeyInput.IsHeld(chord));
+
+    // Godot looks for a tooltip again only when the mouse enters a control or moves 5 pixels, so when the tooltip
+    // key goes down or up the mouse is moved off everything and back, entering the slot afresh.
+    private void RecheckTooltipWhenShowingChanges()
+    {
+        var shown = ItemTooltipsShown();
+        if (shown == itemTooltipsShown)
+        {
+            return;
+        }
+
+        itemTooltipsShown = shown;
+        var away = new InputEventMouseMotion { Position = OffScreen, GlobalPosition = OffScreen };
+        var back = new InputEventMouseMotion { Position = mousePosition, GlobalPosition = mousePosition };
+        GetViewport().PushInput(away, true);
+        GetViewport().PushInput(back, true);
+    }
+
     private ItemTooltipRequest? InventoryTooltip(int slot)
     {
-        if (state is not { Tooltips.Enabled: true } shown || shown.Player.HeldItem.Sprite != 0
+        if (!itemTooltipsShown || state is not { Tooltips.Enabled: true } shown || shown.Player.HeldItem.Sprite != 0
             || shown.Player.Inventory[slot].Sprite == 0)
         {
             return null;
@@ -1040,7 +1069,7 @@ public partial class HudView : Control
     // Holding an item over gear it fits compares the two; gear it doesn't fit shows its usual tooltip.
     private ItemTooltipRequest? WornTooltip(WornSlot slot)
     {
-        if (state is not { Tooltips.Enabled: true } shown)
+        if (!itemTooltipsShown || state is not { Tooltips.Enabled: true } shown)
         {
             return null;
         }
