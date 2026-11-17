@@ -29,7 +29,7 @@ project/assembly_name="TheLastGate"
 
 [gui]
 
-timers/tooltip_delay_sec=0.1
+timers/tooltip_delay_sec=0.3
 
 [rendering]
 

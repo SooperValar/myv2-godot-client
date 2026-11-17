@@ -4,7 +4,7 @@ using Godot;
 namespace TheLastGate.Assets;
 
 // Builds Godot bitmap fonts from the current client's font sheets: one sheet per colour, 96 letters of 6x9 pixels from
-// the second pixel row, for the characters from space to 127. Grey has no sheet, so it is the white sheet tinted.
+// the second pixel row, for the characters from space to 127. Grey and Dim have no sheet, so they are the white sheet tinted.
 public sealed class ClassicFonts(SpriteLoader sprites) : IFontSet
 {
     private const int FirstFontSprite = 18100;
@@ -17,6 +17,7 @@ public sealed class ClassicFonts(SpriteLoader sprites) : IFontSet
     private const int FontSize = 9;
 
     private static readonly Color Grey = Color.Color8(72, 81, 81);
+    private static readonly Color Dim = Color.Color8(144, 154, 154);
 
     private readonly Dictionary<TextColour, GameFont> fonts = [];
 
@@ -32,6 +33,11 @@ public sealed class ClassicFonts(SpriteLoader sprites) : IFontSet
         if (colour == TextColour.Grey)
         {
             return fonts[colour] = For(TextColour.White) with { Tint = Grey };
+        }
+
+        if (colour == TextColour.Dim)
+        {
+            return fonts[colour] = For(TextColour.White) with { Tint = Dim };
         }
 
         var built = new FontFile

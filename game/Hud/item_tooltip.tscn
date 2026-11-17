@@ -1,0 +1,25 @@
+[gd_scene format=3 uid="uid://cenjvfn3kt1tc"]
+
+[ext_resource type="Script" uid="uid://b22x8dbunpxbb" path="res://Hud/ItemTooltipView.cs" id="1_view"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_tooltip"]
+content_margin_left = 8.0
+content_margin_top = 6.0
+content_margin_right = 8.0
+content_margin_bottom = 6.0
+bg_color = Color(0.09019608, 0, 0.019607844, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.54901963, 0.41960785, 0.22745098, 1)
+
+[node name="ItemTooltip" type="PanelContainer" unique_id=1617355546]
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_tooltip")
+script = ExtResource("1_view")
+
+[node name="Parts" type="VBoxContainer" parent="." unique_id=979647344]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3

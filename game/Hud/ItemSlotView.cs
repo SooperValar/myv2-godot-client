@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Godot;
 using TheLastGate.Hotbar;
@@ -10,6 +11,7 @@ namespace TheLastGate.Hud;
 public partial class ItemSlotView : ClickArea
 {
     private const float HighlightBrightness = 2f;
+    private const string TooltipScenePath = "res://Hud/item_tooltip.tscn";
 
     private int previewSprite;
 
@@ -22,6 +24,24 @@ public partial class ItemSlotView : ClickArea
             previewSprite = value;
             ShowPreview();
         }
+    }
+
+    public Func<bool>? HasTooltip { get; set; }
+
+    public Func<ItemTooltip?>? Tooltip { get; set; }
+
+    public override string _GetTooltip(Vector2 atPosition) => HasTooltip?.Invoke() == true ? "item" : "";
+
+    public override GodotObject? _MakeCustomTooltip(string forText)
+    {
+        if (Tooltip == null || HudView.Containing(this)?.Fonts is not { } fonts)
+        {
+            return null;
+        }
+
+        var view = GD.Load<PackedScene>(TooltipScenePath).Instantiate<ItemTooltipView>();
+        view.Watch(Tooltip, fonts);
+        return view;
     }
 
     public override void _Ready()

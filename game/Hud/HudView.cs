@@ -108,7 +108,12 @@ public partial class HudView : Control
         for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
         {
             var clickedSlot = slot;
-            GetNode<ItemSlotView>("%" + slot).Released += button => ClickWorn(clickedSlot, button);
+            var wornView = GetNode<ItemSlotView>("%" + slot);
+            wornView.Released += button => ClickWorn(clickedSlot, button);
+            wornView.HasTooltip = () => HasTooltip(TooltipSlotKind.Worn, (int)clickedSlot);
+            wornView.Tooltip = () => state?.Tooltips.For(TooltipSlotKind.Worn, (int)clickedSlot);
+            wornView.MouseEntered += () => state?.Tooltips.SetHovered(TooltipSlotKind.Worn, (int)clickedSlot);
+            wornView.MouseExited += () => state?.Tooltips.ClearHovered();
         }
 
         GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
@@ -145,7 +150,13 @@ public partial class HudView : Control
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
             var clickedCell = cell;
-            inventory.GetChild<ItemSlotView>(cell).Released +=
+            var cellView = inventory.GetChild<ItemSlotView>(cell);
+            cellView.HasTooltip = () => HasTooltip(TooltipSlotKind.Inventory, inventory.SlotShownIn(clickedCell));
+            cellView.Tooltip = () => state?.Tooltips.For(TooltipSlotKind.Inventory, inventory.SlotShownIn(clickedCell));
+            cellView.MouseEntered += () =>
+                state?.Tooltips.SetHovered(TooltipSlotKind.Inventory, inventory.SlotShownIn(clickedCell));
+            cellView.MouseExited += () => state?.Tooltips.ClearHovered();
+            cellView.Released +=
                 button => ClickInventory(inventory.SlotShownIn(clickedCell), button);
         }
 
@@ -534,6 +545,17 @@ public partial class HudView : Control
         {
             sendCommand(packet);
         }
+    }
+
+    private bool HasTooltip(TooltipSlotKind kind, int slot)
+    {
+        if (state == null || !state.Tooltips.Enabled || state.Player.HeldItem.Sprite != 0)
+        {
+            return false;
+        }
+
+        var items = kind == TooltipSlotKind.Worn ? state.Player.Worn : state.Player.Inventory;
+        return items[slot].Sprite != 0;
     }
 
     private void ShowQuickStats(PlayerState player)
