@@ -19,6 +19,10 @@ public sealed class TextWindows
 
     private int pause;
 
+    public TextWindows(WindowPause pause) => Pause = pause;
+
+    public WindowPause Pause { get; }
+
     public bool MessageOfTheDayOpen { get; private set; }
 
     public bool WelcomeOpen { get; private set; }
@@ -147,7 +151,7 @@ public sealed class TextWindows
         TutorialPage = FirstPage;
     }
 
-    private void CloseAll()
+    public void CloseAll()
     {
         MessageOfTheDayOpen = false;
         WelcomeOpen = false;

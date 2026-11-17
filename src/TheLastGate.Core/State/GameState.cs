@@ -13,6 +13,7 @@ public sealed class GameState
     {
         Tooltips = new ItemTooltips(Chat);
         MessageOfTheDay.LineAdded += MessageOfTheDayLines.Add;
+        TextWindows = new TextWindows(Pause);
     }
 
     public PlayerState Player { get; } = new();
@@ -23,7 +24,9 @@ public sealed class GameState
     public CharacterNames Names { get; } = new();
     public ItemTooltips Tooltips { get; }
     public MessageOfTheDayLines MessageOfTheDayLines { get; } = new();
-    public TextWindows TextWindows { get; } = new();
+    public WindowPause Pause { get; } = new();
+    public TextWindows TextWindows { get; }
+    public ShopRefresh ShopRefresh { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
@@ -43,6 +46,10 @@ public sealed class GameState
     public event Action<WindowRequest>? WindowRequested;
     public event Action<MinimapBox>? MinimapBoxCleared;
     public event Action<string>? UnusualDataSeen;
+
+    public bool CloseShop() => throw new NotImplementedException();
+
+    public bool CloseWindowsByEscape() => throw new NotImplementedException();
 
     internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
 

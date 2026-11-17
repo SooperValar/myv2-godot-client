@@ -9,7 +9,10 @@ public class TextWindowsTests
     private static readonly WindowRequest MessageOfTheDay = new(WindowKind.MessageOfTheDay, 0);
     private static readonly WindowRequest Welcome = new(WindowKind.NewPlayerWelcome, 0);
 
-    private readonly TextWindows windows = new();
+    private readonly WindowPause pause = new();
+    private readonly TextWindows windows;
+
+    public TextWindowsTests() => windows = new TextWindows(pause);
 
     [Fact]
     public void Show_OpensTheMessageOfTheDay()
@@ -184,61 +187,68 @@ public class TextWindowsTests
         Assert.False(windows.CloseByEscape());
     }
 
-    [Theory]
-    [InlineData(23, false)]
-    [InlineData(24, true)]
-    public void EndOfTick_ClosesWindowsTheServerOpensSoonAfterOneWasClosed(int ticksAfterClosing, bool staysOpen)
+    [Fact]
+    public void Close_StartsThePause()
     {
         windows.Show(MessageOfTheDay);
+
         windows.Close();
-        Ticks(ticksAfterClosing);
 
-        windows.Show(MessageOfTheDay);
-        windows.EndOfTick();
-
-        Assert.Equal(staysOpen, windows.MessageOfTheDayOpen);
+        Assert.True(pause.Active);
     }
 
     [Fact]
-    public void Ok_AndSkippingTheWelcomeStartTheSamePause()
+    public void Ok_StartsThePause()
     {
         windows.Show(MessageOfTheDay);
-        windows.Ok();
-        windows.Show(Welcome);
-        windows.EndOfTick();
-        Assert.False(windows.WelcomeOpen);
 
-        Ticks(TextWindows.ClosedPauseTicks);
+        windows.Ok();
+
+        Assert.True(pause.Active);
+    }
+
+    [Fact]
+    public void Right_SkippingTheWelcomeStartsThePause()
+    {
         windows.Show(Welcome);
+
         windows.Right();
-        windows.Show(MessageOfTheDay);
-        windows.EndOfTick();
-        Assert.False(windows.MessageOfTheDayOpen);
+
+        Assert.True(pause.Active);
+    }
+
+    [Fact]
+    public void TurningTutorialPages_StartsNoPause()
+    {
+        windows.Show(Tutorial(1));
+
+        windows.Right();
+        windows.Left();
+
+        Assert.False(pause.Active);
     }
 
     [Fact]
     public void CloseByEscape_StartsNoPause()
     {
         windows.Show(MessageOfTheDay);
+
         windows.CloseByEscape();
 
-        windows.Show(MessageOfTheDay);
-        windows.EndOfTick();
-
-        Assert.True(windows.MessageOfTheDayOpen);
+        Assert.False(pause.Active);
     }
 
     [Fact]
-    public void CancelPause_LetsTheNextWindowStayOpen()
+    public void CloseAll_ClosesEveryWindowWithoutAPause()
     {
         windows.Show(MessageOfTheDay);
-        windows.Close();
+        windows.Show(Welcome);
+        windows.Show(Tutorial(2));
 
-        windows.CancelPause();
-        windows.Show(MessageOfTheDay);
-        windows.EndOfTick();
+        windows.CloseAll();
 
-        Assert.True(windows.MessageOfTheDayOpen);
+        Assert.False(windows.AnyOpen);
+        Assert.False(pause.Active);
     }
 
     [Fact]
@@ -255,12 +265,4 @@ public class TextWindowsTests
     private static WindowRequest Tutorial(int number) => new(WindowKind.Tutorial, number);
 
     private static byte[] Seen(int value) => ClientPackets.OneValue(ClientCommand.MessageOfTheDay, value);
-
-    private void Ticks(int count)
-    {
-        for (var tick = 0; tick < count; tick++)
-        {
-            windows.EndOfTick();
-        }
-    }
 }
