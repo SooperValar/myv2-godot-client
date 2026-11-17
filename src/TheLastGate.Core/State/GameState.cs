@@ -2,6 +2,7 @@ using System;
 using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.Windows;
+using TheLastGate.World;
 
 namespace TheLastGate.State;
 
@@ -28,6 +29,7 @@ public sealed class GameState
     public WindowPause Pause { get; } = new();
     public TextWindows TextWindows { get; }
     public WaypointWindow WaypointWindow { get; }
+    public SkillTreeWindow SkillTreeWindow { get; } = new();
     public ShopRefresh ShopRefresh { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
@@ -62,6 +64,8 @@ public sealed class GameState
     }
 
     // Escape closes a shop with the pause, as the close button does, but tells nobody about the text windows.
+    public void ToggleSkillTree(MapKeys keys) => throw new NotImplementedException();
+
     public bool CloseWindowsByEscape()
     {
         var closedText = TextWindows.CloseByEscape();
