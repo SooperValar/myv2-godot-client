@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -6,7 +7,10 @@ using TheLastGate.State;
 
 namespace TheLastGate.Items;
 
-public readonly record struct TooltipText(string Text, TextColour Colour);
+// Change is what equipping the held item would do to this value.
+public readonly record struct TooltipText(string Text, TextColour Colour, TooltipChange? Change = null);
+
+public readonly record struct TooltipChange(string Text, TextColour Colour);
 
 public abstract record TooltipPart;
 
@@ -72,6 +76,12 @@ public static class TooltipContent
         AddSection(parts, details.OtherLines.Select(index => Wrapped(lines[index])));
         return parts;
     }
+
+    public static IReadOnlyList<TooltipPart> Comparing(ItemTooltip equipped, ItemDetails? held) =>
+        throw new NotImplementedException();
+
+    public static IReadOnlyList<TooltipPart> ComparingEmptySlot(ItemDetails held) =>
+        throw new NotImplementedException();
 
     private static void AddSection(List<TooltipPart> parts, IEnumerable<TooltipPart> section)
     {
