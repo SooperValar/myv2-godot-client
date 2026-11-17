@@ -16,6 +16,7 @@ public partial class WorldView : Node2D
     private const int TintShift = 4;
     private const int HighlightBit = 1 << 7;
     private const int SelectedBit = 1 << 8;
+    private const int UnshownEffect = -1;
     private const float HighlightBrightness = 2f;
     private const float ShadowAlpha = 0.5f;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
@@ -51,6 +52,7 @@ public partial class WorldView : Node2D
     private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
     private Shader? tintShader;
+    private float worldGamma = Gamma.Normal;
 
     public GameState State { get; set; } = null!;
     public SpriteLoader Sprites { get; set; } = null!;
@@ -64,6 +66,26 @@ public partial class WorldView : Node2D
     public int SelectedCharacter { get; private set; }
 
     public bool PickTileDrawnUnderMouse { get; set; }
+
+    // A sprite's brightness is only set again when its light changes, so a new gamma has every lit sprite redone on the
+    // next refresh.
+    public float WorldGamma
+    {
+        get => worldGamma;
+        set
+        {
+            if (value == worldGamma)
+            {
+                return;
+            }
+
+            worldGamma = value;
+            foreach (var layer in (SpriteLayer[])[floors, objects, characters])
+            {
+                Array.Fill(layer.ShownEffects, UnshownEffect);
+            }
+        }
+    }
 
     // Switching on waits for the next tick to glide from; switching off puts everything back on the tick.
     public bool GlideMovement
@@ -404,7 +426,7 @@ public partial class WorldView : Node2D
         ShowEffect(effects.Injury, injury, characterOffset);
         ShowEffect(effects.Death, death, MapEffects.DeathFollowsCharacter(tile) ? characterOffset : Vector2.Zero);
         ShowEffect(effects.Tomb, tomb, Vector2.Zero);
-        var brightness = SpriteLighting.Brightness(tile.Light);
+        var brightness = SpriteLighting.Brightness(tile.Light, WorldGamma);
         effects.Tomb.SelfModulate = new Color(brightness, brightness, brightness);
         effects.Glow.Visible = glow != null;
         if (glow is { } shown)
@@ -692,7 +714,7 @@ public partial class WorldView : Node2D
 
         layer.ShownEffects[tileIndex] = effect;
         var needsShader = look.Tint != SpriteTint.None || look.Selected;
-        var brightness = SpriteLighting.Brightness(look.Light);
+        var brightness = SpriteLighting.Brightness(look.Light, WorldGamma);
         if (look.Highlighted && !needsShader)
         {
             brightness *= HighlightBrightness;

@@ -8,6 +8,7 @@ using TheLastGate.Characters;
 using TheLastGate.Hotkeys;
 using TheLastGate.Net;
 using TheLastGate.Windows;
+using TheLastGate.World;
 
 namespace TheLastGate.Config;
 
@@ -62,6 +63,8 @@ public sealed class ClientSettings
             file.GetValue(DisplaySection, "cursor_scale", 1f).AsSingle(),
             SmallestCursorScale,
             LargestCursorScale);
+        ScreenGamma = Gamma.Clamp(file.GetValue(DisplaySection, "screen_gamma", Gamma.Normal).AsSingle());
+        WorldGamma = Gamma.Clamp(file.GetValue(DisplaySection, "world_gamma", Gamma.Normal).AsSingle());
     }
 
     public bool Windowed { get; set; }
@@ -80,6 +83,8 @@ public sealed class ClientSettings
     public bool GlideMovement { get; set; }
     public KeyBindings KeyBindings { get; } = new();
     public float CursorScale { get; set; }
+    public float ScreenGamma { get; set; }
+    public float WorldGamma { get; set; }
 
     public bool this[GeneralOption option]
     {
@@ -140,6 +145,8 @@ public sealed class ClientSettings
         file.SetValue(AudioSection, "sound_enabled", SoundEnabled);
         file.SetValue(AudioSection, "sound_volume", SoundVolume);
         file.SetValue(DisplaySection, "cursor_scale", CursorScale);
+        file.SetValue(DisplaySection, "screen_gamma", ScreenGamma);
+        file.SetValue(DisplaySection, "world_gamma", WorldGamma);
         file.SetValue(GeneralSection, "escape_closes_windows_first", EscapeClosesWindowsFirst);
         file.SetValue(GeneralSection, "enter_to_talk", EnterToTalk);
         file.SetValue(GeneralSection, "expanded_quick_stats", ExpandedQuickStats);
@@ -155,7 +162,17 @@ public sealed class ClientSettings
             LauncherSection,
             "character_files",
             CharacterHistory.Entries.Select(entry => entry.FilePath).ToArray());
-        foreach (var (id, keys) in KeyBindings.Saved())
+        // A binding this client no longer has, such as the old gamma key, would otherwise stay in the file forever.
+        var savedBindings = KeyBindings.Saved();
+        if (file.HasSection(KeybindsSection))
+        {
+            foreach (var oldId in file.GetSectionKeys(KeybindsSection).Where(id => !savedBindings.ContainsKey(id)))
+            {
+                file.EraseSectionKey(KeybindsSection, oldId);
+            }
+        }
+
+        foreach (var (id, keys) in savedBindings)
         {
             file.SetValue(KeybindsSection, id, keys);
         }

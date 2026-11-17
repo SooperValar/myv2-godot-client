@@ -32,6 +32,7 @@ public partial class GameScreen : Control
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
+    private ScreenGammaLayer? screenGamma;
     private GameSession session = null!;
     private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
@@ -118,10 +119,12 @@ public partial class GameScreen : Control
         soundEffects.Volume = settings.SoundVolume;
         CursorShapes.Register(settings.CursorScale);
         gameState.Tooltips.Enabled = settings.ItemTooltips;
+        screenGamma?.ShowGamma(settings.ScreenGamma);
         if (worldView != null)
         {
             worldView.GlideMovement = settings.GlideMovement;
             worldView.PickTileDrawnUnderMouse = settings.PickTileDrawnUnderMouse;
+            worldView.WorldGamma = settings.WorldGamma;
         }
     }
 
@@ -153,6 +156,7 @@ public partial class GameScreen : Control
             SendCommand = SendAction,
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             GlideMovement = clientSettings.GlideMovement,
+            WorldGamma = clientSettings.WorldGamma,
             ShowShadows = clientSettings.Shadows,
             ShowNames = characterSettings.ShowNames,
             ShowHealthPercent = characterSettings.ShowHealthPercent,
@@ -176,6 +180,9 @@ public partial class GameScreen : Control
         gameState.Tooltips.SendLook = connection.SendCommand;
         gameState.Tooltips.Enabled = clientSettings.ItemTooltips;
         gameState.ShopRefresh.Send = connection.SendCommand;
+        screenGamma = new ScreenGammaLayer();
+        AddChild(screenGamma);
+        screenGamma.ShowGamma(clientSettings.ScreenGamma);
     }
 
     private DebugFacts ReadDebugFacts() => new(

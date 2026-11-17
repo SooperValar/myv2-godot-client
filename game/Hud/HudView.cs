@@ -283,6 +283,8 @@ public partial class HudView : Control
             return null;
         });
         optionsWindow.ResetAllChosen += () => ChangeKeyBindings((window, bindings) => window.ChooseResetAll(bindings));
+        optionsWindow.ScreenGammaChanged += gamma => ChangeClientSettings(settings => settings.ScreenGamma = gamma);
+        optionsWindow.WorldGammaChanged += gamma => ChangeClientSettings(settings => settings.WorldGamma = gamma);
 
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)

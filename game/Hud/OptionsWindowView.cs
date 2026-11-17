@@ -7,6 +7,7 @@ using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Hotkeys;
 using TheLastGate.Windows;
+using TheLastGate.World;
 
 namespace TheLastGate.Hud;
 
@@ -35,6 +36,10 @@ public partial class OptionsWindowView : Panel
 
     private Node KeybindSections => GetNode("Pages/Keybinds/Rows/Sections");
 
+    private HSlider ScreenGamma => GetNode<HSlider>("Pages/Display/ScreenGammaRow/ScreenGamma");
+
+    private HSlider WorldGamma => GetNode<HSlider>("Pages/Display/WorldGammaRow/WorldGamma");
+
     public event Action<OptionsTab>? TabChosen;
 
     public event Action? CloseChosen;
@@ -58,6 +63,10 @@ public partial class OptionsWindowView : Panel
     public event Action<string>? BindingResetChosen;
 
     public event Action? ResetAllChosen;
+
+    public event Action<float>? ScreenGammaChanged;
+
+    public event Action<float>? WorldGammaChanged;
 
     public override void _Ready()
     {
@@ -92,6 +101,16 @@ public partial class OptionsWindowView : Panel
             CursorScaleChanged?.Invoke((float)scale);
         };
         GetNode<Button>("Pages/Keybinds/Rows/ResetAll").Pressed += () => ResetAllChosen?.Invoke();
+        ScreenGamma.ValueChanged += gamma =>
+        {
+            ShowGammaValue(ScreenGamma, (float)gamma);
+            ScreenGammaChanged?.Invoke((float)gamma);
+        };
+        WorldGamma.ValueChanged += gamma =>
+        {
+            ShowGammaValue(WorldGamma, (float)gamma);
+            WorldGammaChanged?.Invoke((float)gamma);
+        };
     }
 
     // Runs before the chat line and the hotkeys see the key, so the key being bound does nothing else.
@@ -145,6 +164,10 @@ public partial class OptionsWindowView : Panel
         SoundEnabled.SetPressedNoSignal(settings.SoundEnabled);
         Volume.SetValueNoSignal(settings.SoundVolume);
         ShowVolume(settings.SoundVolume);
+        ScreenGamma.SetValueNoSignal(settings.ScreenGamma);
+        ShowGammaValue(ScreenGamma, settings.ScreenGamma);
+        WorldGamma.SetValueNoSignal(settings.WorldGamma);
+        ShowGammaValue(WorldGamma, settings.WorldGamma);
         ShowKeybinds(KeybindsTab.Sections(characterSettings), settings.KeyBindings, window);
     }
 
@@ -267,4 +290,7 @@ public partial class OptionsWindowView : Panel
     private void ShowCursorScale(float scale) =>
         GetNode<Label>("Pages/General/Rows/CursorRow/CursorScale/Value").Text =
             scale.ToString("0.0", CultureInfo.InvariantCulture) + "x";
+
+    private static void ShowGammaValue(HSlider slider, float gamma) =>
+        slider.GetNode<Label>("Value").Text = Gamma.Text(gamma);
 }
