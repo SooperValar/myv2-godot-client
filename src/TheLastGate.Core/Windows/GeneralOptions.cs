@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace TheLastGate.Windows;
@@ -6,11 +7,16 @@ public enum GeneralOption
 {
     EscapeClosesWindowsFirst,
     ExpandedQuickStats,
+    ItemTooltips,
+    ItemTooltipsAlways,
     GlideMovement,
     PickTileDrawnUnderMouse,
 }
 
-public sealed record OptionRow(GeneralOption Option, string Label, bool Default, bool GodotOnly);
+public sealed record OptionRow(GeneralOption Option, string Label, bool Default, bool GodotOnly)
+{
+    public GeneralOption? Under { get; init; }
+}
 
 // The General tab's checkboxes: the current client's in its own words, then this client's own, which start off.
 public static class GeneralOptions
@@ -32,6 +38,12 @@ public static class GeneralOptions
             false,
             true),
     ];
+
+    public static bool IsShown(OptionRow row, Func<GeneralOption, bool> isOn) =>
+        throw new NotImplementedException();
+
+    public static bool ShowsItemTooltips(bool itemTooltips, bool always, bool keyHeld) =>
+        throw new NotImplementedException();
 
     public static bool EscapeSendsReset(bool escapeClosesWindowsFirst, bool closedAWindow) =>
         !escapeClosesWindowsFirst || !closedAWindow;

@@ -212,6 +212,27 @@ public class KeyBindingsTests
         Assert.Equal("Alt", saved["item_tooltip_hotkey"]);
     }
 
+    [Theory]
+    [InlineData(MapKeys.Alt, false, true)]
+    [InlineData(MapKeys.Alt | MapKeys.Shift, false, true)]
+    [InlineData(MapKeys.Shift, true, false)]
+    [InlineData(MapKeys.None, false, false)]
+    public void KeyChord_AModifierAloneIsHeldWhileThatModifierIsDown(MapKeys heldModifiers, bool keyDown, bool isHeld)
+    {
+        Assert.Equal(isHeld, new KeyChord(KeyNames.Alt, MapKeys.None).IsHeld(heldModifiers, keyDown));
+    }
+
+    [Theory]
+    [InlineData(MapKeys.Ctrl, true, true)]
+    [InlineData(MapKeys.Ctrl | MapKeys.Shift, true, true)]
+    [InlineData(MapKeys.Ctrl, false, false)]
+    [InlineData(MapKeys.Shift, true, false)]
+    [InlineData(MapKeys.None, true, false)]
+    public void KeyChord_IsHeldWithItsKeyAndAtLeastItsModifiers(MapKeys heldModifiers, bool keyDown, bool isHeld)
+    {
+        Assert.Equal(isHeld, new KeyChord("T", MapKeys.Ctrl).IsHeld(heldModifiers, keyDown));
+    }
+
     [Fact]
     public void SavedAndLoaded_RoundTrip()
     {

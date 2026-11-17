@@ -17,6 +17,8 @@ public readonly record struct KeyChord(string Key, MapKeys Modifiers)
     // The hotbar's label: "C-1".
     public string ShortName => Prefixed(prefix => prefix.Short);
 
+    public bool IsHeld(MapKeys heldModifiers, bool keyDown) => throw new NotImplementedException();
+
     // Reads only what LongName writes: modifiers in Shift, Ctrl, Alt order, then a known key.
     public static KeyChord? Parse(string text)
     {
