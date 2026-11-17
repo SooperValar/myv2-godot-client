@@ -1,3 +1,7 @@
+using System;
+using TheLastGate.Hotkeys;
+using TheLastGate.State;
+
 namespace TheLastGate.Windows;
 
 public enum OptionsTab
@@ -14,6 +18,10 @@ public sealed class OptionsWindow
 
     public OptionsTab Tab { get; private set; }
 
+    public string? Capturing { get; private set; }
+
+    public bool ConfirmingReset { get; private set; }
+
     public void Toggle() => IsOpen = !IsOpen;
 
     public bool Close()
@@ -24,4 +32,14 @@ public sealed class OptionsWindow
     }
 
     public void Show(OptionsTab tab) => Tab = tab;
+
+    public void StartCapture(string id) => throw new NotImplementedException();
+
+    public LogLine? Capture(KeyChord chord, KeyBindings bindings) => throw new NotImplementedException();
+
+    public void CancelCapture() => throw new NotImplementedException();
+
+    public void UnbindCaptured(KeyBindings bindings) => throw new NotImplementedException();
+
+    public LogLine? ChooseResetAll(KeyBindings bindings) => throw new NotImplementedException();
 }
