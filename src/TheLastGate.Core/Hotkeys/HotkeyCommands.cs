@@ -1,8 +1,24 @@
-using System;
+using System.Collections.Generic;
 
 namespace TheLastGate.Hotkeys;
 
 public static class HotkeyCommands
 {
-    public static string? Says(string id) => throw new NotImplementedException();
+    private static readonly Dictionary<string, string> Said = new()
+    {
+        ["fightback_hotkey"] = "/fightback",
+        ["swap_position_hotkey"] = "/swap",
+        ["who_hotkey"] = "/who",
+        ["my_buff_hotkey"] = "/buffs",
+        ["gc_offense_hotkey"] = "Offense",
+        ["gc_defense_hotkey"] = "Defense",
+        ["gc_passive_hotkey"] = "Passive",
+        ["gc_wait_hotkey"] = "Wait",
+        ["gc_follow_hotkey"] = "Follow",
+        ["gc_move_hotkey"] = "Move",
+        ["gc_buffs_hotkey"] = "/gcb",
+        ["gc_transfer_hotkey"] = "transfer",
+    };
+
+    public static string? Says(string id) => Said.GetValueOrDefault(id);
 }
