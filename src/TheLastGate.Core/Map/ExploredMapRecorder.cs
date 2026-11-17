@@ -1,5 +1,5 @@
-using System;
 using TheLastGate.State;
+using TheLastGate.World;
 
 namespace TheLastGate.Map;
 
@@ -7,18 +7,40 @@ public sealed class ExploredMapRecorder(ExploredMap map)
 {
     public const int EmptyFloorSprite = 999;
 
-    public bool Paused => throw new NotImplementedException();
+    private readonly SpectateWatch spectating = new();
+
+    public bool Paused => spectating.Active;
 
     public ExploredMap Map => map;
 
-    public static int? SpriteToAverage(uint flags, int floorSprite, int itemSprite) =>
-        throw new NotImplementedException();
+    // Unlit and off-map tiles arrive with the empty floor, or none; a tile is coloured by what stands on it.
+    public static int? SpriteToAverage(uint flags, int floorSprite, int itemSprite)
+    {
+        if ((flags & (uint)MapFlags.Invisible) != 0 || floorSprite is 0 or EmptyFloorSprite)
+        {
+            return null;
+        }
 
-    public void See(int tileX, int tileY, uint colour) => throw new NotImplementedException();
+        return itemSprite != 0 ? itemSprite : floorSprite;
+    }
 
-    public void ClearBox(MinimapBox box) => throw new NotImplementedException();
+    public void See(int tileX, int tileY, uint colour)
+    {
+        if (!Paused)
+        {
+            map.SetTile(tileX, tileY, colour);
+        }
+    }
 
-    public void NoteLogLine(string line, int centreCharacter) => throw new NotImplementedException();
+    public void ClearBox(MinimapBox box)
+    {
+        if (!Paused)
+        {
+            map.ClearBox(box.Left, box.Top, box.Width, box.Height);
+        }
+    }
 
-    public void NoteViewCentre(int centreCharacter) => throw new NotImplementedException();
+    public void NoteLogLine(string line, int centreCharacter) => spectating.LogLine(line, centreCharacter);
+
+    public void NoteViewCentre(int centreCharacter) => spectating.ViewCentre(centreCharacter);
 }
