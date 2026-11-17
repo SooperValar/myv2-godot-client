@@ -1,3 +1,5 @@
+using System;
+
 namespace TheLastGate.World;
 
 public static class SpriteLighting
@@ -9,4 +11,6 @@ public static class SpriteLighting
     private const float GammaEffect = DefaultGamma - ShaderGammaBase;
 
     public static float Brightness(int light) => light > 0 ? GammaEffect / (light * light + GammaEffect) : 1f;
+
+    public static float Brightness(int light, float worldGamma) => throw new NotImplementedException();
 }

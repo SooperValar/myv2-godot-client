@@ -20,14 +20,25 @@ public class OptionsWindowTests
         Assert.False(window.IsOpen);
     }
 
-    [Fact]
-    public void Show_SwitchesTab()
+    [Theory]
+    [InlineData(OptionsTab.Audio)]
+    [InlineData(OptionsTab.Display)]
+    [InlineData(OptionsTab.Keybinds)]
+    public void Show_SwitchesTab(OptionsTab tab)
     {
         window.Toggle();
 
-        window.Show(OptionsTab.Keybinds);
+        window.Show(tab);
 
-        Assert.Equal(OptionsTab.Keybinds, window.Tab);
+        Assert.Equal(tab, window.Tab);
+    }
+
+    [Fact]
+    public void Tabs_KeepTheCurrentClientsThreeThenTheGodotDisplayTab()
+    {
+        Assert.Equal(
+            [OptionsTab.General, OptionsTab.Audio, OptionsTab.Keybinds, OptionsTab.Display],
+            Enum.GetValues<OptionsTab>());
     }
 
     [Fact]

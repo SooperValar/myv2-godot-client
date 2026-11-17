@@ -8,10 +8,25 @@ public class KeyBindingsTests
     private readonly KeyBindings bindings = new();
 
     [Fact]
-    public void All_HasEveryBindingOfTheCurrentClientOnce()
+    public void All_HasEveryBindingOfTheCurrentClientOnceButGamma()
     {
-        Assert.Equal(49, Bindings.All.Count);
+        Assert.Equal(48, Bindings.All.Count);
         Assert.Equal(Bindings.All.Count, Bindings.All.Select(binding => binding.Id).Distinct().Count());
+    }
+
+    [Fact]
+    public void All_LeavesGammaToTheDisplaySliders()
+    {
+        Assert.DoesNotContain(Bindings.All, binding => binding.Id == "toggle_gamma_hotkey");
+    }
+
+    [Fact]
+    public void Load_DropsAGammaKeySavedByAnEarlierVersion()
+    {
+        bindings.Load(new Dictionary<string, string> { ["toggle_gamma_hotkey"] = "F10" });
+
+        Assert.False(bindings.Saved().ContainsKey("toggle_gamma_hotkey"));
+        Assert.Null(bindings.Find(new KeyChord("F10", MapKeys.None)));
     }
 
     [Theory]
@@ -127,7 +142,7 @@ public class KeyBindingsTests
         Assert.Null(bindings.Find(new KeyChord("1", MapKeys.Ctrl | MapKeys.Shift)));
         Assert.Null(bindings.Find(new KeyChord("1", MapKeys.None)));
         Assert.Equal("reset_window_size_hotkey", bindings.Find(new KeyChord("F10", MapKeys.Shift))?.Id);
-        Assert.Equal("toggle_gamma_hotkey", bindings.Find(new KeyChord("F10", MapKeys.None))?.Id);
+        Assert.Null(bindings.Find(new KeyChord("F10", MapKeys.None)));
     }
 
     [Fact]

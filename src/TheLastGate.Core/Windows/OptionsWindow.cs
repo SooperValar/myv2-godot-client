@@ -11,6 +11,7 @@ public enum OptionsTab
     General,
     Audio,
     Keybinds,
+    Display,
 }
 
 // Nothing but its own button, its hotkey and Escape opens or closes it; the tab is remembered while it's shut.
