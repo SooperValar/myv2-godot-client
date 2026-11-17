@@ -17,7 +17,7 @@ public partial class ClickArea : Control
         }
 
         AcceptEvent();
-        if (click.Pressed || !new Rect2(Vector2.Zero, Size).HasPoint(click.Position))
+        if (click.Pressed || !Contains(click.Position))
         {
             return;
         }
@@ -33,4 +33,6 @@ public partial class ClickArea : Control
             EmitSignal(SignalName.Released, Variant.From(button));
         }
     }
+
+    protected virtual bool Contains(Vector2 point) => new Rect2(Vector2.Zero, Size).HasPoint(point);
 }

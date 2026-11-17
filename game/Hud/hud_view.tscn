@@ -24,6 +24,7 @@
 [ext_resource type="PackedScene" uid="uid://cikoega2qm5yf" path="res://Hud/depot_window.tscn" id="22_depotwindow"]
 [ext_resource type="PackedScene" uid="uid://bkd1i4cug6ojj" path="res://Hud/smith_window.tscn" id="23_smithwindow"]
 [ext_resource type="PackedScene" uid="uid://c4nhp1yrm7a4i" path="res://Hud/waypoint_window.tscn" id="24_waypointwindow"]
+[ext_resource type="PackedScene" uid="uid://dunfj2uaq4jcb" path="res://Hud/skill_tree_window.tscn" id="25_skilltreewindow"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -419,6 +420,32 @@ offset_right = 129.0
 offset_bottom = 579.0
 text = "Aston"
 script = ExtResource("4_hudlabel")
+
+[node name="TreeButton" type="Control" parent="." unique_id=484884030]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 341.0
+offset_top = 179.0
+offset_right = 370.0
+offset_bottom = 210.0
+script = ExtResource("8_clickarea")
+
+[node name="Glow" type="TextureRect" parent="TreeButton" unique_id=119514720]
+visible = false
+layout_mode = 0
+offset_left = -4.0
+offset_top = -2.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+SpriteNumber = 18008
+
+[node name="Picture" type="TextureRect" parent="TreeButton" unique_id=1074817622]
+layout_mode = 0
+offset_left = -2.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+SpriteNumber = 18002
+DarkSpriteNumber = 18004
 
 [node name="SwapSetButton" type="Control" parent="." unique_id=1530283471]
 unique_name_in_owner = true
@@ -1421,6 +1448,14 @@ offset_right = 777.0
 offset_bottom = 596.0
 
 [node name="WaypointWindow" parent="." unique_id=814677978 instance=ExtResource("24_waypointwindow")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 480.0
+offset_top = 280.0
+offset_right = 777.0
+offset_bottom = 596.0
+
+[node name="SkillTreeWindow" parent="." unique_id=1174673754 instance=ExtResource("25_skilltreewindow")]
 unique_name_in_owner = true
 layout_mode = 0
 offset_left = 480.0

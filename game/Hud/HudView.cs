@@ -231,6 +231,15 @@ public partial class HudView : Control
             ((ClickArea)waypointWindow.Row(row)).Released += button => ClickWaypoint(shownRow, button);
         }
 
+        var skillTreeWindow = GetNode<SkillTreeWindowView>("%SkillTreeWindow");
+        skillTreeWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseSkillTree;
+        for (var node = 0; node < SkillTrees.Nodes; node++)
+        {
+            var shownNode = node;
+            skillTreeWindow.Node(node).Released += button => ClickSkillTreeNode(shownNode, button);
+        }
+
+        GetNode<ClickArea>("%TreeButton").Released += ClickTreeButton;
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
         {
@@ -258,7 +267,8 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
-        if (state.TextWindows.AnyOpen || state.WaypointWindow.IsOpen || state.OpenShop != null)
+        if (state.TextWindows.AnyOpen || state.WaypointWindow.IsOpen || state.SkillTreeWindow.Open != null
+            || state.OpenShop != null)
         {
             lookPanel.Hide();
         }
@@ -268,6 +278,7 @@ public partial class HudView : Control
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
         GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
         ShowWaypoints();
+        GetNode<SkillTreeWindowView>("%SkillTreeWindow").ShowTree(state);
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -335,6 +346,7 @@ public partial class HudView : Control
         }
 
         ShowHeldItem(state.Player.HeldItem);
+        ShowTreeButton();
         var buyingTen = Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
         GetNode<ShopWindowView>("%ShopWindow").ShowText(state, hoveredShopCell, buyingTen);
         if (GetViewport().GuiGetHoveredControl() is not ClickArea hovered)
@@ -743,6 +755,49 @@ public partial class HudView : Control
         }
     }
 
+    // The button answers clicks even while it isn't drawn, so a character with only contract points can open that tree.
+    private void ShowTreeButton()
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        var button = GetNode<Control>("%TreeButton");
+        var player = state.Player;
+        button.GetNode<CanvasItem>("Picture").Visible = SkillTreeWindow.ButtonShows(player.TreePoints);
+        var glow = button.GetNode<CanvasItem>("Glow");
+        glow.Visible = SkillTreeWindow.ButtonShows(player.TreePoints)
+            && state.SkillTreeWindow.ButtonGlows(player.TreePoints, player.OsirisTree);
+        var brightness = SpriteLighting.Brightness(SkillTreeWindow.GlowLight((long)Time.GetTicksMsec()));
+        glow.Modulate = new Color(brightness, brightness, brightness);
+    }
+
+    private void ClickTreeButton(MapButton button)
+    {
+        if (button == MapButton.Left && state != null)
+        {
+            state.ToggleSkillTree(HeldKeys.Current());
+            Refresh(selectedCharacter);
+        }
+    }
+
+    private void ClickSkillTreeNode(int node, MapButton button)
+    {
+        if (state?.SkillTreeWindow.Click(node, button, HeldKeys.Current()) is { } packet)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private void ClickCloseSkillTree(MapButton button)
+    {
+        if (button == MapButton.Left && state?.SkillTreeWindow.Close() == true)
+        {
+            Refresh(selectedCharacter);
+        }
+    }
+
     private void ClickCloseShop(MapButton button)
     {
         if (button == MapButton.Left && state?.CloseShop() == true)
@@ -756,8 +811,7 @@ public partial class HudView : Control
     {
         if (state?.CloseWindowsByEscape() == true)
         {
-            ShowTextWindows();
-            ShowWaypoints();
+            Refresh(selectedCharacter);
             return;
         }
 
