@@ -8,6 +8,7 @@ using TheLastGate.State;
 namespace TheLastGate.Hud;
 
 public sealed record DebugFacts(
+    string ClientVersion,
     uint ServerVersion,
     string GodotVersion,
     string AdapterName,

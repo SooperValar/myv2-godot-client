@@ -178,6 +178,7 @@ public partial class GameScreen : Control
     }
 
     private DebugFacts ReadDebugFacts() => new(
+        "",
         session.Handshake.ServerVersion,
         Engine.GetVersionInfo()["string"].AsString(),
         RenderingServer.GetVideoAdapterName(),

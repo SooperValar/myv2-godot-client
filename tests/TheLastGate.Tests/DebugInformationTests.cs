@@ -7,6 +7,7 @@ namespace TheLastGate.Tests;
 public class DebugInformationTests
 {
     private static readonly DebugFacts Facts = new(
+        "1.4.2+5e0c1d7",
         0x010203,
         "4.7.2-stable (official)",
         "NVIDIA GeForce RTX 4090",
@@ -17,11 +18,12 @@ public class DebugInformationTests
         16.66);
 
     [Fact]
-    public void Lines_ShowWhatTheGodotClientShowedInGreenAfterABlankLine()
+    public void Lines_ShowTheClientVersionThenWhatTheGodotClientShowedInGreenAfterABlankLine()
     {
         Assert.Equal(
             [
                 " ",
+                "Client Version 1.4.2",
                 "Networking Version 0.15.00",
                 "Server Version 1.02.03",
                 "Godot Version 4.7.2-stable (official)",
