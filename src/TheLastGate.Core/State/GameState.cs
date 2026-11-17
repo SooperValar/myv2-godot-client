@@ -14,6 +14,7 @@ public sealed class GameState
         Tooltips = new ItemTooltips(Chat);
         MessageOfTheDay.LineAdded += MessageOfTheDayLines.Add;
         TextWindows = new TextWindows(Pause);
+        WaypointWindow = new WaypointWindow(Pause);
     }
 
     public PlayerState Player { get; } = new();
@@ -26,6 +27,7 @@ public sealed class GameState
     public MessageOfTheDayLines MessageOfTheDayLines { get; } = new();
     public WindowPause Pause { get; } = new();
     public TextWindows TextWindows { get; }
+    public WaypointWindow WaypointWindow { get; }
     public ShopRefresh ShopRefresh { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();

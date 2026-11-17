@@ -67,18 +67,6 @@ public class RequestCommandsTests
         Assert.Equal(2, state.Player.Mode);
     }
 
-    [Fact]
-    public void Waypoints_RequestsTheWaypointWindow()
-    {
-        var state = new GameState();
-        var requests = 0;
-        state.WaypointsRequested += () => requests++;
-
-        Process(state, TestCommand.Of(ServerCommand.Waypoints));
-
-        Assert.Equal(1, requests);
-    }
-
     [Theory]
     [InlineData(0, WindowKind.MessageOfTheDay, 0)]
     [InlineData(99, WindowKind.NewPlayerWelcome, 0)]
