@@ -115,6 +115,8 @@ public partial class HudView : Control
 
     public Action PlayClick { get; set; } = () => { };
 
+    public Func<DebugFacts>? ReadDebugFacts { get; set; }
+
     public event Action? SettingsChanged;
 
     public event Action? LeaveRequested;
@@ -610,6 +612,18 @@ public partial class HudView : Control
             return true;
         }
 
+        if (id == "reset_window_size_hotkey")
+        {
+            ResetWindowSize();
+            return true;
+        }
+
+        if (id == "display_debug_information_hotkey")
+        {
+            ShowDebugInformation();
+            return true;
+        }
+
         if (HotkeyCommands.Says(id) is { } line)
         {
             Say(line);
@@ -623,6 +637,32 @@ public partial class HudView : Control
 
         ClickOption(option, MapButton.Left);
         return true;
+    }
+
+    // A maximised window is brought back to a plain window first, or the new size would not show.
+    private void ResetWindowSize()
+    {
+        if (WindowReset.Line(ClientSettings?.Windowed ?? true) is not { } line)
+        {
+            return;
+        }
+
+        DisplayServer.WindowSetMode(DisplayServer.WindowMode.Windowed);
+        DisplayServer.WindowSetSize(new Vector2I(WindowReset.Size.Width, WindowReset.Size.Height));
+        state?.Chat.Add(line);
+    }
+
+    private void ShowDebugInformation()
+    {
+        if (ReadDebugFacts?.Invoke() is not { } facts)
+        {
+            return;
+        }
+
+        foreach (var line in DebugInformation.Lines(facts))
+        {
+            state?.Chat.Add(line);
+        }
     }
 
     private static OptionButton? OptionForHotkey(string id) => id switch

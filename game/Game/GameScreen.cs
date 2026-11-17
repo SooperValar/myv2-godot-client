@@ -168,6 +168,7 @@ public partial class GameScreen : Control
         hudView.ClientSettingsChanged += () => ApplyClientSettings(clientSettings);
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
+        hudView.ReadDebugFacts = ReadDebugFacts;
         hudView.Show(gameState, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
@@ -175,6 +176,16 @@ public partial class GameScreen : Control
         gameState.Tooltips.Enabled = clientSettings.ItemTooltips;
         gameState.ShopRefresh.Send = connection.SendCommand;
     }
+
+    private DebugFacts ReadDebugFacts() => new(
+        session.Handshake.ServerVersion,
+        Engine.GetVersionInfo()["string"].AsString(),
+        RenderingServer.GetVideoAdapterName(),
+        RenderingServer.GetVideoAdapterVendor(),
+        RenderingServer.GetVideoAdapterApiVersion(),
+        playback.QueuedTicks,
+        pacer.BufferTarget,
+        pacer.MeasuredPeriodMilliseconds);
 
     private void SendAction(byte[] packet)
     {
