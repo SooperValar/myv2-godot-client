@@ -20,6 +20,7 @@
 [ext_resource type="Script" uid="uid://bomtg3mqrk113" path="res://Hud/DarkModeShift.cs" id="18_darkshift"]
 [ext_resource type="Script" uid="uid://br01fdchbbgdf" path="res://Hud/ChatLine.cs" id="19_chatline"]
 [ext_resource type="PackedScene" uid="uid://c43vvk1g7qgns" path="res://Hud/text_windows.tscn" id="20_textwindows"]
+[ext_resource type="PackedScene" uid="uid://cv82ogaee8q8m" path="res://Hud/shop_window.tscn" id="21_shopwindow"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -1391,6 +1392,14 @@ custom_minimum_size = Vector2(48, 15)
 layout_mode = 2
 script = ExtResource("11_option")
 Kind = 11
+
+[node name="ShopWindow" parent="." unique_id=745665677 instance=ExtResource("21_shopwindow")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 480.0
+offset_top = 280.0
+offset_right = 777.0
+offset_bottom = 596.0
 
 [node name="TextWindows" parent="." unique_id=454257924 instance=ExtResource("20_textwindows")]
 unique_name_in_owner = true

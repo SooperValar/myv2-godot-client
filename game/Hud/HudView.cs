@@ -55,6 +55,7 @@ public partial class HudView : Control
     private bool darkMode;
     private SpriteLoader? editorSprites;
     private IFontSet? fonts;
+    private int? hoveredShopCell;
     private Vector2 mousePosition;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
@@ -176,6 +177,17 @@ public partial class HudView : Control
         var chatLine = GetNode<ChatLine>("%ChatLine");
         chatLine.LineSent += Say;
         chatLine.EscapePressed += PressEscape;
+        var shopWindow = GetNode<ShopWindowView>("%ShopWindow");
+        shopWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
+        foreach (var node in shopWindow.GetNode("Grid").GetChildren())
+        {
+            var shopCell = (ItemSlotView)node;
+            var cell = shopCell.GetIndex();
+            shopCell.Released += button => ClickShop(cell, button);
+            shopCell.MouseEntered += () => hoveredShopCell = cell;
+            shopCell.MouseExited += () => hoveredShopCell = null;
+        }
+
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
         {
@@ -203,12 +215,13 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
-        if (state.TextWindows.AnyOpen)
+        if (state.TextWindows.AnyOpen || state.OpenShop != null)
         {
             lookPanel.Hide();
         }
 
         ShowTextWindows();
+        GetNode<ShopWindowView>("%ShopWindow").ShowItems(state);
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -276,6 +289,8 @@ public partial class HudView : Control
         }
 
         ShowHeldItem(state.Player.HeldItem);
+        var buyingTen = Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
+        GetNode<ShopWindowView>("%ShopWindow").ShowText(state, hoveredShopCell, buyingTen);
         if (GetViewport().GuiGetHoveredControl() is not ClickArea hovered)
         {
             return;
@@ -292,6 +307,12 @@ public partial class HudView : Control
         {
             var item = player.Inventory[inventory.SlotShownIn(hovered.GetIndex())];
             cursor = InventoryClicks.Cursor(item, holdingItem, HeldKeys.Current());
+        }
+        else if (hovered.GetParent()?.GetParent() is ShopWindowView)
+        {
+            var slot = ShopClicks.SlotFor(hovered.GetIndex());
+            var items = state.Shop.ShopItems;
+            cursor = ShopClicks.Cursor(slot < items.Length && items[slot].Sprite != 0, holdingItem);
         }
         else if (Enum.TryParse<WornSlot>(hovered.Name, out var slot))
         {
@@ -561,6 +582,28 @@ public partial class HudView : Control
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
     }
 
+    private void ClickShop(int cell, MapButton button)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        var slot = ShopClicks.SlotFor(cell);
+        if (ShopClicks.Packet(button, HeldKeys.Current(), state.Shop.Number, slot) is { } packet)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private void ClickCloseShop(MapButton button)
+    {
+        if (button == MapButton.Left && state?.CloseShop() == true)
+        {
+            Refresh(selectedCharacter);
+        }
+    }
+
     // With a window open, Escape only closes it; otherwise it stops what the character is doing.
     private void PressEscape()
     {
@@ -822,6 +865,12 @@ public partial class HudView : Control
         GetNode<CanvasItem>("%OwnName").Visible = true;
         SetText("OwnName", player.Name);
         ShowCharacter(player.Name, player.PointsTotal, sprite, SpriteTint.None);
+        if (state is { OpenShop: not (null or ShopKind.WeaponSmith or ShopKind.ArmourSmith) })
+        {
+            var shop = state.Shop;
+            ShowCharacter(shop.Name, shop.Points, shop.Sprite, SpriteTint.None);
+        }
+
         ShowEquipment(player);
     }
 
