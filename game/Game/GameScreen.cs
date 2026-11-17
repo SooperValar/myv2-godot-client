@@ -151,6 +151,12 @@ public partial class GameScreen : Control
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
         hudView.KeyBindings = clientSettings.KeyBindings;
+        hudView.ClientSettings = clientSettings;
+        hudView.AudioChanged += () =>
+        {
+            soundEffects.Enabled = clientSettings.SoundEnabled;
+            soundEffects.Volume = clientSettings.SoundVolume;
+        };
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
         hudView.Show(gameState, fonts, SendAction);

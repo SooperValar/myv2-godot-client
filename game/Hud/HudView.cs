@@ -90,6 +90,7 @@ public partial class HudView : Control
 
     public CharacterSettings Settings { get; set; } = new();
     public KeyBindings KeyBindings { get; set; } = new();
+    public ClientSettings? ClientSettings { get; set; }
 
     public IFontSet? Fonts
     {
@@ -106,6 +107,8 @@ public partial class HudView : Control
     public event Action? SettingsChanged;
 
     public event Action? LeaveRequested;
+
+    public event Action? AudioChanged;
 
     public static HudView? Containing(Node node)
     {
@@ -245,6 +248,12 @@ public partial class HudView : Control
         }
 
         GetNode<ClickArea>("%TreeButton").Released += ClickTreeButton;
+        var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
+        optionsWindow.TabChosen += ChooseOptionsTab;
+        optionsWindow.CloseChosen += CloseOptions;
+        optionsWindow.SoundEnabledChanged += enabled => ChangeAudio(settings => settings.SoundEnabled = enabled);
+        optionsWindow.SoundVolumeChanged += volume => ChangeAudio(settings => settings.SoundVolume = volume);
+
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
         {
@@ -284,6 +293,7 @@ public partial class HudView : Control
         GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
         ShowWaypoints();
         GetNode<SkillTreeWindowView>("%SkillTreeWindow").ShowTree(state);
+        ShowOptions();
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -460,6 +470,9 @@ public partial class HudView : Control
                 case HotbarMenu menu:
                     menu.ApplyFont();
                     break;
+                case OptionsWindowView options:
+                    options.ApplyButtonSprite();
+                    break;
             }
 
             Reload(child);
@@ -522,6 +535,12 @@ public partial class HudView : Control
             return true;
         }
 
+        if (id == "toggle_options_hotkey")
+        {
+            ToggleOptions();
+            return true;
+        }
+
         if (OptionForHotkey(id) is not { } option)
         {
             return false;
@@ -565,6 +584,12 @@ public partial class HudView : Control
         if (option == OptionButton.Exit)
         {
             ClickExit();
+            return;
+        }
+
+        if (option == OptionButton.Options)
+        {
+            ToggleOptions();
             return;
         }
 
@@ -834,6 +859,47 @@ public partial class HudView : Control
         {
             Refresh(selectedCharacter);
         }
+    }
+
+    private void ShowOptions()
+    {
+        if (state != null)
+        {
+            var soundEnabled = ClientSettings?.SoundEnabled ?? true;
+            var soundVolume = ClientSettings?.SoundVolume ?? 0;
+            GetNode<OptionsWindowView>("%OptionsWindow").ShowOptions(state.OptionsWindow, soundEnabled, soundVolume);
+        }
+    }
+
+    private void ToggleOptions()
+    {
+        state?.OptionsWindow.Toggle();
+        ShowOptions();
+    }
+
+    private void ChooseOptionsTab(OptionsTab tab)
+    {
+        state?.OptionsWindow.Show(tab);
+        ShowOptions();
+    }
+
+    private void CloseOptions()
+    {
+        state?.OptionsWindow.Close();
+        ShowOptions();
+    }
+
+    // Options are saved the moment they change, so nothing is lost if the game closes unexpectedly.
+    private void ChangeAudio(Action<ClientSettings> change)
+    {
+        if (ClientSettings == null)
+        {
+            return;
+        }
+
+        change(ClientSettings);
+        ClientSettings.Save();
+        AudioChanged?.Invoke();
     }
 
     private void ClickCloseShop(MapButton button)

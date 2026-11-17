@@ -1,0 +1,140 @@
+[gd_scene format=3 uid="uid://datd803sos88d"]
+
+[ext_resource type="Script" uid="uid://hsct2t2clvpi" path="res://Hud/OptionsWindowView.cs" id="1_view"]
+[ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_tabs"]
+
+[node name="OptionsWindow" type="Panel" unique_id=882502596]
+visible = false
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 320.0
+offset_bottom = 320.0
+theme = ExtResource("2_theme")
+script = ExtResource("1_view")
+
+[node name="Tabs" type="HBoxContainer" parent="." unique_id=1072354599]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = 310.0
+offset_bottom = 40.0
+theme_override_constants/separation = 15
+
+[node name="GeneralTab" type="Button" parent="Tabs" unique_id=1495784883]
+custom_minimum_size = Vector2(90, 30)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "General"
+
+[node name="AudioTab" type="Button" parent="Tabs" unique_id=710427860]
+custom_minimum_size = Vector2(90, 30)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "Audio"
+
+[node name="KeybindsTab" type="Button" parent="Tabs" unique_id=1647750390]
+custom_minimum_size = Vector2(90, 30)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tabs")
+text = "Keybinds"
+
+[node name="TopSeparator" type="ColorRect" parent="." unique_id=378095721]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 48.0
+offset_right = 310.0
+offset_bottom = 49.0
+mouse_filter = 2
+color = Color(0.43, 0.43, 0.5, 0.5)
+
+[node name="Pages" type="TabContainer" parent="." unique_id=1045340498]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 57.0
+offset_right = 310.0
+offset_bottom = 275.0
+current_tab = 0
+tabs_visible = false
+
+[node name="General" type="VBoxContainer" parent="Pages" unique_id=1732244971]
+layout_mode = 2
+theme_override_constants/separation = 4
+metadata/_tab_index = 0
+
+[node name="Audio" type="VBoxContainer" parent="Pages" unique_id=1733750324]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+metadata/_tab_index = 1
+
+[node name="SoundEnabled" type="CheckBox" parent="Pages/Audio" unique_id=608601566]
+layout_mode = 2
+size_flags_horizontal = 0
+focus_mode = 0
+button_pressed = true
+text = "Audio Enabled?"
+
+[node name="VolumeRow" type="HBoxContainer" parent="Pages/Audio" unique_id=1985627937]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Volume" type="HSlider" parent="Pages/Audio/VolumeRow" unique_id=853474521]
+custom_minimum_size = Vector2(195, 16)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+max_value = 10.0
+value = 10.0
+rounded = true
+
+[node name="Value" type="Label" parent="Pages/Audio/VolumeRow/Volume" unique_id=932787854]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "10"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="VolumeLabel" type="Label" parent="Pages/Audio/VolumeRow" unique_id=1145731362]
+layout_mode = 2
+text = "Audio Volume"
+
+[node name="Keybinds" type="VBoxContainer" parent="Pages" unique_id=1770377513]
+visible = false
+layout_mode = 2
+theme_override_constants/separation = 4
+metadata/_tab_index = 2
+
+[node name="BottomSeparator" type="ColorRect" parent="." unique_id=626065756]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 283.0
+offset_right = 310.0
+offset_bottom = 284.0
+mouse_filter = 2
+color = Color(0.43, 0.43, 0.5, 0.5)
+
+[node name="CloseButton" type="Button" parent="." unique_id=1870376445]
+layout_mode = 0
+offset_left = 120.0
+offset_top = 292.0
+offset_right = 200.0
+offset_bottom = 312.0
+focus_mode = 0
+text = "Close"

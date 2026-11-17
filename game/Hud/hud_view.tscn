@@ -25,6 +25,7 @@
 [ext_resource type="PackedScene" uid="uid://bkd1i4cug6ojj" path="res://Hud/smith_window.tscn" id="23_smithwindow"]
 [ext_resource type="PackedScene" uid="uid://c4nhp1yrm7a4i" path="res://Hud/waypoint_window.tscn" id="24_waypointwindow"]
 [ext_resource type="PackedScene" uid="uid://dunfj2uaq4jcb" path="res://Hud/skill_tree_window.tscn" id="25_skilltreewindow"]
+[ext_resource type="PackedScene" uid="uid://datd803sos88d" path="res://Hud/options_window.tscn" id="26_optionswindow"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -1474,6 +1475,14 @@ offset_bottom = 600.0
 [node name="HeldItem" parent="." unique_id=1093361542 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
 mouse_filter = 2
+
+[node name="OptionsWindow" parent="." unique_id=1247369675 instance=ExtResource("26_optionswindow")]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 480.0
+offset_top = 280.0
+offset_right = 800.0
+offset_bottom = 600.0
 
 [node name="HotbarMenu" type="PopupMenu" parent="." unique_id=1133469277]
 unique_name_in_owner = true

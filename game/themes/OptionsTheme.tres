@@ -1,0 +1,98 @@
+[gd_resource type="Theme" format=3 uid="uid://bxevvm0ssb2pb"]
+
+[ext_resource type="FontFile" uid="uid://cm10nefpsee4n" path="res://fonts/astonia.ttf" id="1_font"]
+[ext_resource type="Texture2D" uid="uid://cvksl1c4f55af" path="res://images/options/checkbox-checked.png" id="2_checked"]
+[ext_resource type="Texture2D" uid="uid://bqqgnywpuh1vx" path="res://images/options/checkbox-unchecked.png" id="3_unchecked"]
+[ext_resource type="Texture2D" uid="uid://lyqee263yie1" path="res://images/options/slider-grabber.png" id="4_grabber"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_window"]
+bg_color = Color(0.06, 0.06, 0.06, 0.94)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.43, 0.43, 0.5, 0.5)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_slider"]
+content_margin_top = 8.0
+content_margin_bottom = 8.0
+bg_color = Color(0.2, 0.2, 0.2, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_none"]
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button"]
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+modulate_color = Color(1, 1, 1, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+modulate_color = Color(0.701961, 0.701961, 0.701961, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_active"]
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+modulate_color = Color(0.85098, 0.85098, 0.85098, 1)
+
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_disabled"]
+texture_margin_left = 3.0
+texture_margin_top = 3.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+modulate_color = Color(0.45098, 0.45098, 0.45098, 1)
+
+[resource]
+default_font = ExtResource("1_font")
+default_font_size = 10
+Button/colors/font_color = Color(0.94902, 0.85098, 0.411765, 1)
+Button/colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
+Button/colors/font_focus_color = Color(0.94902, 0.85098, 0.411765, 1)
+Button/colors/font_hover_color = Color(0.85098, 0.74902, 0.309804, 1)
+Button/colors/font_hover_pressed_color = Color(0.74902, 0.65098, 0.211765, 1)
+Button/colors/font_pressed_color = Color(0.74902, 0.65098, 0.211765, 1)
+Button/styles/disabled = SubResource("StyleBoxTexture_button_disabled")
+Button/styles/focus = SubResource("StyleBoxEmpty_none")
+Button/styles/hover = SubResource("StyleBoxTexture_button_hover")
+Button/styles/hover_pressed = SubResource("StyleBoxTexture_button_active")
+Button/styles/normal = SubResource("StyleBoxTexture_button")
+Button/styles/pressed = SubResource("StyleBoxTexture_button_active")
+CheckBox/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+CheckBox/colors/font_focus_color = Color(0.952941, 0.858824, 0.415686, 1)
+CheckBox/colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
+CheckBox/colors/font_hover_pressed_color = Color(0.952941, 0.858824, 0.415686, 1)
+CheckBox/colors/font_pressed_color = Color(0.952941, 0.858824, 0.415686, 1)
+CheckBox/constants/h_separation = 4
+CheckBox/icons/checked = ExtResource("2_checked")
+CheckBox/icons/unchecked = ExtResource("3_unchecked")
+CheckBox/styles/focus = SubResource("StyleBoxEmpty_none")
+CheckBox/styles/hover = SubResource("StyleBoxEmpty_none")
+CheckBox/styles/hover_pressed = SubResource("StyleBoxEmpty_none")
+CheckBox/styles/normal = SubResource("StyleBoxEmpty_none")
+CheckBox/styles/pressed = SubResource("StyleBoxEmpty_none")
+HSlider/icons/grabber = ExtResource("4_grabber")
+HSlider/icons/grabber_highlight = ExtResource("4_grabber")
+HSlider/styles/focus = SubResource("StyleBoxEmpty_none")
+HSlider/styles/grabber_area = SubResource("StyleBoxEmpty_none")
+HSlider/styles/grabber_area_highlight = SubResource("StyleBoxEmpty_none")
+HSlider/styles/slider = SubResource("StyleBoxFlat_slider")
+Label/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+Panel/styles/panel = SubResource("StyleBoxFlat_window")
+TabButton/base_type = &"Button"
+TabButton/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+TabButton/colors/font_focus_color = Color(0.952941, 0.858824, 0.415686, 1)
+TabButton/colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
+TabButton/colors/font_hover_pressed_color = Color(0.286275, 0.737255, 0.886275, 1)
+TabButton/colors/font_pressed_color = Color(0.286275, 0.737255, 0.886275, 1)
+TabButton/styles/focus = SubResource("StyleBoxEmpty_none")
+TabButton/styles/hover = SubResource("StyleBoxTexture_button_active")
+TabButton/styles/hover_pressed = SubResource("StyleBoxTexture_button")
+TabButton/styles/normal = SubResource("StyleBoxTexture_button_hover")
+TabButton/styles/pressed = SubResource("StyleBoxTexture_button")
+TabContainer/styles/panel = SubResource("StyleBoxEmpty_none")
