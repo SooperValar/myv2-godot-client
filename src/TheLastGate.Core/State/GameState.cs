@@ -47,9 +47,36 @@ public sealed class GameState
     public event Action<MinimapBox>? MinimapBoxCleared;
     public event Action<string>? UnusualDataSeen;
 
-    public bool CloseShop() => throw new NotImplementedException();
+    public bool CloseShop()
+    {
+        if (OpenShop == null)
+        {
+            return false;
+        }
 
-    public bool CloseWindowsByEscape() => throw new NotImplementedException();
+        OpenShop = null;
+        Pause.Start();
+        ReportShopClosed();
+        return true;
+    }
+
+    // Escape closes a shop with the pause, as the close button does, but tells nobody about the text windows.
+    public bool CloseWindowsByEscape()
+    {
+        var closedText = TextWindows.CloseByEscape();
+        var closedShop = CloseShop();
+        return closedText || closedShop;
+    }
+
+    internal void ShutWindows()
+    {
+        TextWindows.CloseAll();
+        if (OpenShop != null)
+        {
+            OpenShop = null;
+            ReportShopClosed();
+        }
+    }
 
     internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
 

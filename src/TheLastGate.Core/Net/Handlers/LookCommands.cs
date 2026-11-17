@@ -69,8 +69,7 @@ internal static class LookCommands
                 ReadSmith(state, ref reader);
                 break;
             case ServerCommand.CloseShop:
-                state.OpenShop = null;
-                state.ReportShopClosed();
+                state.CloseShop();
                 break;
             default:
                 throw new UnreachableException();
@@ -166,6 +165,7 @@ internal static class LookCommands
     {
         state.Shop = shop;
         state.OpenShop = kind;
+        state.TextWindows.CloseAll();
         state.ReportShopOpened(kind);
     }
 

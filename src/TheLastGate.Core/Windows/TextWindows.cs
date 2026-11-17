@@ -10,14 +10,10 @@ public readonly record struct TextWindowAction(IReadOnlyList<byte[]> Packets, bo
 // left out: the server never opens one.
 public sealed class TextWindows
 {
-    public const int ClosedPauseTicks = 24;
-
     private const int FirstPage = 1;
     private const int SkipTutorials = 16;
 
     private static readonly TextWindowAction Nothing = new([], false);
-
-    private int pause;
 
     public TextWindows(WindowPause pause) => Pause = pause;
 
@@ -64,14 +60,14 @@ public sealed class TextWindows
         }
 
         CloseAll();
-        pause = ClosedPauseTicks;
+        Pause.Start();
         return new TextWindowAction(packets, false);
     }
 
     public TextWindowAction Ok()
     {
         MessageOfTheDayOpen = false;
-        pause = ClosedPauseTicks;
+        Pause.Start();
         return Nothing;
     }
 
@@ -104,7 +100,7 @@ public sealed class TextWindows
         if (WelcomeOpen)
         {
             WelcomeOpen = false;
-            pause = ClosedPauseTicks;
+            Pause.Start();
             return new TextWindowAction([Seen(SkipTutorials)], false);
         }
 
@@ -129,18 +125,6 @@ public sealed class TextWindows
         var anyOpen = AnyOpen;
         CloseAll();
         return anyOpen;
-    }
-
-    public void CancelPause() => pause = 0;
-
-    // For a short while after a window is closed, anything the server opens is closed again straight away.
-    public void EndOfTick()
-    {
-        if (pause > 0)
-        {
-            pause--;
-            CloseAll();
-        }
     }
 
     private static byte[] Seen(int value) => ClientPackets.OneValue(ClientCommand.MessageOfTheDay, value);

@@ -164,7 +164,7 @@ public partial class GameScreen : Control
         // Using or looking at something lets the next window the server opens stay open.
         if ((ClientCommand)packet[0] is ClientCommand.Use or ClientCommand.Look)
         {
-            gameState.TextWindows.CancelPause();
+            gameState.Pause.Cancel();
         }
 
         connection.SendCommand(packet);
