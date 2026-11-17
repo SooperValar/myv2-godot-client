@@ -536,6 +536,15 @@ public partial class WorldView : Node2D
         marker.Visible = true;
     }
 
+    // Pooled nameplates are outside the tree, so nothing else frees them.
+    public override void _ExitTree()
+    {
+        while (freeNameplates.TryPop(out var nameplate))
+        {
+            nameplate.Free();
+        }
+    }
+
     private void ReleaseUnusedNameplates()
     {
         foreach (var (characterNumber, nameplate) in nameplatesByCharacter)
