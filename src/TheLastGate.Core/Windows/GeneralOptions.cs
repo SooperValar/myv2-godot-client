@@ -27,6 +27,12 @@ public static class GeneralOptions
     [
         new(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true, false),
         new(GeneralOption.ExpandedQuickStats, "Show Hit/Parry Score with Weapon/Armor value.", true, false),
+        new(GeneralOption.ItemTooltips, "Show item tooltips for inventory and equipped gear.", true, false),
+        new(
+            GeneralOption.ItemTooltipsAlways,
+            "Always show tooltips on hover. When off, hold the Item Tooltip hotkey to show them.",
+            true,
+            false) { Under = GeneralOption.ItemTooltips },
         new(
             GeneralOption.GlideMovement,
             "Glide characters and the map smoothly between server updates instead of stepping.",
@@ -40,10 +46,10 @@ public static class GeneralOptions
     ];
 
     public static bool IsShown(OptionRow row, Func<GeneralOption, bool> isOn) =>
-        throw new NotImplementedException();
+        row.Under is not { } parent || isOn(parent);
 
     public static bool ShowsItemTooltips(bool itemTooltips, bool always, bool keyHeld) =>
-        throw new NotImplementedException();
+        itemTooltips && (always || keyHeld);
 
     public static bool EscapeSendsReset(bool escapeClosesWindowsFirst, bool closedAWindow) =>
         !escapeClosesWindowsFirst || !closedAWindow;
