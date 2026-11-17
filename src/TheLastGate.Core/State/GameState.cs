@@ -77,8 +77,9 @@ public sealed class GameState
         var closedText = TextWindows.CloseByEscape();
         var closedWaypoints = WaypointWindow.Close();
         var closedTree = SkillTreeWindow.Close();
+        var closedOptions = OptionsWindow.Close();
         var closedShop = CloseShop();
-        return closedText || closedWaypoints || closedTree || closedShop;
+        return closedText || closedWaypoints || closedTree || closedOptions || closedShop;
     }
 
     internal void ShutWindows()
