@@ -262,6 +262,20 @@ public partial class HudView : Control
         optionsWindow.SoundVolumeChanged += volume => ChangeClientSettings(settings => settings.SoundVolume = volume);
         optionsWindow.OptionChanged += (option, isOn) => ChangeClientSettings(settings => settings[option] = isOn);
         optionsWindow.CursorScaleChanged += scale => ChangeClientSettings(settings => settings.CursorScale = scale);
+        optionsWindow.CaptureChosen += id => ChangeOptionsWindow(window => window.StartCapture(id));
+        optionsWindow.CaptureCancelled += () => ChangeOptionsWindow(window => window.CancelCapture());
+        optionsWindow.CaptureUnbound += () => ChangeKeyBindings((window, bindings) =>
+        {
+            window.UnbindCaptured(bindings);
+            return null;
+        });
+        optionsWindow.KeyCaptured += chord => ChangeKeyBindings((window, bindings) => window.Capture(chord, bindings));
+        optionsWindow.BindingResetChosen += id => ChangeKeyBindings((_, bindings) =>
+        {
+            bindings.Reset(id);
+            return null;
+        });
+        optionsWindow.ResetAllChosen += () => ChangeKeyBindings((window, bindings) => window.ChooseResetAll(bindings));
 
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
@@ -323,6 +337,7 @@ public partial class HudView : Control
             var hotbarButton = (HotbarButtonView)node;
             var slot = hotbarButton.Slot;
             hotbarButton.ShowName(HotbarButtons.Name(Settings.HotbarActions[slot], Settings.HotbarNames[slot]));
+            hotbarButton.ShowKey();
         }
 
         GetNode<InventoryGrid>("%Inventory").Show(player, Settings.HotbarActions);
@@ -874,8 +889,35 @@ public partial class HudView : Control
     {
         if (state != null)
         {
-            GetNode<OptionsWindowView>("%OptionsWindow").ShowOptions(state.OptionsWindow, ClientSettings);
+            GetNode<OptionsWindowView>("%OptionsWindow").ShowOptions(state.OptionsWindow, ClientSettings, Settings);
         }
+    }
+
+    private void ChangeOptionsWindow(Action<OptionsWindow> change)
+    {
+        if (state != null)
+        {
+            change(state.OptionsWindow);
+            ShowOptions();
+        }
+    }
+
+    // The hotbar's key labels are refreshed with the window, since they show the bindings too.
+    private void ChangeKeyBindings(Func<OptionsWindow, KeyBindings, LogLine?> change)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
+        LogLine? line = null;
+        ChangeClientSettings(settings => line = change(state.OptionsWindow, settings.KeyBindings));
+        if (line is { } shown)
+        {
+            state.Chat.Add(shown);
+        }
+
+        Refresh(selectedCharacter);
     }
 
     private void ToggleOptions()

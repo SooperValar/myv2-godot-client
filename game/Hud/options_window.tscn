@@ -162,11 +162,33 @@ vertical_alignment = 1
 layout_mode = 2
 text = "Audio Volume"
 
-[node name="Keybinds" type="VBoxContainer" parent="Pages" unique_id=1770377513]
+[node name="Keybinds" type="ScrollContainer" parent="Pages" unique_id=1770377513]
 visible = false
 layout_mode = 2
-theme_override_constants/separation = 4
+horizontal_scroll_mode = 0
 metadata/_tab_index = 2
+
+[node name="Rows" type="VBoxContainer" parent="Pages/Keybinds" unique_id=1219356870]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Sections" type="VBoxContainer" parent="Pages/Keybinds/Rows" unique_id=1610883451]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="ResetSeparator" type="ColorRect" parent="Pages/Keybinds/Rows" unique_id=275904316]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.43, 0.43, 0.5, 0.5)
+
+[node name="ResetAll" type="Button" parent="Pages/Keybinds/Rows" unique_id=1846200773]
+custom_minimum_size = Vector2(200, 20)
+layout_mode = 2
+size_flags_horizontal = 4
+focus_mode = 0
+text = "Reset Keybinds to Defaults"
 
 [node name="BottomSeparator" type="ColorRect" parent="." unique_id=626065756]
 layout_mode = 0

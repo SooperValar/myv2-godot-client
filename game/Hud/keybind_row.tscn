@@ -1,0 +1,27 @@
+[gd_scene format=3 uid="uid://b1cfx8gn11rg1"]
+
+[node name="KeybindRow" type="HBoxContainer" unique_id=1394817265]
+theme_override_constants/separation = 4
+
+[node name="Text" type="Label" parent="." unique_id=807316594]
+custom_minimum_size = Vector2(120, 0)
+layout_mode = 2
+size_flags_vertical = 4
+text = "Toggle Health Bars"
+horizontal_alignment = 2
+autowrap_mode = 3
+
+[node name="Key" type="Button" parent="." unique_id=1730658321]
+custom_minimum_size = Vector2(80, 20)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+text = "F8"
+clip_text = true
+
+[node name="Reset" type="Button" parent="." unique_id=440597118]
+custom_minimum_size = Vector2(52, 20)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+text = "Reset"
