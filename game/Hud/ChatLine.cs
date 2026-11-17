@@ -103,8 +103,6 @@ public partial class ChatLine : LineEdit
                 }
 
                 break;
-            case Key.Insert:
-                break;
             default:
                 return;
         }
