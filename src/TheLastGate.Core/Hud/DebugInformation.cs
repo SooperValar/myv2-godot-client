@@ -25,6 +25,7 @@ public static class DebugInformation
         string[] lines =
         [
             " ",
+            ClientVersion.Text(facts.ClientVersion),
             $"Networking Version {VersionText(Protocol.NetworkingVersion)}",
             $"Server Version {VersionText(facts.ServerVersion)}",
             $"Godot Version {facts.GodotVersion}",
