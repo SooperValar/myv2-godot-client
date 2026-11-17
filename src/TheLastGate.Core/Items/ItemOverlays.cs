@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TheLastGate.State;
 
@@ -48,6 +49,8 @@ public static class ItemOverlays
 
         return overlays;
     }
+
+    public static IReadOnlyList<ItemOverlay> Shop(ShopItem item) => throw new NotImplementedException();
 
     public static IReadOnlyList<ItemOverlay> Carried(ItemSlot item)
     {
