@@ -11,9 +11,16 @@ public enum WorldMapTool
     Text,
 }
 
+// Opened by its hotkey or the minimap, always centred on the player; Escape closes it with the other windows.
 public sealed class WorldMapWindow
 {
-    public bool IsOpen => throw new NotImplementedException();
+    private const double StatusSeconds = 3;
+    private const double NoticeSeconds = 12;
+
+    private string status = "";
+    private double statusUntil;
+
+    public bool IsOpen { get; private set; }
 
     public bool CentreOnPlayer { get; set; }
 
@@ -21,29 +28,53 @@ public sealed class WorldMapWindow
 
     public WorldMapTool Tool { get; set; }
 
-    public int HelpPage => throw new NotImplementedException();
+    public int HelpPage { get; private set; }
 
-    public string HelpPageText => throw new NotImplementedException();
+    public string HelpPageText => $"{HelpPage + 1} / {WorldMapHelp.Pages.Count}";
 
-    public static bool IsAvailable(WorldMapTool tool, bool hasCategory) => throw new NotImplementedException();
+    // Pins, lines and text go into the current category, so they wait until there is one.
+    public static bool IsAvailable(WorldMapTool tool, bool hasCategory) =>
+        tool is WorldMapTool.Select or WorldMapTool.Pan || hasCategory;
 
-    public void OpenAtPlayer() => throw new NotImplementedException();
+    public void OpenAtPlayer()
+    {
+        IsOpen = true;
+        CentreOnPlayer = true;
+    }
 
-    public void Toggle() => throw new NotImplementedException();
+    public void Toggle()
+    {
+        if (!Close())
+        {
+            OpenAtPlayer();
+        }
+    }
 
-    public bool Close() => throw new NotImplementedException();
+    public bool Close()
+    {
+        var wasOpen = IsOpen;
+        IsOpen = false;
+        return wasOpen;
+    }
 
-    public void Panned() => throw new NotImplementedException();
+    public void Panned() => Follow = false;
 
-    public void ShowStatus(string text, double now) => throw new NotImplementedException();
+    public void ShowStatus(string text, double now) => Show(text, now, StatusSeconds);
 
-    public void ShowSetAsideNotice(string fileName, double now) => throw new NotImplementedException();
+    public void ShowSetAsideNotice(string fileName, double now) =>
+        Show($"Your saved annotations could not be read and were set aside as {fileName}.bad.", now, NoticeSeconds);
 
-    public string StatusAt(double now) => throw new NotImplementedException();
+    public string StatusAt(double now) => now < statusUntil ? status : "";
 
-    public void OpenHelp() => throw new NotImplementedException();
+    public void OpenHelp() => HelpPage = 0;
 
-    public void NextHelpPage() => throw new NotImplementedException();
+    public void NextHelpPage() => HelpPage = Math.Min(HelpPage + 1, WorldMapHelp.Pages.Count - 1);
 
-    public void PreviousHelpPage() => throw new NotImplementedException();
+    public void PreviousHelpPage() => HelpPage = Math.Max(HelpPage - 1, 0);
+
+    private void Show(string text, double now, double seconds)
+    {
+        status = text;
+        statusUntil = now + seconds;
+    }
 }

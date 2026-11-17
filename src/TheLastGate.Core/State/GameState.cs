@@ -79,8 +79,9 @@ public sealed class GameState
         var closedWaypoints = WaypointWindow.Close();
         var closedTree = SkillTreeWindow.Close();
         var closedOptions = OptionsWindow.Close();
+        var closedWorldMap = WorldMapWindow.Close();
         var closedShop = CloseShop();
-        return closedText || closedWaypoints || closedTree || closedOptions || closedShop;
+        return closedText || closedWaypoints || closedTree || closedOptions || closedWorldMap || closedShop;
     }
 
     internal void ShutWindows()

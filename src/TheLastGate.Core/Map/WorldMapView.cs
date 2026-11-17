@@ -2,9 +2,17 @@ using System;
 
 namespace TheLastGate.Map;
 
+// Where the world map window looks: map y runs across the panel and map x down it, as on the minimap. Tile (x, y)
+// covers tile coordinates x..x+1 and y..y+1, so its middle is at (x + 0.5, y + 0.5).
 public sealed class WorldMapView
 {
     public const double MaxPixelsPerTile = 16;
+    public const double ZoomStep = 1.25;
+
+    private const int TilesDown = 1024;
+    private const int TilesAcross = 2048;
+    private const double OpeningPixelsPerTile = 8;
+    private const double SmallestFit = 1e-3;
 
     public double CentreTileX { get; set; }
 
@@ -12,27 +20,62 @@ public sealed class WorldMapView
 
     public double PixelsPerTile { get; set; }
 
+    // Zoomed out as far as the whole world fitting in the panel, and never to nothing in a panel with no size.
     public static double MinPixelsPerTile(double panelWidth, double panelHeight) =>
-        throw new NotImplementedException();
+        Math.Max(Math.Min(panelWidth / TilesAcross, panelHeight / TilesDown), SmallestFit);
 
-    public void Clamp(double panelWidth, double panelHeight) => throw new NotImplementedException();
+    public void Clamp(double panelWidth, double panelHeight)
+    {
+        PixelsPerTile = Math.Clamp(PixelsPerTile, MinPixelsPerTile(panelWidth, panelHeight), MaxPixelsPerTile);
+        CentreTileX = Math.Clamp(CentreTileX, 0, TilesDown);
+        CentreTileY = Math.Clamp(CentreTileY, 0, TilesAcross);
+    }
 
     public (double X, double Y) TileToPanel(double panelWidth, double panelHeight, double tileX, double tileY) =>
-        throw new NotImplementedException();
+        ((tileY - CentreTileY) * PixelsPerTile + panelWidth / 2,
+            (tileX - CentreTileX) * PixelsPerTile + panelHeight / 2);
 
     public (double X, double Y) PanelToTile(double panelWidth, double panelHeight, double panelX, double panelY) =>
-        throw new NotImplementedException();
+        ((panelY - panelHeight / 2) / PixelsPerTile + CentreTileX,
+            (panelX - panelWidth / 2) / PixelsPerTile + CentreTileY);
 
-    public (int X, int Y)? TileUnder(double panelWidth, double panelHeight, double panelX, double panelY) =>
-        throw new NotImplementedException();
+    public (int X, int Y)? TileUnder(double panelWidth, double panelHeight, double panelX, double panelY)
+    {
+        var (exactX, exactY) = PanelToTile(panelWidth, panelHeight, panelX, panelY);
+        var tileX = (int)Math.Floor(exactX);
+        var tileY = (int)Math.Floor(exactY);
+        return tileX is >= 0 and < TilesDown && tileY is >= 0 and < TilesAcross ? (tileX, tileY) : null;
+    }
 
-    public void Pan(double panelWidth, double panelHeight, double deltaX, double deltaY) =>
-        throw new NotImplementedException();
+    public void Pan(double panelWidth, double panelHeight, double deltaX, double deltaY)
+    {
+        CentreTileY -= deltaX / PixelsPerTile;
+        CentreTileX -= deltaY / PixelsPerTile;
+        Clamp(panelWidth, panelHeight);
+    }
 
-    public void ZoomAt(double panelWidth, double panelHeight, double panelX, double panelY, double factor) =>
-        throw new NotImplementedException();
+    // The tile under the cursor stays under it.
+    public void ZoomAt(double panelWidth, double panelHeight, double panelX, double panelY, double factor)
+    {
+        var (anchorX, anchorY) = PanelToTile(panelWidth, panelHeight, panelX, panelY);
+        PixelsPerTile = Math.Clamp(
+            PixelsPerTile * factor,
+            MinPixelsPerTile(panelWidth, panelHeight),
+            MaxPixelsPerTile);
+        CentreTileY = anchorY - (panelX - panelWidth / 2) / PixelsPerTile;
+        CentreTileX = anchorX - (panelY - panelHeight / 2) / PixelsPerTile;
+        Clamp(panelWidth, panelHeight);
+    }
 
-    public void CentreOn(int tileX, int tileY) => throw new NotImplementedException();
+    public void CentreOn(int tileX, int tileY)
+    {
+        MoveTo(tileX, tileY);
+        PixelsPerTile = OpeningPixelsPerTile;
+    }
 
-    public void MoveTo(int tileX, int tileY) => throw new NotImplementedException();
+    public void MoveTo(int tileX, int tileY)
+    {
+        CentreTileX = tileX + 0.5;
+        CentreTileY = tileY + 0.5;
+    }
 }
