@@ -1,0 +1,63 @@
+using System;
+using Godot;
+using TheLastGate.Assets;
+using TheLastGate.Net;
+using TheLastGate.State;
+
+namespace TheLastGate.Map;
+
+// Owns the explored map for one server: loads it, records the view into it, and saves it every five minutes and when
+// the game ends, as the current client does.
+public sealed class ExploredMapKeeper
+{
+    private const string FilePrefix = "TLGMap_";
+
+    private static readonly TimeSpan SaveEvery = TimeSpan.FromMinutes(5);
+
+    private readonly string ownPath;
+    private TimeSpan sinceSave;
+
+    public ExploredMapKeeper(ServerAddress server)
+    {
+        ownPath = ProjectSettings.GlobalizePath("user://" + ServerFiles.Name(FilePrefix, server.Host, server.Port));
+        var map = new ExploredMap();
+        map.LoadFrom(ServerFiles.PathToLoad(ownPath, ServerFiles.SdlClientPath(FilePrefix, server.Host, server.Port)));
+        Recorder = new ExploredMapRecorder(map);
+    }
+
+    public ExploredMapRecorder Recorder { get; }
+
+    public static int ViewCentreCharacter(WorldMap view) => view.Tiles[WorldMap.PlayerTile].CharacterNumber;
+
+    // The view centre goes first, so a view that has just moved to someone being spectated is never recorded.
+    public void See(WorldMap view, SpriteLoader sprites)
+    {
+        Recorder.NoteViewCentre(ViewCentreCharacter(view));
+        foreach (var tile in view.Tiles)
+        {
+            if (ExploredMapRecorder.SpriteToAverage(tile.Flags, tile.BackgroundSprite, tile.AnimatedItemSprite) is
+                { } sprite)
+            {
+                Recorder.See(tile.X, tile.Y, sprites.AverageColour(sprite));
+            }
+        }
+    }
+
+    public void Advance(TimeSpan elapsed)
+    {
+        sinceSave += elapsed;
+        if (sinceSave >= SaveEvery)
+        {
+            sinceSave = TimeSpan.Zero;
+            Save();
+        }
+    }
+
+    public void Save()
+    {
+        if (Recorder.Map.Changed && !Recorder.Map.SaveTo(ownPath))
+        {
+            GD.PushWarning($"Couldn't save the explored map to {ownPath}");
+        }
+    }
+}

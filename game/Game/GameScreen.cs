@@ -10,6 +10,7 @@ using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Hud;
 using TheLastGate.Items;
+using TheLastGate.Map;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.World;
@@ -28,7 +29,9 @@ public partial class GameScreen : Control
     private readonly GameState gameState = new();
     private readonly TickPacer pacer = new();
     private readonly HashSet<string> reportedUnusualData = [];
+    private ExploredMapKeeper? exploredMap;
     private HudView hudView = null!;
+    private ConnectionState lastConnectionState;
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
@@ -53,6 +56,7 @@ public partial class GameScreen : Control
 
         session = startedSession;
         CursorShapes.Register(ClientSettings.Load().CursorScale);
+        OpenExploredMap();
         AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
@@ -69,6 +73,9 @@ public partial class GameScreen : Control
         {
             gameState.Chat.Add(new LogLine(message, StatusFont));
         }
+
+        SaveExploredMapWhenTheConnectionEnds();
+        exploredMap?.Advance(TimeSpan.FromSeconds(delta));
 
         if (!newCharacterSaved && connection.State == ConnectionState.Connected
             && session.Handshake.CreatedKey is { } createdKey)
@@ -94,6 +101,11 @@ public partial class GameScreen : Control
                 connection.SendCommand);
             if (ticksPlayed > 0)
             {
+                if (sprites != null)
+                {
+                    exploredMap?.See(gameState.Map, sprites);
+                }
+
                 worldView?.Refresh();
                 worldView?.RecordMovement(ticksPlayed, TickMilliseconds());
                 hudView.Refresh(worldView?.SelectedCharacter ?? 0);
@@ -108,9 +120,32 @@ public partial class GameScreen : Control
 
     public override void _ExitTree()
     {
+        exploredMap?.Save();
         CursorShapes.Clear();
         connection.Dispose();
         sprites?.Dispose();
+    }
+
+    private void OpenExploredMap()
+    {
+        var keeper = new ExploredMapKeeper(session.Server);
+        gameState.MinimapBoxCleared += keeper.Recorder.ClearBox;
+        gameState.Chat.LineAdded += line =>
+            keeper.Recorder.NoteLogLine(line.Text, ExploredMapKeeper.ViewCentreCharacter(gameState.Map));
+        exploredMap = keeper;
+    }
+
+    // The current client saves the map when the connection fails, in case the game is closed straight after.
+    private void SaveExploredMapWhenTheConnectionEnds()
+    {
+        var connectionState = connection.State;
+        if (connectionState != lastConnectionState
+            && connectionState is ConnectionState.Closed or ConnectionState.Failed)
+        {
+            exploredMap?.Save();
+        }
+
+        lastConnectionState = connectionState;
     }
 
     private void ApplyClientSettings(ClientSettings settings)

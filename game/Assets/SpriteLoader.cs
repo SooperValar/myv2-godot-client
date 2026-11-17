@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Godot;
+using TheLastGate.Map;
 
 namespace TheLastGate.Assets;
 
 public sealed class SpriteLoader : IDisposable
 {
+    private readonly Dictionary<int, uint> averageColours = [];
     private readonly BmpLibrary bmpLibrary;
     private readonly SpriteCache<Texture2D> cache;
     private readonly IReadOnlyDictionary<int, string> overrides;
@@ -83,6 +85,18 @@ public sealed class SpriteLoader : IDisposable
         var texture = ImageTexture.CreateFromImage(image);
         cache.Add(spriteNumber, texture, (long)image.GetWidth() * image.GetHeight() * SpritePixels.Rgba8BytesPerPixel);
         return texture;
+    }
+
+    // Kept apart from the texture cache, so evicting a texture never costs a colour the explored map asks for often.
+    public uint AverageColour(int spriteNumber)
+    {
+        if (!averageColours.TryGetValue(spriteNumber, out var colour))
+        {
+            colour = LoadImage(spriteNumber) is { } image ? SpriteColours.Average(image.GetData()) : 0;
+            averageColours[spriteNumber] = colour;
+        }
+
+        return colour;
     }
 
     public Texture2D? GetUiPicture(int pictureNumber)
