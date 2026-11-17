@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using TheLastGate.State;
 
@@ -70,6 +71,8 @@ public static class ItemOverlays
         AddCatalyst(overlays, item.Sprite, item.Catalyst);
         return overlays;
     }
+
+    public static IReadOnlyList<ItemOverlay> Stored(DepotItem item) => throw new NotImplementedException();
 
     public static IReadOnlyList<ItemOverlay> Carried(ItemSlot item)
     {
