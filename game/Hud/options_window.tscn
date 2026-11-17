@@ -69,10 +69,57 @@ offset_bottom = 275.0
 current_tab = 0
 tabs_visible = false
 
-[node name="General" type="VBoxContainer" parent="Pages" unique_id=1732244971]
+[node name="General" type="ScrollContainer" parent="Pages" unique_id=1494194119]
+layout_mode = 2
+horizontal_scroll_mode = 0
+metadata/_tab_index = 0
+
+[node name="Rows" type="VBoxContainer" parent="Pages/General" unique_id=1850155754]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="ClientOptions" type="VBoxContainer" parent="Pages/General/Rows" unique_id=557309005]
 layout_mode = 2
 theme_override_constants/separation = 4
-metadata/_tab_index = 0
+
+[node name="GodotHeading" type="Label" parent="Pages/General/Rows" unique_id=608309846]
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Godot Client"
+
+[node name="GodotOptions" type="VBoxContainer" parent="Pages/General/Rows" unique_id=120612640]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CursorRow" type="HBoxContainer" parent="Pages/General/Rows" unique_id=1738460304]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="CursorScale" type="HSlider" parent="Pages/General/Rows/CursorRow" unique_id=1441114981]
+custom_minimum_size = Vector2(195, 16)
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+min_value = 0.5
+max_value = 4.0
+step = 0.5
+value = 1.0
+
+[node name="Value" type="Label" parent="Pages/General/Rows/CursorRow/CursorScale" unique_id=721080746]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "1.0x"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="CursorLabel" type="Label" parent="Pages/General/Rows/CursorRow" unique_id=905621382]
+layout_mode = 2
+text = "Cursor Size"
 
 [node name="Audio" type="VBoxContainer" parent="Pages" unique_id=1733750324]
 visible = false

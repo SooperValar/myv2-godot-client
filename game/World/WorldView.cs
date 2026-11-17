@@ -31,7 +31,6 @@ public partial class WorldView : Node2D
     private readonly SpriteLayer floors = new();
     private readonly Stack<Nameplate> freeNameplates = [];
     private readonly Sprite2D giveMarker = new() { Centered = false, Visible = false };
-    private readonly MovementGlide glide = new();
     private readonly Dictionary<int, GlidePoint> glidePoints = [];
     private readonly Dictionary<MagicGlow, ShaderMaterial> glowMaterials = [];
     private readonly NameRequests nameRequests = new();
@@ -43,6 +42,9 @@ public partial class WorldView : Node2D
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private readonly Sprite2D walkMarker = new() { Centered = false, Visible = false };
     private Node2D floorLayer = null!;
+    private MovementGlide glide = new();
+    private bool glideMovement;
+    private bool glideRecorded;
     private Shader? glowShader;
     private MapAction hover = MapAction.Nothing;
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
@@ -62,7 +64,28 @@ public partial class WorldView : Node2D
     public int SelectedCharacter { get; private set; }
 
     public bool PickTileDrawnUnderMouse { get; set; }
-    public bool GlideMovement { get; set; }
+
+    // Switching on waits for the next tick to glide from; switching off puts everything back on the tick.
+    public bool GlideMovement
+    {
+        get => glideMovement;
+        set
+        {
+            if (value == glideMovement)
+            {
+                return;
+            }
+
+            glideMovement = value;
+            glide = new MovementGlide();
+            glideRecorded = false;
+            if (!value && IsInsideTree())
+            {
+                SnapToTicks();
+            }
+        }
+    }
+
     public Action<byte[]> SendCommand { get; set; } = _ => { };
 
     public override void _Ready()
@@ -90,7 +113,7 @@ public partial class WorldView : Node2D
 
     public override void _Process(double delta)
     {
-        if (GlideMovement)
+        if (GlideMovement && glideRecorded)
         {
             PlaceGlided();
         }
@@ -210,6 +233,7 @@ public partial class WorldView : Node2D
 
         var player = SnappedPoint(State.Map.Tiles[WorldMap.PlayerTile]);
         glide.Record(player, glidePoints, (long)Time.GetTicksMsec(), ticks, tickMilliseconds);
+        glideRecorded = true;
     }
 
     private static Sprite2D AddSpriteNode(Node2D layer, int column, int row)
@@ -583,6 +607,22 @@ public partial class WorldView : Node2D
     {
         var lag = shown - SnappedPoint(tile);
         return new Vector2(lag.X, lag.Y);
+    }
+
+    private void SnapToTicks()
+    {
+        Array.Fill(characterOffsets, new Vector2I(int.MinValue, int.MinValue));
+        mapShift = new Vector2I(int.MinValue, int.MinValue);
+        for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
+        {
+            if (tileEffects[tileIndex] is { } effects)
+            {
+                var (x, y) = IsometricProjection.TilePosition(tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
+                effects.Root.Position = new Vector2(x, y);
+            }
+        }
+
+        Refresh();
     }
 
     private void PlaceGlided()

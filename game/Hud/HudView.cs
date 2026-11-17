@@ -38,6 +38,12 @@ public partial class HudView : Control
     private const int ManaRow = 6;
     private const int HitScoreMeta = 5;
     private const int ParryScoreMeta = 6;
+
+    private const int ExpandedQuickStatsPicture = 2;
+    private const int CompactQuickStatsPicture = 3;
+    private const int DarkPictureOffset = 10000;
+    private const float ExperienceBarTop = 71;
+    private const float HiddenQuickStatsRows = 28;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
 
     private static readonly (string Button, Func<TextWindows, TextWindowAction> Click)[] TextWindowButtons =
@@ -108,7 +114,7 @@ public partial class HudView : Control
 
     public event Action? LeaveRequested;
 
-    public event Action? AudioChanged;
+    public event Action? ClientSettingsChanged;
 
     public static HudView? Containing(Node node)
     {
@@ -251,8 +257,11 @@ public partial class HudView : Control
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
         optionsWindow.CloseChosen += CloseOptions;
-        optionsWindow.SoundEnabledChanged += enabled => ChangeAudio(settings => settings.SoundEnabled = enabled);
-        optionsWindow.SoundVolumeChanged += volume => ChangeAudio(settings => settings.SoundVolume = volume);
+        optionsWindow.SoundEnabledChanged +=
+            enabled => ChangeClientSettings(settings => settings.SoundEnabled = enabled);
+        optionsWindow.SoundVolumeChanged += volume => ChangeClientSettings(settings => settings.SoundVolume = volume);
+        optionsWindow.OptionChanged += (option, isOn) => ChangeClientSettings(settings => settings[option] = isOn);
+        optionsWindow.CursorScaleChanged += scale => ChangeClientSettings(settings => settings.CursorScale = scale);
 
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
@@ -865,9 +874,7 @@ public partial class HudView : Control
     {
         if (state != null)
         {
-            var soundEnabled = ClientSettings?.SoundEnabled ?? true;
-            var soundVolume = ClientSettings?.SoundVolume ?? 0;
-            GetNode<OptionsWindowView>("%OptionsWindow").ShowOptions(state.OptionsWindow, soundEnabled, soundVolume);
+            GetNode<OptionsWindowView>("%OptionsWindow").ShowOptions(state.OptionsWindow, ClientSettings);
         }
     }
 
@@ -890,7 +897,7 @@ public partial class HudView : Control
     }
 
     // Options are saved the moment they change, so nothing is lost if the game closes unexpectedly.
-    private void ChangeAudio(Action<ClientSettings> change)
+    private void ChangeClientSettings(Action<ClientSettings> change)
     {
         if (ClientSettings == null)
         {
@@ -899,7 +906,22 @@ public partial class HudView : Control
 
         change(ClientSettings);
         ClientSettings.Save();
-        AudioChanged?.Invoke();
+        ShowQuickStatsLayout();
+        ClientSettingsChanged?.Invoke();
+    }
+
+    // Without Hit and Parry the current client draws a shorter box, and the experience bar moves up with the rows.
+    private void ShowQuickStatsLayout()
+    {
+        var expanded = ClientSettings?.ExpandedQuickStats ?? true;
+        var quickStats = GetNode<Control>("QuickStats");
+        quickStats.GetNode<CanvasItem>("RowsShift/Rows/HitRow").Visible = expanded;
+        quickStats.GetNode<CanvasItem>("RowsShift/Rows/ParryRow").Visible = expanded;
+        var background = quickStats.GetNode<UiPicture>("Background");
+        background.PictureNumber = expanded ? ExpandedQuickStatsPicture : CompactQuickStatsPicture;
+        background.DarkPictureNumber = background.PictureNumber + DarkPictureOffset;
+        var bar = GetNode<Control>("%ExperienceBar");
+        bar.Position = bar.Position with { Y = expanded ? ExperienceBarTop : ExperienceBarTop - HiddenQuickStatsRows };
     }
 
     private void ClickCloseShop(MapButton button)
@@ -913,13 +935,16 @@ public partial class HudView : Control
     // With a window open, Escape only closes it; otherwise it stops what the character is doing.
     private void PressEscape()
     {
-        if (state?.CloseWindowsByEscape() == true)
+        var closedAWindow = state?.CloseWindowsByEscape() == true;
+        if (closedAWindow)
         {
             Refresh(selectedCharacter);
-            return;
         }
 
-        sendCommand(ClientPackets.ShortAndInt(ClientCommand.Reset, 0, 0));
+        if (GeneralOptions.EscapeSendsReset(ClientSettings?.EscapeClosesWindowsFirst ?? true, closedAWindow))
+        {
+            sendCommand(ClientPackets.ShortAndInt(ClientCommand.Reset, 0, 0));
+        }
     }
 
     private void ClickTextWindow(MapButton button, Func<TextWindows, TextWindowAction> click)
@@ -997,6 +1022,7 @@ public partial class HudView : Control
 
     private void ShowQuickStats(PlayerState player)
     {
+        ShowQuickStatsLayout();
         var metaStats = state!.Terminology.MetaStats;
         SetText("WeaponValue", Number(player.Weapon));
         SetText("ArmorValue", Number(player.Armor));

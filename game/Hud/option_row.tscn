@@ -1,0 +1,16 @@
+[gd_scene format=3 uid="uid://bh62qsp0bli60"]
+
+[node name="OptionRow" type="HBoxContainer" unique_id=542300771]
+theme_override_constants/separation = 8
+
+[node name="Box" type="CheckBox" parent="." unique_id=1525886319]
+layout_mode = 2
+size_flags_vertical = 4
+focus_mode = 0
+
+[node name="Text" type="Label" parent="." unique_id=953507770]
+custom_minimum_size = Vector2(276, 0)
+layout_mode = 2
+size_flags_vertical = 0
+text = "Escape closes windows before canceling movement."
+autowrap_mode = 3

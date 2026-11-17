@@ -111,6 +111,18 @@ public partial class GameScreen : Control
         sprites?.Dispose();
     }
 
+    private void ApplyClientSettings(ClientSettings settings)
+    {
+        soundEffects.Enabled = settings.SoundEnabled;
+        soundEffects.Volume = settings.SoundVolume;
+        CursorShapes.Register(settings.CursorScale);
+        if (worldView != null)
+        {
+            worldView.GlideMovement = settings.GlideMovement;
+            worldView.PickTileDrawnUnderMouse = settings.PickTileDrawnUnderMouse;
+        }
+    }
+
     private static long NowMilliseconds() => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
 
     private double TickMilliseconds() =>
@@ -152,11 +164,7 @@ public partial class GameScreen : Control
         hudView.Settings = characterSettings;
         hudView.KeyBindings = clientSettings.KeyBindings;
         hudView.ClientSettings = clientSettings;
-        hudView.AudioChanged += () =>
-        {
-            soundEffects.Enabled = clientSettings.SoundEnabled;
-            soundEffects.Volume = clientSettings.SoundVolume;
-        };
+        hudView.ClientSettingsChanged += () => ApplyClientSettings(clientSettings);
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
         hudView.Show(gameState, fonts, SendAction);

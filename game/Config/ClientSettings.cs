@@ -1,11 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using Godot;
 using TheLastGate.Characters;
 using TheLastGate.Hotkeys;
 using TheLastGate.Net;
+using TheLastGate.Windows;
 
 namespace TheLastGate.Config;
 
@@ -22,6 +24,7 @@ public sealed class ClientSettings
     private const string ServerSection = "server";
     private const string WorldSection = "world";
     private const string KeybindsSection = "keybinds";
+    private const string GeneralSection = "general";
 
     private readonly ConfigFile file;
 
@@ -47,11 +50,9 @@ public sealed class ClientSettings
             file.GetValue(ServerSection, "proxy", ServerAddress.Live.Proxy).AsString(),
             file.GetValue(ServerSection, "port", ServerAddress.Live.Port).AsInt32());
 
-        // Also hand-added until the Options window exists: "true" picks the tile drawn under the mouse while the
-        // player is mid-step, where the current client picks as if the map hadn't moved.
+        EscapeClosesWindowsFirst = file.GetValue(GeneralSection, "escape_closes_windows_first", true).AsBool();
+        ExpandedQuickStats = file.GetValue(GeneralSection, "expanded_quick_stats", true).AsBool();
         PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
-
-        // Also hand-added: "true" glides characters and the map between ticks, where the current client snaps.
         GlideMovement = file.GetValue(WorldSection, "glide_movement", false).AsBool();
         KeyBindings.Load(SavedBindings(file));
         CursorScale = Math.Clamp(
@@ -67,10 +68,44 @@ public sealed class ClientSettings
     public int SoundVolume { get; set; }
     public CharacterHistory CharacterHistory { get; }
     public ServerAddress Server { get; }
-    public bool PickTileDrawnUnderMouse { get; }
-    public bool GlideMovement { get; }
+    public bool EscapeClosesWindowsFirst { get; set; }
+    public bool ExpandedQuickStats { get; set; }
+    public bool PickTileDrawnUnderMouse { get; set; }
+    public bool GlideMovement { get; set; }
     public KeyBindings KeyBindings { get; } = new();
-    public float CursorScale { get; }
+    public float CursorScale { get; set; }
+
+    public bool this[GeneralOption option]
+    {
+        get => option switch
+        {
+            GeneralOption.EscapeClosesWindowsFirst => EscapeClosesWindowsFirst,
+            GeneralOption.ExpandedQuickStats => ExpandedQuickStats,
+            GeneralOption.GlideMovement => GlideMovement,
+            GeneralOption.PickTileDrawnUnderMouse => PickTileDrawnUnderMouse,
+            _ => throw new UnreachableException(),
+        };
+        set
+        {
+            switch (option)
+            {
+                case GeneralOption.EscapeClosesWindowsFirst:
+                    EscapeClosesWindowsFirst = value;
+                    break;
+                case GeneralOption.ExpandedQuickStats:
+                    ExpandedQuickStats = value;
+                    break;
+                case GeneralOption.GlideMovement:
+                    GlideMovement = value;
+                    break;
+                case GeneralOption.PickTileDrawnUnderMouse:
+                    PickTileDrawnUnderMouse = value;
+                    break;
+                default:
+                    throw new UnreachableException();
+            }
+        }
+    }
 
     public static ClientSettings Load()
     {
@@ -86,6 +121,11 @@ public sealed class ClientSettings
         file.SetValue(DisplaySection, "dark_mode", DarkMode);
         file.SetValue(AudioSection, "sound_enabled", SoundEnabled);
         file.SetValue(AudioSection, "sound_volume", SoundVolume);
+        file.SetValue(DisplaySection, "cursor_scale", CursorScale);
+        file.SetValue(GeneralSection, "escape_closes_windows_first", EscapeClosesWindowsFirst);
+        file.SetValue(GeneralSection, "expanded_quick_stats", ExpandedQuickStats);
+        file.SetValue(WorldSection, "pick_tile_drawn_under_mouse", PickTileDrawnUnderMouse);
+        file.SetValue(WorldSection, "glide_movement", GlideMovement);
         file.SetValue(
             LauncherSection,
             "character_names",
