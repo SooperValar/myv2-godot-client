@@ -3,6 +3,7 @@
 [ext_resource type="Theme" uid="uid://cca5jb3y02bv3" path="res://themes/LauncherTheme.tres" id="1_theme"]
 [ext_resource type="Script" uid="uid://dl3tb5fmj5p8y" path="res://Game/GameScreen.cs" id="2_script"]
 [ext_resource type="PackedScene" uid="uid://cryrwimptw87p" path="res://Hud/hud_view.tscn" id="3_hud"]
+[ext_resource type="PackedScene" uid="uid://cmjtisxq2pywp" path="res://Audio/sound_effects.tscn" id="4_sounds"]
 
 [node name="Game" type="Control" unique_id=1783224375]
 layout_mode = 3
@@ -28,3 +29,6 @@ color = Color(0.08, 0.08, 0.1, 1)
 [node name="HudView" parent="." unique_id=1324670573 instance=ExtResource("3_hud")]
 unique_name_in_owner = true
 layout_mode = 0
+
+[node name="SoundEffects" parent="." unique_id=1351099144 instance=ExtResource("4_sounds")]
+unique_name_in_owner = true

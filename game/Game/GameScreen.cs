@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.IO;
 using Godot;
 using TheLastGate.Assets;
+using TheLastGate.Audio;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Hud;
@@ -30,12 +31,14 @@ public partial class GameScreen : Control
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
     private GameSession session = null!;
+    private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
     private WorldView? worldView;
 
     public override void _Ready()
     {
         hudView = GetNode<HudView>("%HudView");
+        soundEffects = GetNode<SoundEffects>("%SoundEffects");
         hudView.LeaveRequested += ReturnToLauncher;
 
         if (GameSession.Take() is not { } startedSession)
@@ -128,7 +131,7 @@ public partial class GameScreen : Control
             State = gameState,
             Sprites = sprites,
             Fonts = fonts,
-            SendCommand = connection.SendCommand,
+            SendCommand = SendAction,
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             ShowShadows = clientSettings.Shadows,
             ShowNames = characterSettings.ShowNames,
@@ -142,7 +145,15 @@ public partial class GameScreen : Control
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
-        hudView.Show(gameState, fonts, connection.SendCommand);
+        hudView.Show(gameState, fonts, SendAction);
+        soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
+        gameState.SoundRequested += soundEffects.PlayServerSound;
+    }
+
+    private void SendAction(byte[] packet)
+    {
+        soundEffects.PlayClickFor(packet);
+        connection.SendCommand(packet);
     }
 
     private void SaveNewCharacter(LoginKey createdKey)
