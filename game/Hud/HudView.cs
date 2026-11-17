@@ -220,6 +220,17 @@ public partial class HudView : Control
             smithButton.Released += button => ClickSmithButton(buttonNumber, button);
         }
 
+        var waypointWindow = GetNode<WaypointWindowView>("%WaypointWindow");
+        waypointWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseWaypoints;
+        waypointWindow.GetNode<ClickArea>("ScrollUp").Released += button => ClickScrollWaypoints(-1, button);
+        waypointWindow.GetNode<ClickArea>("ScrollDown").Released += button => ClickScrollWaypoints(1, button);
+        waypointWindow.GetNode<Control>("Blocker").GuiInput += ScrollWaypoints;
+        for (var row = 0; row < WaypointWindow.VisibleRows; row++)
+        {
+            var shownRow = row;
+            ((ClickArea)waypointWindow.Row(row)).Released += button => ClickWaypoint(shownRow, button);
+        }
+
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
         {
@@ -247,7 +258,7 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
-        if (state.TextWindows.AnyOpen || state.OpenShop != null)
+        if (state.TextWindows.AnyOpen || state.WaypointWindow.IsOpen || state.OpenShop != null)
         {
             lookPanel.Hide();
         }
@@ -256,6 +267,7 @@ public partial class HudView : Control
         GetNode<ShopWindowView>("%ShopWindow").ShowItems(state);
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
         GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
+        ShowWaypoints();
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -684,6 +696,53 @@ public partial class HudView : Control
         }
     }
 
+    private void ShowWaypoints()
+    {
+        if (state != null)
+        {
+            GetNode<WaypointWindowView>("%WaypointWindow").ShowWaypoints(state);
+        }
+    }
+
+    private void ClickWaypoint(int row, MapButton button)
+    {
+        if (state?.WaypointWindow.Choose(row, button, state.Player.Waypoints) is { } packet)
+        {
+            sendCommand(packet);
+            ShowWaypoints();
+        }
+    }
+
+    private void ClickScrollWaypoints(int direction, MapButton button)
+    {
+        if (button == MapButton.Left && state != null)
+        {
+            state.WaypointWindow.ScrollBy(direction * WaypointWindow.ArrowStep(HeldKeys.Current()));
+            ShowWaypoints();
+        }
+    }
+
+    private void ScrollWaypoints(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventMouseButton { Pressed: true } wheel || state == null
+            || wheel.ButtonIndex is not (MouseButton.WheelUp or MouseButton.WheelDown)
+            || !WaypointWindowView.InWheelArea(wheel.Position))
+        {
+            return;
+        }
+
+        state.WaypointWindow.ScrollBy(wheel.ButtonIndex == MouseButton.WheelDown ? 1 : -1);
+        ShowWaypoints();
+    }
+
+    private void ClickCloseWaypoints(MapButton button)
+    {
+        if (button == MapButton.Left && state?.WaypointWindow.Close() == true)
+        {
+            Refresh(selectedCharacter);
+        }
+    }
+
     private void ClickCloseShop(MapButton button)
     {
         if (button == MapButton.Left && state?.CloseShop() == true)
@@ -698,6 +757,7 @@ public partial class HudView : Control
         if (state?.CloseWindowsByEscape() == true)
         {
             ShowTextWindows();
+            ShowWaypoints();
             return;
         }
 

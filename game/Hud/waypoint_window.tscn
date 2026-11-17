@@ -1,0 +1,96 @@
+[gd_scene format=3 uid="uid://c4nhp1yrm7a4i"]
+
+[ext_resource type="Script" uid="uid://c2yeyh5kp5s8c" path="res://Hud/WaypointWindowView.cs" id="1_view"]
+[ext_resource type="Script" uid="uid://dns0wvx5gfo6b" path="res://Hud/ArchiveSprite.cs" id="2_sprite"]
+[ext_resource type="Script" uid="uid://bsuu4hjc2626f" path="res://Hud/ClickArea.cs" id="3_click"]
+[ext_resource type="PackedScene" uid="uid://bhr4a7tqkufdc" path="res://Hud/waypoint_row.tscn" id="4_row"]
+
+[node name="WaypointWindow" type="Control" unique_id=1530803544]
+visible = false
+layout_mode = 0
+offset_left = 0.0
+offset_top = 0.0
+offset_right = 297.0
+offset_bottom = 316.0
+mouse_filter = 2
+script = ExtResource("1_view")
+
+[node name="Background" type="TextureRect" parent="." unique_id=1032443188]
+layout_mode = 0
+mouse_filter = 2
+script = ExtResource("2_sprite")
+SpriteNumber = 5
+DarkSpriteNumber = 18005
+
+[node name="Blocker" type="Control" parent="." unique_id=1517110112]
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 281.0
+offset_bottom = 316.0
+
+[node name="Rows" type="VBoxContainer" parent="Blocker" unique_id=852111210]
+layout_mode = 0
+offset_left = 0.0
+offset_top = -1.0
+offset_right = 266.0
+offset_bottom = 279.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Row0" parent="Blocker/Rows" unique_id=386431152 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row1" parent="Blocker/Rows" unique_id=1075197606 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row2" parent="Blocker/Rows" unique_id=1119340408 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row3" parent="Blocker/Rows" unique_id=1072457918 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row4" parent="Blocker/Rows" unique_id=451306448 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row5" parent="Blocker/Rows" unique_id=1533551974 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row6" parent="Blocker/Rows" unique_id=485938712 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Row7" parent="Blocker/Rows" unique_id=1505839003 instance=ExtResource("4_row")]
+layout_mode = 2
+
+[node name="Bar" type="ColorRect" parent="." unique_id=747936011]
+layout_mode = 0
+offset_left = 269.0
+offset_top = 36.0
+offset_right = 280.0
+offset_bottom = 69.0
+mouse_filter = 2
+color = Color(0.0322580645, 0.380952381, 0, 1)
+
+[node name="ScrollUp" type="Control" parent="." unique_id=140553638]
+layout_mode = 0
+offset_left = 268.0
+offset_top = 1.0
+offset_right = 280.0
+offset_bottom = 35.0
+script = ExtResource("3_click")
+
+[node name="ScrollDown" type="Control" parent="." unique_id=1939994884]
+layout_mode = 0
+offset_left = 268.0
+offset_top = 246.0
+offset_right = 280.0
+offset_bottom = 280.0
+script = ExtResource("3_click")
+
+[node name="CloseButton" type="Control" parent="." unique_id=1713114462]
+layout_mode = 0
+offset_left = 280.0
+offset_top = 1.0
+offset_right = 296.0
+offset_bottom = 14.0
+script = ExtResource("3_click")
