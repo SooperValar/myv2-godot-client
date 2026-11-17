@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -33,4 +34,6 @@ public sealed record Note(
         && TileY == other.TileY
         && ColourIndex == other.ColourIndex
         && Segments.SequenceEqual(other.Segments);
+
+    public bool IsSamePin(Note other) => throw new NotImplementedException();
 }

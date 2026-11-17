@@ -39,6 +39,10 @@ public sealed class NoteSet
     public NoteCategory? FindCategory(int categoryId) =>
         categories.FirstOrDefault(category => category.Id == categoryId);
 
+    public int CountDuplicatePins(int categoryId) => throw new NotImplementedException();
+
+    public int RemoveDuplicatePins(int categoryId) => throw new NotImplementedException();
+
     public static uint Rgb(NoteCategory category, Note note) =>
         NotePalette.Rgb(IsPaletteColour(note.ColourIndex) ? note.ColourIndex : category.ColourIndex);
 

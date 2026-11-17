@@ -9,6 +9,55 @@ public class NotesTests
     private readonly NoteSet set = new();
 
     [Fact]
+    public void IsSamePin_ComparesOnlyTheLabelAndTile()
+    {
+        var category = set.AddCategory("A", 0);
+        var gate = set.FindNote(set.AddPoint(category, NoteKind.Pin, 5, 5, "Gate"))!;
+        var recoloured = set.AddPoint(category, NoteKind.Pin, 5, 5, "Gate");
+        set.SetNoteColour(recoloured, 3);
+
+        Assert.True(gate.IsSamePin(set.FindNote(recoloured)!));
+        Assert.False(gate.IsSamePin(set.FindNote(set.AddPoint(category, NoteKind.Pin, 5, 5, "gate"))!));
+        Assert.False(gate.IsSamePin(set.FindNote(set.AddPoint(category, NoteKind.Pin, 6, 5, "Gate"))!));
+        Assert.False(gate.IsSamePin(set.FindNote(set.AddPoint(category, NoteKind.Text, 5, 5, "Gate"))!));
+    }
+
+    [Fact]
+    public void DuplicatePins_AreRemovedThroughSubcategoriesKeepingTheFirst()
+    {
+        var root = set.AddCategory("Root", 0);
+        var firstGate = set.AddPoint(root, NoteKind.Pin, 5, 5, "Gate");
+        var recoloured = set.AddPoint(root, NoteKind.Pin, 5, 5, "Gate");
+        set.SetNoteColour(recoloured, 3);
+        set.AddPoint(root, NoteKind.Pin, 6, 5, "Gate");
+        set.AddPoint(root, NoteKind.Text, 5, 5, "Gate");
+        set.AddPoint(root, NoteKind.Pin, 1, 1, "Door");
+        var child = set.AddCategory("Child", 0, root);
+        set.AddPoint(child, NoteKind.Pin, 5, 5, "Gate");
+        set.AddPoint(child, NoteKind.Pin, 2, 2, "Door");
+        set.AddPoint(child, NoteKind.Pin, 2, 2, "Door");
+        var outside = set.AddCategory("Outside", 0);
+        set.AddPoint(outside, NoteKind.Pin, 5, 5, "Gate");
+        set.AddPoint(outside, NoteKind.Pin, 5, 5, "Gate");
+        set.Changed = false;
+
+        Assert.Equal(2, set.CountDuplicatePins(root));
+        Assert.Equal(1, set.CountDuplicatePins(child));
+        Assert.Equal(2, set.RemoveDuplicatePins(root));
+
+        Assert.True(set.Changed);
+        Assert.Equal(4, set.FindCategory(root)!.Notes.Count);
+        Assert.NotNull(set.FindNote(firstGate));
+        Assert.Null(set.FindNote(recoloured));
+        Assert.Equal(2, set.FindCategory(child)!.Notes.Count);
+        Assert.Equal(2, set.FindCategory(outside)!.Notes.Count);
+        Assert.Equal(0, set.CountDuplicatePins(root));
+        set.Changed = false;
+        Assert.Equal(0, set.RemoveDuplicatePins(root));
+        Assert.False(set.Changed);
+    }
+
+    [Fact]
     public void CategoriesAndNotes_ShareOneIdCounterThatNeverReuses()
     {
         var category = set.AddCategory("Keys", 0);
