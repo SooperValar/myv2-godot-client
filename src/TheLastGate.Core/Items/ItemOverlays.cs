@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using TheLastGate.State;
 
@@ -50,7 +49,27 @@ public static class ItemOverlays
         return overlays;
     }
 
-    public static IReadOnlyList<ItemOverlay> Shop(ShopItem item) => throw new NotImplementedException();
+    public static IReadOnlyList<ItemOverlay> Shop(ShopItem item)
+    {
+        var overlays = new List<ItemOverlay>();
+        if (item.Sprite == 0)
+        {
+            return overlays;
+        }
+
+        if (item.IsSoulstone)
+        {
+            overlays.Add(new ItemOverlay(SoulstoneSprite, 0));
+        }
+
+        if (item.IsEnchanted)
+        {
+            overlays.Add(new ItemOverlay(TalismanSprite, 0));
+        }
+
+        AddCatalyst(overlays, item.Sprite, item.Catalyst);
+        return overlays;
+    }
 
     public static IReadOnlyList<ItemOverlay> Carried(ItemSlot item)
     {
@@ -76,17 +95,7 @@ public static class ItemOverlays
             overlays.Add(new ItemOverlay(CorruptionSprite, 0));
         }
 
-        var value = (uint)item.Properties;
-        if (value > 0 && item.Sprite == CatalystSprite)
-        {
-            overlays.Add(new ItemOverlay(CatalystOverlayBase + (int)value, 0));
-        }
-        else if (value > 0 && item.Sprite == CorrupterSprite)
-        {
-            overlays.Add(new ItemOverlay(CorrupterOverlay, 0));
-            overlays.Add(new ItemOverlay(CorrupterDigitBase + (int)(value / 16), CorrupterDigitSpacing));
-            overlays.Add(new ItemOverlay(CorrupterDigitBase + (int)(value % 16), CorrupterDigitSpacing * 2));
-        }
+        AddCatalyst(overlays, item.Sprite, (uint)item.Properties);
 
         if (item.Stack is > 0 and <= LargestShownStack)
         {
@@ -94,5 +103,20 @@ public static class ItemOverlays
         }
 
         return overlays;
+    }
+
+    // A catalyst shows its kind; a corrupter shows its number as two digits.
+    private static void AddCatalyst(List<ItemOverlay> overlays, int sprite, uint value)
+    {
+        if (value > 0 && sprite == CatalystSprite)
+        {
+            overlays.Add(new ItemOverlay(CatalystOverlayBase + (int)value, 0));
+        }
+        else if (value > 0 && sprite == CorrupterSprite)
+        {
+            overlays.Add(new ItemOverlay(CorrupterOverlay, 0));
+            overlays.Add(new ItemOverlay(CorrupterDigitBase + (int)(value / 16), CorrupterDigitSpacing));
+            overlays.Add(new ItemOverlay(CorrupterDigitBase + (int)(value % 16), CorrupterDigitSpacing * 2));
+        }
     }
 }
