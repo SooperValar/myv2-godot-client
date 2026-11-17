@@ -15,10 +15,28 @@ public partial class ChatLine : LineEdit
 
     private readonly TabCompletion completion = new();
     private readonly ChatHistory history = new();
+    private readonly ChatMode mode = new();
     private readonly ChatLineView view = new();
     private GameFont? font;
 
     [Export] public string PreviewText { get; set; } = "";
+
+    public bool EnterToTalk
+    {
+        get => mode.EnterToTalk;
+        set
+        {
+            if (mode.EnterToTalk != value)
+            {
+                mode.EnterToTalk = value;
+                FollowMode();
+            }
+        }
+    }
+
+    public bool TakesTyping => mode.TakesTyping;
+
+    public bool RunsHotkeys => mode.RunsHotkeys;
 
     public event Action<string>? LineSent;
 
@@ -73,7 +91,17 @@ public partial class ChatLine : LineEdit
 
                 break;
             case Key.Escape:
-                EscapePressed?.Invoke();
+                if (mode.Press(ChatKey.Escape) == ChatAction.Cancel)
+                {
+                    Clear();
+                    history.Abandon();
+                    FollowMode();
+                }
+                else
+                {
+                    EscapePressed?.Invoke();
+                }
+
                 break;
             case Key.Insert:
                 break;
@@ -82,6 +110,27 @@ public partial class ChatLine : LineEdit
         }
 
         AcceptEvent();
+    }
+
+    // Asked only while the line is closed, when it holds no focus and its keys reach the HUD instead.
+    public bool Open(ChatKey key)
+    {
+        switch (mode.Press(key))
+        {
+            case ChatAction.Open:
+                break;
+            case ChatAction.OpenWithSlash:
+                InsertTextAtCaret("/");
+                break;
+            case ChatAction.OpenWithOlder:
+                ShowLine(history.Older(Text));
+                break;
+            default:
+                return false;
+        }
+
+        FollowMode();
+        return true;
     }
 
     public void ApplyFont()
@@ -110,7 +159,10 @@ public partial class ChatLine : LineEdit
         var top = new Vector2(0, shownFont.Font.GetAscent(shownFont.Size));
         var advance = shownFont.Font.GetCharSize('M', shownFont.Size).X;
         DrawText(shown, top, shownFont);
-        DrawText(CursorGlyph, top + new Vector2(cursorColumn * advance, 0), shownFont);
+        if (editorPreview || mode.TakesTyping)
+        {
+            DrawText(CursorGlyph, top + new Vector2(cursorColumn * advance, 0), shownFont);
+        }
     }
 
     private void DrawText(string text, Vector2 position, GameFont shownFont) =>
@@ -125,22 +177,42 @@ public partial class ChatLine : LineEdit
         }
     }
 
+    // With enter to talk, Enter closes the line even when there is nothing to send.
     private void Send(string line)
     {
-        if (line.Length == 0)
+        var closes = mode.Press(ChatKey.Enter) == ChatAction.Send;
+        if (line.Length > 0)
         {
-            return;
+            history.Sent(line);
+            completion.Learn(line);
+            Clear();
+            LineSent?.Invoke(line);
         }
 
-        history.Sent(line);
-        completion.Learn(line);
-        Clear();
-        LineSent?.Invoke(line);
+        if (closes)
+        {
+            FollowMode();
+        }
+    }
+
+    // A closed line can't be clicked into and holds no focus, so typing goes nowhere and keys reach the hotkeys.
+    private void FollowMode()
+    {
+        if (mode.TakesTyping)
+        {
+            FocusMode = FocusModeEnum.All;
+            GrabFocus();
+        }
+        else
+        {
+            ReleaseFocus();
+            FocusMode = FocusModeEnum.None;
+        }
     }
 
     private void TakeFocusBack()
     {
-        if (IsInsideTree() && GetViewport().GuiGetFocusOwner() == null)
+        if (IsInsideTree() && mode.TakesTyping && GetViewport().GuiGetFocusOwner() == null)
         {
             GrabFocus();
         }

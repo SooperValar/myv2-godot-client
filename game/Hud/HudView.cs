@@ -7,6 +7,7 @@ using System.Linq;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Characters;
+using TheLastGate.Chat;
 using TheLastGate.Config;
 using TheLastGate.Cursors;
 using TheLastGate.Game;
@@ -288,6 +289,7 @@ public partial class HudView : Control
         }
 
         chatLine.GrabFocus();
+        chatLine.EnterToTalk = ClientSettings?.EnterToTalk ?? false;
         Refresh(0);
     }
 
@@ -361,16 +363,48 @@ public partial class HudView : Control
     }
 
     // Held keys repeat their hotkey, as in the current client.
+    // A closed enter-to-talk chat line holds no focus, so the keys that open it, and Escape, arrive here; a key can
+    // run its hotkey and open the line too, as in the current client.
     public override void _UnhandledKeyInput(InputEvent inputEvent)
     {
-        if (inputEvent is InputEventKey { Pressed: true } key
+        if (inputEvent is not InputEventKey { Pressed: true } key)
+        {
+            return;
+        }
+
+        var chatLine = GetNode<ChatLine>("%ChatLine");
+        var handled = chatLine.RunsHotkeys
             && HotkeyInput.Chord(key) is { } chord
             && KeyBindings.Find(chord) is { } binding
-            && RunHotkey(binding.Id))
+            && RunHotkey(binding.Id);
+        if (!chatLine.TakesTyping && ChatKeyFor(key.Keycode) is { } chatKey)
+        {
+            if (chatKey == ChatKey.Escape)
+            {
+                PressEscape();
+                handled = true;
+            }
+            else
+            {
+                handled |= chatLine.Open(chatKey);
+            }
+        }
+
+        if (handled)
         {
             GetViewport().SetInputAsHandled();
         }
     }
+
+    private static ChatKey? ChatKeyFor(Key key) => key switch
+    {
+        Key.Enter or Key.KpEnter => ChatKey.Enter,
+        Key.Escape => ChatKey.Escape,
+        Key.Slash => ChatKey.Slash,
+        Key.Up => ChatKey.Older,
+        Key.Down => ChatKey.Newer,
+        _ => null,
+    };
 
     public static string HotbarKeyName(Node node, int slot) =>
         (Containing(node)?.KeyBindings ?? DefaultBindings).ShortName(Bindings.SpellId(slot));
@@ -954,6 +988,7 @@ public partial class HudView : Control
         change(ClientSettings);
         ClientSettings.Save();
         ShowQuickStatsLayout();
+        GetNode<ChatLine>("%ChatLine").EnterToTalk = ClientSettings.EnterToTalk;
         ClientSettingsChanged?.Invoke();
     }
 

@@ -51,6 +51,7 @@ public sealed class ClientSettings
             file.GetValue(ServerSection, "port", ServerAddress.Live.Port).AsInt32());
 
         EscapeClosesWindowsFirst = file.GetValue(GeneralSection, "escape_closes_windows_first", true).AsBool();
+        EnterToTalk = file.GetValue(GeneralSection, "enter_to_talk", false).AsBool();
         ExpandedQuickStats = file.GetValue(GeneralSection, "expanded_quick_stats", true).AsBool();
         ItemTooltips = file.GetValue(GeneralSection, "item_tooltips", true).AsBool();
         ItemTooltipsAlways = file.GetValue(GeneralSection, "item_tooltips_always", true).AsBool();
@@ -71,6 +72,7 @@ public sealed class ClientSettings
     public CharacterHistory CharacterHistory { get; }
     public ServerAddress Server { get; }
     public bool EscapeClosesWindowsFirst { get; set; }
+    public bool EnterToTalk { get; set; }
     public bool ExpandedQuickStats { get; set; }
     public bool ItemTooltips { get; set; }
     public bool ItemTooltipsAlways { get; set; }
@@ -84,6 +86,7 @@ public sealed class ClientSettings
         get => option switch
         {
             GeneralOption.EscapeClosesWindowsFirst => EscapeClosesWindowsFirst,
+            GeneralOption.EnterToTalk => EnterToTalk,
             GeneralOption.ExpandedQuickStats => ExpandedQuickStats,
             GeneralOption.ItemTooltips => ItemTooltips,
             GeneralOption.ItemTooltipsAlways => ItemTooltipsAlways,
@@ -97,6 +100,9 @@ public sealed class ClientSettings
             {
                 case GeneralOption.EscapeClosesWindowsFirst:
                     EscapeClosesWindowsFirst = value;
+                    break;
+                case GeneralOption.EnterToTalk:
+                    EnterToTalk = value;
                     break;
                 case GeneralOption.ExpandedQuickStats:
                     ExpandedQuickStats = value;
@@ -135,6 +141,7 @@ public sealed class ClientSettings
         file.SetValue(AudioSection, "sound_volume", SoundVolume);
         file.SetValue(DisplaySection, "cursor_scale", CursorScale);
         file.SetValue(GeneralSection, "escape_closes_windows_first", EscapeClosesWindowsFirst);
+        file.SetValue(GeneralSection, "enter_to_talk", EnterToTalk);
         file.SetValue(GeneralSection, "expanded_quick_stats", ExpandedQuickStats);
         file.SetValue(GeneralSection, "item_tooltips", ItemTooltips);
         file.SetValue(GeneralSection, "item_tooltips_always", ItemTooltipsAlways);
