@@ -3,4 +3,8 @@
   <PropertyGroup>
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
   </PropertyGroup>
+  <!-- Release Please raises this on each release; until the first one, 0.0.0 shows in game as RC. -->
+  <PropertyGroup>
+    <Version>0.0.0</Version> <!-- x-release-please-version -->
+  </PropertyGroup>
 </Project>

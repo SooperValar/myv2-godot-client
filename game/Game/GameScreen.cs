@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Audio;
@@ -178,7 +179,8 @@ public partial class GameScreen : Control
     }
 
     private DebugFacts ReadDebugFacts() => new(
-        "",
+        typeof(GameScreen).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
+        ?? "",
         session.Handshake.ServerVersion,
         Engine.GetVersionInfo()["string"].AsString(),
         RenderingServer.GetVideoAdapterName(),
