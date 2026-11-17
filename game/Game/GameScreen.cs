@@ -8,6 +8,7 @@ using TheLastGate.Audio;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Hud;
+using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.World;
@@ -148,11 +149,17 @@ public partial class GameScreen : Control
         hudView.Show(gameState, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
+        gameState.Tooltips.SendLook = connection.SendCommand;
     }
 
     private void SendAction(byte[] packet)
     {
         soundEffects.PlayClickFor(packet);
+        if (ItemTooltips.IsManualLook(packet))
+        {
+            gameState.Tooltips.ManualLookSent();
+        }
+
         connection.SendCommand(packet);
     }
 
