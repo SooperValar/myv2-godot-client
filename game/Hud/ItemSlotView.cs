@@ -26,21 +26,19 @@ public partial class ItemSlotView : ClickArea
         }
     }
 
-    public Func<bool>? HasTooltip { get; set; }
+    public Func<ItemTooltipRequest?>? TooltipRequest { get; set; }
 
-    public Func<ItemTooltip?>? Tooltip { get; set; }
-
-    public override string _GetTooltip(Vector2 atPosition) => HasTooltip?.Invoke() == true ? "item" : "";
+    public override string _GetTooltip(Vector2 atPosition) => TooltipRequest?.Invoke() != null ? "item" : "";
 
     public override GodotObject? _MakeCustomTooltip(string forText)
     {
-        if (Tooltip == null || HudView.Containing(this)?.Fonts is not { } fonts)
+        if (TooltipRequest == null || HudView.Containing(this)?.Fonts is not { } fonts)
         {
             return null;
         }
 
         var view = GD.Load<PackedScene>(TooltipScenePath).Instantiate<ItemTooltipView>();
-        view.Watch(Tooltip, fonts);
+        view.Watch(TooltipRequest, fonts);
         return view;
     }
 

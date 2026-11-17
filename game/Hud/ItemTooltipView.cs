@@ -6,13 +6,13 @@ using TheLastGate.Items;
 
 namespace TheLastGate.Hud;
 
-// Godot builds a custom tooltip once, so this one watches its slot and rebuilds itself when the item's text arrives
-// or changes.
+// Godot builds a custom tooltip once, so this one watches its slot and rebuilds itself when what it should show
+// changes, such as the item's text arriving.
 public partial class ItemTooltipView : PanelContainer
 {
-    private const string FetchingText = "Fetching item details...";
     private const float WrapWidth = 272;
     private const int BadgeGap = 6;
+    private const int ChangeGap = 4;
     private const int TableColumnGap = 12;
     private const int TableRowGap = 2;
     private const int SeparatorSpace = 5;
@@ -20,9 +20,8 @@ public partial class ItemTooltipView : PanelContainer
     private static readonly Color SeparatorColour = Color.Color8(110, 110, 128, 128);
 
     private IFontSet? fonts;
-    private bool showingPlaceholder;
-    private ItemTooltip? shown;
-    private Func<ItemTooltip?>? source;
+    private ItemTooltipRequest? shown;
+    private Func<ItemTooltipRequest?>? source;
 
     public override void _EnterTree()
     {
@@ -35,11 +34,27 @@ public partial class ItemTooltipView : PanelContainer
 
     public override void _Process(double delta) => Update();
 
-    public void Watch(Func<ItemTooltip?> tooltipSource, IFontSet fontSet)
+    public void Watch(Func<ItemTooltipRequest?> tooltipSource, IFontSet fontSet)
     {
         source = tooltipSource;
         fonts = fontSet;
         Update();
+    }
+
+    // A value that equipping the held item would change is followed by the change.
+    private static Control MakeText(TooltipText text, IFontSet fonts, bool wraps = false)
+    {
+        var label = MakeLabel(text, fonts, wraps);
+        if (text.Change is not { } change)
+        {
+            return label;
+        }
+
+        var row = new HBoxContainer { MouseFilter = MouseFilterEnum.Ignore };
+        row.AddThemeConstantOverride("separation", ChangeGap);
+        row.AddChild(label);
+        row.AddChild(MakeLabel(new TooltipText(change.Text, change.Colour), fonts));
+        return row;
     }
 
     private static Label MakeLabel(TooltipText text, IFontSet fonts, bool wraps = false)
@@ -80,7 +95,7 @@ public partial class ItemTooltipView : PanelContainer
         {
             foreach (var cell in row)
             {
-                grid.AddChild(MakeLabel(cell, fonts));
+                grid.AddChild(MakeText(cell, fonts));
             }
         }
 
@@ -94,7 +109,7 @@ public partial class ItemTooltipView : PanelContainer
         row.AddChild(MakeLabel(new TooltipText(badges.Label, TextColour.Dim), fonts));
         foreach (var badge in badges.Badges)
         {
-            row.AddChild(MakeLabel(badge, fonts));
+            row.AddChild(MakeText(badge, fonts));
         }
 
         return row;
@@ -107,24 +122,10 @@ public partial class ItemTooltipView : PanelContainer
             return;
         }
 
-        var tooltip = source();
-        if (tooltip == null)
+        if (source() is { } request && request != shown)
         {
-            if (!showingPlaceholder)
-            {
-                ShowParts([new TooltipLine(new TooltipText(FetchingText, TextColour.Dim))], fonts);
-                showingPlaceholder = true;
-                shown = null;
-            }
-
-            return;
-        }
-
-        if (!ReferenceEquals(tooltip, shown))
-        {
-            ShowParts(TooltipContent.For(tooltip), fonts);
-            shown = tooltip;
-            showingPlaceholder = false;
+            ShowParts(request.Parts(), fonts);
+            shown = request;
         }
     }
 
@@ -141,7 +142,7 @@ public partial class ItemTooltipView : PanelContainer
         {
             var node = part switch
             {
-                TooltipLine line => MakeLabel(line.Text, fontSet, line.Wraps),
+                TooltipLine line => MakeText(line.Text, fontSet, line.Wraps),
                 TooltipSeparator => MakeSeparator(),
                 TooltipTable table => MakeTable(table, fontSet),
                 TooltipBadges badges => MakeBadges(badges, fontSet),
