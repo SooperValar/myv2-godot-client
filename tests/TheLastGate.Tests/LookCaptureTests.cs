@@ -1,0 +1,188 @@
+using TheLastGate.Assets;
+using TheLastGate.Items;
+using TheLastGate.State;
+
+namespace TheLastGate.Tests;
+
+public class LookCaptureTests
+{
+    private static readonly LogLine Header = new("Steel Sword:", (int)TextColour.Lime);
+    private static readonly LogLine Description = new("A finely crafted steel sword.", (int)TextColour.Yellow);
+    private static readonly LogLine Chatter = new("Bob: hello", (int)TextColour.Blue);
+    private readonly LookCapture capture;
+
+    private readonly List<LookReply> replies = [];
+
+    public LookCaptureTests() => capture = new LookCapture(replies.Add);
+
+    [Fact]
+    public void Offer_HidesBothRepliesToABackgroundLookAndResolvesTheirSharedLines()
+    {
+        capture.ExpectFetch(0);
+
+        Assert.True(capture.Offer(Header));
+        Assert.True(capture.Offer(Description));
+        Assert.True(capture.Offer(Header));
+        Assert.True(capture.Offer(Description));
+        capture.EndOfTick();
+
+        var reply = Assert.Single(replies);
+        Assert.Equal([Header, Description], reply.Shared);
+        Assert.Empty(reply.Released);
+    }
+
+    [Fact]
+    public void Offer_ReleasesOtherChatCaughtAfterAReply()
+    {
+        capture.ExpectFetch(0);
+
+        capture.Offer(Header);
+        capture.Offer(Description);
+        capture.Offer(Chatter);
+        capture.Offer(Header);
+        capture.Offer(Description);
+        capture.EndOfTick();
+
+        var reply = Assert.Single(replies);
+        Assert.Equal([Header, Description], reply.Shared);
+        Assert.Equal([Chatter], reply.Released);
+    }
+
+    [Fact]
+    public void Offer_LetsLinesBeforeAReplyThrough()
+    {
+        capture.ExpectFetch(0);
+
+        Assert.False(capture.Offer(Chatter));
+    }
+
+    [Fact]
+    public void Offer_LetsAReplyNobodyAskedForThrough()
+    {
+        Assert.False(capture.Offer(Header));
+        Assert.False(capture.Offer(Description));
+    }
+
+    [Fact]
+    public void Offer_LetsAPlayersOwnLookThroughToChat()
+    {
+        capture.ExpectManual(0);
+
+        Assert.False(capture.Offer(Header));
+        Assert.False(capture.Offer(Description));
+        Assert.False(capture.HasPending);
+    }
+
+    [Fact]
+    public void Offer_MatchesRepliesToRequestsInTheOrderTheyWereSent()
+    {
+        capture.ExpectManual(0);
+        capture.ExpectFetch(0);
+
+        Assert.False(capture.Offer(Header));
+        Assert.True(capture.Offer(Header));
+        Assert.True(capture.Offer(Header));
+    }
+
+    [Fact]
+    public void Offer_CapturesEmptyLinesInsideAReply()
+    {
+        var blank = new LogLine("", (int)TextColour.Yellow);
+        capture.ExpectFetch(0);
+
+        capture.Offer(Header);
+        Assert.True(capture.Offer(blank));
+        capture.Offer(Header);
+        capture.Offer(blank);
+        capture.EndOfTick();
+
+        Assert.Equal([Header, blank], Assert.Single(replies).Shared);
+    }
+
+    [Fact]
+    public void Offer_LetsLinesThroughOnceAReplyIsFull()
+    {
+        capture.ExpectFetch(0);
+        capture.Offer(Header);
+        for (var line = 1; line < LookCapture.MaxLines; line++)
+        {
+            Assert.True(capture.Offer(Description));
+        }
+
+        Assert.False(capture.Offer(Description));
+    }
+
+    [Fact]
+    public void EndOfTick_EndsTheReplyBeingCaptured()
+    {
+        capture.ExpectFetch(0);
+        capture.Offer(Header);
+        capture.EndOfTick();
+
+        Assert.False(capture.Offer(Chatter));
+    }
+
+    [Fact]
+    public void EndOfTick_WaitsForBothReplies()
+    {
+        capture.ExpectFetch(0);
+        capture.Offer(Header);
+        capture.EndOfTick();
+
+        Assert.Empty(replies);
+        Assert.True(capture.HasPending);
+    }
+
+    [Fact]
+    public void EndOfTick_ReleasesEverythingWhenTheRepliesShareNothing()
+    {
+        var otherHeader = new LogLine("Bronze Sword:", (int)TextColour.Lime);
+        capture.ExpectFetch(0);
+
+        capture.Offer(Header);
+        capture.Offer(otherHeader);
+        capture.EndOfTick();
+
+        var reply = Assert.Single(replies);
+        Assert.Empty(reply.Shared);
+        Assert.Equal([Header, otherHeader], reply.Released);
+    }
+
+    [Fact]
+    public void Abandon_ReleasesWhatWasCaughtAndForgetsTheRequests()
+    {
+        capture.ExpectFetch(0);
+        capture.Offer(Header);
+        capture.Offer(Chatter);
+
+        var released = capture.Abandon();
+
+        Assert.Equal([Header, Chatter], released);
+        Assert.False(capture.HasPending);
+        Assert.False(capture.Offer(Header));
+        Assert.Empty(replies);
+    }
+
+    [Fact]
+    public void DropManualsSentBefore_ForgetsLooksThatWereNeverAnswered()
+    {
+        capture.ExpectManual(0);
+        capture.ExpectManual(10);
+
+        capture.DropManualsSentBefore(5);
+
+        Assert.True(capture.HasPending);
+        capture.DropManualsSentBefore(11);
+        Assert.False(capture.HasPending);
+    }
+
+    [Fact]
+    public void DropManualsSentBefore_KeepsABackgroundLookWaiting()
+    {
+        capture.ExpectFetch(0);
+
+        capture.DropManualsSentBefore(100);
+
+        Assert.True(capture.HasPending);
+    }
+}
