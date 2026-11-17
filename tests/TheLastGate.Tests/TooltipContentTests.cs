@@ -67,7 +67,7 @@ public class TooltipContentTests
                 Text("Strength", TextColour.Yellow),
                 Text("+2", TextColour.White),
                 Text("+4", TextColour.Teal),
-                Text("30", TextColour.Grey),
+                Text("30", TextColour.Dim),
             ],
             table.Rows[0]);
         Assert.Equal(
@@ -75,7 +75,7 @@ public class TooltipContentTests
                 Text("Weapon Value", TextColour.Yellow),
                 Text("+24", TextColour.White),
                 Text("+24", TextColour.Teal),
-                Text("", TextColour.Grey),
+                Text("", TextColour.Dim),
             ],
             table.Rows[1]);
         Assert.Equal(Text("+5%", TextColour.White), table.Rows[2][1]);

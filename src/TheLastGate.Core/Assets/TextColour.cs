@@ -13,4 +13,5 @@ public enum TextColour
     Purple,
     White,
     Grey,
+    Dim,
 }
