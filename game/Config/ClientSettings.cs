@@ -48,6 +48,9 @@ public sealed class ClientSettings
         // Also hand-added until the Options window exists: "true" picks the tile drawn under the mouse while the
         // player is mid-step, where the current client picks as if the map hadn't moved.
         PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
+
+        // Also hand-added: "true" glides characters and the map between ticks, where the current client snaps.
+        GlideMovement = file.GetValue(WorldSection, "glide_movement", false).AsBool();
         CursorScale = Math.Clamp(
             file.GetValue(DisplaySection, "cursor_scale", 1f).AsSingle(),
             SmallestCursorScale,
@@ -62,6 +65,7 @@ public sealed class ClientSettings
     public CharacterHistory CharacterHistory { get; }
     public ServerAddress Server { get; }
     public bool PickTileDrawnUnderMouse { get; }
+    public bool GlideMovement { get; }
     public float CursorScale { get; }
 
     public static ClientSettings Load()

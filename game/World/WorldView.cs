@@ -5,6 +5,7 @@ using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Game;
 using TheLastGate.State;
+using GlidePoint = System.Numerics.Vector2;
 
 namespace TheLastGate.World;
 
@@ -30,6 +31,8 @@ public partial class WorldView : Node2D
     private readonly SpriteLayer floors = new();
     private readonly Stack<Nameplate> freeNameplates = [];
     private readonly Sprite2D giveMarker = new() { Centered = false, Visible = false };
+    private readonly MovementGlide glide = new();
+    private readonly Dictionary<int, GlidePoint> glidePoints = [];
     private readonly Dictionary<MagicGlow, ShaderMaterial> glowMaterials = [];
     private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
@@ -59,6 +62,7 @@ public partial class WorldView : Node2D
     public int SelectedCharacter { get; private set; }
 
     public bool PickTileDrawnUnderMouse { get; set; }
+    public bool GlideMovement { get; set; }
     public Action<byte[]> SendCommand { get; set; } = _ => { };
 
     public override void _Ready()
@@ -86,6 +90,11 @@ public partial class WorldView : Node2D
 
     public override void _Process(double delta)
     {
+        if (GlideMovement)
+        {
+            PlaceGlided();
+        }
+
         var action = GetViewport().GuiGetHoveredControl() != null
             ? MapAction.Nothing
             : MapActions.Decide(
@@ -182,6 +191,27 @@ public partial class WorldView : Node2D
         LastRefreshMilliseconds = clock.Elapsed.TotalMilliseconds;
     }
 
+    public void RecordMovement(int ticks, double tickMilliseconds)
+    {
+        if (!GlideMovement)
+        {
+            return;
+        }
+
+        glidePoints.Clear();
+        for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
+        {
+            ref readonly var tile = ref State.Map.Tiles[tileIndex];
+            if (characters.ShownSprites[tileIndex] != 0)
+            {
+                glidePoints[tile.CharacterNumber] = SnappedPoint(tile);
+            }
+        }
+
+        var player = SnappedPoint(State.Map.Tiles[WorldMap.PlayerTile]);
+        glide.Record(player, glidePoints, (long)Time.GetTicksMsec(), ticks, tickMilliseconds);
+    }
+
     private static Sprite2D AddSpriteNode(Node2D layer, int column, int row)
     {
         var (x, y) = IsometricProjection.TilePosition(column, row);
@@ -214,8 +244,9 @@ public partial class WorldView : Node2D
     private (float Column, float Row)? PointUnder(Vector2 screenPosition)
     {
         var (x, y) = ((int)screenPosition.X, (int)screenPosition.Y);
+        var drawnShift = floorLayer.Position.Round();
         return PickTileDrawnUnderMouse
-            ? MapPicking.PointAt(x, y, IsometricProjection.BaseMapShiftX - mapShift.X, -mapShift.Y)
+            ? MapPicking.PointAt(x, y, IsometricProjection.BaseMapShiftX - (int)drawnShift.X, -(int)drawnShift.Y)
             : MapPicking.PointAt(x, y);
     }
 
@@ -533,6 +564,42 @@ public partial class WorldView : Node2D
         characterOffsets[tileIndex] = offset;
         var (x, y) = IsometricProjection.TilePosition(tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
         characters.Nodes[tileIndex].Position = new Vector2(x + offset.X, y + offset.Y);
+    }
+
+    private static GlidePoint SnappedPoint(in MapTile tile) =>
+        MovementGlide.WorldPoint(tile.X, tile.Y, tile.CharacterOffsetX, tile.CharacterOffsetY);
+
+    // How far behind its latest position something is drawn. Left unrounded, so steps stay smooth on big windows.
+    private static Vector2 Lag(GlidePoint shown, in MapTile tile)
+    {
+        var lag = shown - SnappedPoint(tile);
+        return new Vector2(lag.X, lag.Y);
+    }
+
+    private void PlaceGlided()
+    {
+        var now = (long)Time.GetTicksMsec();
+        var shift = new Vector2(mapShift.X, mapShift.Y) - Lag(glide.Player(now), State.Map.Tiles[WorldMap.PlayerTile]);
+        floorLayer.Position = shift;
+        objectLayer.Position = shift;
+
+        for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
+        {
+            ref readonly var tile = ref State.Map.Tiles[tileIndex];
+            if (characters.ShownSprites[tileIndex] == 0 || glide.Character(tile.CharacterNumber, now) is not { } shown)
+            {
+                continue;
+            }
+
+            var lag = Lag(shown, tile);
+            var (x, y) = IsometricProjection.TilePosition(tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
+            var snapped = new Vector2(x + tile.CharacterOffsetX, y + tile.CharacterOffsetY);
+            characters.Nodes[tileIndex].Position = snapped + lag;
+            if (tileEffects[tileIndex] is { } effects)
+            {
+                effects.Root.Position = new Vector2(x, y) + lag;
+            }
+        }
     }
 
     private void ShiftMapUnderPlayer()

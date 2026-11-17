@@ -81,18 +81,19 @@ public partial class GameScreen : Control
 
         try
         {
-            var played = false;
+            var ticksPlayed = 0;
             playback.PlayDueTicks(
                 NowMilliseconds(),
                 payload =>
                 {
                     processor.Process(payload);
-                    played = true;
+                    ticksPlayed++;
                 },
                 connection.SendCommand);
-            if (played)
+            if (ticksPlayed > 0)
             {
                 worldView?.Refresh();
+                worldView?.RecordMovement(ticksPlayed, TickMilliseconds());
                 hudView.Refresh(worldView?.SelectedCharacter ?? 0);
             }
         }
@@ -111,6 +112,9 @@ public partial class GameScreen : Control
     }
 
     private static long NowMilliseconds() => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
+
+    private double TickMilliseconds() =>
+        pacer.MeasuredPeriodMilliseconds >= 1 ? pacer.MeasuredPeriodMilliseconds : TickPacer.NominalTickMilliseconds;
 
     private void AddWorldView()
     {
@@ -134,6 +138,7 @@ public partial class GameScreen : Control
             Fonts = fonts,
             SendCommand = SendAction,
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
+            GlideMovement = clientSettings.GlideMovement,
             ShowShadows = clientSettings.Shadows,
             ShowNames = characterSettings.ShowNames,
             ShowHealthPercent = characterSettings.ShowHealthPercent,
