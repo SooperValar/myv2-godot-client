@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -35,5 +34,11 @@ public sealed record Note(
         && ColourIndex == other.ColourIndex
         && Segments.SequenceEqual(other.Segments);
 
-    public bool IsSamePin(Note other) => throw new NotImplementedException();
+    // A pin is known by its label and tile, so a recoloured copy is still the same pin.
+    public bool IsSamePin(Note other) =>
+        Kind == NoteKind.Pin
+        && other.Kind == NoteKind.Pin
+        && TileX == other.TileX
+        && TileY == other.TileY
+        && Label == other.Label;
 }

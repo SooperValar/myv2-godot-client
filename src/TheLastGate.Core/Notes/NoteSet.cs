@@ -39,9 +39,43 @@ public sealed class NoteSet
     public NoteCategory? FindCategory(int categoryId) =>
         categories.FirstOrDefault(category => category.Id == categoryId);
 
-    public int CountDuplicatePins(int categoryId) => throw new NotImplementedException();
+    // Counted within each category of the subtree, against the pins before it there.
+    public int CountDuplicatePins(int categoryId) =>
+        categories
+            .Where(category => IsWithin(category.Id, categoryId))
+            .Sum(category => category.NoteList
+                .Where((note, index) => category.NoteList.Take(index).Any(earlier => earlier.IsSamePin(note)))
+                .Count());
 
-    public int RemoveDuplicatePins(int categoryId) => throw new NotImplementedException();
+    // The first copy stays, so the pin that has been on the map longest keeps its id and colour.
+    public int RemoveDuplicatePins(int categoryId)
+    {
+        var removed = 0;
+        foreach (var category in categories.Where(category => IsWithin(category.Id, categoryId)))
+        {
+            var kept = new List<Note>();
+            foreach (var note in category.NoteList)
+            {
+                if (kept.Any(earlier => earlier.IsSamePin(note)))
+                {
+                    removed++;
+                    continue;
+                }
+
+                kept.Add(note);
+            }
+
+            category.NoteList.Clear();
+            category.NoteList.AddRange(kept);
+        }
+
+        if (removed > 0)
+        {
+            Changed = true;
+        }
+
+        return removed;
+    }
 
     public static uint Rgb(NoteCategory category, Note note) =>
         NotePalette.Rgb(IsPaletteColour(note.ColourIndex) ? note.ColourIndex : category.ColourIndex);
@@ -337,6 +371,10 @@ public sealed class NoteSet
         segments.Count is >= 1 and <= NoteLimits.SegmentsPerPath
         && segments.All(segment =>
             IsTile(segment.StartX) && IsTile(segment.StartY) && IsTile(segment.EndX) && IsTile(segment.EndY));
+
+    internal string UniqueCategoryName(int parentId, string wanted) => UniqueName(parentId, 0, wanted);
+
+    internal void AppendNote(NoteCategory category, Note note) => Add(category, note);
 
     private static string Fit(string label) => NoteText.Fit(label, NoteLimits.LabelBytes);
 
