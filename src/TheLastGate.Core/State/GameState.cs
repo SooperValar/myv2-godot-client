@@ -1,4 +1,5 @@
 using System;
+using TheLastGate.Items;
 using TheLastGate.Net;
 
 namespace TheLastGate.State;
@@ -7,12 +8,15 @@ public sealed class GameState
 {
     public const int ServerTickCycle = 200;
 
+    public GameState() => Tooltips = new ItemTooltips(Chat);
+
     public PlayerState Player { get; } = new();
     public WorldMap Map { get; } = new();
     public TextLog Chat { get; } = new();
     public TextLog MessageOfTheDay { get; } = new();
     public Terminology Terminology { get; } = new();
     public CharacterNames Names { get; } = new();
+    public ItemTooltips Tooltips { get; }
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
