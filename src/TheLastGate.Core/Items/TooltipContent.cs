@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -59,7 +58,33 @@ public static class TooltipContent
     private static readonly string[] ConditionLabels =
         ["Perfect condition", "Showing signs of age", "Fairly old", "Old", "Very old and battered"];
 
-    public static IReadOnlyList<TooltipPart> For(ItemTooltip tooltip)
+    public static IReadOnlyList<TooltipPart> For(ItemTooltip tooltip) => Body(tooltip, null);
+
+    public static IReadOnlyList<TooltipPart> Comparing(ItemTooltip equipped, ItemDetails? held)
+    {
+        var parts = new List<TooltipPart> { Line("Equipped", TextColour.Dim) };
+        parts.AddRange(Body(equipped, held));
+        if (held == null)
+        {
+            parts.Add(Line("No details for the held item.", TextColour.Dim));
+        }
+
+        return parts;
+    }
+
+    public static IReadOnlyList<TooltipPart> ComparingEmptySlot(ItemDetails held)
+    {
+        var parts = new List<TooltipPart> { Line("Empty slot", TextColour.Dim) };
+        if (held.Stats.Count > 0)
+        {
+            AddSection(parts, Stats(new ItemDetails(), held));
+        }
+
+        return parts;
+    }
+
+    // `held` is the item that would replace this one, when comparing.
+    private static List<TooltipPart> Body(ItemTooltip tooltip, ItemDetails? held)
     {
         var lines = tooltip.Lines;
         var details = tooltip.Details;
@@ -70,18 +95,16 @@ public static class TooltipContent
         }
 
         AddSection(parts, details.EffectLines.Select(index => Wrapped(lines[index])));
-        AddSection(parts, Stats(details));
+        if (details.Stats.Count > 0 || held is { Stats.Count: > 0 })
+        {
+            AddSection(parts, Stats(details, held));
+        }
+
         AddSection(parts, Badges(details));
         AddSection(parts, Footer(details));
         AddSection(parts, details.OtherLines.Select(index => Wrapped(lines[index])));
         return parts;
     }
-
-    public static IReadOnlyList<TooltipPart> Comparing(ItemTooltip equipped, ItemDetails? held) =>
-        throw new NotImplementedException();
-
-    public static IReadOnlyList<TooltipPart> ComparingEmptySlot(ItemDetails held) =>
-        throw new NotImplementedException();
 
     private static void AddSection(List<TooltipPart> parts, IEnumerable<TooltipPart> section)
     {
@@ -100,28 +123,53 @@ public static class TooltipContent
     private static TextColour Colour(LogLine line) =>
         line.Font is >= (int)TextColour.Red and <= (int)TextColour.White ? (TextColour)line.Font : TextColour.Yellow;
 
-    private static IEnumerable<TooltipPart> Stats(ItemDetails details)
+    private static IEnumerable<TooltipPart> Stats(ItemDetails shown, ItemDetails? held)
     {
-        var tableStats = details.Stats.Where(InTable).ToList();
-        if (tableStats.Count > 0)
+        if (shown.SoulstoneTable || held is { SoulstoneTable: true })
         {
-            yield return Table(details, tableStats);
+            held = null;
         }
 
-        foreach (var stat in details.Stats.Where(stat => !InTable(stat)))
+        if (shown.Stats.Any(InTable) || (held != null && held.Stats.Any(InTable)))
         {
-            yield return new TooltipLine(new TooltipText($"{stat.Name}: {Special(stat)}", TextColour.Yellow));
+            yield return Table(shown, held);
+        }
+
+        foreach (var stat in shown.Stats.Where(stat => !InTable(stat)))
+        {
+            var change = held != null && Comparable(stat)
+                ? Change(stat, (Find(held, stat.Name)?.Passive ?? 0) - stat.Passive)
+                : null;
+            yield return new TooltipLine(new TooltipText($"{stat.Name}: {Special(stat)}", TextColour.Yellow, change));
+        }
+
+        if (held == null)
+        {
+            yield break;
+        }
+
+        foreach (var gain in held.Stats.Where(stat => !InTable(stat) && Find(shown, stat.Name) == null))
+        {
+            var change = Comparable(gain) ? Change(gain, gain.Passive) : null;
+            yield return new TooltipLine(new TooltipText($"{gain.Name}: -", TextColour.Dim, change));
         }
     }
 
     // Complexity and Min. Rank read better as lines under the table than as a column of mostly empty cells.
     private static bool InTable(ItemStat stat) => stat.Kind is not (ItemStatKind.Single or ItemStatKind.Rank);
 
-    private static TooltipTable Table(ItemDetails details, IReadOnlyList<ItemStat> stats)
+    private static bool Comparable(ItemStat stat) =>
+        stat.Kind is ItemStatKind.Plain or ItemStatKind.Percent or ItemStatKind.Single or ItemStatKind.Regen;
+
+    private static ItemStat? Find(ItemDetails details, string name) =>
+        details.Stats.FirstOrDefault(stat => stat.Name == name);
+
+    private static TooltipTable Table(ItemDetails shown, ItemDetails? held)
     {
-        var showActive = !details.SoulstoneTable && details.Stats.Any(ShowsActive);
-        var showRequired = !details.SoulstoneTable && details.Stats.Any(ShowsRequired);
-        var valueLabel = details.SoulstoneTable ? "Adds" : showActive ? "Passive" : "Value";
+        var anyActive = shown.Stats.Any(ShowsActive) || (held != null && held.Stats.Any(ShowsActive));
+        var showActive = !shown.SoulstoneTable && anyActive;
+        var showRequired = !shown.SoulstoneTable && shown.Stats.Any(ShowsRequired);
+        var valueLabel = shown.SoulstoneTable ? "Adds" : showActive ? "Passive" : "Value";
         var header = new List<string> { "Stat", valueLabel };
         if (showActive)
         {
@@ -133,24 +181,31 @@ public static class TooltipContent
             header.Add("Req");
         }
 
-        var rows = stats.Select(stat => Row(stat, showActive, showRequired)).ToList();
+        var rows = shown.Stats.Where(InTable).Select(stat => Row(stat, held, showActive, showRequired)).ToList();
+        if (held != null)
+        {
+            var gains = held.Stats.Where(stat => InTable(stat) && Comparable(stat) && Find(shown, stat.Name) == null);
+            rows.AddRange(gains.Select(gain => GainedRow(gain, showActive, showRequired)));
+        }
+
         return new TooltipTable(header.Select(label => new TooltipText(label, TextColour.Orange)).ToList(), rows);
     }
 
-    private static IReadOnlyList<TooltipText> Row(ItemStat stat, bool showActive, bool showRequired)
+    // Each value is followed by what swapping the held item in would change: held minus shown.
+    private static IReadOnlyList<TooltipText> Row(ItemStat stat, ItemDetails? held, bool showActive, bool showRequired)
     {
+        var compare = held != null && Comparable(stat);
+        var heldStat = compare ? Find(held!, stat.Name) : null;
+        var passiveChange = compare ? Change(stat, (heldStat?.Passive ?? 0) - stat.Passive) : null;
         var passive = Special(stat) ?? Value(stat, stat.Passive);
         var row = new List<TooltipText>
         {
             new(stat.Name, TextColour.Yellow),
-            new(passive, stat.Passive < 0 ? TextColour.Red : TextColour.White),
+            new(passive, stat.Passive < 0 ? TextColour.Red : TextColour.White, passiveChange),
         };
         if (showActive)
         {
-            row.Add(
-                HasActive(stat)
-                    ? new TooltipText(Value(stat, stat.Active), stat.Active < 0 ? TextColour.Red : TextColour.Teal)
-                    : new TooltipText("", TextColour.Teal));
+            row.Add(HasActive(stat) ? ActiveCell(stat, heldStat, compare) : new TooltipText("", TextColour.Teal));
         }
 
         if (showRequired)
@@ -160,6 +215,42 @@ public static class TooltipContent
 
         return row;
     }
+
+    private static TooltipText ActiveCell(ItemStat stat, ItemStat? heldStat, bool compare)
+    {
+        var heldActive = heldStat != null && HasActive(heldStat) ? heldStat.Active : 0;
+        var change = compare ? Change(stat, heldActive - stat.Active) : null;
+        return new TooltipText(Value(stat, stat.Active), stat.Active < 0 ? TextColour.Red : TextColour.Teal, change);
+    }
+
+    // A stat only the held item has: equipping it would add it outright.
+    private static IReadOnlyList<TooltipText> GainedRow(ItemStat gain, bool showActive, bool showRequired)
+    {
+        var row = new List<TooltipText>
+        {
+            new(gain.Name, TextColour.Dim),
+            new("-", TextColour.Dim, Change(gain, gain.Passive)),
+        };
+        if (showActive)
+        {
+            row.Add(
+                HasActive(gain)
+                    ? new TooltipText("-", TextColour.Dim, Change(gain, gain.Active))
+                    : new TooltipText("", TextColour.Dim));
+        }
+
+        if (showRequired)
+        {
+            row.Add(new TooltipText("", TextColour.Dim));
+        }
+
+        return row;
+    }
+
+    private static TooltipChange? Change(ItemStat stat, int difference) =>
+        difference == 0
+            ? null
+            : new TooltipChange(Value(stat, difference), difference > 0 ? TextColour.Green : TextColour.Red);
 
     private static bool HasActive(ItemStat stat) => stat.Kind is ItemStatKind.Plain or ItemStatKind.Percent;
 
