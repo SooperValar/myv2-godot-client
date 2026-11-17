@@ -63,18 +63,32 @@ public sealed class GameState
         return true;
     }
 
-    // Escape closes a shop with the pause, as the close button does, but tells nobody about the text windows.
-    public void ToggleSkillTree(MapKeys keys) => throw new NotImplementedException();
+    // Opening the tree quietly shuts the other windows: no pause, and the server isn't told the shop went away.
+    public void ToggleSkillTree(MapKeys keys)
+    {
+        ShutWindowsBesideTheTree();
+        SkillTreeWindow.Toggle(keys, Player.TreePoints, Player.OsirisTree);
+    }
 
+    // Escape closes a shop with the pause, as the close button does, but tells nobody about the text windows.
     public bool CloseWindowsByEscape()
     {
         var closedText = TextWindows.CloseByEscape();
         var closedWaypoints = WaypointWindow.Close();
+        var closedTree = SkillTreeWindow.Close();
         var closedShop = CloseShop();
-        return closedText || closedWaypoints || closedShop;
+        return closedText || closedWaypoints || closedTree || closedShop;
     }
 
     internal void ShutWindows()
+    {
+        ShutWindowsBesideTheTree();
+        SkillTreeWindow.Close();
+    }
+
+    internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
+
+    private void ShutWindowsBesideTheTree()
     {
         TextWindows.CloseAll();
         WaypointWindow.Close();
@@ -84,8 +98,6 @@ public sealed class GameState
             ReportShopClosed();
         }
     }
-
-    internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
 
     internal void ReportShopOpened(ShopKind kind) => ShopOpened?.Invoke(kind);
 

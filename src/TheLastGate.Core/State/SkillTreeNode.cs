@@ -1,3 +1,4 @@
+using System.Text;
 using TheLastGate.Characters;
 
 namespace TheLastGate.State;
@@ -15,4 +16,11 @@ public sealed class SkillTreeNode
     internal byte[] NameField { get; } = new byte[NameLength];
     internal byte[] Description1Field { get; } = new byte[DescriptionLength];
     internal byte[] Description2Field { get; } = new byte[DescriptionLength];
+
+    internal static SkillTreeNode Placeholder(int icon, string name)
+    {
+        var node = new SkillTreeNode { Icon = icon };
+        Encoding.ASCII.GetBytes(name, node.NameField);
+        return node;
+    }
 }

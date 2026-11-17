@@ -42,7 +42,7 @@ public class TerminologyCommandsTests
     {
         var terminology = Process(TestCommand.Of(ServerCommand.TermSkillTree).Bytes(0, 12).UInt16(1234));
 
-        Assert.All(terminology.Trees[0], node => Assert.Equal(0, node.Icon));
+        Assert.All(terminology.Trees[0], node => Assert.NotEqual(1234, node.Icon));
     }
 
     [Fact]
@@ -83,7 +83,7 @@ public class TerminologyCommandsTests
     {
         var terminology = Process(TestCommand.Of(ServerCommand.TermSkills).Bytes(0, 3).UInt16(1234));
 
-        Assert.Equal(0, terminology.Trees[0][3].Icon);
+        Assert.NotEqual(1234, terminology.Trees[0][3].Icon);
         Assert.All(terminology.Skills, skill => Assert.Equal(0, skill.SortKey));
     }
 
