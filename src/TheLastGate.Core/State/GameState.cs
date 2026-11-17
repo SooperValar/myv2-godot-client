@@ -31,6 +31,7 @@ public sealed class GameState
     public WaypointWindow WaypointWindow { get; }
     public SkillTreeWindow SkillTreeWindow { get; } = new();
     public OptionsWindow OptionsWindow { get; } = new();
+    public WorldMapWindow WorldMapWindow { get; } = new();
     public ShopRefresh ShopRefresh { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
