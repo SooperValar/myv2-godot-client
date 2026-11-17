@@ -15,6 +15,7 @@ using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Stats;
+using TheLastGate.Windows;
 using TheLastGate.World;
 
 namespace TheLastGate.Hud;
@@ -37,6 +38,15 @@ public partial class HudView : Control
     private const int HitScoreMeta = 5;
     private const int ParryScoreMeta = 6;
     private static readonly Vector2 HeldItemOffset = new(16, 16);
+
+    private static readonly (string Button, Func<TextWindows, TextWindowAction> Click)[] TextWindowButtons =
+    [
+        ("CloseButton", windows => windows.Close()),
+        ("OkButton", windows => windows.Ok()),
+        ("LeftButton", windows => windows.Left()),
+        ("RightButton", windows => windows.Right()),
+    ];
+
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
     private readonly SkillShortcut skillShortcut = new();
@@ -83,6 +93,8 @@ public partial class HudView : Control
             Reload(this);
         }
     }
+
+    public Action PlayClick { get; set; } = () => { };
 
     public event Action? SettingsChanged;
 
@@ -163,7 +175,13 @@ public partial class HudView : Control
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
         var chatLine = GetNode<ChatLine>("%ChatLine");
         chatLine.LineSent += Say;
-        chatLine.EscapePressed += () => sendCommand(ClientPackets.ShortAndInt(ClientCommand.Reset, 0, 0));
+        chatLine.EscapePressed += PressEscape;
+        var textWindows = GetNode<TextWindowView>("%TextWindows");
+        foreach (var (buttonName, click) in TextWindowButtons)
+        {
+            textWindows.GetNode<ClickArea>(buttonName).Released += button => ClickTextWindow(button, click);
+        }
+
         chatLine.GrabFocus();
         Refresh(0);
     }
@@ -185,6 +203,12 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
+        if (state.TextWindows.AnyOpen)
+        {
+            lookPanel.Hide();
+        }
+
+        ShowTextWindows();
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -535,6 +559,47 @@ public partial class HudView : Control
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
         GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    // With a text window open, Escape only closes it; otherwise it stops what the character is doing.
+    private void PressEscape()
+    {
+        if (state?.TextWindows.CloseByEscape() == true)
+        {
+            ShowTextWindows();
+            return;
+        }
+
+        sendCommand(ClientPackets.ShortAndInt(ClientCommand.Reset, 0, 0));
+    }
+
+    private void ClickTextWindow(MapButton button, Func<TextWindows, TextWindowAction> click)
+    {
+        if (button != MapButton.Left || state == null)
+        {
+            return;
+        }
+
+        var action = click(state.TextWindows);
+        foreach (var packet in action.Packets)
+        {
+            sendCommand(packet);
+        }
+
+        if (action.PlaysClick)
+        {
+            PlayClick();
+        }
+
+        ShowTextWindows();
+    }
+
+    private void ShowTextWindows()
+    {
+        if (state != null)
+        {
+            GetNode<TextWindowView>("%TextWindows").Show(state.TextWindows, state.MessageOfTheDayLines);
+        }
     }
 
     private void Say(string line)

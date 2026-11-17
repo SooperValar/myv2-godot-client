@@ -39,6 +39,8 @@ public partial class SoundEffects : Node
         }
     }
 
+    public void PlayClick() => Play(ClickFile, 0);
+
     public void PlayServerSound(SoundRequest request) =>
         Play(request.Number.ToString(CultureInfo.InvariantCulture), request.Pan);
 

@@ -146,6 +146,7 @@ public partial class GameScreen : Control
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
+        hudView.PlayClick = soundEffects.PlayClick;
         hudView.Show(gameState, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
@@ -158,6 +159,12 @@ public partial class GameScreen : Control
         if (ItemTooltips.IsManualLook(packet))
         {
             gameState.Tooltips.ManualLookSent();
+        }
+
+        // Using or looking at something lets the next window the server opens stay open.
+        if ((ClientCommand)packet[0] is ClientCommand.Use or ClientCommand.Look)
+        {
+            gameState.TextWindows.CancelPause();
         }
 
         connection.SendCommand(packet);
