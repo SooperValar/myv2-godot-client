@@ -29,6 +29,14 @@ public static class HotbarAssignments
         return Line($"{key} is now {skillName}.");
     }
 
+    public static LogLine Assign(
+        CharacterSettings settings,
+        int slot,
+        int skillNumber,
+        string skillName,
+        string keyName) =>
+        throw new System.NotImplementedException();
+
     public static void Clear(CharacterSettings settings, int slot)
     {
         settings.HotbarActions[slot] = CharacterSettings.Unassigned;

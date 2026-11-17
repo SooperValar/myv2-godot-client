@@ -18,7 +18,7 @@ public class HotbarAssignmentsTests
     {
         var settings = new CharacterSettings();
 
-        var line = HotbarAssignments.Assign(settings, 3, Protect, "Protect");
+        var line = HotbarAssignments.Assign(settings, 3, Protect, "Protect", "C-4");
 
         Assert.Equal(Protect, settings.HotbarActions[3]);
         Assert.Equal("Protect", settings.HotbarNames[3]);
@@ -30,7 +30,7 @@ public class HotbarAssignmentsTests
     {
         var settings = new CharacterSettings();
 
-        var line = HotbarAssignments.Assign(settings, 3, 11, "Magic Shield");
+        var line = HotbarAssignments.Assign(settings, 3, 11, "Magic Shield", "C-4");
 
         Assert.Equal("Magic S", settings.HotbarNames[3]);
         Assert.Equal("C-4 is now Magic Shield.", line.Text);
@@ -40,9 +40,9 @@ public class HotbarAssignmentsTests
     public void Assign_ReplacesAnotherSkillOnTheButton()
     {
         var settings = new CharacterSettings();
-        HotbarAssignments.Assign(settings, 3, Protect, "Protect");
+        HotbarAssignments.Assign(settings, 3, Protect, "Protect", "C-4");
 
-        HotbarAssignments.Assign(settings, 3, Blind, "Blind");
+        HotbarAssignments.Assign(settings, 3, Blind, "Blind", "C-4");
 
         Assert.Equal(Blind, settings.HotbarActions[3]);
         Assert.Equal("Blind", settings.HotbarNames[3]);
@@ -52,9 +52,9 @@ public class HotbarAssignmentsTests
     public void Assign_OfTheSkillAlreadyOnTheButtonUnassignsIt()
     {
         var settings = new CharacterSettings();
-        HotbarAssignments.Assign(settings, 3, Protect, "Protect");
+        HotbarAssignments.Assign(settings, 3, Protect, "Protect", "C-4");
 
-        var line = HotbarAssignments.Assign(settings, 3, Protect, "Protect");
+        var line = HotbarAssignments.Assign(settings, 3, Protect, "Protect", "C-4");
 
         Assert.Equal(CharacterSettings.Unassigned, settings.HotbarActions[3]);
         Assert.Equal("-", settings.HotbarNames[3]);
@@ -66,18 +66,18 @@ public class HotbarAssignmentsTests
     {
         var settings = new CharacterSettings();
 
-        var line = HotbarAssignments.Assign(settings, 0, 105, HotbarButtons.ItemName(105));
+        var line = HotbarAssignments.Assign(settings, 0, 105, HotbarButtons.ItemName(105), "A-Keypad 1");
 
         Assert.Equal(105, settings.HotbarActions[0]);
         Assert.Equal("Item 5", settings.HotbarNames[0]);
-        Assert.Equal(new LogLine("C-1 is now Item 5.", (int)TextColour.Yellow), line);
+        Assert.Equal(new LogLine("A-Keypad 1 is now Item 5.", (int)TextColour.Yellow), line);
     }
 
     [Fact]
     public void Clear_UnassignsTheButton()
     {
         var settings = new CharacterSettings();
-        HotbarAssignments.Assign(settings, 3, Protect, "Protect");
+        HotbarAssignments.Assign(settings, 3, Protect, "Protect", "C-4");
 
         HotbarAssignments.Clear(settings, 3);
 
