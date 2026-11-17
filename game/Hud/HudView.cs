@@ -206,6 +206,20 @@ public partial class HudView : Control
             pageButton.Released += button => ClickDepotPage(shownPage, button);
         }
 
+        var smithWindow = GetNode<SmithWindowView>("%SmithWindow");
+        smithWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
+        foreach (var (node, slot) in SmithWindowView.ItemSlots)
+        {
+            smithWindow.GetNode<ItemSlotView>(node).Released += button => ClickSmithItem(slot, button);
+        }
+
+        for (var number = SmithClicks.FirstButton; number <= SmithClicks.LastButton; number++)
+        {
+            var buttonNumber = number;
+            var smithButton = smithWindow.GetNode<ClickArea>($"Button{number}");
+            smithButton.Released += button => ClickSmithButton(buttonNumber, button);
+        }
+
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
         {
@@ -241,6 +255,7 @@ public partial class HudView : Control
         ShowTextWindows();
         GetNode<ShopWindowView>("%ShopWindow").ShowItems(state);
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
+        GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -651,6 +666,22 @@ public partial class HudView : Control
 
         depotPage.Turn(wheel.ButtonIndex == MouseButton.WheelDown ? 1 : -1);
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
+    }
+
+    private void ClickSmithItem(int slot, MapButton button)
+    {
+        if (state != null && SmithClicks.ItemPacket(button, HeldKeys.Current(), state.Shop.Number, slot) is { } packet)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private void ClickSmithButton(int buttonNumber, MapButton button)
+    {
+        if (state != null && SmithClicks.ButtonPacket(button, state.Shop.Number, buttonNumber) is { } packet)
+        {
+            sendCommand(packet);
+        }
     }
 
     private void ClickCloseShop(MapButton button)
