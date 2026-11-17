@@ -47,6 +47,7 @@ public partial class HudView : Control
         ("RightButton", windows => windows.Right()),
     ];
 
+    private readonly DepotPage depotPage = new();
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
     private readonly SkillShortcut skillShortcut = new();
@@ -188,6 +189,23 @@ public partial class HudView : Control
             shopCell.MouseExited += () => hoveredShopCell = null;
         }
 
+        var depotWindow = GetNode<DepotWindowView>("%DepotWindow");
+        depotWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
+        depotWindow.GetNode<Control>("Blocker").GuiInput += ScrollDepot;
+        foreach (var node in depotWindow.GetNode("Blocker/Grid").GetChildren())
+        {
+            var depotCell = (ItemSlotView)node;
+            var cell = depotCell.GetIndex();
+            depotCell.Released += button => ClickDepot(cell, button);
+        }
+
+        for (var page = 0; page < DepotPage.Pages; page++)
+        {
+            var shownPage = page;
+            var pageButton = depotWindow.GetNode<ClickArea>($"Blocker/PageButton{page}");
+            pageButton.Released += button => ClickDepotPage(shownPage, button);
+        }
+
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
         {
@@ -222,6 +240,7 @@ public partial class HudView : Control
 
         ShowTextWindows();
         GetNode<ShopWindowView>("%ShopWindow").ShowItems(state);
+        GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
         if (lookPanel.Shown is { } look)
         {
             ShowPortrait(look);
@@ -308,7 +327,12 @@ public partial class HudView : Control
             var item = player.Inventory[inventory.SlotShownIn(hovered.GetIndex())];
             cursor = InventoryClicks.Cursor(item, holdingItem, HeldKeys.Current());
         }
-        else if (hovered.GetParent()?.GetParent() is ShopWindowView)
+        else if (hovered.Owner is DepotWindowView)
+        {
+            var item = state.Shop.Depot[depotPage.Current][hovered.GetIndex()];
+            cursor = ShopClicks.Cursor(item.Sprite != 0, holdingItem);
+        }
+        else if (hovered.Owner is ShopWindowView)
         {
             var slot = ShopClicks.SlotFor(hovered.GetIndex());
             var items = state.Shop.ShopItems;
@@ -441,7 +465,7 @@ public partial class HudView : Control
 
     private ShopSale? SaleToOpenShop() =>
         state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith
-            ? new ShopSale(state.Shop.Number, 0)
+            ? new ShopSale(state.Shop.Number, depotPage.Current)
             : null;
 
     private void ClickOption(OptionButton option, MapButton button)
@@ -594,6 +618,39 @@ public partial class HudView : Control
         {
             sendCommand(packet);
         }
+    }
+
+    private void ClickDepot(int cell, MapButton button)
+    {
+        if (state != null && DepotClicks.Packet(button, state.Shop.Number, depotPage.Current, cell) is { } packet)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private void ClickDepotPage(int page, MapButton button)
+    {
+        if (button != MapButton.Left || state == null)
+        {
+            return;
+        }
+
+        depotPage.Show(page);
+        PlayClick();
+        GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
+    }
+
+    private void ScrollDepot(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventMouseButton { Pressed: true } wheel || state == null
+            || wheel.ButtonIndex is not (MouseButton.WheelUp or MouseButton.WheelDown)
+            || !DepotWindowView.InWheelArea(wheel.Position))
+        {
+            return;
+        }
+
+        depotPage.Turn(wheel.ButtonIndex == MouseButton.WheelDown ? 1 : -1);
+        GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
     }
 
     private void ClickCloseShop(MapButton button)
