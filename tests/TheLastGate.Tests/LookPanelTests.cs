@@ -13,6 +13,17 @@ public class LookPanelTests
     }
 
     [Fact]
+    public void Hide_StopsShowingTheLookAtOnce()
+    {
+        var panel = new LookPanel();
+        panel.Show(new CharacterLook());
+
+        panel.Hide();
+
+        Assert.Null(panel.Shown);
+    }
+
+    [Fact]
     public void Show_KeepsTheLookForTenSeconds()
     {
         var panel = new LookPanel();

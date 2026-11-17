@@ -22,6 +22,8 @@ public sealed class LookPanel
         shownFor = TimeSpan.Zero;
     }
 
+    public void Hide() => throw new NotImplementedException();
+
     public void Advance(TimeSpan elapsed)
     {
         shownFor += elapsed;
