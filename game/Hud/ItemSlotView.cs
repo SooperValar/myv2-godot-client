@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using Godot;
-using TheLastGate.Hotbar;
 using TheLastGate.Items;
 using TheLastGate.State;
 
@@ -78,7 +77,7 @@ public partial class ItemSlotView : ClickArea
         hotbarKey.Visible = button != null;
         if (button is { } slot)
         {
-            hotbarKey.Text = HotbarButtons.KeyLabel(slot);
+            hotbarKey.Text = HudView.HotbarKeyName(this, slot);
         }
     }
 

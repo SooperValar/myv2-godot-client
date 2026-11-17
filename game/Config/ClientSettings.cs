@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Godot;
 using TheLastGate.Characters;
+using TheLastGate.Hotkeys;
 using TheLastGate.Net;
 
 namespace TheLastGate.Config;
@@ -20,6 +21,7 @@ public sealed class ClientSettings
     private const string LauncherSection = "launcher";
     private const string ServerSection = "server";
     private const string WorldSection = "world";
+    private const string KeybindsSection = "keybinds";
 
     private readonly ConfigFile file;
 
@@ -51,6 +53,7 @@ public sealed class ClientSettings
 
         // Also hand-added: "true" glides characters and the map between ticks, where the current client snaps.
         GlideMovement = file.GetValue(WorldSection, "glide_movement", false).AsBool();
+        KeyBindings.Load(SavedBindings(file));
         CursorScale = Math.Clamp(
             file.GetValue(DisplaySection, "cursor_scale", 1f).AsSingle(),
             SmallestCursorScale,
@@ -66,6 +69,7 @@ public sealed class ClientSettings
     public ServerAddress Server { get; }
     public bool PickTileDrawnUnderMouse { get; }
     public bool GlideMovement { get; }
+    public KeyBindings KeyBindings { get; } = new();
     public float CursorScale { get; }
 
     public static ClientSettings Load()
@@ -90,8 +94,19 @@ public sealed class ClientSettings
             LauncherSection,
             "character_files",
             CharacterHistory.Entries.Select(entry => entry.FilePath).ToArray());
+        foreach (var (id, keys) in KeyBindings.Saved())
+        {
+            file.SetValue(KeybindsSection, id, keys);
+        }
+
         return file.Save(FilePath);
     }
+
+    private static Dictionary<string, string> SavedBindings(ConfigFile file) =>
+        file.HasSection(KeybindsSection)
+            ? file.GetSectionKeys(KeybindsSection)
+                .ToDictionary(id => id, id => file.GetValue(KeybindsSection, id, "").AsString())
+            : [];
 
     private static IEnumerable<PreviousCharacter> SavedCharacters(ConfigFile file)
     {

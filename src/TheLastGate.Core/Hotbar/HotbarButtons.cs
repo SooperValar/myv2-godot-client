@@ -10,7 +10,6 @@ public static class HotbarButtons
     public const int FirstInventoryAction = 100;
     public const int FirstEquipmentAction = 200;
 
-    private const string Keys = "12345QWERTASDFGZXCVB";
     private const int SkillLimit = 60;
     private const int UsedFromHotbar = 1;
 
@@ -19,10 +18,6 @@ public static class HotbarButtons
         "*Helmet", "*Neckla", "*Armor", "*Gloves", "*Belt", "*Tarot1", "*Boots", "*Offhan", "*Weapon", "*Cloak",
         "*L-Ring", "*R-Ring", "*Tarot2",
     ];
-
-    public static string KeyLabel(int slot) => $"C-{Keys[slot]}";
-
-    public static int? SlotForKey(char key) => Keys.IndexOf(key) is var slot and >= 0 ? slot : null;
 
     public static string Name(int action, string storedName) =>
         action == CharacterSettings.Unassigned ? "-" : storedName;

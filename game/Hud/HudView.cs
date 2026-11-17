@@ -11,6 +11,7 @@ using TheLastGate.Config;
 using TheLastGate.Cursors;
 using TheLastGate.Game;
 using TheLastGate.Hotbar;
+using TheLastGate.Hotkeys;
 using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.State;
@@ -46,6 +47,9 @@ public partial class HudView : Control
         ("LeftButton", windows => windows.Left()),
         ("RightButton", windows => windows.Right()),
     ];
+
+    // Labels shown in the editor, where no settings are loaded.
+    private static readonly KeyBindings DefaultBindings = new();
 
     private readonly DepotPage depotPage = new();
     private readonly ExitSequence exit = new();
@@ -85,6 +89,7 @@ public partial class HudView : Control
     }
 
     public CharacterSettings Settings { get; set; } = new();
+    public KeyBindings KeyBindings { get; set; } = new();
 
     public IFontSet? Fonts
     {
@@ -317,18 +322,20 @@ public partial class HudView : Control
         }
     }
 
+    // Held keys repeat their hotkey, as in the current client.
     public override void _UnhandledKeyInput(InputEvent inputEvent)
     {
-        if (inputEvent is not InputEventKey { Pressed: true, Echo: false, CtrlPressed: true } key
-            || (long)key.Keycode > char.MaxValue
-            || HotbarButtons.SlotForKey((char)key.Keycode) is not { } slot)
+        if (inputEvent is InputEventKey { Pressed: true } key
+            && HotkeyInput.Chord(key) is { } chord
+            && KeyBindings.Find(chord) is { } binding
+            && RunHotkey(binding.Id))
         {
-            return;
+            GetViewport().SetInputAsHandled();
         }
-
-        GetViewport().SetInputAsHandled();
-        UseHotbar(slot);
     }
+
+    public static string HotbarKeyName(Node node, int slot) =>
+        (Containing(node)?.KeyBindings ?? DefaultBindings).ShortName(Bindings.SpellId(slot));
 
     public override void _Process(double delta)
     {
@@ -506,6 +513,37 @@ public partial class HudView : Control
         state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith
             ? new ShopSale(state.Shop.Number, depotPage.Current)
             : null;
+
+    private bool RunHotkey(string id)
+    {
+        if (Bindings.SpellSlot(id) is { } slot)
+        {
+            UseHotbar(slot);
+            return true;
+        }
+
+        if (OptionForHotkey(id) is not { } option)
+        {
+            return false;
+        }
+
+        ClickOption(option, MapButton.Left);
+        return true;
+    }
+
+    private static OptionButton? OptionForHotkey(string id) => id switch
+    {
+        "speed_fast_hotkey" => OptionButton.Fast,
+        "speed_normal_hotkey" => OptionButton.Normal,
+        "speed_slow_hotkey" => OptionButton.Slow,
+        "toggle_percent_hotkey" => OptionButton.HealthPercent,
+        "toggle_stat_base_hotkey" => OptionButton.StatBase,
+        "toggle_hide_sprite_hotkey" => OptionButton.HideWalls,
+        "toggle_names_hotkey" => OptionButton.Names,
+        "toggle_health_bars_hotkey" => OptionButton.HealthBars,
+        "exit_hotkey" => OptionButton.Exit,
+        _ => null,
+    };
 
     private void ClickOption(OptionButton option, MapButton button)
     {
@@ -944,7 +982,8 @@ public partial class HudView : Control
         var name = action < HotbarButtons.FirstInventoryAction
             ? state!.Terminology.Skills[action].Name
             : HotbarButtons.ItemName(action);
-        state!.Chat.Add(HotbarAssignments.Assign(Settings, slot, action, name));
+        var keyName = KeyBindings.ShortName(Bindings.SpellId(slot));
+        state!.Chat.Add(HotbarAssignments.Assign(Settings, slot, action, name, keyName));
         HotbarChanged();
     }
 

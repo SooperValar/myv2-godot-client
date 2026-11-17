@@ -15,9 +15,6 @@ public static class HotbarAssignments
     private static readonly int[] UsableSkills =
         [37, 40, 16, 49, 22, 48, 41, 35, 24, 21, 20, 25, 18, 27, 47, 26, 52, 15, 50, 11, 42, 17, 43, 51, 46, 19];
 
-    public static LogLine Assign(CharacterSettings settings, int slot, int skillNumber, string skillName) =>
-        Assign(settings, slot, skillNumber, skillName, HotbarButtons.KeyLabel(slot));
-
     public static LogLine Assign(
         CharacterSettings settings,
         int slot,

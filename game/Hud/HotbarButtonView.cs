@@ -1,5 +1,4 @@
 using Godot;
-using TheLastGate.Hotbar;
 
 namespace TheLastGate.Hud;
 
@@ -23,11 +22,11 @@ public partial class HotbarButtonView : ClickArea
 
     public void ShowName(string name) => GetNode<Label>("Name").Text = name;
 
-    private void ShowKey()
+    public void ShowKey()
     {
         if (IsInsideTree())
         {
-            GetNode<Label>("Key").Text = HotbarButtons.KeyLabel(slot);
+            GetNode<Label>("Key").Text = HudView.HotbarKeyName(this, slot);
         }
     }
 }

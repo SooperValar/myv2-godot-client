@@ -150,6 +150,7 @@ public partial class GameScreen : Control
         hudView.DarkMode = clientSettings.DarkMode;
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
+        hudView.KeyBindings = clientSettings.KeyBindings;
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
         hudView.Show(gameState, fonts, SendAction);
