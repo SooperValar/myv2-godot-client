@@ -1,6 +1,7 @@
 using System;
 using TheLastGate.Items;
 using TheLastGate.Net;
+using TheLastGate.Windows;
 
 namespace TheLastGate.State;
 
@@ -17,6 +18,8 @@ public sealed class GameState
     public Terminology Terminology { get; } = new();
     public CharacterNames Names { get; } = new();
     public ItemTooltips Tooltips { get; }
+    public MessageOfTheDayLines MessageOfTheDayLines { get; } = new();
+    public TextWindows TextWindows { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
