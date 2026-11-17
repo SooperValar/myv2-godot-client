@@ -37,27 +37,158 @@ public sealed class NoteSet
     public NoteCategory? FindCategory(int categoryId) =>
         categories.FirstOrDefault(category => category.Id == categoryId);
 
-    public static uint Rgb(NoteCategory category, Note note) => throw new NotImplementedException();
+    public static uint Rgb(NoteCategory category, Note note) =>
+        NotePalette.Rgb(IsPaletteColour(note.ColourIndex) ? note.ColourIndex : category.ColourIndex);
 
-    public int Attach(NoteCategory detached, int parentId) => throw new NotImplementedException();
+    // An attached category keeps its name as it is, even if a sibling has it; imports decide how to handle clashes.
+    public int Attach(NoteCategory detached, int parentId)
+    {
+        if (!AcceptsChild(parentId) || categories.Count >= NoteLimits.Categories)
+        {
+            return 0;
+        }
 
-    public int AddPoint(int categoryId, NoteKind kind, int tileX, int tileY, string label) =>
-        throw new NotImplementedException();
+        detached.ParentId = parentId;
+        detached.Id = nextId++;
+        for (var index = 0; index < detached.NoteList.Count; index++)
+        {
+            detached.NoteList[index] = detached.NoteList[index] with { Id = nextId++ };
+        }
 
-    public int AddPath(int categoryId, IReadOnlyList<PathSegment> segments, string label) =>
-        throw new NotImplementedException();
+        categories.Add(detached);
+        Changed = true;
+        return detached.Id;
+    }
 
-    public Note? FindNote(int noteId) => throw new NotImplementedException();
+    public int AddPoint(int categoryId, NoteKind kind, int tileX, int tileY, string label)
+    {
+        if (FindCategory(categoryId) is not { } category
+            || kind is not (NoteKind.Pin or NoteKind.Text)
+            || !IsTile(tileX)
+            || !IsTile(tileY)
+            || (kind == NoteKind.Text && label.Length == 0)
+            || category.NoteList.Count >= NoteLimits.NotesPerCategory)
+        {
+            return 0;
+        }
 
-    public NoteCategory? OwnerOf(int noteId) => throw new NotImplementedException();
+        return Add(category, new Note(kind, Fit(label), tileX, tileY, [], Note.CategoryColour));
+    }
 
-    public bool RemoveNote(int noteId) => throw new NotImplementedException();
+    public int AddPath(int categoryId, IReadOnlyList<PathSegment> segments, string label)
+    {
+        if (FindCategory(categoryId) is not { } category
+            || !AreValid(segments)
+            || category.NoteList.Count >= NoteLimits.NotesPerCategory
+            || category.SegmentTotal + segments.Count > NoteLimits.SegmentsPerCategory)
+        {
+            return 0;
+        }
 
-    public bool SetNoteColour(int noteId, int colourIndex) => throw new NotImplementedException();
+        var start = segments[0];
+        return Add(
+            category,
+            new Note(NoteKind.Path, Fit(label), start.StartX, start.StartY, segments.ToArray(), Note.CategoryColour));
+    }
 
-    public bool MoveNote(int noteId, int categoryId) => throw new NotImplementedException();
+    public Note? FindNote(int noteId) => OwnerOf(noteId)?.NoteList.First(note => note.Id == noteId);
 
-    public bool ReplaceNote(int noteId, Note edited) => throw new NotImplementedException();
+    public NoteCategory? OwnerOf(int noteId) =>
+        categories.FirstOrDefault(category => category.NoteList.Any(note => note.Id == noteId));
+
+    public bool RemoveNote(int noteId)
+    {
+        if (OwnerOf(noteId) is not { } owner)
+        {
+            return false;
+        }
+
+        owner.NoteList.RemoveAll(note => note.Id == noteId);
+        Changed = true;
+        return true;
+    }
+
+    public bool SetNoteColour(int noteId, int colourIndex)
+    {
+        if (OwnerOf(noteId) is not { } owner
+            || (colourIndex != Note.CategoryColour && !IsPaletteColour(colourIndex)))
+        {
+            return false;
+        }
+
+        Store(owner, FindNote(noteId)! with { ColourIndex = colourIndex });
+        return true;
+    }
+
+    public bool MoveNote(int noteId, int categoryId)
+    {
+        if (OwnerOf(noteId) is not { } source
+            || FindCategory(categoryId) is not { } target
+            || target == source
+            || target.NoteList.Count >= NoteLimits.NotesPerCategory)
+        {
+            return false;
+        }
+
+        var note = FindNote(noteId)!;
+        if (target.SegmentTotal + note.Segments.Count > NoteLimits.SegmentsPerCategory)
+        {
+            return false;
+        }
+
+        source.NoteList.Remove(note);
+        target.NoteList.Add(note);
+        Changed = true;
+        return true;
+    }
+
+    // An edit changes the label and where the note is; its id, kind and colour stay. Text must keep a label, and a
+    // path its category's segment limit.
+    public bool ReplaceNote(int noteId, Note edited)
+    {
+        if (OwnerOf(noteId) is not { } owner)
+        {
+            return false;
+        }
+
+        var stored = FindNote(noteId)!;
+        if (stored.Kind == NoteKind.Text && edited.Label.Length == 0)
+        {
+            return false;
+        }
+
+        if (stored.Kind == NoteKind.Path)
+        {
+            if (!AreValid(edited.Segments)
+                || owner.SegmentTotal - stored.Segments.Count + edited.Segments.Count
+                > NoteLimits.SegmentsPerCategory)
+            {
+                return false;
+            }
+
+            var start = edited.Segments[0];
+            Store(
+                owner,
+                stored with
+                {
+                    Label = Fit(edited.Label),
+                    TileX = start.StartX,
+                    TileY = start.StartY,
+                    Segments = edited.Segments.ToArray(),
+                });
+            return true;
+        }
+
+        if (!IsTile(edited.TileX) || !IsTile(edited.TileY))
+        {
+            return false;
+        }
+
+        Store(
+            owner,
+            stored with { Label = Fit(edited.Label), TileX = edited.TileX, TileY = edited.TileY, Segments = [] });
+        return true;
+    }
 
     public bool HasChildren(int categoryId) =>
         categoryId != 0 && categories.Any(category => category.ParentId == categoryId && category.Id != categoryId);
@@ -193,6 +324,29 @@ public sealed class NoteSet
     }
 
     private static bool IsPaletteColour(int colourIndex) => colourIndex is >= 0 and < NotePalette.Size;
+
+    private static bool IsTile(int tile) => tile is >= 0 and < NoteLimits.Tiles;
+
+    private static bool AreValid(IReadOnlyList<PathSegment> segments) =>
+        segments.Count is >= 1 and <= NoteLimits.SegmentsPerPath
+        && segments.All(segment =>
+            IsTile(segment.StartX) && IsTile(segment.StartY) && IsTile(segment.EndX) && IsTile(segment.EndY));
+
+    private static string Fit(string label) => NoteText.Fit(label, NoteLimits.LabelBytes);
+
+    private int Add(NoteCategory category, Note note)
+    {
+        var added = note with { Id = nextId++ };
+        category.NoteList.Add(added);
+        Changed = true;
+        return added.Id;
+    }
+
+    private void Store(NoteCategory owner, Note note)
+    {
+        owner.NoteList[owner.NoteList.FindIndex(stored => stored.Id == note.Id)] = note;
+        Changed = true;
+    }
 
     private bool AcceptsChild(int parentId) =>
         parentId == 0 || (FindCategory(parentId) != null && Depth(parentId) < NoteLimits.Depth);

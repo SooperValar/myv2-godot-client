@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TheLastGate.Notes;
 
@@ -17,17 +17,30 @@ public sealed class NoteCategory
 
     public bool ShowLabels { get; set; } = true;
 
-    public IReadOnlyList<Note> Notes => throw new NotImplementedException();
+    public IReadOnlyList<Note> Notes => NoteList;
 
-    public int SegmentTotal => throw new NotImplementedException();
+    public int SegmentTotal => NoteList.Sum(note => note.Segments.Count);
 
+    internal List<Note> NoteList { get; } = [];
+
+    // A category read from a file or a share code, not yet part of a set; attaching it gives it and its notes ids.
     public static NoteCategory Detached(
         string name,
         int colourIndex,
         bool visible,
         bool showLabels,
-        IEnumerable<Note> notes) =>
-        throw new NotImplementedException();
+        IEnumerable<Note> notes)
+    {
+        var category = new NoteCategory
+        {
+            Name = name,
+            ColourIndex = colourIndex,
+            Visible = visible,
+            ShowLabels = showLabels,
+        };
+        category.NoteList.AddRange(notes);
+        return category;
+    }
 
-    public int Count(NoteKind kind) => throw new NotImplementedException();
+    public int Count(NoteKind kind) => NoteList.Count(note => note.Kind == kind);
 }
