@@ -27,6 +27,11 @@ public static class GeneralOptions
     public static IReadOnlyList<OptionRow> Rows { get; } =
     [
         new(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true, false),
+        new(
+            GeneralOption.EnterToTalk,
+            "Press Enter to activate chat mode before typing. Press Enter again to send, or ESC to cancel.",
+            false,
+            false),
         new(GeneralOption.ExpandedQuickStats, "Show Hit/Parry Score with Weapon/Armor value.", true, false),
         new(GeneralOption.ItemTooltips, "Show item tooltips for inventory and equipped gear.", true, false),
         new(
