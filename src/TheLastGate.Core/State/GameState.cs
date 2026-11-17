@@ -9,7 +9,11 @@ public sealed class GameState
 {
     public const int ServerTickCycle = 200;
 
-    public GameState() => Tooltips = new ItemTooltips(Chat);
+    public GameState()
+    {
+        Tooltips = new ItemTooltips(Chat);
+        MessageOfTheDay.LineAdded += MessageOfTheDayLines.Add;
+    }
 
     public PlayerState Player { get; } = new();
     public WorldMap Map { get; } = new();

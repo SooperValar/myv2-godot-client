@@ -124,6 +124,7 @@ public sealed class TickProcessor(GameState state)
         }
 
         state.Tooltips.EndOfTick();
+        state.TextWindows.EndOfTick();
         state.ClientTick++;
         var tiles = state.Map.Tiles;
         for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)

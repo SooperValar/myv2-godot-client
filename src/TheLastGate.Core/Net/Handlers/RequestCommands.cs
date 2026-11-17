@@ -35,7 +35,9 @@ internal static class RequestCommands
                 state.ReportWaypointsRequested();
                 break;
             case ServerCommand.ShowMessageOfTheDay:
-                state.ReportWindowRequested(WindowFor(reader.ReadByte()));
+                var window = WindowFor(reader.ReadByte());
+                state.TextWindows.Show(window);
+                state.ReportWindowRequested(window);
                 break;
             case ServerCommand.ClearBox:
                 state.ReportMinimapBoxCleared(
