@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+
 namespace TheLastGate.Notes;
 
 public sealed class NoteCategory
@@ -13,4 +16,18 @@ public sealed class NoteCategory
     public bool Visible { get; set; } = true;
 
     public bool ShowLabels { get; set; } = true;
+
+    public IReadOnlyList<Note> Notes => throw new NotImplementedException();
+
+    public int SegmentTotal => throw new NotImplementedException();
+
+    public static NoteCategory Detached(
+        string name,
+        int colourIndex,
+        bool visible,
+        bool showLabels,
+        IEnumerable<Note> notes) =>
+        throw new NotImplementedException();
+
+    public int Count(NoteKind kind) => throw new NotImplementedException();
 }

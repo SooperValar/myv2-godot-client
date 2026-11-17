@@ -37,6 +37,28 @@ public sealed class NoteSet
     public NoteCategory? FindCategory(int categoryId) =>
         categories.FirstOrDefault(category => category.Id == categoryId);
 
+    public static uint Rgb(NoteCategory category, Note note) => throw new NotImplementedException();
+
+    public int Attach(NoteCategory detached, int parentId) => throw new NotImplementedException();
+
+    public int AddPoint(int categoryId, NoteKind kind, int tileX, int tileY, string label) =>
+        throw new NotImplementedException();
+
+    public int AddPath(int categoryId, IReadOnlyList<PathSegment> segments, string label) =>
+        throw new NotImplementedException();
+
+    public Note? FindNote(int noteId) => throw new NotImplementedException();
+
+    public NoteCategory? OwnerOf(int noteId) => throw new NotImplementedException();
+
+    public bool RemoveNote(int noteId) => throw new NotImplementedException();
+
+    public bool SetNoteColour(int noteId, int colourIndex) => throw new NotImplementedException();
+
+    public bool MoveNote(int noteId, int categoryId) => throw new NotImplementedException();
+
+    public bool ReplaceNote(int noteId, Note edited) => throw new NotImplementedException();
+
     public bool HasChildren(int categoryId) =>
         categoryId != 0 && categories.Any(category => category.ParentId == categoryId && category.Id != categoryId);
 
