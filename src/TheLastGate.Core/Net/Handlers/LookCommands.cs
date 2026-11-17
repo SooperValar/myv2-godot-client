@@ -166,6 +166,7 @@ internal static class LookCommands
         state.Shop = shop;
         state.OpenShop = kind;
         state.TextWindows.CloseAll();
+        state.WaypointWindow.Close();
         state.ReportShopOpened(kind);
     }
 

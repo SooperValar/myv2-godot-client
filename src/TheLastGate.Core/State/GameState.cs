@@ -44,7 +44,6 @@ public sealed class GameState
     public event Action<SoundRequest>? SoundRequested;
     public event Action<ServerExit>? ExitRequested;
     public event Action<UniqueId>? UniqueIdReceived;
-    public event Action? WaypointsRequested;
     public event Action<WindowRequest>? WindowRequested;
     public event Action<MinimapBox>? MinimapBoxCleared;
     public event Action<string>? UnusualDataSeen;
@@ -66,13 +65,15 @@ public sealed class GameState
     public bool CloseWindowsByEscape()
     {
         var closedText = TextWindows.CloseByEscape();
+        var closedWaypoints = WaypointWindow.Close();
         var closedShop = CloseShop();
-        return closedText || closedShop;
+        return closedText || closedWaypoints || closedShop;
     }
 
     internal void ShutWindows()
     {
         TextWindows.CloseAll();
+        WaypointWindow.Close();
         if (OpenShop != null)
         {
             OpenShop = null;
@@ -91,8 +92,6 @@ public sealed class GameState
     internal void ReportExitRequested(ServerExit exit) => ExitRequested?.Invoke(exit);
 
     internal void ReportUniqueIdReceived(UniqueId uniqueId) => UniqueIdReceived?.Invoke(uniqueId);
-
-    internal void ReportWaypointsRequested() => WaypointsRequested?.Invoke();
 
     internal void ReportWindowRequested(WindowRequest window) => WindowRequested?.Invoke(window);
 

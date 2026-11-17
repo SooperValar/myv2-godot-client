@@ -32,7 +32,7 @@ internal static class RequestCommands
             case ServerCommand.Ignore:
                 break;
             case ServerCommand.Waypoints:
-                state.ReportWaypointsRequested();
+                state.WaypointWindow.Open();
                 break;
             case ServerCommand.ShowMessageOfTheDay:
                 var window = WindowFor(reader.ReadByte());
