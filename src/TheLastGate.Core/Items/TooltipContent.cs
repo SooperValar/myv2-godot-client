@@ -145,7 +145,7 @@ public static class TooltipContent
 
         if (showRequired)
         {
-            row.Add(new TooltipText(ShowsRequired(stat) ? Whole(stat.Required!.Value) : "", TextColour.Grey));
+            row.Add(new TooltipText(ShowsRequired(stat) ? Whole(stat.Required!.Value) : "", TextColour.Dim));
         }
 
         return row;
