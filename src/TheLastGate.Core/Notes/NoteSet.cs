@@ -15,6 +15,8 @@ public sealed class NoteSet
 
     public bool Changed { get; set; }
 
+    public bool ShowOnMinimap { get; set; }
+
     public int AddCategory(string name, int colourIndex, int parentId = 0)
     {
         if (!AcceptsChild(parentId) || categories.Count >= NoteLimits.Categories)
