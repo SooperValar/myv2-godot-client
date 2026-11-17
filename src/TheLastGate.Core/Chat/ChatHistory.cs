@@ -44,6 +44,8 @@ public sealed class ChatHistory
         sentCount = Math.Min(sentCount + 1, Entries - 1);
     }
 
+    public void Abandon() => throw new NotImplementedException();
+
     private static string[] CreateEntries()
     {
         var created = new string[Entries];

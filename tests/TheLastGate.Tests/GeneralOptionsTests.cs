@@ -10,6 +10,7 @@ public class GeneralOptionsTests
         Assert.Equal(
             [
                 GeneralOption.EscapeClosesWindowsFirst,
+                GeneralOption.EnterToTalk,
                 GeneralOption.ExpandedQuickStats,
                 GeneralOption.ItemTooltips,
                 GeneralOption.ItemTooltipsAlways,
@@ -17,11 +18,17 @@ public class GeneralOptionsTests
                 GeneralOption.PickTileDrawnUnderMouse,
             ],
             GeneralOptions.Rows.Select(row => row.Option));
-        Assert.Equal([false, false, false, false, true, true], GeneralOptions.Rows.Select(row => row.GodotOnly));
+        Assert.Equal(
+            [false, false, false, false, false, true, true],
+            GeneralOptions.Rows.Select(row => row.GodotOnly));
     }
 
     [Theory]
     [InlineData(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true)]
+    [InlineData(
+        GeneralOption.EnterToTalk,
+        "Press Enter to activate chat mode before typing. Press Enter again to send, or ESC to cancel.",
+        false)]
     [InlineData(GeneralOption.ExpandedQuickStats, "Show Hit/Parry Score with Weapon/Armor value.", true)]
     [InlineData(GeneralOption.ItemTooltips, "Show item tooltips for inventory and equipped gear.", true)]
     [InlineData(

@@ -93,4 +93,19 @@ public class ChatHistoryTests
         Assert.Equal("line 6", current);
         Assert.Null(history.Older(current));
     }
+
+    [Fact]
+    public void Abandon_StartsAgainFromTheNewestSentLine()
+    {
+        var history = new ChatHistory();
+        history.Sent("one");
+        history.Sent("two");
+        history.Older("draft");
+        history.Older("two");
+
+        history.Abandon();
+
+        Assert.Null(history.Newer(""));
+        Assert.Equal("two", history.Older(""));
+    }
 }
