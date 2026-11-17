@@ -604,6 +604,18 @@ public partial class HudView : Control
             return true;
         }
 
+        if (id == "swap_gear_hotkey")
+        {
+            ClickSwapSet(MapButton.Left);
+            return true;
+        }
+
+        if (HotkeyCommands.Says(id) is { } line)
+        {
+            Say(line);
+            return true;
+        }
+
         if (OptionForHotkey(id) is not { } option)
         {
             return false;
