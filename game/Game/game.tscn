@@ -28,6 +28,7 @@ color = Color(0.08, 0.08, 0.1, 1)
 
 [node name="HudView" parent="." unique_id=1324670573 instance=ExtResource("3_hud")]
 unique_name_in_owner = true
+z_index = 1
 layout_mode = 0
 
 [node name="SoundEffects" parent="." unique_id=1351099144 instance=ExtResource("4_sounds")]
