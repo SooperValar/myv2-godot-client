@@ -209,6 +209,7 @@ public partial class GameScreen : Control
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
         hudView.ReadDebugFacts = ReadDebugFacts;
+        hudView.ExploredMap = exploredMap?.Recorder.Map;
         hudView.Show(gameState, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;

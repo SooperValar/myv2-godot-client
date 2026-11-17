@@ -14,6 +14,7 @@ using TheLastGate.Game;
 using TheLastGate.Hotbar;
 using TheLastGate.Hotkeys;
 using TheLastGate.Items;
+using TheLastGate.Map;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Stats;
@@ -64,6 +65,8 @@ public partial class HudView : Control
     private readonly DepotPage depotPage = new();
     private readonly ExitSequence exit = new();
     private readonly LookPanel lookPanel = new();
+    private readonly byte[] minimapPixels = new byte[MinimapView.Pixels * MinimapView.Pixels * 4];
+    private readonly MinimapView minimapView = new();
     private readonly SkillShortcut skillShortcut = new();
     private readonly StatPlan statPlan = new();
 
@@ -72,6 +75,9 @@ public partial class HudView : Control
     private IFontSet? fonts;
     private int? hoveredShopCell;
     private bool itemTooltipsShown = true;
+    private Image? minimapImage;
+    private (int Revision, int X, int Y, int Magnification)? minimapShown;
+    private ImageTexture? minimapTexture;
     private Vector2 mousePosition;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
@@ -116,6 +122,8 @@ public partial class HudView : Control
     public Action PlayClick { get; set; } = () => { };
 
     public Func<DebugFacts>? ReadDebugFacts { get; set; }
+
+    public ExploredMap? ExploredMap { get; set; }
 
     public event Action? SettingsChanged;
 
@@ -261,6 +269,11 @@ public partial class HudView : Control
         }
 
         GetNode<ClickArea>("%TreeButton").Released += ClickTreeButton;
+        var minimap = GetNode<ClickArea>("%Minimap");
+        minimap.Released += button => ClickMinimap(MinimapButton.Map, button);
+        minimap.GuiInput += ScrollMinimap;
+        GetNode<ClickArea>("%MinimapZoomIn").Released += button => ClickMinimap(MinimapButton.ZoomIn, button);
+        GetNode<ClickArea>("%MinimapZoomOut").Released += button => ClickMinimap(MinimapButton.ZoomOut, button);
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
         optionsWindow.CloseChosen += CloseOptions;
@@ -353,6 +366,7 @@ public partial class HudView : Control
         GetNode<InventoryGrid>("%Inventory").Show(player, Settings.HotbarActions);
         ShowStats(player);
         ShowQuickStats(player);
+        ShowMinimap();
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
@@ -785,6 +799,84 @@ public partial class HudView : Control
         {
             state?.Chat.Add(new LogLine(TrashCan.Hint, HintFont));
         }
+    }
+
+    // Redrawn only when the map, the player's tile or the magnification has changed since the last picture.
+    private void ShowMinimap()
+    {
+        if (ExploredMap is not { } map || state == null)
+        {
+            return;
+        }
+
+        var player = state.Map.Tiles[WorldMap.PlayerTile];
+        var shown = (map.Revision, player.X, player.Y, minimapView.Magnification);
+        if (shown == minimapShown)
+        {
+            return;
+        }
+
+        minimapShown = shown;
+        minimapView.Render(map, player.X, player.Y, minimapPixels);
+        if (minimapImage == null || minimapTexture == null)
+        {
+            minimapImage = Image.CreateFromData(
+                MinimapView.Pixels,
+                MinimapView.Pixels,
+                false,
+                Image.Format.Rgba8,
+                minimapPixels);
+            minimapTexture = ImageTexture.CreateFromImage(minimapImage);
+            GetNode<TextureRect>("%Minimap/Picture").Texture = minimapTexture;
+            return;
+        }
+
+        minimapImage.SetData(MinimapView.Pixels, MinimapView.Pixels, false, Image.Format.Rgba8, minimapPixels);
+        minimapTexture.Update(minimapImage);
+    }
+
+    // A modifier key makes the zoom buttons jump to the end; clicking the map itself waits for the world map window.
+    private void ClickMinimap(MinimapButton clicked, MapButton button)
+    {
+        if (button == MapButton.Right)
+        {
+            state?.Chat.Add(new LogLine(MinimapView.Help(clicked), HintFont));
+            return;
+        }
+
+        if (button != MapButton.Left)
+        {
+            return;
+        }
+
+        var toTheEnd = HeldKeys.Current() != MapKeys.None;
+        switch (clicked)
+        {
+            case MinimapButton.ZoomIn:
+                minimapView.ZoomIn(toTheEnd);
+                break;
+            case MinimapButton.ZoomOut:
+                minimapView.ZoomOut(toTheEnd);
+                break;
+            case MinimapButton.Map:
+                return;
+            default:
+                throw new UnreachableException();
+        }
+
+        ShowMinimap();
+    }
+
+    private void ScrollMinimap(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventMouseButton { Pressed: true } wheel
+            || wheel.ButtonIndex is not (MouseButton.WheelUp or MouseButton.WheelDown))
+        {
+            return;
+        }
+
+        minimapView.Scroll(wheel.ButtonIndex == MouseButton.WheelUp ? 1 : -1);
+        ShowMinimap();
     }
 
     private void ClickSwapSet(MapButton button)

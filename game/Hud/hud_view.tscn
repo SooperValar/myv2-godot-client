@@ -422,6 +422,43 @@ offset_bottom = 579.0
 text = "Aston"
 script = ExtResource("4_hudlabel")
 
+[node name="Minimap" type="Control" parent="." unique_id=1736402915]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 6.0
+offset_top = 582.0
+offset_right = 134.0
+offset_bottom = 710.0
+script = ExtResource("8_clickarea")
+
+[node name="Picture" type="TextureRect" parent="Minimap" unique_id=419283376]
+texture_filter = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+
+[node name="MinimapZoomIn" type="Control" parent="." unique_id=1288650137]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 136.0
+offset_top = 582.0
+offset_right = 152.0
+offset_bottom = 598.0
+script = ExtResource("8_clickarea")
+
+[node name="MinimapZoomOut" type="Control" parent="." unique_id=902731488]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 136.0
+offset_top = 600.0
+offset_right = 152.0
+offset_bottom = 616.0
+script = ExtResource("8_clickarea")
+
 [node name="TreeButton" type="Control" parent="." unique_id=484884030]
 unique_name_in_owner = true
 layout_mode = 0
