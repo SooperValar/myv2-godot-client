@@ -1,12 +1,13 @@
 using System;
 using System.Diagnostics;
+using TheLastGate.Items;
 using TheLastGate.State;
 
 namespace TheLastGate.Net.Handlers;
 
 internal static class ItemCommands
 {
-    public static void Apply(PlayerState player, ReadOnlySpan<byte> command)
+    public static void Apply(PlayerState player, ItemTooltips tooltips, ReadOnlySpan<byte> command)
     {
         var reader = new PacketReader(command);
         switch ((ServerCommand)reader.ReadByte())
@@ -14,16 +15,23 @@ internal static class ItemCommands
             case ServerCommand.SetCharacterItem:
             {
                 var slot = reader.ReadUInt32();
-                Store(
-                    player.Inventory,
-                    slot,
-                    new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), reader.ReadByte()));
+                var item = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), reader.ReadByte());
+                if (Store(player.Inventory, slot, item))
+                {
+                    tooltips.SlotChanged(TooltipSlotKind.Inventory, (int)slot, item.Sprite);
+                }
+
                 break;
             }
             case ServerCommand.SetCharacterWorn:
             {
                 var slot = reader.ReadUInt32();
-                Store(player.Worn, slot, new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), 0));
+                var item = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), 0);
+                if (Store(player.Worn, slot, item))
+                {
+                    tooltips.SlotChanged(TooltipSlotKind.Worn, (int)slot, item.Sprite);
+                }
+
                 break;
             }
             case ServerCommand.SetCharacterSpell:
@@ -37,17 +45,21 @@ internal static class ItemCommands
             }
             case ServerCommand.SetCharacterHeldItem:
                 player.HeldItem = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), 0);
+                tooltips.HeldItemChanged(player.HeldItem.Sprite);
                 break;
             default:
                 throw new UnreachableException();
         }
     }
 
-    private static void Store<TSlot>(TSlot[] slots, uint slot, TSlot value)
+    private static bool Store<TSlot>(TSlot[] slots, uint slot, TSlot value)
     {
-        if (slot < slots.Length)
+        if (slot >= slots.Length)
         {
-            slots[slot] = value;
+            return false;
         }
+
+        slots[slot] = value;
+        return true;
     }
 }

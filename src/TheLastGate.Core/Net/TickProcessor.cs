@@ -54,7 +54,7 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetCharacterWorn
                     or ServerCommand.SetCharacterSpell
                     or ServerCommand.SetCharacterHeldItem:
-                    ItemCommands.Apply(state.Player, command);
+                    ItemCommands.Apply(state.Player, state.Tooltips, command);
                     break;
                 case ServerCommand.SetMap3
                     or ServerCommand.SetMap4
@@ -72,7 +72,11 @@ public sealed class TickProcessor(GameState state)
                     MapCommands.Apply(state.Map, command);
                     break;
                 case >= ServerCommand.Log0 and <= ServerCommand.Log9:
-                    LogCommands.Apply(state.Chat, command, command[0] - (byte)ServerCommand.Log0);
+                    LogCommands.Apply(
+                        state.Chat,
+                        command,
+                        command[0] - (byte)ServerCommand.Log0,
+                        state.Tooltips.Offer);
                     break;
                 case >= ServerCommand.MessageOfTheDay0 and <= ServerCommand.MessageOfTheDay3:
                     LogCommands.Apply(
@@ -111,12 +115,15 @@ public sealed class TickProcessor(GameState state)
                     var tickReader = new PacketReader(command);
                     tickReader.Skip(1);
                     state.ServerTick = tickReader.ReadByte();
+                    // The server only sends Tick when a login starts the tick stream.
+                    state.Tooltips.Reset();
                     break;
                 default:
                     throw new UnreachableException();
             }
         }
 
+        state.Tooltips.EndOfTick();
         state.ClientTick++;
         var tiles = state.Map.Tiles;
         for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)
