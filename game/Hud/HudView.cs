@@ -561,10 +561,10 @@ public partial class HudView : Control
         SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
     }
 
-    // With a text window open, Escape only closes it; otherwise it stops what the character is doing.
+    // With a window open, Escape only closes it; otherwise it stops what the character is doing.
     private void PressEscape()
     {
-        if (state?.TextWindows.CloseByEscape() == true)
+        if (state?.CloseWindowsByEscape() == true)
         {
             ShowTextWindows();
             return;

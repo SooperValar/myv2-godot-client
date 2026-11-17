@@ -151,6 +151,7 @@ public partial class GameScreen : Control
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
         gameState.Tooltips.SendLook = connection.SendCommand;
+        gameState.ShopRefresh.Send = connection.SendCommand;
     }
 
     private void SendAction(byte[] packet)
