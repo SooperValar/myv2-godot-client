@@ -22,7 +22,8 @@ public sealed record Binding(string Id, string Name, BindingCategory Category, K
     public bool Hold { get; init; }
 }
 
-// The current client's bindings, ids and defaults, in its order: a key bound twice fires the first.
+// The current client's bindings, ids and defaults, in its order: a key bound twice fires the first. Its gamma key is
+// left out because the Display tab's sliders replace it.
 public static class Bindings
 {
     public const int SpellCount = 20;
@@ -46,7 +47,6 @@ public static class Bindings
         new("toggle_names_hotkey", "Toggle Names", BindingCategory.World, Plain("F7")),
         new("toggle_health_bars_hotkey", "Toggle Health Bars", BindingCategory.World, Plain("F8")),
         new("toggle_options_hotkey", "Options Window", BindingCategory.Window, Plain("F9")),
-        new("toggle_gamma_hotkey", "Toggle Gamma", BindingCategory.Window, Plain("F10")),
         new("reset_window_size_hotkey", "Reset Window Size", BindingCategory.Window, With(MapKeys.Shift, "F10")),
         new("toggle_planner_hotkey", "Skill Planner", BindingCategory.Window, With(MapKeys.Ctrl, "P")),
         new("toggle_worldmap_hotkey", "World Map", BindingCategory.Window, null),
