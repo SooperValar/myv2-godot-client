@@ -15,27 +15,26 @@ public static class HotbarAssignments
     private static readonly int[] UsableSkills =
         [37, 40, 16, 49, 22, 48, 41, 35, 24, 21, 20, 25, 18, 27, 47, 26, 52, 15, 50, 11, 42, 17, 43, 51, 46, 19];
 
-    public static LogLine Assign(CharacterSettings settings, int slot, int skillNumber, string skillName)
-    {
-        var key = HotbarButtons.KeyLabel(slot);
-        if (settings.HotbarActions[slot] == skillNumber)
-        {
-            Clear(settings, slot);
-            return Line($"{key} is now unassigned.");
-        }
-
-        settings.HotbarActions[slot] = skillNumber;
-        settings.HotbarNames[slot] = skillName.Length > ButtonNameLength ? skillName[..ButtonNameLength] : skillName;
-        return Line($"{key} is now {skillName}.");
-    }
+    public static LogLine Assign(CharacterSettings settings, int slot, int skillNumber, string skillName) =>
+        Assign(settings, slot, skillNumber, skillName, HotbarButtons.KeyLabel(slot));
 
     public static LogLine Assign(
         CharacterSettings settings,
         int slot,
         int skillNumber,
         string skillName,
-        string keyName) =>
-        throw new System.NotImplementedException();
+        string keyName)
+    {
+        if (settings.HotbarActions[slot] == skillNumber)
+        {
+            Clear(settings, slot);
+            return Line($"{keyName} is now unassigned.");
+        }
+
+        settings.HotbarActions[slot] = skillNumber;
+        settings.HotbarNames[slot] = skillName.Length > ButtonNameLength ? skillName[..ButtonNameLength] : skillName;
+        return Line($"{keyName} is now {skillName}.");
+    }
 
     public static void Clear(CharacterSettings settings, int slot)
     {

@@ -1,27 +1,70 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TheLastGate.Hotkeys;
 
 public sealed class KeyBindings
 {
-    public KeyChord? For(string id) => throw new NotImplementedException();
+    private const string NotSet = "Not Set";
 
-    public string LongName(string id) => throw new NotImplementedException();
+    private readonly Dictionary<string, KeyChord?> current =
+        Bindings.All.ToDictionary(binding => binding.Id, binding => binding.Default);
 
-    public string ShortName(string id) => throw new NotImplementedException();
+    public KeyChord? For(string id) => current[id];
 
-    public Binding? Find(KeyChord pressed) => throw new NotImplementedException();
+    public string LongName(string id) => For(id)?.LongName ?? NotSet;
 
-    public string? Assign(string id, KeyChord chord) => throw new NotImplementedException();
+    public string ShortName(string id) => For(id)?.ShortName ?? "";
 
-    public void Clear(string id) => throw new NotImplementedException();
+    public Binding? Find(KeyChord pressed) =>
+        Bindings.All.FirstOrDefault(binding => !binding.Hold && current[binding.Id] == pressed);
 
-    public void Reset(string id) => throw new NotImplementedException();
+    // A key does one thing, so the binding that had it loses it; its id is returned to tell the player.
+    public string? Assign(string id, KeyChord chord)
+    {
+        var displaced = Bindings.All.FirstOrDefault(binding => binding.Id != id && current[binding.Id] == chord)?.Id;
+        if (displaced != null)
+        {
+            current[displaced] = null;
+        }
 
-    public void ResetAll() => throw new NotImplementedException();
+        current[id] = chord;
+        return displaced;
+    }
 
-    public void Load(IReadOnlyDictionary<string, string> saved) => throw new NotImplementedException();
+    public void Clear(string id) => current[id] = null;
 
-    public IReadOnlyDictionary<string, string> Saved() => throw new NotImplementedException();
+    public void Reset(string id) => current[id] = Bindings.All.First(binding => binding.Id == id).Default;
+
+    public void ResetAll()
+    {
+        foreach (var binding in Bindings.All)
+        {
+            current[binding.Id] = binding.Default;
+        }
+    }
+
+    // An empty value unbinds; an unknown id, or a value that can't be read, keeps the default.
+    public void Load(IReadOnlyDictionary<string, string> saved)
+    {
+        foreach (var (id, value) in saved)
+        {
+            if (!current.ContainsKey(id))
+            {
+                continue;
+            }
+
+            if (value.Length == 0)
+            {
+                current[id] = null;
+            }
+            else if (KeyChord.Parse(value) is { } chord)
+            {
+                current[id] = chord;
+            }
+        }
+    }
+
+    public IReadOnlyDictionary<string, string> Saved() =>
+        Bindings.All.ToDictionary(binding => binding.Id, binding => current[binding.Id]?.LongName ?? "");
 }
