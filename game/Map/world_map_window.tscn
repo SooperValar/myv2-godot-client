@@ -1,0 +1,327 @@
+[gd_scene format=3 uid="uid://dhjxuv8y6wbco"]
+
+[ext_resource type="Script" uid="uid://damkff6blbl7o" path="res://Map/WorldMapWindowView.cs" id="1_view"]
+[ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
+[ext_resource type="Script" uid="uid://bslwrp71aal2p" path="res://Map/PixelCross.cs" id="3_cross"]
+[ext_resource type="Script" uid="uid://b80snolajg5y8" path="res://Map/WorldMapCanvas.cs" id="4_canvas"]
+[ext_resource type="Script" uid="uid://eww6ywu3afjf" path="res://Map/ResizeGrip.cs" id="5_grip"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
+bg_color = Color(0.0666667, 0.0196078, 0.0196078, 1)
+
+[sub_resource type="ButtonGroup" id="ButtonGroup_tools"]
+
+[node name="WorldMapWindow" type="Panel" unique_id=1192837465]
+offset_left = 60.0
+offset_top = 60.0
+offset_right = 960.0
+offset_bottom = 680.0
+theme = ExtResource("2_theme")
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+script = ExtResource("1_view")
+
+[node name="Frame" type="NinePatchRect" parent="." unique_id=640375829]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Rows" type="VBoxContainer" parent="." unique_id=2005381617]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 10.0
+offset_top = 10.0
+offset_right = -10.0
+offset_bottom = -10.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="TitleBar" type="Control" parent="Rows" unique_id=1450298133]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Title" type="Label" parent="Rows/TitleBar" unique_id=318273650]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "World Map"
+horizontal_alignment = 1
+vertical_alignment = 1
+
+[node name="Help" type="Button" parent="Rows/TitleBar" unique_id=1981127346]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -46.0
+offset_right = -27.0
+offset_bottom = 19.0
+grow_horizontal = 0
+tooltip_text = "How to use the world map"
+focus_mode = 0
+text = "?"
+
+[node name="Close" type="Button" parent="Rows/TitleBar" unique_id=713029461]
+layout_mode = 1
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -19.0
+offset_bottom = 19.0
+grow_horizontal = 0
+focus_mode = 0
+
+[node name="Cross" type="Control" parent="Rows/TitleBar/Close" unique_id=1067362919]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+script = ExtResource("3_cross")
+
+[node name="Body" type="HBoxContainer" parent="Rows" unique_id=294561088]
+layout_mode = 2
+size_flags_vertical = 3
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Categories" type="Control" parent="Rows/Body" unique_id=1708249135]
+custom_minimum_size = Vector2(220, 0)
+layout_mode = 2
+
+[node name="Frame" type="NinePatchRect" parent="Rows/Body/Categories" unique_id=932475614]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="MapFrame" type="Control" parent="Rows/Body" unique_id=1543098227]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="Frame" type="NinePatchRect" parent="Rows/Body/MapFrame" unique_id=1171384592]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Canvas" type="Control" parent="Rows/Body/MapFrame" unique_id=1489023651]
+texture_filter = 1
+clip_contents = true
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 6.0
+offset_top = 6.0
+offset_right = -6.0
+offset_bottom = -6.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("4_canvas")
+
+[node name="BottomBar" type="HBoxContainer" parent="Rows" unique_id=826091745]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Select" type="Button" parent="Rows/BottomBar" unique_id=1355062874]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+toggle_mode = true
+button_pressed = true
+button_group = SubResource("ButtonGroup_tools")
+text = "Select"
+
+[node name="Pan" type="Button" parent="Rows/BottomBar" unique_id=104738291]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tools")
+text = "Pan"
+
+[node name="Pin" type="Button" parent="Rows/BottomBar" unique_id=1630284917]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+disabled = true
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tools")
+text = "Pin"
+
+[node name="Line" type="Button" parent="Rows/BottomBar" unique_id=520938164]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+disabled = true
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tools")
+text = "Line"
+
+[node name="Text" type="Button" parent="Rows/BottomBar" unique_id=1938402215]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"TabButton"
+disabled = true
+toggle_mode = true
+button_group = SubResource("ButtonGroup_tools")
+text = "Text"
+
+[node name="Follow" type="CheckBox" parent="Rows/BottomBar" unique_id=1259381046]
+layout_mode = 2
+focus_mode = 0
+text = "Follow player"
+
+[node name="Status" type="Label" parent="Rows/BottomBar" unique_id=703619284]
+layout_mode = 2
+
+[node name="Spacer" type="Control" parent="Rows/BottomBar" unique_id=1827364019]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+
+[node name="Coordinates" type="Label" parent="Rows/BottomBar" unique_id=461927380]
+layout_mode = 2
+text = "512, 1024"
+
+[node name="GripRoom" type="Control" parent="Rows/BottomBar" unique_id=1102938475]
+custom_minimum_size = Vector2(9, 0)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="ResizeGrip" type="Control" parent="." unique_id=650192837]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -16.0
+offset_top = -16.0
+offset_right = -7.0
+offset_bottom = -7.0
+grow_horizontal = 0
+grow_vertical = 0
+mouse_default_cursor_shape = 12
+script = ExtResource("5_grip")
+
+[node name="HelpBlocker" type="ColorRect" parent="." unique_id=1395027461]
+visible = false
+top_level = true
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.8, 0.8, 0.8, 0.35)
+
+[node name="Help" type="PanelContainer" parent="HelpBlocker" unique_id=876243019]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+
+[node name="Frame" type="NinePatchRect" parent="HelpBlocker/Help" unique_id=1764029381]
+layout_mode = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Margins" type="MarginContainer" parent="HelpBlocker/Help" unique_id=294817365]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Rows" type="VBoxContainer" parent="HelpBlocker/Help/Margins" unique_id=1630492817]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Heading" type="Label" parent="HelpBlocker/Help/Margins/Rows" unique_id=1201938475]
+layout_mode = 2
+text = "World Map Help"
+
+[node name="Separator" type="ColorRect" parent="HelpBlocker/Help/Margins/Rows" unique_id=338475610]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[node name="Page" type="VBoxContainer" parent="HelpBlocker/Help/Margins/Rows" unique_id=1093847261]
+custom_minimum_size = Vector2(460, 240)
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Title" type="Label" parent="HelpBlocker/Help/Margins/Rows/Page" unique_id=1948576302]
+layout_mode = 2
+text = "Getting around"
+
+[node name="Lines" type="VBoxContainer" parent="HelpBlocker/Help/Margins/Rows/Page" unique_id=702938145]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Buttons" type="HBoxContainer" parent="HelpBlocker/Help/Margins/Rows" unique_id=1584930276]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Back" type="Button" parent="HelpBlocker/Help/Margins/Rows/Buttons" unique_id=1023948576]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+disabled = true
+text = "Back"
+
+[node name="Next" type="Button" parent="HelpBlocker/Help/Margins/Rows/Buttons" unique_id=496817230]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Next"
+
+[node name="PageNumber" type="Label" parent="HelpBlocker/Help/Margins/Rows/Buttons" unique_id=1239485760]
+layout_mode = 2
+text = "1 / 8"
+
+[node name="Close" type="Button" parent="HelpBlocker/Help/Margins/Rows/Buttons" unique_id=857392016]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Close"

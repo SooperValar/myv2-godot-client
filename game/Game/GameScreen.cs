@@ -214,6 +214,7 @@ public partial class GameScreen : Control
         hudView.PlayClick = soundEffects.PlayClick;
         hudView.ReadDebugFacts = ReadDebugFacts;
         hudView.ExploredMap = exploredMap?.Recorder.Map;
+        hudView.NotesSetAsideFile = mapNotes is { WasSetAside: true } ? mapNotes.FileName : null;
         hudView.Show(gameState, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;

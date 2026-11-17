@@ -1,3 +1,4 @@
+using System.IO;
 using Godot;
 using TheLastGate.Net;
 using TheLastGate.Notes;
@@ -29,6 +30,8 @@ public sealed class MapNotesKeeper
     public bool WasSetAside { get; }
 
     public string SetAsidePath => ownPath + ".bad";
+
+    public string FileName => Path.GetFileName(ownPath);
 
     public void Save()
     {

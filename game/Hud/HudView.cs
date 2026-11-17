@@ -35,6 +35,7 @@ public partial class HudView : Control
     private const string SwapSetHint = "Swap equipment with a stored alternate set.";
     private const string TrashCanName = "TrashCan";
     private const string ItemTooltipBinding = "item_tooltip_hotkey";
+    private const string WorldMapWindowScenePath = "res://Map/world_map_window.tscn";
     private const int HintFont = 1;
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
@@ -79,10 +80,12 @@ public partial class HudView : Control
     private (int Revision, int X, int Y, int Magnification)? minimapShown;
     private ImageTexture? minimapTexture;
     private Vector2 mousePosition;
+    private bool notesNoticeShown;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
     private SpriteLoader? sprites;
     private GameState? state;
+    private WorldMapWindowView? worldMapWindow;
 
     [Export]
     public bool DarkMode
@@ -124,6 +127,8 @@ public partial class HudView : Control
     public Func<DebugFacts>? ReadDebugFacts { get; set; }
 
     public ExploredMap? ExploredMap { get; set; }
+
+    public string? NotesSetAsideFile { get; set; }
 
     public event Action? SettingsChanged;
 
@@ -274,6 +279,8 @@ public partial class HudView : Control
         minimap.GuiInput += ScrollMinimap;
         GetNode<ClickArea>("%MinimapZoomIn").Released += button => ClickMinimap(MinimapButton.ZoomIn, button);
         GetNode<ClickArea>("%MinimapZoomOut").Released += button => ClickMinimap(MinimapButton.ZoomOut, button);
+        worldMapWindow = GD.Load<PackedScene>(WorldMapWindowScenePath).Instantiate<WorldMapWindowView>();
+        AddChild(worldMapWindow);
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
         optionsWindow.CloseChosen += CloseOptions;
@@ -367,6 +374,7 @@ public partial class HudView : Control
         ShowStats(player);
         ShowQuickStats(player);
         ShowMinimap();
+        ShowWorldMap();
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
@@ -622,6 +630,13 @@ public partial class HudView : Control
             return true;
         }
 
+        if (id == "toggle_worldmap_hotkey")
+        {
+            state?.WorldMapWindow.Toggle();
+            ShowWorldMap();
+            return true;
+        }
+
         if (id == "swap_gear_hotkey")
         {
             ClickSwapSet(MapButton.Left);
@@ -859,6 +874,8 @@ public partial class HudView : Control
                 minimapView.ZoomOut(toTheEnd);
                 break;
             case MinimapButton.Map:
+                state?.WorldMapWindow.OpenAtPlayer();
+                ShowWorldMap();
                 return;
             default:
                 throw new UnreachableException();
@@ -877,6 +894,23 @@ public partial class HudView : Control
 
         minimapView.Scroll(wheel.ButtonIndex == MouseButton.WheelUp ? 1 : -1);
         ShowMinimap();
+    }
+
+    // The current client shows the set-aside notice the first time the world map opens.
+    private void ShowWorldMap()
+    {
+        if (state == null || worldMapWindow == null)
+        {
+            return;
+        }
+
+        var player = state.Map.Tiles[WorldMap.PlayerTile];
+        worldMapWindow.ShowWindow(state.WorldMapWindow, ExploredMap, (player.X, player.Y));
+        if (state.WorldMapWindow.IsOpen && !notesNoticeShown && NotesSetAsideFile is { } fileName)
+        {
+            notesNoticeShown = true;
+            state.WorldMapWindow.ShowSetAsideNotice(fileName, Time.GetTicksMsec() / 1000.0);
+        }
     }
 
     private void ClickSwapSet(MapButton button)
