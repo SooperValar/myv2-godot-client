@@ -32,6 +32,7 @@ public partial class GameScreen : Control
     private ExploredMapKeeper? exploredMap;
     private HudView hudView = null!;
     private ConnectionState lastConnectionState;
+    private MapNotesKeeper? mapNotes;
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
@@ -74,7 +75,7 @@ public partial class GameScreen : Control
             gameState.Chat.Add(new LogLine(message, StatusFont));
         }
 
-        SaveExploredMapWhenTheConnectionEnds();
+        SaveMapsWhenTheConnectionEnds();
         exploredMap?.Advance(TimeSpan.FromSeconds(delta));
 
         if (!newCharacterSaved && connection.State == ConnectionState.Connected
@@ -121,6 +122,7 @@ public partial class GameScreen : Control
     public override void _ExitTree()
     {
         exploredMap?.Save();
+        mapNotes?.Save();
         CursorShapes.Clear();
         connection.Dispose();
         sprites?.Dispose();
@@ -133,16 +135,18 @@ public partial class GameScreen : Control
         gameState.Chat.LineAdded += line =>
             keeper.Recorder.NoteLogLine(line.Text, ExploredMapKeeper.ViewCentreCharacter(gameState.Map));
         exploredMap = keeper;
+        mapNotes = new MapNotesKeeper(session.Server);
     }
 
-    // The current client saves the map when the connection fails, in case the game is closed straight after.
-    private void SaveExploredMapWhenTheConnectionEnds()
+    // The current client saves its maps when the connection fails, in case the game is closed straight after.
+    private void SaveMapsWhenTheConnectionEnds()
     {
         var connectionState = connection.State;
         if (connectionState != lastConnectionState
             && connectionState is ConnectionState.Closed or ConnectionState.Failed)
         {
             exploredMap?.Save();
+            mapNotes?.Save();
         }
 
         lastConnectionState = connectionState;
