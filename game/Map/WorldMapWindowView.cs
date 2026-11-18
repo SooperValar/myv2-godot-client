@@ -63,13 +63,7 @@ public partial class WorldMapWindowView : Panel
         ShowOnMinimapBox.Toggled += ShowOnMinimap;
         foreach (var tool in Enum.GetValues<WorldMapTool>())
         {
-            ToolButton(tool).Pressed += () =>
-            {
-                if (window != null)
-                {
-                    window.Tool = tool;
-                }
-            };
+            ToolButton(tool).Pressed += () => { window?.Editor.ChooseTool(tool); };
         }
 
         GetNode<Button>("HelpBlocker/Help/Margins/Rows/Buttons/Back").Pressed += () => ChangeHelpPage(-1);

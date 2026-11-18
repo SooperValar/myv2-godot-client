@@ -1,5 +1,7 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
 using TheLastGate.Map;
 using TheLastGate.Notes;
 
@@ -13,84 +15,521 @@ public enum NoteLabelPurpose
     Path,
 }
 
+// What the world map's tools do with the mouse: Pin and Text ask for a name for the tile clicked, Line drags out the
+// segments of a path that is named when it is finished, and Select picks a note. A note being edited is changed on a
+// copy, which the map draws in its place until it is saved or cancelled.
 public sealed class WorldMapEditor
 {
     public const double SelectRadius = 8;
+
+    // A press that moves no further than this is still a click, so placing a pin needs no perfectly still hand.
     public const double ClickSlack = 2;
 
-    public WorldMapTool Tool => throw new NotImplementedException();
+    private const double SnapPixels = 8;
 
-    public int CurrentCategoryId => throw new NotImplementedException();
+    private readonly List<PathSegment> pending = [];
+    private int labelCategoryId;
+    private (int X, int Y) labelTile;
+    private bool leftDragged;
+    private bool leftHeld;
+    private (double X, double Y) leftPressedAt;
+    private bool pressOnWorld;
+    private (int X, int Y) pressTile;
+    private bool rightDragged;
+    private bool rightHeld;
+    private (double X, double Y) rightPressedAt;
 
-    public int SelectedNoteId => throw new NotImplementedException();
+    public WorldMapTool Tool { get; private set; }
 
-    public IReadOnlyList<PathSegment> PendingSegments => throw new NotImplementedException();
+    public int CurrentCategoryId { get; private set; }
 
-    public int PendingCategoryId => throw new NotImplementedException();
+    public int SelectedNoteId { get; private set; }
 
-    public Note? Edited => throw new NotImplementedException();
+    public IReadOnlyList<PathSegment> PendingSegments => pending;
 
-    public bool CanSaveEdit => throw new NotImplementedException();
+    public int PendingCategoryId { get; private set; }
 
-    public NoteLabelPurpose LabelPurpose => throw new NotImplementedException();
+    public Note? Edited { get; private set; }
 
+    public bool CanSaveEdit => Edited is not { Kind: NoteKind.Text, Label.Length: 0 };
+
+    public NoteLabelPurpose LabelPurpose { get; private set; }
+
+    // Enter finishes a path only while the map has the player's attention.
     public bool Focused { get; set; }
 
-    public event Action<string>? Problem
+    private bool DrawsSegments => Edited?.Kind == NoteKind.Path || (Edited == null && Tool == WorldMapTool.Line);
+
+    private IReadOnlyList<PathSegment> DrawnSegments => Edited?.Kind == NoteKind.Path
+        ? Edited.Segments
+        : Edited == null && Tool == WorldMapTool.Line
+            ? pending
+            : [];
+
+    public event Action<string>? Problem;
+
+    public void EnsureCurrentCategory(NoteSet notes)
     {
-        add => throw new NotImplementedException();
-        remove => throw new NotImplementedException();
+        if (notes.FindCategory(CurrentCategoryId) == null)
+        {
+            CurrentCategoryId = notes.Categories.Count > 0 ? notes.Categories[0].Id : 0;
+        }
+
+        if (!WorldMapWindow.IsAvailable(Tool, CurrentCategoryId != 0))
+        {
+            ChooseTool(WorldMapTool.Select);
+        }
     }
 
-    public void EnsureCurrentCategory(NoteSet notes) => throw new NotImplementedException();
+    // Putting down the Line tool finishes the path being drawn; picking it up starts a new one.
+    public void ChooseTool(WorldMapTool tool)
+    {
+        if (tool == Tool)
+        {
+            return;
+        }
 
-    public void ChooseTool(WorldMapTool tool) => throw new NotImplementedException();
+        CancelEdit();
+        if (Tool == WorldMapTool.Line)
+        {
+            AskForPathName();
+        }
 
-    public void Select(int noteId) => throw new NotImplementedException();
+        Tool = tool;
+        if (tool == WorldMapTool.Line)
+        {
+            pending.Clear();
+            PendingCategoryId = CurrentCategoryId;
+        }
+    }
 
-    public void BeginEdit(NoteSet notes, int noteId) => throw new NotImplementedException();
+    public void Select(int noteId)
+    {
+        if (Edited != null && Edited.Id != noteId)
+        {
+            CancelEdit();
+        }
 
-    public void RenameEdited(string label) => throw new NotImplementedException();
+        SelectedNoteId = noteId;
+    }
 
-    public void SaveEdit(NoteSet notes) => throw new NotImplementedException();
+    public void BeginEdit(NoteSet notes, int noteId)
+    {
+        ChooseTool(WorldMapTool.Select);
+        CancelEdit();
+        if (notes.FindNote(noteId) is not { } note)
+        {
+            return;
+        }
 
-    public void CancelEdit() => throw new NotImplementedException();
+        Edited = note;
+        SelectedNoteId = noteId;
+    }
 
-    public void Delete(NoteSet notes, int noteId) => throw new NotImplementedException();
+    public void RenameEdited(string label)
+    {
+        if (Edited != null)
+        {
+            Edited = Edited with { Label = label };
+        }
+    }
 
-    public void DeleteSegment(NoteSet notes, int noteId, int segmentIndex) => throw new NotImplementedException();
+    // A path edited down to no segments is deleted.
+    public void SaveEdit(NoteSet notes)
+    {
+        if (Edited == null)
+        {
+            return;
+        }
 
-    public void Recolour(NoteSet notes, int noteId, int colourIndex) => throw new NotImplementedException();
+        if (Edited is { Kind: NoteKind.Path, Segments.Count: 0 })
+        {
+            notes.RemoveNote(Edited.Id);
+            if (SelectedNoteId == Edited.Id)
+            {
+                SelectedNoteId = 0;
+            }
+        }
+        else
+        {
+            notes.ReplaceNote(Edited.Id, Edited);
+        }
 
-    public void SendTo(NoteSet notes, int noteId, int categoryId) => throw new NotImplementedException();
+        CancelEdit();
+    }
 
-    public void PressLeft(WorldMapPanel panel, double panelX, double panelY) =>
-        throw new NotImplementedException();
+    public void CancelEdit() => Edited = null;
 
-    public void MoveMouse(WorldMapPanel panel, double panelX, double panelY) => throw new NotImplementedException();
+    public void Delete(NoteSet notes, int noteId)
+    {
+        if (Edited?.Id == noteId)
+        {
+            CancelEdit();
+        }
 
-    public void ReleaseLeft(NoteSet notes, WorldMapPanel panel, double panelX, double panelY) =>
-        throw new NotImplementedException();
+        if (SelectedNoteId == noteId)
+        {
+            SelectedNoteId = 0;
+        }
 
-    public void PressRight(double panelX, double panelY) => throw new NotImplementedException();
+        notes.RemoveNote(noteId);
+    }
 
-    public NoteHit? ReleaseRight(NoteSet notes, WorldMapPanel panel, double panelX, double panelY) =>
-        throw new NotImplementedException();
+    public void DeleteSegment(NoteSet notes, int noteId, int segmentIndex)
+    {
+        if (notes.FindNote(noteId) is not { Kind: NoteKind.Path } path
+            || segmentIndex < 0
+            || segmentIndex >= path.Segments.Count)
+        {
+            return;
+        }
 
-    public PathSegment? Preview(WorldMapPanel panel, double panelX, double panelY) =>
-        throw new NotImplementedException();
+        if (path.Segments.Count == 1)
+        {
+            Delete(notes, noteId);
+            return;
+        }
 
-    public int DrawingCategoryId(NoteSet notes) => throw new NotImplementedException();
+        notes.ReplaceNote(noteId, path with { Segments = Without(path.Segments, segmentIndex) });
+    }
 
-    public bool CanConfirmLabel(string label) => throw new NotImplementedException();
+    public void Recolour(NoteSet notes, int noteId, int colourIndex)
+    {
+        if (notes.SetNoteColour(noteId, colourIndex) && Edited?.Id == noteId)
+        {
+            Edited = Edited with { ColourIndex = colourIndex };
+        }
+    }
 
-    public void ConfirmLabel(NoteSet notes, string label) => throw new NotImplementedException();
+    public void SendTo(NoteSet notes, int noteId, int categoryId)
+    {
+        if (!notes.MoveNote(noteId, categoryId))
+        {
+            Problem?.Invoke("That category is full.");
+            return;
+        }
 
-    public void CancelLabel() => throw new NotImplementedException();
+        if (Edited?.Id == noteId)
+        {
+            CancelEdit();
+        }
+    }
 
-    public bool FinishPendingPath() => throw new NotImplementedException();
+    // A press near an end of the path being drawn or edited starts from that end, so segments join up.
+    public void PressLeft(WorldMapPanel panel, double panelX, double panelY)
+    {
+        var (tileX, tileY, onWorld) = panel.View.NearestTileUnder(panel.Width, panel.Height, panelX, panelY);
+        pressOnWorld = onWorld;
+        pressTile = SnapToDrawnEnd(panel, tileX, tileY);
+        leftHeld = true;
+        leftDragged = false;
+        leftPressedAt = (panelX, panelY);
+    }
 
-    public bool DiscardPendingPath() => throw new NotImplementedException();
+    // Dragging a pin or text being edited carries it along.
+    public void MoveMouse(WorldMapPanel panel, double panelX, double panelY)
+    {
+        if (rightHeld && double.Hypot(panelX - rightPressedAt.X, panelY - rightPressedAt.Y) > ClickSlack)
+        {
+            rightDragged = true;
+        }
 
-    public void DropInterruptedWork() => throw new NotImplementedException();
+        if (!leftHeld)
+        {
+            return;
+        }
+
+        if (double.Hypot(panelX - leftPressedAt.X, panelY - leftPressedAt.Y) > ClickSlack)
+        {
+            leftDragged = true;
+        }
+
+        if (leftDragged && Edited != null && Edited.Kind != NoteKind.Path)
+        {
+            var (tileX, tileY, _) = panel.View.NearestTileUnder(panel.Width, panel.Height, panelX, panelY);
+            Edited = Edited with { TileX = tileX, TileY = tileY };
+        }
+    }
+
+    public void ReleaseLeft(NoteSet notes, WorldMapPanel panel, double panelX, double panelY)
+    {
+        if (!leftHeld)
+        {
+            return;
+        }
+
+        MoveMouse(panel, panelX, panelY);
+        leftHeld = false;
+        if (Edited != null)
+        {
+            FinishEditPress(notes, panel, panelX, panelY);
+            return;
+        }
+
+        switch (Tool)
+        {
+            case WorldMapTool.Select:
+                if (!leftDragged)
+                {
+                    Select(
+                        panel.View.HitTest(notes, panel.Width, panel.Height, panelX, panelY, SelectRadius)?.NoteId
+                        ?? 0);
+                }
+
+                break;
+            case WorldMapTool.Pin or WorldMapTool.Text:
+                if (!leftDragged && pressOnWorld)
+                {
+                    AskForPointName(Tool == WorldMapTool.Pin ? NoteLabelPurpose.Pin : NoteLabelPurpose.Text);
+                }
+
+                break;
+            case WorldMapTool.Line:
+                if (leftDragged && pressOnWorld)
+                {
+                    AddPendingSegment(notes, EndUnder(panel, panelX, panelY));
+                }
+
+                break;
+            case WorldMapTool.Pan:
+                break;
+            default:
+                throw new UnreachableException();
+        }
+    }
+
+    public void PressRight(double panelX, double panelY)
+    {
+        rightHeld = true;
+        rightDragged = false;
+        rightPressedAt = (panelX, panelY);
+    }
+
+    // A right click on a note, not a right drag, opens the note's menu.
+    public NoteHit? ReleaseRight(NoteSet notes, WorldMapPanel panel, double panelX, double panelY)
+    {
+        if (!rightHeld)
+        {
+            return null;
+        }
+
+        MoveMouse(panel, panelX, panelY);
+        rightHeld = false;
+        return rightDragged || leftHeld
+            ? null
+            : panel.View.HitTest(notes, panel.Width, panel.Height, panelX, panelY, SelectRadius);
+    }
+
+    // The segment a drag would add if the button were let go here.
+    public PathSegment? Preview(WorldMapPanel panel, double panelX, double panelY)
+    {
+        if (!leftHeld || !leftDragged || !pressOnWorld || !DrawsSegments)
+        {
+            return null;
+        }
+
+        var (endX, endY) = EndUnder(panel, panelX, panelY);
+        return new PathSegment(pressTile.X, pressTile.Y, endX, endY);
+    }
+
+    public int DrawingCategoryId(NoteSet notes)
+    {
+        if (Edited != null)
+        {
+            return notes.OwnerOf(Edited.Id)?.Id ?? 0;
+        }
+
+        return pending.Count > 0 ? PendingCategoryId : CurrentCategoryId;
+    }
+
+    public bool CanConfirmLabel(string label) => LabelPurpose != NoteLabelPurpose.Text || label.Length > 0;
+
+    public void ConfirmLabel(NoteSet notes, string label)
+    {
+        var addedId = LabelPurpose switch
+        {
+            NoteLabelPurpose.Pin => notes.AddPoint(labelCategoryId, NoteKind.Pin, labelTile.X, labelTile.Y, label),
+            NoteLabelPurpose.Text => notes.AddPoint(labelCategoryId, NoteKind.Text, labelTile.X, labelTile.Y, label),
+            NoteLabelPurpose.Path => notes.AddPath(PendingCategoryId, pending.ToArray(), label),
+            NoteLabelPurpose.None => -1,
+            _ => throw new UnreachableException(),
+        };
+        if (LabelPurpose == NoteLabelPurpose.Path)
+        {
+            pending.Clear();
+        }
+
+        LabelPurpose = NoteLabelPurpose.None;
+        if (addedId == 0)
+        {
+            Problem?.Invoke("Category is full.");
+        }
+    }
+
+    // A path finished by putting down the Line tool has nowhere to go back to, so cancelling its name throws it away.
+    public void CancelLabel()
+    {
+        if (LabelPurpose == NoteLabelPurpose.Path && Tool != WorldMapTool.Line)
+        {
+            pending.Clear();
+        }
+
+        LabelPurpose = NoteLabelPurpose.None;
+    }
+
+    public bool FinishPendingPath()
+    {
+        if (!Focused || Tool != WorldMapTool.Line || pending.Count == 0 || LabelPurpose != NoteLabelPurpose.None)
+        {
+            return false;
+        }
+
+        AskForPathName();
+        return true;
+    }
+
+    public bool DiscardPendingPath()
+    {
+        if (Tool != WorldMapTool.Line || pending.Count == 0)
+        {
+            return false;
+        }
+
+        pending.Clear();
+        return true;
+    }
+
+    // A path still being drawn outlives the map closing; going back to the Line tool lets Enter still finish it.
+    public void DropInterruptedWork()
+    {
+        CancelEdit();
+        if (LabelPurpose == NoteLabelPurpose.Path && pending.Count > 0)
+        {
+            Tool = WorldMapTool.Line;
+        }
+
+        LabelPurpose = NoteLabelPurpose.None;
+        leftHeld = false;
+        rightHeld = false;
+    }
+
+    private static PathSegment[] Without(IReadOnlyList<PathSegment> segments, int segmentIndex) =>
+        segments.Where((_, index) => index != segmentIndex).ToArray();
+
+    private (int X, int Y) SnapToDrawnEnd(WorldMapPanel panel, int tileX, int tileY) =>
+        WorldMapView.SnapToEnd(
+            DrawnSegments,
+            tileX,
+            tileY,
+            Math.Max(1, SnapPixels / panel.View.PixelsPerTile)) ?? (tileX, tileY);
+
+    private (int X, int Y) EndUnder(WorldMapPanel panel, double panelX, double panelY)
+    {
+        var (tileX, tileY, _) = panel.View.NearestTileUnder(panel.Width, panel.Height, panelX, panelY);
+        return SnapToDrawnEnd(panel, tileX, tileY);
+    }
+
+    private void FinishEditPress(NoteSet notes, WorldMapPanel panel, double panelX, double panelY)
+    {
+        var editedPath = Edited!.Kind == NoteKind.Path;
+        if (leftDragged)
+        {
+            if (editedPath && pressOnWorld)
+            {
+                AddEditedSegment(notes, EndUnder(panel, panelX, panelY));
+            }
+
+            return;
+        }
+
+        if (editedPath)
+        {
+            var segmentIndex = panel.View.HitSegment(Edited, panel.Width, panel.Height, panelX, panelY, SelectRadius);
+            if (segmentIndex >= 0)
+            {
+                Edited = Edited with { Segments = Without(Edited.Segments, segmentIndex) };
+                return;
+            }
+        }
+
+        var hitId = panel.View.HitTest(notes, panel.Width, panel.Height, panelX, panelY, SelectRadius)?.NoteId ?? 0;
+        if (hitId != 0 && hitId != Edited.Id)
+        {
+            Select(hitId);
+        }
+    }
+
+    private void AddPendingSegment(NoteSet notes, (int X, int Y) end)
+    {
+        if (end == pressTile)
+        {
+            return;
+        }
+
+        if (pending.Count >= NoteLimits.SegmentsPerPath)
+        {
+            Problem?.Invoke("Path is full.");
+            return;
+        }
+
+        if (pending.Count == 0)
+        {
+            PendingCategoryId = CurrentCategoryId;
+        }
+
+        if (!HasSegmentRoom(notes, PendingCategoryId, pending.Count + 1))
+        {
+            Problem?.Invoke("Category is full.");
+            return;
+        }
+
+        pending.Add(new PathSegment(pressTile.X, pressTile.Y, end.X, end.Y));
+    }
+
+    private void AddEditedSegment(NoteSet notes, (int X, int Y) end)
+    {
+        var edited = Edited!;
+        if (end == pressTile)
+        {
+            return;
+        }
+
+        if (edited.Segments.Count >= NoteLimits.SegmentsPerPath)
+        {
+            Problem?.Invoke("Path is full.");
+            return;
+        }
+
+        var storedCount = notes.FindNote(edited.Id)?.Segments.Count ?? 0;
+        if (notes.OwnerOf(edited.Id) is { } owner
+            && !HasSegmentRoom(notes, owner.Id, edited.Segments.Count + 1 - storedCount))
+        {
+            Problem?.Invoke("Category is full.");
+            return;
+        }
+
+        Edited = edited with
+        {
+            Segments = [.. edited.Segments, new PathSegment(pressTile.X, pressTile.Y, end.X, end.Y)],
+        };
+    }
+
+    private static bool HasSegmentRoom(NoteSet notes, int categoryId, int extraSegments) =>
+        notes.FindCategory(categoryId) is not { } category
+        || category.SegmentTotal + extraSegments <= NoteLimits.SegmentsPerCategory;
+
+    private void AskForPointName(NoteLabelPurpose purpose)
+    {
+        LabelPurpose = purpose;
+        labelCategoryId = CurrentCategoryId;
+        labelTile = pressTile;
+    }
+
+    private void AskForPathName()
+    {
+        if (pending.Count > 0)
+        {
+            LabelPurpose = NoteLabelPurpose.Path;
+        }
+    }
 }

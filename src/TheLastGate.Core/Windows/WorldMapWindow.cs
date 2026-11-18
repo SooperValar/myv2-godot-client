@@ -26,9 +26,9 @@ public sealed class WorldMapWindow
 
     public bool Follow { get; set; }
 
-    public WorldMapTool Tool { get; set; }
-
     public WorldMapEditor Editor { get; } = new();
+
+    public WorldMapTool Tool => Editor.Tool;
 
     public int HelpPage { get; private set; }
 
@@ -42,6 +42,7 @@ public sealed class WorldMapWindow
     {
         IsOpen = true;
         CentreOnPlayer = true;
+        Editor.Focused = true;
     }
 
     public void Toggle()
@@ -56,10 +57,12 @@ public sealed class WorldMapWindow
     {
         var wasOpen = IsOpen;
         IsOpen = false;
+        Editor.DropInterruptedWork();
         return wasOpen;
     }
 
-    public bool CloseByEscape() => throw new NotImplementedException();
+    // The first Escape while a path is being drawn throws the path away; the next closes the map.
+    public bool CloseByEscape() => Editor.DiscardPendingPath() || Close();
 
     public void Panned() => Follow = false;
 

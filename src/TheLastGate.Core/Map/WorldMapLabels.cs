@@ -44,7 +44,8 @@ public static class WorldMapLabels
     }
 
     // Every marker and text plate is reserved before any name is placed, so no name covers one, and the selected pin's
-    // name goes first so it gets the best spot. A name with no room is left out; hovering the pin shows it instead.
+    // name goes first so it gets the best spot. A name with no room is left out; hovering the pin shows it instead. A
+    // note being edited is laid out where the edit has put it.
     public static IReadOnlyDictionary<int, LabelRect> Place(
         NoteSet notes,
         WorldMapView view,
@@ -70,8 +71,9 @@ public static class WorldMapLabels
             }
 
             var namesShown = notes.LabelsShown(category);
-            foreach (var note in category.Notes)
+            foreach (var stored in category.Notes)
             {
+                var note = edited?.Id == stored.Id ? edited : stored;
                 if (note.Kind == NoteKind.Text)
                 {
                     var (plate, _, _) = TextPlate(view, panelWidth, panelHeight, note, measure(note.Label));

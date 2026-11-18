@@ -53,19 +53,47 @@ public sealed class WorldMapView
         return tileX is >= 0 and < TilesDown && tileY is >= 0 and < TilesAcross ? (tileX, tileY) : null;
     }
 
+    // A cursor off the world is held to the nearest tile on it, and says so.
     public (int X, int Y, bool OnWorld) NearestTileUnder(
         double panelWidth,
         double panelHeight,
         double panelX,
-        double panelY) =>
-        throw new NotImplementedException();
+        double panelY)
+    {
+        var (exactX, exactY) = PanelToTile(panelWidth, panelHeight, panelX, panelY);
+        var tileX = (int)Math.Floor(exactX);
+        var tileY = (int)Math.Floor(exactY);
+        var heldX = Math.Clamp(tileX, 0, TilesDown - 1);
+        var heldY = Math.Clamp(tileY, 0, TilesAcross - 1);
+        return (heldX, heldY, heldX == tileX && heldY == tileY);
+    }
 
     public static (int X, int Y)? SnapToEnd(
         IReadOnlyList<PathSegment> segments,
         int tileX,
         int tileY,
-        double maxTiles) =>
-        throw new NotImplementedException();
+        double maxTiles)
+    {
+        (int X, int Y)? nearest = null;
+        var nearestDistance = double.PositiveInfinity;
+        foreach (var segment in segments)
+        {
+            Consider(segment.StartX, segment.StartY);
+            Consider(segment.EndX, segment.EndY);
+        }
+
+        return nearest;
+
+        void Consider(int endX, int endY)
+        {
+            var distance = double.Hypot(endX - tileX, endY - tileY);
+            if (distance <= maxTiles && distance < nearestDistance)
+            {
+                nearestDistance = distance;
+                nearest = (endX, endY);
+            }
+        }
+    }
 
     public void Pan(double panelWidth, double panelHeight, double deltaX, double deltaY)
     {
