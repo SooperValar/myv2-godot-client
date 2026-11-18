@@ -206,6 +206,11 @@ public partial class WorldView : Node2D
             | (click.CtrlPressed ? MapKeys.Ctrl : MapKeys.None)
             | (click.AltPressed ? MapKeys.Alt : MapKeys.None);
         var action = MapActions.Decide(State, PointUnder(click.Position), keys, button, SelectedCharacter);
+        if (action.GivesMore)
+        {
+            State.GiveMore.Gave(State.Player.HeldItem);
+        }
+
         if (action.Command is { } command)
         {
             SendCommand(command);

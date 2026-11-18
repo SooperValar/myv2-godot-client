@@ -160,6 +160,7 @@ public partial class GameScreen : Control
         CursorShapes.Register(settings.CursorScale);
         gameState.Tooltips.Enabled = settings.ItemTooltips;
         gameState.UseQueue.Enabled = settings.UseQueue;
+        gameState.GiveMore.Enabled = settings.GiveMore;
         screenGamma?.ShowGamma(settings.ScreenGamma);
         if (worldView != null)
         {
@@ -230,6 +231,8 @@ public partial class GameScreen : Control
 
         // A queued use has already clicked when it was queued.
         gameState.UseQueue.Send = connection.SendCommand;
+        gameState.GiveMore.Enabled = clientSettings.GiveMore;
+        gameState.GiveMore.Send = SendAction;
         gameState.ShopRefresh.Send = connection.SendCommand;
         gameState.BuffWatch.Say = text =>
         {

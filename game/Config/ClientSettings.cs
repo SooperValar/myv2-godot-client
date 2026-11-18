@@ -52,6 +52,7 @@ public sealed class ClientSettings
             file.GetValue(ServerSection, "port", ServerAddress.Live.Port).AsInt32());
 
         EscapeClosesWindowsFirst = file.GetValue(GeneralSection, "escape_closes_windows_first", true).AsBool();
+        GiveMore = file.GetValue(GeneralSection, "give_more", false).AsBool();
         UseQueue = file.GetValue(GeneralSection, "use_queue", false).AsBool();
         EnterToTalk = file.GetValue(GeneralSection, "enter_to_talk", false).AsBool();
         ExpandedQuickStats = file.GetValue(GeneralSection, "expanded_quick_stats", true).AsBool();
@@ -77,6 +78,7 @@ public sealed class ClientSettings
     public CharacterHistory CharacterHistory { get; }
     public ServerAddress Server { get; }
     public bool EscapeClosesWindowsFirst { get; set; }
+    public bool GiveMore { get; set; }
     public bool UseQueue { get; set; }
     public bool EnterToTalk { get; set; }
     public bool ExpandedQuickStats { get; set; }
@@ -95,6 +97,7 @@ public sealed class ClientSettings
         get => option switch
         {
             GeneralOption.EscapeClosesWindowsFirst => EscapeClosesWindowsFirst,
+            GeneralOption.GiveMore => GiveMore,
             GeneralOption.UseQueue => UseQueue,
             GeneralOption.EnterToTalk => EnterToTalk,
             GeneralOption.ExpandedQuickStats => ExpandedQuickStats,
@@ -111,6 +114,9 @@ public sealed class ClientSettings
             {
                 case GeneralOption.EscapeClosesWindowsFirst:
                     EscapeClosesWindowsFirst = value;
+                    break;
+                case GeneralOption.GiveMore:
+                    GiveMore = value;
                     break;
                 case GeneralOption.UseQueue:
                     UseQueue = value;
@@ -160,6 +166,7 @@ public sealed class ClientSettings
         file.SetValue(DisplaySection, "screen_gamma", ScreenGamma);
         file.SetValue(DisplaySection, "world_gamma", WorldGamma);
         file.SetValue(GeneralSection, "escape_closes_windows_first", EscapeClosesWindowsFirst);
+        file.SetValue(GeneralSection, "give_more", GiveMore);
         file.SetValue(GeneralSection, "use_queue", UseQueue);
         file.SetValue(GeneralSection, "enter_to_talk", EnterToTalk);
         file.SetValue(GeneralSection, "expanded_quick_stats", ExpandedQuickStats);
