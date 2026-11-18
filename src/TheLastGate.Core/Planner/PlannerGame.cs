@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using TheLastGate.Buffs;
 using TheLastGate.State;
 using TheLastGate.Stats;
@@ -13,6 +14,9 @@ public sealed record PlannerSkillText(string Name, IReadOnlyList<int> Attributes
 public sealed class PlannerGame
 {
     public const int StatValueCount = PlayerState.StatValueCount;
+
+    private const int ScoreHigh = 4;
+    private const int ScoreLow = 5;
 
     public int Points { get; set; }
 
@@ -60,12 +64,70 @@ public sealed class PlannerGame
         StatPlan plan,
         PlannerChoices choices,
         BuffWatch buffs,
-        bool hardMode) =>
-        throw new NotImplementedException();
+        bool hardMode)
+    {
+        var game = new PlannerGame
+        {
+            Points = player.Points,
+            Kindred = player.Kindred,
+            HardMode = hardMode,
+            Weapon = player.Weapon,
+            Armor = player.Armor,
+            TreePoints = player.TreePoints,
+            SkillTexts = terminology.Skills
+                .Select(text => new PlannerSkillText(text.Name, text.Attributes.ToArray(), text.Show))
+                .ToArray(),
+            SkillOrder = Stats.SkillOrder.Sorted(
+                terminology.Skills.Select((text, number) =>
+                    new SkillEntry(number, text.Name, text.SortKey, player.Skills[number][0] != 0)),
+                player.Kindred),
+            Plan = plan,
+            Choices = choices,
+        };
+        player.TreeNodes.CopyTo(game.TreeNodes, 0);
+        for (var slot = 0; slot < PlayerState.WornSlots; slot++)
+        {
+            game.WornSprites[slot] = player.Worn[slot].Sprite;
+        }
 
-    public int[] ValuesFor(int slot) => throw new NotImplementedException();
+        CopyValues(player.Attributes, game.Attributes);
+        CopyValues(player.Skills, game.Skills);
+        player.HitPoints.CopyTo(game.HitPoints, 0);
+        player.Mana.CopyTo(game.Mana, 0);
+        foreach (var meta in terminology.MetaStats)
+        {
+            if (meta.Name.Length > 0)
+            {
+                game.MetaStats.TryAdd(meta.Name, meta.Value);
+            }
+        }
 
-    public static int Score(int[] values) => throw new NotImplementedException();
+        foreach (var kind in Enum.GetValues<BuffKind>())
+        {
+            game.BuffActive[(int)kind] = buffs.IsActive(kind);
+            game.BuffReadings[(int)kind] = buffs.Reading(kind);
+        }
+
+        return game;
+    }
+
+    public int[] ValuesFor(int slot) => slot switch
+    {
+        < PlayerState.AttributeCount => Attributes[slot],
+        StatPlan.HitPointsSlot => HitPoints,
+        StatPlan.ManaSlot => Mana,
+        _ => Skills[slot - StatPlan.FirstSkillSlot],
+    };
+
+    public static int Score(int[] values) => (values[ScoreHigh] << 8) | values[ScoreLow];
+
+    private static void CopyValues(int[][] from, int[][] to)
+    {
+        for (var index = 0; index < from.Length; index++)
+        {
+            from[index].CopyTo(to[index], 0);
+        }
+    }
 
     private static int[][] Values(int count)
     {
