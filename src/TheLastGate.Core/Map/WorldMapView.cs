@@ -17,6 +17,8 @@ public sealed class WorldMapView
     private const double OpeningPixelsPerTile = 8;
     private const double SmallestFit = 1e-3;
 
+    private static readonly NoteKind[] HitOrder = [NoteKind.Pin, NoteKind.Text, NoteKind.Path];
+
     public double CentreTileX { get; set; }
 
     public double CentreTileY { get; set; }
@@ -70,14 +72,53 @@ public sealed class WorldMapView
         Clamp(panelWidth, panelHeight);
     }
 
+    // Pins win over text and text over paths; among one kind the nearest within the radius wins.
     public NoteHit? HitTest(
         NoteSet notes,
         double panelWidth,
         double panelHeight,
         double panelX,
         double panelY,
-        double radius) =>
-        throw new NotImplementedException();
+        double radius)
+    {
+        foreach (var kind in HitOrder)
+        {
+            NoteHit? best = null;
+            var bestDistance = double.PositiveInfinity;
+            foreach (var category in notes.Categories)
+            {
+                if (!notes.IsShown(category))
+                {
+                    continue;
+                }
+
+                foreach (var note in category.Notes)
+                {
+                    if (note.Kind != kind)
+                    {
+                        continue;
+                    }
+
+                    var segmentIndex = -1;
+                    var distance = kind == NoteKind.Path
+                        ? NearestSegment(note, panelWidth, panelHeight, panelX, panelY, out segmentIndex)
+                        : DistanceToTile(note.TileX, note.TileY, panelWidth, panelHeight, panelX, panelY);
+                    if (distance <= radius && distance < bestDistance)
+                    {
+                        bestDistance = distance;
+                        best = new NoteHit(note.Id, segmentIndex);
+                    }
+                }
+            }
+
+            if (best != null)
+            {
+                return best;
+            }
+        }
+
+        return null;
+    }
 
     public int HitSegment(
         Note path,
@@ -85,8 +126,11 @@ public sealed class WorldMapView
         double panelHeight,
         double panelX,
         double panelY,
-        double radius) =>
-        throw new NotImplementedException();
+        double radius)
+    {
+        var distance = NearestSegment(path, panelWidth, panelHeight, panelX, panelY, out var segmentIndex);
+        return distance <= radius ? segmentIndex : -1;
+    }
 
     public void CentreOn(int tileX, int tileY)
     {
@@ -98,5 +142,58 @@ public sealed class WorldMapView
     {
         CentreTileX = tileX + 0.5;
         CentreTileY = tileY + 0.5;
+    }
+
+    private static double DistanceToSegment(
+        (double X, double Y) point,
+        (double X, double Y) start,
+        (double X, double Y) end)
+    {
+        var spanX = end.X - start.X;
+        var spanY = end.Y - start.Y;
+        var spanLengthSquared = spanX * spanX + spanY * spanY;
+        var along = spanLengthSquared > 0
+            ? Math.Clamp(((point.X - start.X) * spanX + (point.Y - start.Y) * spanY) / spanLengthSquared, 0, 1)
+            : 0;
+        return double.Hypot(point.X - (start.X + along * spanX), point.Y - (start.Y + along * spanY));
+    }
+
+    private double DistanceToTile(
+        int tileX,
+        int tileY,
+        double panelWidth,
+        double panelHeight,
+        double panelX,
+        double panelY)
+    {
+        var (centreX, centreY) = TileToPanel(panelWidth, panelHeight, tileX + 0.5, tileY + 0.5);
+        return double.Hypot(panelX - centreX, panelY - centreY);
+    }
+
+    private double NearestSegment(
+        Note path,
+        double panelWidth,
+        double panelHeight,
+        double panelX,
+        double panelY,
+        out int segmentIndex)
+    {
+        var bestDistance = double.PositiveInfinity;
+        segmentIndex = -1;
+        for (var index = 0; index < path.Segments.Count; index++)
+        {
+            var segment = path.Segments[index];
+            var distance = DistanceToSegment(
+                (panelX, panelY),
+                TileToPanel(panelWidth, panelHeight, segment.StartX + 0.5, segment.StartY + 0.5),
+                TileToPanel(panelWidth, panelHeight, segment.EndX + 0.5, segment.EndY + 0.5));
+            if (distance < bestDistance)
+            {
+                bestDistance = distance;
+                segmentIndex = index;
+            }
+        }
+
+        return bestDistance;
     }
 }
