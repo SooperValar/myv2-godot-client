@@ -28,6 +28,26 @@ public sealed class AttributeAmounts : IEquatable<AttributeAmounts>
 
     public bool Equals(AttributeAmounts? other) => other != null && amounts.SequenceEqual(other.amounts);
 
+    // In the server's order: Braveness, Willpower, Intuition, Agility, Strength.
+    public static AttributeAmounts Of(int braveness, int willpower, int intuition, int agility, int strength)
+    {
+        var made = new AttributeAmounts();
+        int[] values = [braveness, willpower, intuition, agility, strength];
+        values.CopyTo(made.amounts, 0);
+        return made;
+    }
+
+    public void SetAll(int amount) => Array.Fill(amounts, amount);
+
+    public AttributeAmounts Copy()
+    {
+        var copy = new AttributeAmounts();
+        amounts.CopyTo(copy.amounts, 0);
+        return copy;
+    }
+
+    public override string ToString() => string.Join(", ", amounts);
+
     public override bool Equals(object? other) => Equals(other as AttributeAmounts);
 
     public override int GetHashCode() =>

@@ -106,6 +106,8 @@ public sealed class CombatModelInput
     public bool HitFeedsParry { get; set; }
 
     public bool ParryFeedsHit { get; set; }
+
+    public CombatModelInput Copy() => throw new NotImplementedException();
 }
 
 // What the planner shows for Hit, Parry, Weapon Value and Armor Value. The server only sends the totals, so each is
