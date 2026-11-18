@@ -94,16 +94,44 @@ public class WorldMapLabelsTests
     }
 
     [Fact]
-    public void Place_SkipsHiddenCategoriesAndPinsFarOffThePanel()
+    public void Place_SkipsHiddenCategoriesButNotPinsFarOffThePanel()
     {
         var shown = notes.AddCategory("Shown", 0);
-        notes.AddPoint(shown, NoteKind.Pin, 512, 1024 + 200, "far");
+        var far = notes.AddPoint(shown, NoteKind.Pin, 512, 1024 + 200, "far");
         var nearby = notes.AddPoint(shown, NoteKind.Pin, 512, 1024 + 150, "nearby");
         var hidden = notes.AddCategory("Hidden", 0);
         notes.AddPoint(hidden, NoteKind.Pin, 512, 1024, "hidden");
         notes.FindCategory(hidden)!.Visible = false;
 
-        Assert.Equal(new[] { nearby }, Place().Keys);
+        Assert.Equal([far, nearby], Place().Keys.Order());
+    }
+
+    // A pin past the edge of the panel takes room beside its neighbour whether or not it is in sight.
+    [Theory]
+    [InlineData(0.0)]
+    [InlineData(10.0)]
+    [InlineData(-37.3)]
+    [InlineData(0.6)]
+    public void Panning_LeavesEveryNameWhereItWasBesideItsPin(double panTiles)
+    {
+        var edge = AddPin(512, 1024 + 160, "edge");
+        AddPin(512, 1024 + 166, "beyond");
+        view.CentreTileY += panTiles;
+
+        var name = Place()[edge.Id];
+
+        var (centreX, centreY) = WorldMapLabels.PinCentre(view, Width, Height, edge);
+        Assert.Equal((-49f, -7f), (name.Left - centreX, name.Top - centreY));
+    }
+
+    [Fact]
+    public void Layout_PlacesNamesAroundTheirPinsWithoutThePanel()
+    {
+        var pin = AddPin(512, 1024, "pin");
+
+        var layout = WorldMapLabels.Layout(notes, view.PixelsPerTile, Measure);
+
+        Assert.Equal(new LabelRect(8, -7, 49, 6), layout[pin.Id]);
     }
 
     [Fact]

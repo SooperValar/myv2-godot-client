@@ -19,6 +19,14 @@ public static class WorldMapLabels
 
     public static bool NamesHidden(WorldMapView view) => view.PixelsPerTile < NamesHiddenBelowPixelsPerTile;
 
+    public static IReadOnlyDictionary<int, LabelRect> Layout(
+        NoteSet notes,
+        double pixelsPerTile,
+        Func<string, (float Width, float Height)> measure,
+        int selectedNoteId = 0,
+        Note? edited = null) =>
+        throw new NotImplementedException();
+
     public static (float X, float Y) PinCentre(WorldMapView view, double panelWidth, double panelHeight, Note pin)
     {
         var (panelX, panelY) = view.TileToPanel(panelWidth, panelHeight, pin.TileX + 0.5, pin.TileY + 0.5);
