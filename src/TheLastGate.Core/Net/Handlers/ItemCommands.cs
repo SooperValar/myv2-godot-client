@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using TheLastGate.Buffs;
 using TheLastGate.Items;
 using TheLastGate.State;
 
@@ -7,7 +8,7 @@ namespace TheLastGate.Net.Handlers;
 
 internal static class ItemCommands
 {
-    public static void Apply(PlayerState player, ItemTooltips tooltips, ReadOnlySpan<byte> command)
+    public static void Apply(PlayerState player, ItemTooltips tooltips, BuffWatch buffs, ReadOnlySpan<byte> command)
     {
         var reader = new PacketReader(command);
         switch ((ServerCommand)reader.ReadByte())
@@ -40,7 +41,14 @@ internal static class ItemCommands
                 var sprite = reader.ReadInt16();
                 // The current client keeps this in a signed char, so only the low byte counts.
                 var active = (sbyte)reader.ReadInt16();
-                Store(player.Buffs, slot, new BuffSlot(sprite, active));
+                var updated = new BuffSlot(sprite, active);
+                if (slot < player.Buffs.Length)
+                {
+                    var old = player.Buffs[slot];
+                    player.Buffs[slot] = updated;
+                    buffs.SpellPacket((int)slot, old, updated);
+                }
+
                 break;
             }
             case ServerCommand.SetCharacterHeldItem:
