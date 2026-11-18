@@ -70,6 +70,8 @@ public sealed class StatPlan
         }
     }
 
+    public void Reset() => throw new NotImplementedException();
+
     public IReadOnlyList<byte[]> Commit()
     {
         var packets = new List<byte[]>();

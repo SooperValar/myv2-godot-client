@@ -2,6 +2,7 @@ using System;
 using TheLastGate.Buffs;
 using TheLastGate.Items;
 using TheLastGate.Net;
+using TheLastGate.Stats;
 using TheLastGate.Windows;
 using TheLastGate.World;
 
@@ -27,6 +28,8 @@ public sealed class GameState
     public Terminology Terminology { get; } = new();
     public CharacterNames Names { get; } = new();
     public ItemTooltips Tooltips { get; }
+    public StatPlan StatPlan { get; } = new();
+    public PlannerWindow PlannerWindow { get; } = new();
     public BuffWatch BuffWatch { get; }
     public MessageOfTheDayLines MessageOfTheDayLines { get; } = new();
     public WindowPause Pause { get; } = new();

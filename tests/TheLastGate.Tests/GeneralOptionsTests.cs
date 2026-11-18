@@ -12,6 +12,7 @@ public class GeneralOptionsTests
                 GeneralOption.EscapeClosesWindowsFirst,
                 GeneralOption.EnterToTalk,
                 GeneralOption.ExpandedQuickStats,
+                GeneralOption.SkillPlanner,
                 GeneralOption.ItemTooltips,
                 GeneralOption.ItemTooltipsAlways,
                 GeneralOption.GlideMovement,
@@ -19,7 +20,7 @@ public class GeneralOptionsTests
             ],
             GeneralOptions.Rows.Select(row => row.Option));
         Assert.Equal(
-            [false, false, false, false, false, true, true],
+            [false, false, false, false, false, false, true, true],
             GeneralOptions.Rows.Select(row => row.GodotOnly));
     }
 

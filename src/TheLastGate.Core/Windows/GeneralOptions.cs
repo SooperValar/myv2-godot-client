@@ -8,6 +8,7 @@ public enum GeneralOption
     EscapeClosesWindowsFirst,
     EnterToTalk,
     ExpandedQuickStats,
+    SkillPlanner,
     ItemTooltips,
     ItemTooltipsAlways,
     GlideMovement,
