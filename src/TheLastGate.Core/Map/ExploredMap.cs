@@ -37,7 +37,8 @@ public sealed class ExploredMap
 
     private static ReadOnlySpan<byte> Magic => "TLGM"u8;
 
-    public static bool ClearSaved(string path) => throw new NotImplementedException();
+    // A blank map is written rather than the file deleted, so the current client's map isn't imported over it again.
+    public static bool ClearSaved(string path) => new ExploredMap().SaveTo(path);
 
     public uint ColourAt(int tileX, int tileY) => IsOnMap(tileX, tileY) ? tiles[tileX * Height + tileY] : 0;
 
