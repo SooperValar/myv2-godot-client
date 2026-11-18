@@ -35,7 +35,6 @@ public partial class PlannerWindowView : Panel
     ];
 
     private PackedScene? focusLineScene;
-    private Theme? sceneTheme;
 
     private PackedScene? statRowScene;
 
@@ -73,7 +72,6 @@ public partial class PlannerWindowView : Panel
     public override void _Ready()
     {
         ApplyFrameSprite();
-        ApplyFont();
         statRowScene = GD.Load<PackedScene>(StatRowScenePath);
         focusLineScene = GD.Load<PackedScene>(FocusLineScenePath);
         if (Engine.IsEditorHint())
@@ -265,8 +263,6 @@ public partial class PlannerWindowView : Panel
             skillRows.AddChild(row);
         }
     }
-
-    public void ApplyFont() => PlannerLook.ApplyFont(this, ref sceneTheme);
 
     public void ApplyFrameSprite() => PlannerLook.ApplyFrameSprite(this);
 }

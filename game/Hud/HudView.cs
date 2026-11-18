@@ -129,6 +129,7 @@ public partial class HudView : Control
         set
         {
             fonts = value;
+            ApplyWindowFonts(this);
             Reload(this);
         }
     }
@@ -564,6 +565,7 @@ public partial class HudView : Control
     {
         if (!Engine.IsEditorHint())
         {
+            ChildEnteredTree += ApplyWindowFonts;
             return;
         }
 
@@ -582,6 +584,7 @@ public partial class HudView : Control
 
     public override void _ExitTree()
     {
+        ChildEnteredTree -= ApplyWindowFonts;
         if (editorSprites == null)
         {
             return;
@@ -594,6 +597,24 @@ public partial class HudView : Control
     }
 
     private static string Number(int value) => value.ToString(CultureInfo.InvariantCulture);
+
+    // Every window under the HUD, and anything without a font of its own, is written in the font set's white letters.
+    // The editor keeps the scenes' own fonts, so a saved scene never holds the font set.
+    private void ApplyWindowFonts(Node node)
+    {
+        if (Engine.IsEditorHint() || fonts == null)
+        {
+            return;
+        }
+
+        var font = fonts.For(TextColour.White);
+        if (node == this)
+        {
+            Theme = WindowFonts.WithFont(new Theme(), font.Font, font.Size);
+        }
+
+        WindowFonts.Apply(node, font.Font, font.Size);
+    }
 
     private static void Reload(Node parent)
     {
@@ -624,11 +645,9 @@ public partial class HudView : Control
                     break;
                 case PlannerWindowView planner:
                     planner.ApplyFrameSprite();
-                    planner.ApplyFont();
                     break;
                 case PlannerAdvancedWindowView advanced:
                     advanced.ApplyFrameSprite();
-                    advanced.ApplyFont();
                     break;
             }
 

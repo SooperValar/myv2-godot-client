@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using Godot;
+using TheLastGate.Assets;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Game;
@@ -57,8 +58,11 @@ public partial class LauncherScreen : Control
 
     private string ServerLabel => $"{settings.Server.Host}:{settings.Server.Port}";
 
+    public ILauncherFontSet Fonts { get; set; } = new PixelOperatorFonts();
+
     public override void _Ready()
     {
+        ApplyFonts();
         FindNodes();
 
         settings = ClientSettings.Load();
@@ -74,6 +78,15 @@ public partial class LauncherScreen : Control
         ShowPreviousCharacters();
 
         ConnectSignals();
+    }
+
+    // Buttons are written in the bold font, everything else in the regular one.
+    private void ApplyFonts()
+    {
+        var themed = WindowFonts.WithFont(Theme, Fonts.Regular, Fonts.Size);
+        themed.SetFont("font", "Button", Fonts.Bold);
+        themed.SetFont("font", "OptionButton", Fonts.Regular);
+        Theme = themed;
     }
 
     private void FindNodes()

@@ -15,7 +15,6 @@ public partial class PlannerAdvancedWindowView : Panel
     private const int CardsPerColumn = 5;
 
     private PackedScene? rowScene;
-    private Theme? sceneTheme;
 
     private Container Spells => GetNode<Container>("Body/Sections/Spells");
 
@@ -29,7 +28,6 @@ public partial class PlannerAdvancedWindowView : Panel
     public override void _Ready()
     {
         ApplyFrameSprite();
-        ApplyFont();
         rowScene = GD.Load<PackedScene>(RowScenePath);
         AddSpellRows();
         AddCardRows();
@@ -91,8 +89,6 @@ public partial class PlannerAdvancedWindowView : Panel
             gears[gear].Show(ItemEffects.Gears[gear].Name, (choices.GearTicks & (1u << gear)) != 0, true);
         }
     }
-
-    public void ApplyFont() => PlannerLook.ApplyFont(this, ref sceneTheme);
 
     public void ApplyFrameSprite() => PlannerLook.ApplyFrameSprite(this);
 
