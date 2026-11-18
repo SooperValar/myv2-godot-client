@@ -14,7 +14,7 @@ public enum SkillScale
     Immunity,
 }
 
-public sealed class BuffModelSkill
+public sealed record BuffModelSkill
 {
     // The value the server sends.
     public int ServerTotal { get; set; }
@@ -81,6 +81,8 @@ public sealed class BuffModelInput
     public int PlannedMana { get; set; }
 
     public PlannerEffects Effects { get; set; } = new();
+
+    public BuffModelInput Copy() => throw new NotImplementedException();
 }
 
 public sealed class BuffModelResult
