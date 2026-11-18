@@ -1,5 +1,6 @@
 using System;
 using Godot;
+using TheLastGate.Stats;
 
 namespace TheLastGate.Planner;
 
@@ -15,14 +16,28 @@ public partial class PlannerStatRow : Control
 
     private PlannerRow? shown;
 
+    public int? Slot => shown?.Slot;
+
     // The row's stat plan slot, and true to raise it or false to lower it.
     public event Action<int, bool>? GlyphClicked;
+
+    // The row's stat plan slot.
+    public event Action<int>? NameClicked;
 
     public override void _Ready()
     {
         WireGlyph("Lower", false);
         WireGlyph("Raise", true);
+        GetNode<Control>("NameClick").GuiInput += input =>
+        {
+            if (input is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } && shown != null)
+            {
+                NameClicked?.Invoke(shown.Slot);
+            }
+        };
     }
+
+    public void ShowOutline(bool outlined) => GetNode<CanvasItem>("Outline").Visible = outlined;
 
     public void Show(PlannerRow row)
     {
@@ -40,6 +55,10 @@ public partial class PlannerStatRow : Control
         GetNode<CanvasItem>("Marker").Visible = row.UsesRaisedAttribute;
         ShowGlyph("Lower");
         ShowGlyph("Raise");
+
+        // Only skills can be focused.
+        GetNode<Control>("NameClick").MouseFilter =
+            row.Slot >= StatPlan.FirstSkillSlot ? MouseFilterEnum.Stop : MouseFilterEnum.Ignore;
     }
 
     private void ShowPart(string path, int amount, string text)

@@ -49,3 +49,21 @@ size_flags_vertical = 1
 theme_override_colors/font_color = Color(0.352941, 0.705882, 1, 1)
 text = " +4"
 vertical_alignment = 1
+
+[node name="Outline" type="ReferenceRect" parent="." unique_id=811600921]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(0.952941, 0.858824, 0.415686, 1)
+editor_only = false
+
+[node name="NameClick" type="Control" parent="." unique_id=1139727805]
+layout_mode = 0
+offset_right = 118.0
+offset_bottom = 14.0
+mouse_filter = 2

@@ -5,6 +5,7 @@
 [ext_resource type="PackedScene" uid="uid://f8ob5sl7bt4g" path="res://Planner/planner_stat_row.tscn" id="3_row"]
 [ext_resource type="PackedScene" uid="uid://gnrt5ug31fqn" path="res://Planner/planner_value_row.tscn" id="4_value"]
 [ext_resource type="Theme" uid="uid://cutkkse75jg5" path="res://themes/GameDropdownTheme.tres" id="5_dropdown"]
+[ext_resource type="PackedScene" uid="uid://x64mt3tr32cj" path="res://Planner/planner_focus_line.tscn" id="6_focus"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
 bg_color = Color(0.164706, 0.0588235, 0.0392157, 0.941176)
@@ -236,6 +237,44 @@ theme_override_constants/margin_left = 10
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
+
+[node name="FocusGap" type="Control" parent="Left" unique_id=704403207]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="FocusHeading" type="Control" parent="Left" unique_id=1972082315]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Left/FocusHeading" unique_id=903505798]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 290.0
+offset_bottom = 14.0
+theme_type_variation = &"HeadingLabel"
+text = "Focus"
+vertical_alignment = 1
+
+[node name="FocusLines" type="VBoxContainer" parent="Left" unique_id=903937317]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="PlanRow" type="Control" parent="Left" unique_id=706662266]
+custom_minimum_size = Vector2(290, 21)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="PlanIt" type="Button" parent="Left/PlanRow" unique_id=780407432]
+layout_mode = 0
+offset_left = 228.0
+offset_top = 2.0
+offset_right = 288.0
+offset_bottom = 21.0
+focus_mode = 0
+text = "Plan it"
 
 [node name="Right" type="VBoxContainer" parent="." unique_id=965235590]
 layout_mode = 0

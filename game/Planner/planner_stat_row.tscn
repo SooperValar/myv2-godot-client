@@ -123,3 +123,21 @@ theme_override_colors/font_color = Color(0.658824, 0.690196, 0.690196, 1)
 text = "1033"
 horizontal_alignment = 2
 vertical_alignment = 1
+
+[node name="Outline" type="ReferenceRect" parent="." unique_id=486736583]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+border_color = Color(0.952941, 0.858824, 0.415686, 1)
+editor_only = false
+
+[node name="NameClick" type="Control" parent="." unique_id=278027242]
+layout_mode = 0
+offset_right = 118.0
+offset_bottom = 14.0
+mouse_filter = 2

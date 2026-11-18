@@ -4,6 +4,7 @@ using System.Linq;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Hud;
+using TheLastGate.Stats;
 using TheLastGate.Windows;
 using OptionButton = Godot.OptionButton;
 
@@ -17,6 +18,7 @@ public partial class PlannerWindowView : Panel
 {
     private const int FrameSprite = 18128;
     private const string StatRowScenePath = "res://Planner/planner_stat_row.tscn";
+    private const string FocusLineScenePath = "res://Planner/planner_focus_line.tscn";
     private const int PreviewSkillRows = 12;
     private const int MathLineHeight = 14;
 
@@ -27,8 +29,17 @@ public partial class PlannerWindowView : Panel
 
     private static readonly string[] CombatRowNames = ["HitScore", "ParryScore", "WeaponValue", "ArmorValue"];
 
+    private static readonly FocusLine[] PreviewFocusLines =
+    [
+        new("Sword  80 -> 81", null, false, FocusTone.Heading),
+        new("Cheapest +1", "4800 exp", false, FocusTone.Normal),
+        new("+1 Sword", "4800", true, FocusTone.SkillRaise),
+        new("Through attributes", "49476 exp", false, FocusTone.OtherRoute),
+    ];
+
     private static readonly Color LightBackground = Color.Color8(42, 15, 10, 240);
     private static readonly Color DarkBackground = Color.Color8(23, 0, 5);
+    private PackedScene? focusLineScene;
     private Theme? sceneTheme;
 
     private PackedScene? statRowScene;
@@ -40,6 +51,10 @@ public partial class PlannerWindowView : Panel
     private OptionButton OffhandChoice => GetNode<OptionButton>("Left/Equipment/Offhand");
 
     private Container MathLines => GetNode<Container>("Left/MathScroll/Indent/MathLines");
+
+    private Container FocusLines => GetNode<Container>("Left/FocusLines");
+
+    private Button PlanIt => GetNode<Button>("Left/PlanRow/PlanIt");
 
     public event Action? CommitPressed;
 
@@ -54,15 +69,27 @@ public partial class PlannerWindowView : Panel
 
     public event Action<CombatOffhand>? OffhandChosen;
 
+    public event Action<PlannerFocus>? FocusClicked;
+
+    public event Action? PlanItPressed;
+
     public override void _Ready()
     {
         ApplyFrameSprite();
         ApplyFont();
         statRowScene = GD.Load<PackedScene>(StatRowScenePath);
+        focusLineScene = GD.Load<PackedScene>(FocusLineScenePath);
         if (Engine.IsEditorHint())
         {
             EnsureSkillRows(PreviewSkillRows);
+            ShowFocusLines(PreviewFocusLines);
             return;
+        }
+
+        foreach (var stat in Enum.GetValues<CombatStat>())
+        {
+            GetNode<PlannerValueRow>("Left/" + CombatRowNames[(int)stat]).NameClicked +=
+                () => FocusClicked?.Invoke(PlannerFocus.OnStat(stat));
         }
 
         foreach (var name in StatRowNames)
@@ -85,6 +112,45 @@ public partial class PlannerWindowView : Panel
         GetNode<Button>("Header/Commit").Pressed += () => CommitPressed?.Invoke();
         GetNode<Button>("Header/Reset").Pressed += () => ResetPressed?.Invoke();
         GetNode<Button>("Header/Close").Pressed += () => ClosePressed?.Invoke();
+        PlanIt.Pressed += () => PlanItPressed?.Invoke();
+    }
+
+    // The gold outline marks the focused skill or combat stat.
+    public void ShowFocus(PlannerFocus? focus, FocusPanel panel)
+    {
+        var focusedSlot = focus?.Skill is { } skill ? StatPlan.SkillSlot(skill) : (int?)null;
+        foreach (var row in SkillRows.GetChildren().Cast<PlannerStatRow>())
+        {
+            row.ShowOutline(row.Visible && row.Slot == focusedSlot);
+        }
+
+        foreach (var stat in Enum.GetValues<CombatStat>())
+        {
+            GetNode<PlannerValueRow>("Left/" + CombatRowNames[(int)stat]).ShowOutline(focus?.Stat == stat);
+        }
+
+        ShowFocusLines(panel.Lines);
+        PlanIt.Visible = panel.Plan.Count > 0;
+        PlanIt.Disabled = !panel.Affordable;
+    }
+
+    private void ShowFocusLines(IReadOnlyList<FocusLine> lines)
+    {
+        var focusLines = FocusLines;
+        while (focusLines.GetChildCount() < lines.Count && focusLineScene != null)
+        {
+            focusLines.AddChild(focusLineScene.Instantiate());
+        }
+
+        var shownLines = focusLines.GetChildren().OfType<PlannerFocusLine>().ToArray();
+        for (var index = 0; index < shownLines.Length; index++)
+        {
+            shownLines[index].Visible = index < lines.Count;
+            if (index < lines.Count)
+            {
+                shownLines[index].Show(lines[index]);
+            }
+        }
     }
 
     public void ShowWindow(bool shown, bool darkMode, int pointsLeft, int planned, PlannerSheet? sheet)
@@ -124,6 +190,11 @@ public partial class PlannerWindowView : Panel
             combatRows[1].Show(PlannerSheet.ParryScore, sheet.MetaText(PlannerSheet.ParryScore));
             combatRows[2].Show(CombatModel.StatNames[(int)CombatStat.Weapon], sheet.ServerWeapon.ToString());
             combatRows[3].Show(CombatModel.StatNames[(int)CombatStat.Armor], sheet.ServerArmor.ToString());
+            foreach (var row in combatRows)
+            {
+                row.AllowFocus(false);
+            }
+
             aptitude.Show(PlannerSheet.SpellAptitude, sheet.MetaText(PlannerSheet.SpellAptitude));
             return;
         }
@@ -138,6 +209,7 @@ public partial class PlannerWindowView : Panel
         foreach (var stat in Enum.GetValues<CombatStat>())
         {
             combatRows[(int)stat].ShowPlanned(CombatModel.StatNames[(int)stat], server[stat], shown[stat]);
+            combatRows[(int)stat].AllowFocus(true);
         }
 
         aptitude.ShowPlanned(PlannerSheet.SpellAptitude, input.SpellAptitude, planned.SpellAptitude);
@@ -188,6 +260,8 @@ public partial class PlannerWindowView : Panel
             if (row is PlannerStatRow statRow)
             {
                 statRow.GlyphClicked += (slot, raise) => RowClicked?.Invoke(slot, raise);
+                statRow.NameClicked += slot =>
+                    FocusClicked?.Invoke(PlannerFocus.OnSkill(slot - StatPlan.FirstSkillSlot));
             }
 
             skillRows.AddChild(row);

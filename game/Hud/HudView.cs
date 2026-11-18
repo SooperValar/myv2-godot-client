@@ -68,6 +68,7 @@ public partial class HudView : Control
 
     private readonly DepotPage depotPage = new();
     private readonly ExitSequence exit = new();
+    private readonly FocusCache focusCache = new();
     private readonly LookPanel lookPanel = new();
     private readonly byte[] minimapPixels = new byte[MinimapView.Pixels * MinimapView.Pixels * 4];
     private readonly MinimapView minimapView = new();
@@ -308,12 +309,14 @@ public partial class HudView : Control
         worldMapWindow.NotesChanged += MapNotesChanged;
         plannerWindow = GD.Load<PackedScene>(PlannerWindowScenePath).Instantiate<PlannerWindowView>();
         AddChild(plannerWindow);
-        plannerWindow.CommitPressed += CommitPlan;
+        plannerWindow.CommitPressed += CommitPlannerPlan;
         plannerWindow.ResetPressed += ResetPlan;
         plannerWindow.ClosePressed += ClosePlanner;
         plannerWindow.RowClicked += ChangePlan;
         plannerWindow.WeaponChosen += weapon => ChangePlannerChoices(choices => choices.Weapon = weapon);
         plannerWindow.OffhandChosen += offhand => ChangePlannerChoices(choices => choices.Offhand = offhand);
+        plannerWindow.FocusClicked += ToggleFocus;
+        plannerWindow.PlanItPressed += PlanFocus;
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
@@ -1569,6 +1572,39 @@ public partial class HudView : Control
         ShowPlanner();
     }
 
+    // The planner's own Commit also drops the focus, as the numbers it worked on are about to change.
+    private void CommitPlannerPlan()
+    {
+        state?.PlannerWindow.ClearFocus();
+        CommitPlan();
+    }
+
+    private void ToggleFocus(PlannerFocus focus)
+    {
+        state?.PlannerWindow.ToggleFocus(focus);
+        ShowPlanner();
+    }
+
+    private void PlanFocus()
+    {
+        if (state == null || PlannerSheet() is not { } sheet)
+        {
+            return;
+        }
+
+        var panel = FocusPanel.For(sheet, state.PlannerWindow.Focus, focusCache);
+        var player = state.Player;
+        if (panel.Affordable
+            && statPlan.RaiseAll(
+                panel.Plan.Select(raise => (raise.RaiseIndex, raise.Points)).ToArray(),
+                slot => StatPlan.Values(player, slot),
+                player.Points))
+        {
+            ShowStats(player);
+            ShowPlanner();
+        }
+    }
+
     private void ResetPlan()
     {
         statPlan.Reset();
@@ -1625,12 +1661,25 @@ public partial class HudView : Control
         }
 
         var shown = enabled && state.PlannerWindow.IsOpen;
+        var sheet = shown ? PlannerSheet() : null;
         plannerWindow.ShowWindow(
             shown,
             DarkMode,
             state.Player.Points - statPlan.PointsUsed,
             statPlan.PointsUsed,
-            shown ? PlannerSheet() : null);
+            sheet);
+        if (sheet == null)
+        {
+            return;
+        }
+
+        var panel = FocusPanel.For(sheet, state.PlannerWindow.Focus, focusCache);
+        if (panel.LostFocus)
+        {
+            state.PlannerWindow.ClearFocus();
+        }
+
+        plannerWindow.ShowFocus(state.PlannerWindow.Focus, panel);
     }
 
     private void ChangePlannerChoices(Action<PlannerChoices> change)
