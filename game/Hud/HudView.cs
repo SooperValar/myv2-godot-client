@@ -118,6 +118,8 @@ public partial class HudView : Control
     public KeyBindings KeyBindings { get; set; } = new();
     public ClientSettings? ClientSettings { get; set; }
 
+    public PlannerChoicesKeeper? PlannerChoices { get; set; }
+
     public IFontSet? Fonts
     {
         get => fonts;
@@ -309,6 +311,7 @@ public partial class HudView : Control
         plannerWindow.CommitPressed += CommitPlan;
         plannerWindow.ResetPressed += ResetPlan;
         plannerWindow.ClosePressed += ClosePlanner;
+        plannerWindow.RowClicked += ChangePlan;
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
@@ -591,6 +594,10 @@ public partial class HudView : Control
                     break;
                 case OptionsWindowView options:
                     options.ApplyButtonSprite();
+                    break;
+                case PlannerWindowView planner:
+                    planner.ApplyFrameSprite();
+                    planner.ApplyFont();
                     break;
             }
 
@@ -1501,19 +1508,31 @@ public partial class HudView : Control
             return;
         }
 
+        ChangePlan(row.Slot, raise);
+    }
+
+    // Shift raises or lowers 10 at once, Ctrl or Alt 90, in the HUD and the planner alike.
+    private void ChangePlan(int slot, bool raise)
+    {
+        if (state == null)
+        {
+            return;
+        }
+
         var ctrlOrAlt = Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
         var times = StatPlan.ClickTimes(Input.IsKeyPressed(Key.Shift), ctrlOrAlt);
-        var values = StatPlan.Values(state.Player, row.Slot);
+        var values = StatPlan.Values(state.Player, slot);
         if (raise)
         {
-            statPlan.Raise(row.Slot, values, state.Player.Points, times);
+            statPlan.Raise(slot, values, state.Player.Points, times);
         }
         else
         {
-            statPlan.Lower(row.Slot, values, times);
+            statPlan.Lower(slot, values, times);
         }
 
         ShowStats(state.Player);
+        ShowPlanner();
     }
 
     private void ClickUpdate(MapButton button)
@@ -1603,11 +1622,37 @@ public partial class HudView : Control
             return;
         }
 
+        var shown = enabled && state.PlannerWindow.IsOpen;
         plannerWindow.ShowWindow(
-            enabled && state.PlannerWindow.IsOpen,
+            shown,
             DarkMode,
             state.Player.Points - statPlan.PointsUsed,
-            statPlan.PointsUsed);
+            statPlan.PointsUsed,
+            shown ? PlannerSheet() : null);
+    }
+
+    private PlannerSheet? PlannerSheet()
+    {
+        if (state == null || PlannerChoices == null)
+        {
+            return null;
+        }
+
+        var hardMode = CharacterRace.FromNumber(state.Player.Race).GameMode == GameMode.Hard;
+        var game = PlannerGame.From(
+            state.Player,
+            state.Terminology,
+            statPlan,
+            PlannerChoices.Choices,
+            state.BuffWatch,
+            hardMode);
+        var sheet = Planner.PlannerSheet.For(game);
+        if (sheet.ChoicesChanged)
+        {
+            PlannerChoices.Save();
+        }
+
+        return sheet;
     }
 
     private void ShowLook(CharacterLook look)

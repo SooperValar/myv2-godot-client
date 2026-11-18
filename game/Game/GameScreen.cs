@@ -12,6 +12,7 @@ using TheLastGate.Hud;
 using TheLastGate.Items;
 using TheLastGate.Map;
 using TheLastGate.Net;
+using TheLastGate.Planner;
 using TheLastGate.State;
 using TheLastGate.World;
 
@@ -209,6 +210,7 @@ public partial class GameScreen : Control
         hudView.Settings = characterSettings;
         hudView.KeyBindings = clientSettings.KeyBindings;
         hudView.ClientSettings = clientSettings;
+        hudView.PlannerChoices = new PlannerChoicesKeeper(() => session.Record.Key.UserNumber);
         hudView.ClientSettingsChanged += () => ApplyClientSettings(clientSettings);
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;

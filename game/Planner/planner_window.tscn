@@ -2,6 +2,7 @@
 
 [ext_resource type="Script" uid="uid://usd3shgqiub" path="res://Planner/PlannerWindowView.cs" id="1_view"]
 [ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
+[ext_resource type="PackedScene" uid="uid://f8ob5sl7bt4g" path="res://Planner/planner_stat_row.tscn" id="3_row"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
 bg_color = Color(0.164706, 0.0588235, 0.0392157, 0.941176)
@@ -68,3 +69,179 @@ offset_right = 618.0
 offset_bottom = 22.0
 focus_mode = 0
 text = "Close"
+
+[node name="Left" type="VBoxContainer" parent="." unique_id=1211718545]
+layout_mode = 0
+offset_left = 10.0
+offset_top = 36.0
+offset_right = 300.0
+offset_bottom = 660.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="AttributesHeading" type="Control" parent="Left" unique_id=234694200]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Left/AttributesHeading" unique_id=378650639]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 290.0
+offset_bottom = 14.0
+theme_type_variation = &"HeadingLabel"
+text = "Attributes"
+vertical_alignment = 1
+
+[node name="Braveness" parent="Left" unique_id=856500165 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Willpower" parent="Left" unique_id=436501052 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Intuition" parent="Left" unique_id=952225196 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Agility" parent="Left" unique_id=778543000 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Strength" parent="Left" unique_id=1567423318 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Hitpoints" parent="Left" unique_id=2111122110 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Mana" parent="Left" unique_id=1598631709 instance=ExtResource("3_row")]
+layout_mode = 2
+
+[node name="Right" type="VBoxContainer" parent="." unique_id=965235590]
+layout_mode = 0
+offset_left = 314.0
+offset_top = 36.0
+offset_right = 618.0
+offset_bottom = 660.0
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="KeyHeading" type="Control" parent="Right" unique_id=1300489583]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Right/KeyHeading" unique_id=1722958671]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 290.0
+offset_bottom = 14.0
+theme_type_variation = &"HeadingLabel"
+text = "Key"
+vertical_alignment = 1
+
+[node name="BoughtKey" type="Control" parent="Right" unique_id=455127533]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Band" type="ColorRect" parent="Right/BoughtKey" unique_id=1304187674]
+layout_mode = 0
+offset_right = 290.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.952941, 0.858824, 0.415686, 0.219608)
+
+[node name="Sample" type="Label" parent="Right/BoughtKey" unique_id=616558624]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 24.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.490196, 0.862745, 0.415686, 1)
+text = "+N"
+vertical_alignment = 1
+
+[node name="Meaning" type="Label" parent="Right/BoughtKey" unique_id=1113343013]
+layout_mode = 0
+offset_left = 24.0
+offset_right = 290.0
+offset_bottom = 14.0
+text = "points you bought for it"
+vertical_alignment = 1
+
+[node name="GainKey" type="Control" parent="Right" unique_id=1280230111]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Marker" type="ColorRect" parent="Right/GainKey" unique_id=2066185488]
+layout_mode = 0
+offset_right = 2.0
+offset_bottom = 14.0
+mouse_filter = 2
+color = Color(0.352941, 0.705882, 1, 1)
+
+[node name="Sample" type="Label" parent="Right/GainKey" unique_id=396793570]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 24.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.352941, 0.705882, 1, 1)
+text = "+N"
+vertical_alignment = 1
+
+[node name="Meaning" type="Label" parent="Right/GainKey" unique_id=1378042460]
+layout_mode = 0
+offset_left = 24.0
+offset_right = 290.0
+offset_bottom = 14.0
+text = "from raised attributes"
+vertical_alignment = 1
+
+[node name="BaseKey" type="Control" parent="Right" unique_id=1853894222]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Sample" type="Label" parent="Right/BaseKey" unique_id=1544559580]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 24.0
+offset_bottom = 14.0
+theme_override_colors/font_color = Color(0.627451, 0.627451, 0.627451, 1)
+text = "N"
+vertical_alignment = 1
+
+[node name="Meaning" type="Label" parent="Right/BaseKey" unique_id=246399817]
+layout_mode = 0
+offset_left = 24.0
+offset_right = 290.0
+offset_bottom = 14.0
+text = "base, before gear and buffs"
+vertical_alignment = 1
+
+[node name="Gap" type="Control" parent="Right" unique_id=1395973494]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="SkillsHeading" type="Control" parent="Right" unique_id=177224889]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Right/SkillsHeading" unique_id=399044968]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 290.0
+offset_bottom = 14.0
+theme_type_variation = &"HeadingLabel"
+text = "Skills"
+vertical_alignment = 1
+
+[node name="SkillScroll" type="ScrollContainer" parent="Right" unique_id=314210658]
+layout_mode = 2
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+
+[node name="SkillRows" type="VBoxContainer" parent="Right/SkillScroll" unique_id=1434772398]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
