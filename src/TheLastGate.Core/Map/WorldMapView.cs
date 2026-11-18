@@ -1,6 +1,9 @@
 using System;
+using TheLastGate.Notes;
 
 namespace TheLastGate.Map;
+
+public readonly record struct NoteHit(int NoteId, int SegmentIndex);
 
 // Where the world map window looks: map y runs across the panel and map x down it, as on the minimap. Tile (x, y)
 // covers tile coordinates x..x+1 and y..y+1, so its middle is at (x + 0.5, y + 0.5).
@@ -66,6 +69,24 @@ public sealed class WorldMapView
         CentreTileX = anchorX - (panelY - panelHeight / 2) / PixelsPerTile;
         Clamp(panelWidth, panelHeight);
     }
+
+    public NoteHit? HitTest(
+        NoteSet notes,
+        double panelWidth,
+        double panelHeight,
+        double panelX,
+        double panelY,
+        double radius) =>
+        throw new NotImplementedException();
+
+    public int HitSegment(
+        Note path,
+        double panelWidth,
+        double panelHeight,
+        double panelX,
+        double panelY,
+        double radius) =>
+        throw new NotImplementedException();
 
     public void CentreOn(int tileX, int tileY)
     {
