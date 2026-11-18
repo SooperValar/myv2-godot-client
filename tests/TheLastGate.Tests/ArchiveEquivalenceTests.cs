@@ -15,7 +15,7 @@ public class ArchiveEquivalenceTests
     [Fact]
     public void CompiledArchives_MatchCommittedArchives()
     {
-        var repoRoot = FindRepoRoot();
+        var repoRoot = RepositoryFolder.Find();
         using var output = new TempFolder();
 
         var report = SpriteCompiler.Compile(Path.Combine(repoRoot, "art", "sprites"), output.FolderPath);
@@ -29,18 +29,5 @@ public class ArchiveEquivalenceTests
                 committed.AsSpan().SequenceEqual(compiled),
                 $"{fileName} differs from a fresh compile of art/sprites. Run the sprite compiler and commit the archives.");
         }
-    }
-
-    private static string FindRepoRoot()
-    {
-        for (var folder = new DirectoryInfo(AppContext.BaseDirectory); folder != null; folder = folder.Parent)
-        {
-            if (File.Exists(Path.Combine(folder.FullName, "TheLastGate.sln")))
-            {
-                return folder.FullName;
-            }
-        }
-
-        throw new InvalidOperationException("TheLastGate.sln wasn't found above the test output folder.");
     }
 }

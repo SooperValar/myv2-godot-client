@@ -142,5 +142,5 @@ When code changes, update or delete its comments in the same change. A stale com
 ## Working style
 
 - Work through a numbered step in pieces: first the tests with stubs that throw `NotImplementedException`, so every commit builds; then the Core code that passes them; then the view. Snapshot each piece as it is done, and commit the pieces in order once the user has checked the result, in game when there is something to see.
-- Work on a branch, use Conventional Commits, and squash-merge into `main` with player-facing changelog lines, only when the user clearly says to merge. The `committing-and-merging` skill (`.claude/skills/`) has the details. Release Please builds the changelog from `main`.
+- Work on a branch, use Conventional Commits, and squash-merge into `main` with player-facing changelog lines, only when the user clearly says to merge. The `committing-and-merging` skill (`.claude/skills/`) has the details. Release Please (`.github/workflows/release-please.yml`) builds the changelog from `main` and keeps a release PR open. Merging that PR tags the release and raises the version in `Directory.Build.props`; merge it only when the user says to release.
 - Plans and specs from superpowers skills (`docs/superpowers/`, `.superpowers/`) stay local and are never committed. They are listed in `.gitignore`.
