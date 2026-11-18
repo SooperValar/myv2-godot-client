@@ -1,10 +1,14 @@
 using System;
+using System.Collections.Generic;
+using System.Diagnostics;
 using Godot;
+using TheLastGate.Notes;
 using TheLastGate.Windows;
+using NumericsVector = System.Numerics.Vector2;
 
 namespace TheLastGate.Map;
 
-// The world map's picture area: the explored map, panned and zoomed, with the player on it.
+// The world map's picture area: the explored map, panned and zoomed, with the player's notes and the player on it.
 public partial class WorldMapCanvas : Control
 {
     private const int BytesPerPixel = 4;
@@ -13,8 +17,20 @@ public partial class WorldMapCanvas : Control
     private const int MarkerCentre = 1;
     private const float FollowRingRadius = 5;
     private const int FollowRingPoints = 17;
+    private const double PinHoverRadius = 8;
+    private const float PathThickness = 2;
+    private const float PathEdgeThickness = 4;
+    private const float ChevronEdgeThickness = 3;
+    private const int PathEndOutline = 3;
+    private const int PathEndFill = 2;
+    private const int PathStartHole = 1;
 
     private static readonly Color Gold = Color.Color8(243, 219, 106);
+    private static readonly Color PathEdge = Color.Color8(0, 0, 0, 200);
+    private static readonly Color TextPlate = Color.Color8(17, 5, 5, 200);
+
+    // Lines are drawn through the middle of their pixels.
+    private static readonly Vector2 PixelMiddle = new(0.5f, 0.5f);
 
     private readonly byte[] pixels = new byte[WorldMapPicture.Width * WorldMapPicture.Height * BytesPerPixel];
     private readonly WorldMapView view = new();
@@ -23,14 +39,21 @@ public partial class WorldMapCanvas : Control
     private ulong pictureMadeAt;
     private int pictureRevision = -1;
     private ImageTexture? pictureTexture;
+    private IReadOnlyDictionary<int, LabelRect> placedNames = new Dictionary<int, LabelRect>();
 
     public ExploredMap? Map { get; set; }
+
+    public NoteSet? Notes { get; set; }
 
     public WorldMapWindow? Window { get; set; }
 
     public (int X, int Y) PlayerTile { get; set; }
 
     public (int X, int Y)? HoveredTile { get; private set; }
+
+    private Font TextFont => GetThemeFont("font", "Label");
+
+    private int TextSize => GetThemeFontSize("font_size", "Label");
 
     public override void _Process(double delta)
     {
@@ -92,12 +115,32 @@ public partial class WorldMapCanvas : Control
         }
     }
 
+    // A pin's name shows on hover only when it isn't already written beside the pin.
+    public override string _GetTooltip(Vector2 atPosition)
+    {
+        if (Notes == null
+            || view.HitTest(Notes, Size.X, Size.Y, atPosition.X, atPosition.Y, PinHoverRadius) is not { } hit
+            || Notes.FindNote(hit.NoteId) is not { Kind: NoteKind.Pin } pin
+            || pin.Label.Length == 0
+            || placedNames.ContainsKey(pin.Id))
+        {
+            return "";
+        }
+
+        return pin.Label;
+    }
+
     public override void _Draw()
     {
         DrawRect(new Rect2(Vector2.Zero, Size), Colors.Black);
         DrawWorld();
+        DrawNotes();
         DrawPlayer();
     }
+
+    private static Color Colour(uint rgb) => Color.Color8((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb);
+
+    private static Vector2 ToGodot(NumericsVector point) => new(point.X, point.Y);
 
     // Right-drag always pans; with the Pan tool so does the left button.
     private bool StartsPanning(MouseButton button) =>
@@ -108,6 +151,8 @@ public partial class WorldMapCanvas : Control
         var (panelX, panelY) = view.TileToPanel(Size.X, Size.Y, tileX, tileY);
         return new Vector2((float)panelX, (float)panelY);
     }
+
+    private Vector2 TileMiddle(int tileX, int tileY) => ToPanel(tileX + 0.5, tileY + 0.5).Floor();
 
     // Only the part of the world inside the panel is drawn, from the matching part of the picture.
     private void DrawWorld()
@@ -134,12 +179,151 @@ public partial class WorldMapCanvas : Control
         DrawTextureRectRegion(pictureTexture, new Rect2(visibleStart, visibleEnd - visibleStart), source);
     }
 
+    private void DrawNotes()
+    {
+        if (Notes == null)
+        {
+            placedNames = new Dictionary<int, LabelRect>();
+            return;
+        }
+
+        var font = TextFont;
+        var fontSize = TextSize;
+        placedNames = WorldMapLabels.Place(Notes, view, Size.X, Size.Y, Measure);
+        foreach (var category in Notes.Categories)
+        {
+            if (!Notes.IsShown(category))
+            {
+                continue;
+            }
+
+            foreach (var note in category.Notes)
+            {
+                var colour = Colour(NoteSet.Rgb(category, note));
+                switch (note.Kind)
+                {
+                    case NoteKind.Path:
+                        DrawPath(note, colour);
+                        break;
+                    case NoteKind.Pin:
+                        DrawPin(note, colour);
+                        break;
+                    case NoteKind.Text:
+                        DrawTextLabel(note, colour);
+                        break;
+                    default:
+                        throw new UnreachableException();
+                }
+            }
+        }
+
+        return;
+
+        (float Width, float Height) Measure(string text)
+        {
+            var size = font.GetStringSize(text, HorizontalAlignment.Left, -1, fontSize);
+            return (size.X, size.Y);
+        }
+    }
+
+    private void DrawPin(Note pin, Color colour)
+    {
+        var (centreX, centreY) = WorldMapLabels.PinCentre(view, Size.X, Size.Y, pin);
+        var centre = new Vector2(centreX, centreY);
+        DrawDiamond(centre, WorldMapLabels.PinMarkerExtent, Colors.Black);
+        DrawDiamond(centre, WorldMapLabels.PinRadius, colour);
+        if (placedNames.TryGetValue(pin.Id, out var name))
+        {
+            DrawShadowedText(new Vector2(name.Left, name.Top), pin.Label, colour);
+        }
+    }
+
+    private void DrawTextLabel(Note text, Color colour)
+    {
+        var textSize = TextFont.GetStringSize(text.Label, HorizontalAlignment.Left, -1, TextSize);
+        var (plate, textX, textY) = WorldMapLabels.TextPlate(view, Size.X, Size.Y, text, (textSize.X, textSize.Y));
+        DrawRect(new Rect2(plate.Left, plate.Top, plate.Right - plate.Left, plate.Bottom - plate.Top), TextPlate);
+        DrawShadowedText(new Vector2(textX, textY), text.Label, colour);
+    }
+
+    // Every segment's dark edge goes down before any of its colour, so the joins between segments stay clean. The
+    // start is a hollow square and the end a solid one, with arrowheads between showing the way the path was drawn.
+    private void DrawPath(Note path, Color colour)
+    {
+        if (path.Segments.Count == 0)
+        {
+            return;
+        }
+
+        foreach (var (start, end) in VisibleSegments(path))
+        {
+            DrawLine(start + PixelMiddle, end + PixelMiddle, PathEdge, PathEdgeThickness, true);
+        }
+
+        foreach (var (start, end) in VisibleSegments(path))
+        {
+            DrawLine(start + PixelMiddle, end + PixelMiddle, colour, PathThickness, true);
+            foreach (var (first, tip, last) in PathMarks.Chevrons(
+                new NumericsVector(start.X, start.Y),
+                new NumericsVector(end.X, end.Y)))
+            {
+                Vector2[] points = [ToGodot(first), ToGodot(tip), ToGodot(last)];
+                DrawPolyline(points, PathEdge, ChevronEdgeThickness, true);
+                DrawPolyline(points, colour, 1, true);
+            }
+        }
+
+        var firstSegment = path.Segments[0];
+        var lastSegment = path.Segments[^1];
+        var startMark = TileMiddle(firstSegment.StartX, firstSegment.StartY);
+        var endMark = TileMiddle(lastSegment.EndX, lastSegment.EndY);
+        DrawSquare(startMark, PathEndOutline, PathEdge);
+        DrawSquare(startMark, PathEndFill, colour);
+        DrawSquare(startMark, PathStartHole, Colors.Black);
+        DrawSquare(endMark, PathEndOutline, PathEdge);
+        DrawSquare(endMark, PathEndFill, colour);
+    }
+
+    private IEnumerable<(Vector2 Start, Vector2 End)> VisibleSegments(Note path)
+    {
+        const float margin = PathThickness + 2;
+        foreach (var segment in path.Segments)
+        {
+            var start = TileMiddle(segment.StartX, segment.StartY);
+            var end = TileMiddle(segment.EndX, segment.EndY);
+            var missesPanel = Mathf.Max(start.X, end.X) < -margin
+                || Mathf.Min(start.X, end.X) > Size.X + margin
+                || Mathf.Max(start.Y, end.Y) < -margin
+                || Mathf.Min(start.Y, end.Y) > Size.Y + margin;
+            if (!missesPanel)
+            {
+                yield return (start, end);
+            }
+        }
+    }
+
+    private void DrawShadowedText(Vector2 topLeft, string text, Color colour)
+    {
+        var baseline = topLeft + new Vector2(0, TextFont.GetAscent(TextSize));
+        DrawString(TextFont, baseline + Vector2.One, text, HorizontalAlignment.Left, -1, TextSize, Colors.Black);
+        DrawString(TextFont, baseline, text, HorizontalAlignment.Left, -1, TextSize, colour);
+    }
+
+    private void DrawDiamond(Vector2 centre, int radius, Color colour)
+    {
+        for (var row = -radius; row <= radius; row++)
+        {
+            var halfWidth = radius - Math.Abs(row);
+            DrawRect(new Rect2(centre.X - halfWidth, centre.Y + row, halfWidth * 2 + 1, 1), colour);
+        }
+    }
+
     private void DrawPlayer()
     {
-        var centre = ToPanel(PlayerTile.X + 0.5, PlayerTile.Y + 0.5).Floor();
+        var centre = TileMiddle(PlayerTile.X, PlayerTile.Y);
         if (Window?.Follow == true)
         {
-            DrawArc(centre + new Vector2(0.5f, 0.5f), FollowRingRadius, 0, Mathf.Tau, FollowRingPoints, Gold, 1);
+            DrawArc(centre + PixelMiddle, FollowRingRadius, 0, Mathf.Tau, FollowRingPoints, Gold, 1);
         }
 
         DrawSquare(centre, MarkerOutline, Colors.Black);

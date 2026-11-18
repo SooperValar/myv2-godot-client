@@ -116,6 +116,32 @@ patch_margin_top = 6
 patch_margin_right = 6
 patch_margin_bottom = 6
 
+[node name="Footer" type="VBoxContainer" parent="Rows/Body/Categories" unique_id=1286450391]
+layout_mode = 1
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 8.0
+offset_top = -36.0
+offset_right = -8.0
+offset_bottom = -8.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_constants/separation = 4
+
+[node name="Separator" type="ColorRect" parent="Rows/Body/Categories/Footer" unique_id=903817264]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[node name="ShowOnMinimap" type="CheckBox" parent="Rows/Body/Categories/Footer" unique_id=1725093846]
+layout_mode = 2
+focus_mode = 0
+text = "Show on minimap"
+
 [node name="MapFrame" type="Control" parent="Rows/Body" unique_id=1543098227]
 layout_mode = 2
 size_flags_horizontal = 3

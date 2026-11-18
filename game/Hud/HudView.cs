@@ -16,6 +16,7 @@ using TheLastGate.Hotkeys;
 using TheLastGate.Items;
 using TheLastGate.Map;
 using TheLastGate.Net;
+using TheLastGate.Notes;
 using TheLastGate.State;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
@@ -76,8 +77,10 @@ public partial class HudView : Control
     private IFontSet? fonts;
     private int? hoveredShopCell;
     private bool itemTooltipsShown = true;
+    private NoteSet? mapNotes;
+    private int mapNotesStamp;
     private Image? minimapImage;
-    private (int Revision, int X, int Y, int Magnification)? minimapShown;
+    private (int Revision, int X, int Y, int Magnification, int NotesStamp)? minimapShown;
     private ImageTexture? minimapTexture;
     private Vector2 mousePosition;
     private bool notesNoticeShown;
@@ -129,6 +132,18 @@ public partial class HudView : Control
     public ExploredMap? ExploredMap { get; set; }
 
     public string? NotesSetAsideFile { get; set; }
+
+    public NoteSet? MapNotes
+    {
+        get => mapNotes;
+        set
+        {
+            mapNotes = value;
+            mapNotesStamp++;
+        }
+    }
+
+    public Action? SaveMapNotes { get; set; }
 
     public event Action? SettingsChanged;
 
@@ -277,10 +292,12 @@ public partial class HudView : Control
         var minimap = GetNode<ClickArea>("%Minimap");
         minimap.Released += button => ClickMinimap(MinimapButton.Map, button);
         minimap.GuiInput += ScrollMinimap;
+        minimap.TooltipFor = MinimapPinName;
         GetNode<ClickArea>("%MinimapZoomIn").Released += button => ClickMinimap(MinimapButton.ZoomIn, button);
         GetNode<ClickArea>("%MinimapZoomOut").Released += button => ClickMinimap(MinimapButton.ZoomOut, button);
         worldMapWindow = GD.Load<PackedScene>(WorldMapWindowScenePath).Instantiate<WorldMapWindowView>();
         AddChild(worldMapWindow);
+        worldMapWindow.NotesChanged += MapNotesChanged;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
         optionsWindow.CloseChosen += CloseOptions;
@@ -816,7 +833,8 @@ public partial class HudView : Control
         }
     }
 
-    // Redrawn only when the map, the player's tile or the magnification has changed since the last picture.
+    // Redrawn only when the map, the player's tile, the magnification or the notes have changed since the last
+    // picture.
     private void ShowMinimap()
     {
         if (ExploredMap is not { } map || state == null)
@@ -825,7 +843,7 @@ public partial class HudView : Control
         }
 
         var player = state.Map.Tiles[WorldMap.PlayerTile];
-        var shown = (map.Revision, player.X, player.Y, minimapView.Magnification);
+        var shown = (map.Revision, player.X, player.Y, minimapView.Magnification, mapNotesStamp);
         if (shown == minimapShown)
         {
             return;
@@ -833,6 +851,8 @@ public partial class HudView : Control
 
         minimapShown = shown;
         minimapView.Render(map, player.X, player.Y, minimapPixels);
+        var (originX, originY) = minimapView.Origin(player.X, player.Y);
+        MinimapOverlay.Paint(mapNotes, minimapPixels, originX, originY, minimapView.Magnification);
         if (minimapImage == null || minimapTexture == null)
         {
             minimapImage = Image.CreateFromData(
@@ -896,6 +916,34 @@ public partial class HudView : Control
         ShowMinimap();
     }
 
+    // The minimap's rows run down it with map x and its columns across with map y.
+    private string MinimapPinName(Vector2 position)
+    {
+        if (state == null)
+        {
+            return "";
+        }
+
+        var player = state.Map.Tiles[WorldMap.PlayerTile];
+        var (originX, originY) = minimapView.Origin(player.X, player.Y);
+        var pin = MinimapOverlay.PinAt(
+            mapNotes,
+            originX,
+            originY,
+            minimapView.Magnification,
+            (int)position.Y,
+            (int)position.X);
+        return pin?.Label ?? "";
+    }
+
+    // The current client saves the notes straight after every change.
+    private void MapNotesChanged()
+    {
+        mapNotesStamp++;
+        SaveMapNotes?.Invoke();
+        ShowMinimap();
+    }
+
     // The current client shows the set-aside notice the first time the world map opens.
     private void ShowWorldMap()
     {
@@ -905,7 +953,7 @@ public partial class HudView : Control
         }
 
         var player = state.Map.Tiles[WorldMap.PlayerTile];
-        worldMapWindow.ShowWindow(state.WorldMapWindow, ExploredMap, (player.X, player.Y));
+        worldMapWindow.ShowWindow(state.WorldMapWindow, ExploredMap, mapNotes, (player.X, player.Y));
         if (state.WorldMapWindow.IsOpen && !notesNoticeShown && NotesSetAsideFile is { } fileName)
         {
             notesNoticeShown = true;

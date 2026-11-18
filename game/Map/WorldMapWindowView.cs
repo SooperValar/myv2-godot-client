@@ -2,13 +2,15 @@ using System;
 using System.Linq;
 using Godot;
 using TheLastGate.Hud;
+using TheLastGate.Notes;
 using TheLastGate.Windows;
 
 namespace TheLastGate.Map;
 
 // The current client's World Map window, drawn with the game's window and button sprites: a title bar to drag it by,
-// the category column (filled by a later step), the map, and a bar of tools, Follow player and the tile under the
-// cursor. Its own clicks change its own state; the HUD only opens it and tells it what to show.
+// the category column (filled by a later step), the map with the player's notes on it, and a bar of tools, Follow
+// player and the tile under the cursor. Its own clicks change its own state; the HUD only opens it and tells it what
+// to show.
 [Tool]
 public partial class WorldMapWindowView : Panel
 {
@@ -16,6 +18,7 @@ public partial class WorldMapWindowView : Panel
     private const float TitleBottom = 30;
 
     private static readonly Vector2 SmallestSize = new(480, 320);
+    private NoteSet? notes;
 
     private Vector2 titleGrab;
     private bool titleHeld;
@@ -24,6 +27,10 @@ public partial class WorldMapWindowView : Panel
     private WorldMapCanvas Canvas => GetNode<WorldMapCanvas>("Rows/Body/MapFrame/Canvas");
 
     private Control Help => GetNode<Control>("HelpBlocker");
+
+    private CheckBox ShowOnMinimapBox => GetNode<CheckBox>("Rows/Body/Categories/Footer/ShowOnMinimap");
+
+    public event Action? NotesChanged;
 
     public override void _Ready()
     {
@@ -53,6 +60,7 @@ public partial class WorldMapWindowView : Panel
                 window.Follow = isOn;
             }
         };
+        ShowOnMinimapBox.Toggled += ShowOnMinimap;
         foreach (var tool in Enum.GetValues<WorldMapTool>())
         {
             ToolButton(tool).Pressed += () =>
@@ -80,12 +88,20 @@ public partial class WorldMapWindowView : Panel
         GetNode<Label>("Rows/BottomBar/Coordinates").Text =
             Canvas.HoveredTile is { } tile ? $"{tile.X}, {tile.Y}" : "";
         GetNode<CheckBox>("Rows/BottomBar/Follow").SetPressedNoSignal(window.Follow);
+        ShowOnMinimapBox.SetPressedNoSignal(notes?.ShowOnMinimap == true);
     }
 
-    // The window, the map it draws and the player's tile come from the HUD on every refresh.
-    public void ShowWindow(WorldMapWindow shownWindow, ExploredMap? map, (int X, int Y) playerTile)
+    // The window, the map it draws, the notes and the player's tile come from the HUD on every refresh.
+    public void ShowWindow(
+        WorldMapWindow shownWindow,
+        ExploredMap? map,
+        NoteSet? shownNotes,
+        (int X, int Y) playerTile)
     {
         window = shownWindow;
+        notes = shownNotes;
+        ShowOnMinimapBox.Disabled = shownNotes == null;
+        Canvas.Notes = shownNotes;
         Visible = shownWindow.IsOpen;
         Canvas.Window = shownWindow;
         Canvas.Map = map;
@@ -110,6 +126,18 @@ public partial class WorldMapWindowView : Panel
         {
             frame.Texture = texture;
         }
+    }
+
+    private void ShowOnMinimap(bool isOn)
+    {
+        if (notes == null)
+        {
+            return;
+        }
+
+        notes.ShowOnMinimap = isOn;
+        notes.Changed = true;
+        NotesChanged?.Invoke();
     }
 
     private Button ToolButton(WorldMapTool tool) => GetNode<Button>($"Rows/BottomBar/{tool}");
