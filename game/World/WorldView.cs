@@ -24,6 +24,7 @@ public partial class WorldView : Node2D
     private const string NameplateScenePath = "res://World/nameplate.tscn";
     private const string MagicGlowShaderPath = "res://World/magic_glow.gdshader";
     private const int PlayerNameplateLayer = 1;
+    private const int ReservedValue = 4;
     private const int QueuedUseSprite = 45;
 
     // Sprite 4001 numbers the first queued use.
@@ -418,6 +419,7 @@ public partial class WorldView : Node2D
             NameplateText.For(name, tile.CharacterId, tile.CharacterHealthPercent, ShowNames, ShowHealthPercent),
             NameplateFontFor(tile.CharacterTextColour),
             tile.CharacterHealthPercent,
+            tileIndex == WorldMap.PlayerTile ? State.Player.HitPoints[ReservedValue] : 0,
             showText,
             ShowHealthBars);
     }

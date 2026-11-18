@@ -39,6 +39,15 @@ offset_bottom = 2.0
 mouse_filter = 2
 color = Color(0.6451613, 0, 0, 1)
 
+[node name="BarReserved" type="ColorRect" parent="HealthBar" unique_id=745298527]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_right = 24.0
+offset_bottom = 2.0
+mouse_filter = 2
+color = Color(0.516129032, 0.507936508, 0.516129032, 1)
+
 [node name="BarFill" type="ColorRect" parent="HealthBar" unique_id=526572637]
 unique_name_in_owner = true
 layout_mode = 0
