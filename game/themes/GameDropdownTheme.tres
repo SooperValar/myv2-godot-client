@@ -54,6 +54,13 @@ border_width_bottom = 1
 border_color = Color(0.462745, 0.384314, 0.0313726, 1)
 
 [resource]
+LineEdit/colors/caret_color = Color(0.952941, 0.858824, 0.415686, 1)
+LineEdit/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+LineEdit/colors/font_uneditable_color = Color(0.952941, 0.858824, 0.415686, 0.5)
+LineEdit/colors/selection_color = Color(0.462745, 0.384314, 0.0313726, 1)
+LineEdit/styles/focus = SubResource("StyleBoxEmpty_none")
+LineEdit/styles/normal = SubResource("StyleBoxFlat_box")
+LineEdit/styles/read_only = SubResource("StyleBoxFlat_box")
 OptionButton/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 OptionButton/colors/font_disabled_color = Color(0.952941, 0.858824, 0.415686, 0.5)
 OptionButton/colors/font_focus_color = Color(0.952941, 0.858824, 0.415686, 1)

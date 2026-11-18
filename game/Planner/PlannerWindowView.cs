@@ -2,8 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
-using TheLastGate.Assets;
-using TheLastGate.Hud;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
 using OptionButton = Godot.OptionButton;
@@ -16,7 +14,6 @@ namespace TheLastGate.Planner;
 [Tool]
 public partial class PlannerWindowView : Panel
 {
-    private const int FrameSprite = 18128;
     private const string StatRowScenePath = "res://Planner/planner_stat_row.tscn";
     private const string FocusLineScenePath = "res://Planner/planner_focus_line.tscn";
     private const int PreviewSkillRows = 12;
@@ -37,8 +34,6 @@ public partial class PlannerWindowView : Panel
         new("Through attributes", "49476 exp", false, FocusTone.OtherRoute),
     ];
 
-    private static readonly Color LightBackground = Color.Color8(42, 15, 10, 240);
-    private static readonly Color DarkBackground = Color.Color8(23, 0, 5);
     private PackedScene? focusLineScene;
     private Theme? sceneTheme;
 
@@ -72,6 +67,8 @@ public partial class PlannerWindowView : Panel
     public event Action<PlannerFocus>? FocusClicked;
 
     public event Action? PlanItPressed;
+
+    public event Action? AdvancedPressed;
 
     public override void _Ready()
     {
@@ -113,6 +110,7 @@ public partial class PlannerWindowView : Panel
         GetNode<Button>("Header/Reset").Pressed += () => ResetPressed?.Invoke();
         GetNode<Button>("Header/Close").Pressed += () => ClosePressed?.Invoke();
         PlanIt.Pressed += () => PlanItPressed?.Invoke();
+        GetNode<Button>("Left/MathHeader/Advanced").Pressed += () => AdvancedPressed?.Invoke();
     }
 
     // The gold outline marks the focused skill or combat stat.
@@ -156,7 +154,7 @@ public partial class PlannerWindowView : Panel
     public void ShowWindow(bool shown, bool darkMode, int pointsLeft, int planned, PlannerSheet? sheet)
     {
         Visible = shown;
-        ((StyleBoxFlat)GetThemeStylebox("panel")).BgColor = darkMode ? DarkBackground : LightBackground;
+        PlannerLook.ShowBackground(this, darkMode);
         GetNode<Label>("Header/Points").Text = PlannerWindow.Header(pointsLeft, planned);
         if (sheet == null)
         {
@@ -268,34 +266,7 @@ public partial class PlannerWindowView : Panel
         }
     }
 
-    // The text is in the HUD's font, so a font set swapped in the options reaches the planner too. Every label keeps
-    // the planner's own colour, which tints the font set's white letters.
-    public void ApplyFont()
-    {
-        if (HudView.Containing(this)?.Fonts is not { } fonts)
-        {
-            return;
-        }
+    public void ApplyFont() => PlannerLook.ApplyFont(this, ref sceneTheme);
 
-        sceneTheme ??= Theme;
-        var font = fonts.For(TextColour.White);
-        var themed = (Theme)sceneTheme.Duplicate();
-        themed.DefaultFont = font.Font;
-        themed.DefaultFontSize = font.Size;
-        Theme = themed;
-    }
-
-    // The window sprite lives in the sprite archives, so it is put on when the HUD has them.
-    public void ApplyFrameSprite()
-    {
-        if (HudView.Containing(this)?.Sprites?.GetTexture(FrameSprite) is not { } texture)
-        {
-            return;
-        }
-
-        foreach (var frame in FindChildren("Frame", nameof(NinePatchRect), true, false).Cast<NinePatchRect>())
-        {
-            frame.Texture = texture;
-        }
-    }
+    public void ApplyFrameSprite() => PlannerLook.ApplyFrameSprite(this);
 }

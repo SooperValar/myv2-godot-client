@@ -1,0 +1,175 @@
+[gd_scene format=3 uid="uid://m2m746j5i722"]
+
+[ext_resource type="Script" uid="uid://tr7m33h336xj" path="res://Planner/PlannerAdvancedWindowView.cs" id="1_view"]
+[ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
+bg_color = Color(0.164706, 0.0588235, 0.0392157, 0.941176)
+
+[node name="PlannerAdvancedWindow" type="Panel" unique_id=594828369]
+offset_left = 360.0
+offset_top = 60.0
+offset_right = 920.0
+offset_bottom = 660.0
+theme = ExtResource("2_theme")
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+script = ExtResource("1_view")
+
+[node name="Frame" type="NinePatchRect" parent="." unique_id=1589951096]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Header" type="Control" parent="." unique_id=1628439614]
+anchors_preset = 0
+offset_left = 12.0
+offset_top = 12.0
+offset_right = 548.0
+offset_bottom = 31.0
+mouse_filter = 2
+
+[node name="Title" type="Label" parent="Header" unique_id=1246470869]
+layout_mode = 0
+offset_right = 200.0
+offset_bottom = 19.0
+text = "Advanced"
+vertical_alignment = 1
+
+[node name="Close" type="Button" parent="Header" unique_id=436592362]
+layout_mode = 0
+offset_left = 480.0
+offset_right = 536.0
+offset_bottom = 19.0
+focus_mode = 0
+text = "Close"
+
+[node name="Body" type="ScrollContainer" parent="." unique_id=1798788213]
+layout_mode = 0
+offset_left = 12.0
+offset_top = 38.0
+offset_right = 548.0
+offset_bottom = 588.0
+horizontal_scroll_mode = 0
+
+[node name="Sections" type="VBoxContainer" parent="Body" unique_id=1078556862]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="SpellsHeading" type="Label" parent="Body/Sections" unique_id=969752245]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Spells"
+vertical_alignment = 1
+
+[node name="Spells" type="VBoxContainer" parent="Body/Sections" unique_id=1517999141]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="CardsGap" type="Control" parent="Body/Sections" unique_id=1028123016]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CardsHeading" type="Label" parent="Body/Sections" unique_id=254703441]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Tarot cards"
+vertical_alignment = 1
+
+[node name="Cards" type="HBoxContainer" parent="Body/Sections" unique_id=1893127068]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Left" type="VBoxContainer" parent="Body/Sections/Cards" unique_id=1902737042]
+custom_minimum_size = Vector2(268, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="Right" type="VBoxContainer" parent="Body/Sections/Cards" unique_id=1907233788]
+custom_minimum_size = Vector2(268, 0)
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="TreeGap" type="Control" parent="Body/Sections" unique_id=199615873]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="TreeHeading" type="Label" parent="Body/Sections" unique_id=1124567515]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Skill tree"
+vertical_alignment = 1
+
+[node name="TreeRows" type="VBoxContainer" parent="Body/Sections" unique_id=1308563664]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="CorruptorsGap" type="Control" parent="Body/Sections" unique_id=1885135526]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CorruptorsHeading" type="Label" parent="Body/Sections" unique_id=635564191]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Corruptors"
+vertical_alignment = 1
+
+[node name="Corruptors" type="VBoxContainer" parent="Body/Sections" unique_id=1803813678]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="EnchantsGap" type="Control" parent="Body/Sections" unique_id=247052564]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="EnchantsHeading" type="Label" parent="Body/Sections" unique_id=1129836942]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Enchantments"
+vertical_alignment = 1
+
+[node name="Enchants" type="VBoxContainer" parent="Body/Sections" unique_id=1733238196]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
+
+[node name="GearGap" type="Control" parent="Body/Sections" unique_id=1411373736]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="GearHeading" type="Label" parent="Body/Sections" unique_id=1108065990]
+custom_minimum_size = Vector2(0, 19)
+layout_mode = 2
+theme_type_variation = &"HeadingLabel"
+text = "Gear"
+vertical_alignment = 1
+
+[node name="Gear" type="VBoxContainer" parent="Body/Sections" unique_id=1014640166]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0

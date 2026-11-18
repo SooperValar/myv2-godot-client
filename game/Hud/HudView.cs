@@ -39,6 +39,7 @@ public partial class HudView : Control
     private const string ItemTooltipBinding = "item_tooltip_hotkey";
     private const string WorldMapWindowScenePath = "res://Map/world_map_window.tscn";
     private const string PlannerWindowScenePath = "res://Planner/planner_window.tscn";
+    private const string PlannerAdvancedScenePath = "res://Planner/planner_advanced_window.tscn";
     private const int HintFont = 1;
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
@@ -86,6 +87,7 @@ public partial class HudView : Control
     private ImageTexture? minimapTexture;
     private Vector2 mousePosition;
     private bool notesNoticeShown;
+    private PlannerAdvancedWindowView? plannerAdvanced;
     private PlannerWindowView? plannerWindow;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
@@ -317,6 +319,11 @@ public partial class HudView : Control
         plannerWindow.OffhandChosen += offhand => ChangePlannerChoices(choices => choices.Offhand = offhand);
         plannerWindow.FocusClicked += ToggleFocus;
         plannerWindow.PlanItPressed += PlanFocus;
+        plannerWindow.AdvancedPressed += OpenPlannerAdvanced;
+        plannerAdvanced = GD.Load<PackedScene>(PlannerAdvancedScenePath).Instantiate<PlannerAdvancedWindowView>();
+        AddChild(plannerAdvanced);
+        plannerAdvanced.ClosePressed += ClosePlannerAdvanced;
+        plannerAdvanced.ChoiceChanged += ChangePlannerChoices;
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
@@ -618,6 +625,10 @@ public partial class HudView : Control
                 case PlannerWindowView planner:
                     planner.ApplyFrameSprite();
                     planner.ApplyFont();
+                    break;
+                case PlannerAdvancedWindowView advanced:
+                    advanced.ApplyFrameSprite();
+                    advanced.ApplyFont();
                     break;
             }
 
@@ -1661,6 +1672,26 @@ public partial class HudView : Control
         ShowPlanner();
     }
 
+    private void OpenPlannerAdvanced()
+    {
+        if (state != null)
+        {
+            state.PlannerWindow.AdvancedOpen = true;
+        }
+
+        ShowPlanner();
+    }
+
+    private void ClosePlannerAdvanced()
+    {
+        if (state != null)
+        {
+            state.PlannerWindow.AdvancedOpen = false;
+        }
+
+        ShowPlanner();
+    }
+
     private void ShowPlanner()
     {
         var enabled = PlannerEnabled;
@@ -1683,10 +1714,21 @@ public partial class HudView : Control
             state.Player.Points - statPlan.PointsUsed,
             statPlan.PointsUsed,
             sheet);
-        if (sheet == null)
+        if (sheet == null || PlannerChoices == null)
         {
+            if (plannerAdvanced != null)
+            {
+                plannerAdvanced.Visible = false;
+            }
+
             return;
         }
+
+        plannerAdvanced?.ShowWindow(
+            state.PlannerWindow.AdvancedOpen,
+            DarkMode,
+            PlannerChoices.Choices,
+            AdvancedSheet.For(sheet));
 
         var panel = FocusPanel.For(sheet, state.PlannerWindow.Focus, focusCache);
         if (panel.LostFocus)
