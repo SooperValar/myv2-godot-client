@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace TheLastGate.Planner;
@@ -47,6 +48,9 @@ public static class TarotMath
     ];
 
     public static IReadOnlyList<TarotCard> ModelledCards => Modelled;
+
+    // By card number: the 22 cards upright, then reversed.
+    public static IReadOnlyList<string> CardNames => throw new NotImplementedException();
 
     public static bool Has(ulong cards, int cardIndex) =>
         cardIndex is >= 0 and < CardCount && ((cards >> cardIndex) & 1) != 0;

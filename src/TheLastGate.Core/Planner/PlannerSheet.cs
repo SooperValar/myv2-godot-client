@@ -29,11 +29,11 @@ public sealed record PlannerRow(
 // and every row. Without the spell meta stats the rows fall back to the plain skill preview.
 public sealed class PlannerSheet
 {
-    private const string HitScore = "Hit Score";
-    private const string ParryScore = "Parry Score";
-    private const string SpellMultiplier = "Spell Multiplier";
-    private const string SpellAptitude = "Spell Aptitude";
-    private const string SpellBonus = "Spell Bonus";
+    public const string HitScore = "Hit Score";
+    public const string ParryScore = "Parry Score";
+    public const string SpellMultiplier = "Spell Multiplier";
+    public const string SpellAptitude = "Spell Aptitude";
+    public const string SpellBonus = "Spell Bonus";
 
     private const int UncappedValue = 4;
     private const int TotalValue = 5;
@@ -93,6 +93,15 @@ public sealed class PlannerSheet
 
     public CombatModelInput? Combat { get; private set; }
 
+    // Hit, Parry, Weapon and Armor Value with the plan and the buffs shown; missing until Hit and Parry have arrived.
+    public CombatValues? CombatShown => throw new NotImplementedException();
+
+    // The plan or the buffs change a combat number or the spell aptitude.
+    public bool CombatChanged => throw new NotImplementedException();
+
+    // What feeds the numbers besides the stats, one line each: the game mode, the spells, cards, tree and items.
+    public IReadOnlyList<string> MathLines => throw new NotImplementedException();
+
     // A first look picked the weapon and off-hand, so the choices want saving.
     public bool ChoicesChanged { get; private set; }
 
@@ -118,6 +127,11 @@ public sealed class PlannerSheet
             .ToArray();
         return sheet;
     }
+
+    // "-" while the meta stat hasn't arrived.
+    public string MetaText(string name) => throw new NotImplementedException();
+
+    public static string FormatMeta(int value, MetaFormat format) => throw new NotImplementedException();
 
     public static int SpellRaceModifier(uint kindred)
     {

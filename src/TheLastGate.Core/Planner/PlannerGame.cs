@@ -10,6 +10,9 @@ namespace TheLastGate.Planner;
 // A skill as the server's skill table describes it.
 public sealed record PlannerSkillText(string Name, IReadOnlyList<int> Attributes, int Show);
 
+// How a meta stat is written: a decimal one is sent in hundredths.
+public sealed record MetaFormat(bool Decimal, string Affix);
+
 // What the planner works from: the player's numbers copied out of the game, and the plan and choices it changes.
 public sealed class PlannerGame
 {
@@ -49,6 +52,11 @@ public sealed class PlannerGame
 
     // The meta stats that have arrived, by name.
     public Dictionary<string, int> MetaStats { get; } = [];
+
+    public Dictionary<string, MetaFormat> MetaFormats { get; } = [];
+
+    // The names of the class tree's nodes, first node first.
+    public string[] TreeNodeNames { get; } = Enumerable.Repeat("", PlayerState.TreeNodeCount).ToArray();
 
     public bool[] BuffActive { get; } = new bool[BuffModelInput.BuffCount];
 

@@ -12,6 +12,7 @@ public class PlannerSheetTests
     private const int SwordSkill = 3;
     private const int Strength = (int)AttributeSlot.Strength;
     private const int Agility = (int)AttributeSlot.Agility;
+    private const int Braveness = (int)AttributeSlot.Braveness;
 
     private readonly PlannerGame game = Game();
 
@@ -209,6 +210,116 @@ public class PlannerSheetTests
     }
 
     [Fact]
+    public void WithNothingPlannedOrShown_TheCombatBlockShowsTheServersValues()
+    {
+        game.Choices.SpellToggles = 0;
+
+        var sheet = PlannerSheet.For(game);
+
+        Assert.Equal(new CombatValues(100, 90, 30, 30), sheet.CombatShown);
+        Assert.False(sheet.CombatChanged);
+    }
+
+    [Fact]
+    public void RaisingTheWeaponSkill_RaisesHit()
+    {
+        game.Choices.SpellToggles = 0;
+        game.SkillTexts[SwordSkill] = new PlannerSkillText("Sword", [Braveness, Agility, Strength], 1);
+        int[] sword = [40, 0, 200, 3, 0, 80];
+        sword.CopyTo(game.Skills[SwordSkill], 0);
+        var slot = StatPlan.SkillSlot(SwordSkill);
+        game.Plan.Raise(slot, game.ValuesFor(slot), game.Points, 10);
+
+        var sheet = PlannerSheet.For(game);
+
+        Assert.Equal(CombatWeapon.Sword, sheet.Combat?.Weapon);
+        Assert.True(sheet.CombatShown?.Hit > 100);
+        Assert.True(sheet.CombatChanged);
+    }
+
+    [Fact]
+    public void WithoutHitAndParry_ThereAreNoCombatValues()
+    {
+        game.MetaStats.Remove("Hit Score");
+
+        Assert.Null(PlannerSheet.For(game).CombatShown);
+    }
+
+    [Theory]
+    [InlineData(125, true, "%", "1.25%")]
+    [InlineData(7, true, "", "0.07")]
+    [InlineData(90, false, "", "90")]
+    [InlineData(250, false, " pts", "250 pts")]
+    public void FormatMeta_WritesHundredthsForADecimalStat(int value, bool isDecimal, string affix, string text)
+    {
+        Assert.Equal(text, PlannerSheet.FormatMeta(value, new MetaFormat(isDecimal, affix)));
+    }
+
+    [Fact]
+    public void MetaText_IsADashUntilTheStatArrives()
+    {
+        game.MetaFormats[PlannerSheet.SpellMultiplier] = new MetaFormat(true, "x");
+
+        var sheet = PlannerSheet.For(game);
+
+        Assert.Equal("-", sheet.MetaText("Nothing Like It"));
+        Assert.Equal("1.00x", sheet.MetaText(PlannerSheet.SpellMultiplier));
+        Assert.Equal("90", sheet.MetaText(PlannerSheet.ParryScore));
+    }
+
+    [Fact]
+    public void MathLines_ListWhatFeedsTheNumbers()
+    {
+        const uint seyan = 1u << 1;
+        game.HardMode = true;
+        game.Kindred = seyan;
+        game.TreePoints = TreeBit(5) | TreeBit(6) | TreeBit(7) | TreeBit(8);
+        game.TreeNodeNames[4] = "Node Five";
+        game.TreeNodes[5] = 20;
+        game.TreeNodes[6] = 66;
+        game.TreeNodes[7] = 250;
+        game.Choices.TarotCards = 1ul << (int)TarotCard.Magician;
+        game.Choices.CorruptorTicks = 1u << (int)Corruptor.FalseAgility;
+        game.Choices.CorruptorCounts[(int)Corruptor.FalseAgility] = 2;
+        game.Choices.CorruptorTicks |= 1u << (int)Corruptor.FalseStrength;
+        game.Choices.EnchantTicks = 1u << (int)Enchant.MoreBraveness;
+        game.Choices.EnchantCounts[(int)Enchant.MoreBraveness] = 3;
+        var uncounted = FirstIndex(ItemEffects.Enchants, enchant => !enchant.Counted);
+        game.Choices.EnchantTicks |= 1u << uncounted;
+        game.Choices.EnchantCounts[uncounted] = 5;
+        var unmodelled = FirstIndex(ItemEffects.Gears, gear => !gear.Modelled);
+        game.Choices.GearTicks = 1u << unmodelled;
+
+        Assert.Equal(
+            [
+                "Hard Mode", "Bless", "The Magician", "Node Five (skill tree)", "False Strength (skill tree)",
+                "False Tactician (not modelled) (skill tree)", "False Agility x2", "More Braveness x3",
+                ItemEffects.Enchants[uncounted].Name, $"{ItemEffects.Gears[unmodelled].Name} (not modelled)",
+            ],
+            PlannerSheet.For(game).MathLines);
+    }
+
+    [Fact]
+    public void MathLines_LeaveOutUnlearnedNodesAndSpellsYouDontKnow()
+    {
+        game.Kindred = 1u << 1;
+        game.TreePoints = TreeBit(1);
+        game.Skills[BlessSkill][0] = 0;
+
+        Assert.Empty(PlannerSheet.For(game).MathLines);
+    }
+
+    [Fact]
+    public void CardNames_AreTheUprightCardsThenTheReversed()
+    {
+        Assert.Equal(TarotMath.CardCount, TarotMath.CardNames.Count);
+        Assert.Equal("The Fool", TarotMath.CardNames[0]);
+        Assert.Equal("The World", TarotMath.CardNames[21]);
+        Assert.Equal("The Fool, Reversed", TarotMath.CardNames[22]);
+        Assert.Equal("The World, Reversed", TarotMath.CardNames[43]);
+    }
+
+    [Fact]
     public void Score_JoinsTheHighAndLowParts()
     {
         Assert.Equal(300, PlannerGame.Score([0, 0, 0, 0, 1, 44]));
@@ -233,7 +344,14 @@ public class PlannerSheetTests
         Assert.Equal(12, copied.Skills[SwordSkill][0]);
         Assert.Equal(Terminology.SkillCount, copied.SkillOrder.Count);
         Assert.Empty(copied.MetaStats);
+        Assert.Empty(copied.MetaFormats);
+        Assert.Equal("p01", copied.TreeNodeNames[0]);
     }
+
+    private static int TreeBit(int node) => 1 << (12 - node + 4);
+
+    private static int FirstIndex<TEntry>(IReadOnlyList<TEntry> entries, Func<TEntry, bool> matches) =>
+        entries.Select((entry, index) => (entry, index)).First(pair => matches(pair.entry)).index;
 
     private static PlannerGame Game()
     {
