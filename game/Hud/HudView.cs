@@ -312,6 +312,8 @@ public partial class HudView : Control
         plannerWindow.ResetPressed += ResetPlan;
         plannerWindow.ClosePressed += ClosePlanner;
         plannerWindow.RowClicked += ChangePlan;
+        plannerWindow.WeaponChosen += weapon => ChangePlannerChoices(choices => choices.Weapon = weapon);
+        plannerWindow.OffhandChosen += offhand => ChangePlannerChoices(choices => choices.Offhand = offhand);
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
@@ -1629,6 +1631,18 @@ public partial class HudView : Control
             state.Player.Points - statPlan.PointsUsed,
             statPlan.PointsUsed,
             shown ? PlannerSheet() : null);
+    }
+
+    private void ChangePlannerChoices(Action<PlannerChoices> change)
+    {
+        if (PlannerChoices == null)
+        {
+            return;
+        }
+
+        change(PlannerChoices.Choices);
+        PlannerChoices.Save();
+        ShowPlanner();
     }
 
     private PlannerSheet? PlannerSheet()

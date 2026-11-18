@@ -5,6 +5,7 @@ using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Hud;
 using TheLastGate.Windows;
+using OptionButton = Godot.OptionButton;
 
 namespace TheLastGate.Planner;
 
@@ -17,9 +18,14 @@ public partial class PlannerWindowView : Panel
     private const int FrameSprite = 18128;
     private const string StatRowScenePath = "res://Planner/planner_stat_row.tscn";
     private const int PreviewSkillRows = 12;
+    private const int MathLineHeight = 14;
+
+    private const string FistsTooltip = "Fists of the Heavens uses your best weapon skill";
 
     private static readonly string[] StatRowNames =
         ["Braveness", "Willpower", "Intuition", "Agility", "Strength", "Hitpoints", "Mana"];
+
+    private static readonly string[] CombatRowNames = ["HitScore", "ParryScore", "WeaponValue", "ArmorValue"];
 
     private static readonly Color LightBackground = Color.Color8(42, 15, 10, 240);
     private static readonly Color DarkBackground = Color.Color8(23, 0, 5);
@@ -29,6 +35,12 @@ public partial class PlannerWindowView : Panel
 
     private Container SkillRows => GetNode<Container>("Right/SkillScroll/SkillRows");
 
+    private OptionButton WeaponChoice => GetNode<OptionButton>("Left/Equipment/Weapon");
+
+    private OptionButton OffhandChoice => GetNode<OptionButton>("Left/Equipment/Offhand");
+
+    private Container MathLines => GetNode<Container>("Left/MathScroll/Indent/MathLines");
+
     public event Action? CommitPressed;
 
     public event Action? ResetPressed;
@@ -37,6 +49,10 @@ public partial class PlannerWindowView : Panel
 
     // A row's stat plan slot, and true to raise it or false to lower it.
     public event Action<int, bool>? RowClicked;
+
+    public event Action<CombatWeapon>? WeaponChosen;
+
+    public event Action<CombatOffhand>? OffhandChosen;
 
     public override void _Ready()
     {
@@ -54,6 +70,18 @@ public partial class PlannerWindowView : Panel
             GetNode<PlannerStatRow>("Left/" + name).GlyphClicked += (slot, raise) => RowClicked?.Invoke(slot, raise);
         }
 
+        foreach (var name in CombatModel.WeaponNames)
+        {
+            WeaponChoice.AddItem(name);
+        }
+
+        foreach (var name in CombatModel.OffhandNames)
+        {
+            OffhandChoice.AddItem(name);
+        }
+
+        WeaponChoice.ItemSelected += index => WeaponChosen?.Invoke((CombatWeapon)index);
+        OffhandChoice.ItemSelected += index => OffhandChosen?.Invoke((CombatOffhand)index);
         GetNode<Button>("Header/Commit").Pressed += () => CommitPressed?.Invoke();
         GetNode<Button>("Header/Reset").Pressed += () => ResetPressed?.Invoke();
         GetNode<Button>("Header/Close").Pressed += () => ClosePressed?.Invoke();
@@ -76,6 +104,65 @@ public partial class PlannerWindowView : Panel
         }
 
         ShowSkills(sheet.Skills);
+        ShowCombat(sheet);
+        ShowMathLines(sheet.MathLines);
+    }
+
+    // Until Hit, Parry and the spell stats have arrived the block shows the server's numbers alone.
+    private void ShowCombat(PlannerSheet sheet)
+    {
+        var combatRows = CombatRowNames.Select(name => GetNode<PlannerValueRow>("Left/" + name)).ToArray();
+        var multiplier = GetNode<PlannerValueRow>("Left/SpellMultiplier");
+        var aptitude = GetNode<PlannerValueRow>("Left/SpellAptitude");
+        var heading = GetNode<Label>("Left/CombatHeading/Label");
+        multiplier.Show(PlannerSheet.SpellMultiplier, sheet.MetaText(PlannerSheet.SpellMultiplier));
+        if (sheet is not { Combat: { } combat, CombatShown: { } shown, PlannedInput: { } input, Planned: { } planned })
+        {
+            heading.Text = "Combat (current)";
+            GetNode<CanvasItem>("Left/Equipment").Visible = false;
+            combatRows[0].Show(PlannerSheet.HitScore, sheet.MetaText(PlannerSheet.HitScore));
+            combatRows[1].Show(PlannerSheet.ParryScore, sheet.MetaText(PlannerSheet.ParryScore));
+            combatRows[2].Show(CombatModel.StatNames[(int)CombatStat.Weapon], sheet.ServerWeapon.ToString());
+            combatRows[3].Show(CombatModel.StatNames[(int)CombatStat.Armor], sheet.ServerArmor.ToString());
+            aptitude.Show(PlannerSheet.SpellAptitude, sheet.MetaText(PlannerSheet.SpellAptitude));
+            return;
+        }
+
+        heading.Text = sheet.CombatChanged ? "Combat" : "Combat (current)";
+        GetNode<CanvasItem>("Left/Equipment").Visible = true;
+        WeaponChoice.Select((int)combat.Weapon);
+        OffhandChoice.Select((int)combat.Offhand);
+        WeaponChoice.Disabled = combat.BestWeaponSkill;
+        WeaponChoice.TooltipText = combat.BestWeaponSkill ? FistsTooltip : "";
+        var server = new CombatValues(combat.ServerHit, combat.ServerParry, sheet.ServerWeapon, sheet.ServerArmor);
+        foreach (var stat in Enum.GetValues<CombatStat>())
+        {
+            combatRows[(int)stat].ShowPlanned(CombatModel.StatNames[(int)stat], server[stat], shown[stat]);
+        }
+
+        aptitude.ShowPlanned(PlannerSheet.SpellAptitude, input.SpellAptitude, planned.SpellAptitude);
+    }
+
+    private void ShowMathLines(IReadOnlyList<string> lines)
+    {
+        var mathLines = MathLines;
+        while (mathLines.GetChildCount() < lines.Count)
+        {
+            mathLines.AddChild(
+                new Label
+                {
+                    CustomMinimumSize = new Vector2(0, MathLineHeight),
+                    VerticalAlignment = VerticalAlignment.Center,
+                    MouseFilter = MouseFilterEnum.Ignore,
+                });
+        }
+
+        var labels = mathLines.GetChildren().Cast<Label>().ToArray();
+        for (var index = 0; index < labels.Length; index++)
+        {
+            labels[index].Visible = index < lines.Count;
+            labels[index].Text = index < lines.Count ? lines[index] : "";
+        }
     }
 
     private void ShowSkills(IReadOnlyList<PlannerRow> skills)

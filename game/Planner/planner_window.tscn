@@ -3,6 +3,8 @@
 [ext_resource type="Script" uid="uid://usd3shgqiub" path="res://Planner/PlannerWindowView.cs" id="1_view"]
 [ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
 [ext_resource type="PackedScene" uid="uid://f8ob5sl7bt4g" path="res://Planner/planner_stat_row.tscn" id="3_row"]
+[ext_resource type="PackedScene" uid="uid://gnrt5ug31fqn" path="res://Planner/planner_value_row.tscn" id="4_value"]
+[ext_resource type="Theme" uid="uid://cutkkse75jg5" path="res://themes/GameDropdownTheme.tres" id="5_dropdown"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
 bg_color = Color(0.164706, 0.0588235, 0.0392157, 0.941176)
@@ -113,6 +115,127 @@ layout_mode = 2
 
 [node name="Mana" parent="Left" unique_id=1598631709 instance=ExtResource("3_row")]
 layout_mode = 2
+
+[node name="CombatGap" type="Control" parent="Left" unique_id=1586348330]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="CombatHeading" type="Control" parent="Left" unique_id=1778860719]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Left/CombatHeading" unique_id=446509138]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 290.0
+offset_bottom = 14.0
+theme_type_variation = &"HeadingLabel"
+text = "Combat (current)"
+vertical_alignment = 1
+
+[node name="Equipment" type="Control" parent="Left" unique_id=1838238627]
+custom_minimum_size = Vector2(290, 16)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="WeaponLabel" type="Label" parent="Left/Equipment" unique_id=728631151]
+layout_mode = 0
+offset_left = 2.0
+offset_right = 46.0
+offset_bottom = 16.0
+text = "Weapon"
+vertical_alignment = 1
+
+[node name="Weapon" type="OptionButton" parent="Left/Equipment" unique_id=1928883133]
+layout_mode = 0
+offset_left = 46.0
+offset_right = 138.0
+offset_bottom = 16.0
+focus_mode = 0
+theme = ExtResource("5_dropdown")
+clip_text = true
+
+[node name="OffhandLabel" type="Label" parent="Left/Equipment" unique_id=364234993]
+layout_mode = 0
+offset_left = 146.0
+offset_right = 198.0
+offset_bottom = 16.0
+text = "Off-hand"
+vertical_alignment = 1
+
+[node name="Offhand" type="OptionButton" parent="Left/Equipment" unique_id=1071212714]
+layout_mode = 0
+offset_left = 198.0
+offset_right = 290.0
+offset_bottom = 16.0
+focus_mode = 0
+theme = ExtResource("5_dropdown")
+clip_text = true
+
+[node name="HitScore" parent="Left" unique_id=192237873 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="ParryScore" parent="Left" unique_id=1087404368 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="WeaponValue" parent="Left" unique_id=242109944 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="ArmorValue" parent="Left" unique_id=626536839 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="SpellMultiplier" parent="Left" unique_id=964078843 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="SpellAptitude" parent="Left" unique_id=1071398323 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="MathGap" type="Control" parent="Left" unique_id=370130990]
+custom_minimum_size = Vector2(290, 14)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="MathHeader" type="Control" parent="Left" unique_id=753906166]
+custom_minimum_size = Vector2(290, 21)
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Label" type="Label" parent="Left/MathHeader" unique_id=398364089]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 3.0
+offset_right = 200.0
+offset_bottom = 17.0
+theme_type_variation = &"HeadingLabel"
+text = "In the math"
+vertical_alignment = 1
+
+[node name="Advanced" type="Button" parent="Left/MathHeader" unique_id=1695239263]
+layout_mode = 0
+offset_left = 208.0
+offset_right = 288.0
+offset_bottom = 19.0
+focus_mode = 0
+disabled = true
+text = "Advanced..."
+
+[node name="MathScroll" type="ScrollContainer" parent="Left" unique_id=918341557]
+custom_minimum_size = Vector2(290, 70)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Indent" type="MarginContainer" parent="Left/MathScroll" unique_id=674154773]
+layout_mode = 2
+size_flags_horizontal = 3
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+
+[node name="MathLines" type="VBoxContainer" parent="Left/MathScroll/Indent" unique_id=986190509]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 0
 
 [node name="Right" type="VBoxContainer" parent="." unique_id=965235590]
 layout_mode = 0
