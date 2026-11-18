@@ -82,7 +82,44 @@ public sealed class BuffModelInput
 
     public PlannerEffects Effects { get; set; } = new();
 
-    public BuffModelInput Copy() => throw new NotImplementedException();
+    // The attributes, flags and skills are copied, so planning on the copy leaves this one alone; the buff readings
+    // and effects are shared, as nothing changes them.
+    public BuffModelInput Copy()
+    {
+        var copy = new BuffModelInput
+        {
+            Divisor = Divisor,
+            SpellMultiplier = SpellMultiplier,
+            SpellBonus = SpellBonus,
+            SpellAptitude = SpellAptitude,
+            RaceModifier = RaceModifier,
+            ReducedItemBuffs = ReducedItemBuffs,
+            ServerWeapon = ServerWeapon,
+            ServerArmor = ServerArmor,
+            TarotCards = TarotCards,
+            UncappedHitpoints = UncappedHitpoints,
+            PlannedHitpoints = PlannedHitpoints,
+            UncappedMana = UncappedMana,
+            PlannedMana = PlannedMana,
+            Effects = Effects,
+        };
+        foreach (var slot in Enum.GetValues<AttributeSlot>())
+        {
+            copy.ServerAttributes[slot] = ServerAttributes[slot];
+            copy.BaseAttributes[slot] = BaseAttributes[slot];
+            copy.PlannedAttributes[slot] = PlannedAttributes[slot];
+        }
+
+        for (var kind = 0; kind < BuffCount; kind++)
+        {
+            copy.SpellKnown[kind] = SpellKnown[kind];
+            copy.SpellSkills[kind] = SpellSkills[kind] with { };
+            copy.Active[kind] = Active[kind];
+            copy.ShowBuffed[kind] = ShowBuffed[kind];
+        }
+
+        return copy;
+    }
 }
 
 public sealed class BuffModelResult

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TheLastGate.Planner;
 
@@ -34,7 +35,43 @@ public sealed class CombatFocusInput
 // The cheapest route to +1 on the stat; a tie goes to fewer points.
 public sealed record CombatFocusResult(int CurrentValue, FocusRoute? Best);
 
+// The cheapest way to give Hit, Parry, Weapon or Armor Value +1, with buffs, tarot and item effects counted.
 public static class CombatFocus
 {
-    public static CombatFocusResult Search(CombatFocusInput input) => throw new NotImplementedException();
+    public static CombatFocusResult Search(CombatFocusInput input)
+    {
+        var currentValue = StatWithPoints(input, new int[input.Candidates.Count]);
+        var best = FocusSearch.Cheapest(
+            input.Candidates,
+            uint.MaxValue,
+            points => StatWithPoints(input, points) >= currentValue + 1);
+        return new CombatFocusResult(currentValue, best);
+    }
+
+    private static int StatWithPoints(CombatFocusInput input, int[] points)
+    {
+        var model = input.Model.Copy();
+        var combatSkills = input.CombatSkills.ToArray();
+        for (var index = 0; index < input.Candidates.Count; index++)
+        {
+            var raiseIndex = input.Candidates[index].RaiseIndex;
+            var extra = points[index];
+            if (extra == 0)
+            {
+                continue;
+            }
+
+            BuffFocus.AddPoints(model, raiseIndex, extra, input.SpellRaiseIndex);
+            for (var skill = 0; skill < CombatModel.SkillCount; skill++)
+            {
+                if (raiseIndex == input.CombatRaiseIndex[skill])
+                {
+                    combatSkills[skill] = combatSkills[skill] with { Planned = combatSkills[skill].Planned + extra };
+                }
+            }
+        }
+
+        var shown = BuffModel.CombatShown(model, BuffModel.Compute(model), input.Combat, combatSkills);
+        return shown[input.Stat];
+    }
 }
