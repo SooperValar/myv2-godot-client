@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Game;
@@ -23,6 +24,10 @@ public partial class WorldView : Node2D
     private const string NameplateScenePath = "res://World/nameplate.tscn";
     private const string MagicGlowShaderPath = "res://World/magic_glow.gdshader";
     private const int PlayerNameplateLayer = 1;
+    private const int QueuedUseSprite = 45;
+
+    // Sprite 4001 numbers the first queued use.
+    private const int QueuedNumberSprites = 4000;
     private readonly Sprite2D actionMarker = new() { Centered = false, Visible = false };
     private readonly Sprite2D attackMarker = new() { Centered = false, Visible = false };
 
@@ -37,6 +42,9 @@ public partial class WorldView : Node2D
     private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
+    private readonly Sprite2D[] queuedNumberMarkers = Markers(UseQueue.MostQueued);
+    private readonly int[] queuedTiles = new int[UseQueue.MostQueued];
+    private readonly Sprite2D[] queuedUseMarkers = Markers(UseQueue.MostQueued);
     private readonly Sprite2D[] shadowNodes = new Sprite2D[TileCount];
     private readonly int[] shownShadows = new int[TileCount];
     private readonly TileEffects?[] tileEffects = new TileEffects?[TileCount];
@@ -110,6 +118,8 @@ public partial class WorldView : Node2D
 
     public Action<byte[]> SendCommand { get; set; } = _ => { };
 
+    public Action PlayClick { get; set; } = () => { };
+
     public override void _Ready()
     {
         nameplateScene = GD.Load<PackedScene>(NameplateScenePath);
@@ -130,6 +140,13 @@ public partial class WorldView : Node2D
         foreach (var marker in (Sprite2D[])[walkMarker, attackMarker, giveMarker, actionMarker])
         {
             floorLayer.AddChild(marker);
+        }
+
+        for (var position = 0; position < UseQueue.MostQueued; position++)
+        {
+            queuedUseMarkers[position].Material = TintMaterial(SpriteTint.None, false, true);
+            floorLayer.AddChild(queuedUseMarkers[position]);
+            floorLayer.AddChild(queuedNumberMarkers[position]);
         }
     }
 
@@ -195,6 +212,16 @@ public partial class WorldView : Node2D
             GetViewport().SetInputAsHandled();
         }
 
+        if (action.QueuedUse is { } queuedUse)
+        {
+            if (State.UseQueue.Add(queuedUse.X, queuedUse.Y, State.Player.Target) == UseQueueAdd.Queued)
+            {
+                PlayClick();
+            }
+
+            GetViewport().SetInputAsHandled();
+        }
+
         if (action.NewSelection is { } selection)
         {
             SelectedCharacter = selection;
@@ -210,10 +237,12 @@ public partial class WorldView : Node2D
         charactersShown.Clear();
         var target = State.Player.Target;
         var markerTiles = new MarkerTiles(NoTile, NoTile, NoTile, NoTile, 0);
+        Array.Fill(queuedTiles, NoTile);
         for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
         {
             selectedIsShown |= ShowTile(tileIndex);
             markerTiles = FindMarkers(markerTiles, tileIndex, target);
+            FindQueuedUse(tileIndex);
             ShowEffects(tileIndex);
             ref readonly var tile = ref State.Map.Tiles[tileIndex];
             PlaceCharacter(tileIndex, new Vector2I(tile.CharacterOffsetX, tile.CharacterOffsetY));
@@ -532,7 +561,37 @@ public partial class WorldView : Node2D
             found.GiveTile,
             found.GiveTile == found.AttackTile ? 2 : 1);
         PlaceOnGround(actionMarker, found.ActionSprite, found.ActionTile, characters);
+
+        // The use in progress shows its own marker. Each number goes in before its green use marker, which then sits
+        // between the tile and the number.
+        for (var position = 0; position < UseQueue.MostQueued; position++)
+        {
+            var tileIndex = queuedTiles[position] == found.ActionTile ? NoTile : queuedTiles[position];
+            PlaceOnGround(queuedNumberMarkers[position], QueuedNumberSprites + position + 1, tileIndex, characters);
+            PlaceOnGround(queuedUseMarkers[position], QueuedUseSprite, tileIndex, characters);
+        }
     }
+
+    private void FindQueuedUse(int tileIndex)
+    {
+        if (State.UseQueue.Count == 0)
+        {
+            return;
+        }
+
+        ref readonly var tile = ref State.Map.Tiles[tileIndex];
+        var position = State.UseQueue.PositionOf(tile.X, tile.Y);
+        if (position > 0 && !MapSpriteRules.HidesObjectsAndCharacters(
+            tile,
+            tileIndex % WorldMap.Size,
+            tileIndex / WorldMap.Size))
+        {
+            queuedTiles[position - 1] = tileIndex;
+        }
+    }
+
+    private static Sprite2D[] Markers(int count) =>
+        Enumerable.Range(0, count).Select(_ => new Sprite2D { Centered = false, Visible = false }).ToArray();
 
     // Ground markers are drawn right after the tile's node in its layer, at the tile's own position.
     private void PlaceOnGround(Sprite2D marker, int spriteNumber, int tileIndex, SpriteLayer after)
