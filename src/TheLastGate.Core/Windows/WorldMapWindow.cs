@@ -1,4 +1,5 @@
 using System;
+using TheLastGate.Notes;
 
 namespace TheLastGate.Windows;
 
@@ -29,6 +30,8 @@ public sealed class WorldMapWindow
     public WorldMapEditor Editor { get; } = new();
 
     public WorldMapTool Tool => Editor.Tool;
+
+    public (int X, int Y)? MoveRequest { get; set; }
 
     public int HelpPage { get; private set; }
 
@@ -65,6 +68,8 @@ public sealed class WorldMapWindow
     public bool CloseByEscape() => Editor.DiscardPendingPath() || Close();
 
     public void Panned() => Follow = false;
+
+    public void ShowNote(Note note) => throw new NotImplementedException();
 
     public void ShowStatus(string text, double now) => Show(text, now, StatusSeconds);
 

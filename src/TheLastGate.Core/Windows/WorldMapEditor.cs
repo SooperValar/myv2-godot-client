@@ -66,7 +66,24 @@ public sealed class WorldMapEditor
             ? pending
             : [];
 
+    public IReadOnlyCollection<int> ExpandedCategories => throw new NotImplementedException();
+
     public event Action<string>? Problem;
+
+    public void Expand(int categoryId, bool expanded) => throw new NotImplementedException();
+
+    public void ChooseCategory(int categoryId) => throw new NotImplementedException();
+
+    public int CreateCategory(NoteSet notes, string name, int colourIndex, int parentId) =>
+        throw new NotImplementedException();
+
+    public void MoveCategory(NoteSet notes, int categoryId, int parentId) => throw new NotImplementedException();
+
+    public void DeleteCategory(NoteSet notes, int categoryId) => throw new NotImplementedException();
+
+    public int RemoveDuplicatePins(NoteSet notes, int categoryId) => throw new NotImplementedException();
+
+    public bool FinishImport(NoteImportResult result, int parentId) => throw new NotImplementedException();
 
     public void EnsureCurrentCategory(NoteSet notes)
     {

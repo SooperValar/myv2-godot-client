@@ -9,6 +9,19 @@ public class NotesTests
     private readonly NoteSet set = new();
 
     [Fact]
+    public void Revision_GoesUpWithEveryChangeButNotWithSaving()
+    {
+        var before = set.Revision;
+
+        set.AddCategory("A", 0);
+        var changed = set.Revision;
+        set.Changed = false;
+
+        Assert.NotEqual(before, changed);
+        Assert.Equal(changed, set.Revision);
+    }
+
+    [Fact]
     public void IsSamePin_ComparesOnlyTheLabelAndTile()
     {
         var category = set.AddCategory("A", 0);
