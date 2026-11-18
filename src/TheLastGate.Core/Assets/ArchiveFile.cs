@@ -10,11 +10,19 @@ internal sealed class ArchiveFile : IDisposable
     private readonly string fileName;
     private readonly SafeFileHandle handle;
 
+    // A data file Git LFS hasn't pulled is closed again with a hint to pull it, rather than failing at the first read.
     public ArchiveFile(string filePath)
     {
         handle = File.OpenHandle(filePath);
         fileName = Path.GetFileName(filePath);
         Length = RandomAccess.GetLength(handle);
+        Span<byte> fileStart = stackalloc byte[LfsPointer.StartLength];
+        var bytesRead = RandomAccess.Read(handle, fileStart, 0);
+        if (LfsPointer.IsPointer(fileStart[..bytesRead]))
+        {
+            handle.Dispose();
+            throw new InvalidDataException(LfsPointer.PulledMessage(fileName));
+        }
     }
 
     public long Length { get; }
