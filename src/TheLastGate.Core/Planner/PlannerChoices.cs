@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.IO;
+using TheLastGate.Buffs;
 
 namespace TheLastGate.Planner;
 
@@ -27,6 +28,20 @@ public sealed class PlannerChoices
     public int[] EnchantCounts { get; } = new int[ItemEffects.EnchantCount];
 
     public uint GearTicks { get; set; }
+
+    public void ToggleSpell(BuffKind kind) => throw new NotImplementedException();
+
+    public void ToggleCard(TarotCard card) => throw new NotImplementedException();
+
+    public void ToggleCorruptor(int corruptor) => throw new NotImplementedException();
+
+    public void ToggleEnchant(int enchant) => throw new NotImplementedException();
+
+    public void ToggleGear(int gear) => throw new NotImplementedException();
+
+    public void SetCorruptorCount(int corruptor, int count) => throw new NotImplementedException();
+
+    public void SetEnchantCount(int enchant, int count) => throw new NotImplementedException();
 }
 
 // The planner's picks for every character, in the current client's file layout: a format word and a record count, then
