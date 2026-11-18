@@ -107,7 +107,29 @@ public sealed class CombatModelInput
 
     public bool ParryFeedsHit { get; set; }
 
-    public CombatModelInput Copy() => throw new NotImplementedException();
+    public CombatModelInput Copy()
+    {
+        var copy = new CombatModelInput
+        {
+            Weapon = Weapon,
+            Offhand = Offhand,
+            GearClass = GearClass,
+            Rampart = Rampart,
+            Lycanth = Lycanth,
+            EmptySlots = EmptySlots,
+            ServerHit = ServerHit,
+            ServerParry = ServerParry,
+            BaseWeapon = BaseWeapon,
+            BaseArmor = BaseArmor,
+            BestWeaponSkill = BestWeaponSkill,
+            HitFeedsParry = HitFeedsParry,
+            ParryFeedsHit = ParryFeedsHit,
+        };
+        Known.CopyTo(copy.Known, 0);
+        Current.CopyTo(copy.Current, 0);
+        Shown.CopyTo(copy.Shown, 0);
+        return copy;
+    }
 }
 
 // What the planner shows for Hit, Parry, Weapon Value and Armor Value. The server only sends the totals, so each is
