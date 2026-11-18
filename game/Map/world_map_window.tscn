@@ -11,6 +11,48 @@ bg_color = Color(0.0666667, 0.0196078, 0.0196078, 1)
 
 [sub_resource type="ButtonGroup" id="ButtonGroup_tools"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.2, 0.2, 0.2, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_field_focus"]
+content_margin_left = 4.0
+content_margin_top = 2.0
+content_margin_right = 4.0
+content_margin_bottom = 2.0
+bg_color = Color(0.4, 0.4, 0.4, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu"]
+content_margin_left = 4.0
+content_margin_top = 4.0
+content_margin_right = 4.0
+content_margin_bottom = 4.0
+bg_color = Color(0.0666667, 0.0196078, 0.0196078, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_menu_hover"]
+bg_color = Color(0.290196, 0.0941176, 0.0941176, 1)
+
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_menu_separator"]
+color = Color(0.458824, 0.415686, 0.266667, 1)
+
 [node name="WorldMapWindow" type="Panel" unique_id=1192837465]
 offset_left = 60.0
 offset_top = 60.0
@@ -231,6 +273,31 @@ layout_mode = 2
 focus_mode = 0
 text = "Follow player"
 
+[node name="EditName" type="LineEdit" parent="Rows/BottomBar" unique_id=299599624]
+visible = false
+custom_minimum_size = Vector2(180, 19)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/caret_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/selection_color = Color(0.352941, 0.12549, 0.12549, 0.784314)
+theme_override_styles/normal = SubResource("StyleBoxFlat_field")
+theme_override_styles/focus = SubResource("StyleBoxFlat_field_focus")
+max_length = 47
+
+[node name="EditSave" type="Button" parent="Rows/BottomBar" unique_id=155159771]
+visible = false
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Save"
+
+[node name="EditCancel" type="Button" parent="Rows/BottomBar" unique_id=1390643508]
+visible = false
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Cancel"
+
 [node name="Status" type="Label" parent="Rows/BottomBar" unique_id=703619284]
 layout_mode = 2
 
@@ -267,6 +334,8 @@ script = ExtResource("5_grip")
 [node name="HelpBlocker" type="ColorRect" parent="." unique_id=1395027461]
 visible = false
 top_level = true
+z_index = 2
+z_as_relative = false
 layout_mode = 0
 offset_right = 1280.0
 offset_bottom = 720.0
@@ -351,3 +420,173 @@ custom_minimum_size = Vector2(52, 19)
 layout_mode = 2
 focus_mode = 0
 text = "Close"
+
+[node name="LabelBlocker" type="ColorRect" parent="." unique_id=708439001]
+visible = false
+top_level = true
+z_index = 2
+z_as_relative = false
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.8, 0.8, 0.8, 0.35)
+
+[node name="Prompt" type="PanelContainer" parent="LabelBlocker" unique_id=578905621]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+
+[node name="Frame" type="NinePatchRect" parent="LabelBlocker/Prompt" unique_id=668656836]
+layout_mode = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Margins" type="MarginContainer" parent="LabelBlocker/Prompt" unique_id=1916748613]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Rows" type="VBoxContainer" parent="LabelBlocker/Prompt/Margins" unique_id=1802862572]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Heading" type="Label" parent="LabelBlocker/Prompt/Margins/Rows" unique_id=720288524]
+layout_mode = 2
+text = "Label"
+
+[node name="Separator" type="ColorRect" parent="LabelBlocker/Prompt/Margins/Rows" unique_id=284003339]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[node name="Name" type="LineEdit" parent="LabelBlocker/Prompt/Margins/Rows" unique_id=1165021917]
+custom_minimum_size = Vector2(220, 19)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/caret_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/selection_color = Color(0.352941, 0.12549, 0.12549, 0.784314)
+theme_override_styles/normal = SubResource("StyleBoxFlat_field")
+theme_override_styles/focus = SubResource("StyleBoxFlat_field_focus")
+max_length = 47
+
+[node name="Buttons" type="HBoxContainer" parent="LabelBlocker/Prompt/Margins/Rows" unique_id=1476296800]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Confirm" type="Button" parent="LabelBlocker/Prompt/Margins/Rows/Buttons" unique_id=2015496819]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "OK"
+
+[node name="Cancel" type="Button" parent="LabelBlocker/Prompt/Margins/Rows/Buttons" unique_id=1343119479]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Cancel"
+
+[node name="DeleteBlocker" type="ColorRect" parent="." unique_id=1029232572]
+visible = false
+top_level = true
+z_index = 2
+z_as_relative = false
+layout_mode = 0
+offset_right = 1280.0
+offset_bottom = 720.0
+color = Color(0.8, 0.8, 0.8, 0.35)
+
+[node name="Prompt" type="PanelContainer" parent="DeleteBlocker" unique_id=1612649189]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+
+[node name="Frame" type="NinePatchRect" parent="DeleteBlocker/Prompt" unique_id=351990459]
+layout_mode = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Margins" type="MarginContainer" parent="DeleteBlocker/Prompt" unique_id=235690075]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="Rows" type="VBoxContainer" parent="DeleteBlocker/Prompt/Margins" unique_id=1725683207]
+layout_mode = 2
+theme_override_constants/separation = 4
+
+[node name="Heading" type="Label" parent="DeleteBlocker/Prompt/Margins/Rows" unique_id=835946353]
+layout_mode = 2
+text = "Delete annotation"
+
+[node name="Separator" type="ColorRect" parent="DeleteBlocker/Prompt/Margins/Rows" unique_id=143467258]
+custom_minimum_size = Vector2(0, 1)
+layout_mode = 2
+mouse_filter = 2
+color = Color(0.458824, 0.415686, 0.266667, 1)
+
+[node name="Question" type="Label" parent="DeleteBlocker/Prompt/Margins/Rows" unique_id=1706619057]
+layout_mode = 2
+text = "Delete this unnamed pin?"
+
+[node name="Buttons" type="HBoxContainer" parent="DeleteBlocker/Prompt/Margins/Rows" unique_id=706672330]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Confirm" type="Button" parent="DeleteBlocker/Prompt/Margins/Rows/Buttons" unique_id=677705010]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Delete"
+
+[node name="Cancel" type="Button" parent="DeleteBlocker/Prompt/Margins/Rows/Buttons" unique_id=1113427689]
+custom_minimum_size = Vector2(52, 19)
+layout_mode = 2
+focus_mode = 0
+text = "Cancel"
+
+[node name="NoteMenu" type="PopupMenu" parent="." unique_id=667558932]
+theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
+theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
+theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")
+
+[node name="ColourMenu" type="PopupMenu" parent="NoteMenu" unique_id=1204124788]
+theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
+theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
+theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")
+
+[node name="SendToMenu" type="PopupMenu" parent="NoteMenu" unique_id=1380966892]
+theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
+theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
+theme_override_styles/panel = SubResource("StyleBoxFlat_menu")
+theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
+theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")

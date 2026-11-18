@@ -1,4 +1,5 @@
 using System;
+using System.Diagnostics;
 using System.Linq;
 using Godot;
 using TheLastGate.Hud;
@@ -9,16 +10,22 @@ namespace TheLastGate.Map;
 
 // The current client's World Map window, drawn with the game's window and button sprites: a title bar to drag it by,
 // the category column (filled by a later step), the map with the player's notes on it, and a bar of tools, Follow
-// player and the tile under the cursor. Its own clicks change its own state; the HUD only opens it and tells it what
-// to show.
+// player, the edited note's name and the tile under the cursor. Its own clicks change its own state; the HUD only
+// opens it and tells it what to show. Every change to the notes is handed straight back to be saved.
 [Tool]
 public partial class WorldMapWindowView : Panel
 {
     private const int FrameSprite = 18128;
     private const float TitleBottom = 30;
+    private const int SwatchSize = 20;
+    private const int CategoryColourItem = NotePalette.Size;
 
     private static readonly Vector2 SmallestSize = new(480, 320);
+    private int deleteNoteId;
+    private int editedNameShownFor;
+    private NoteHit menuHit;
     private NoteSet? notes;
+    private NoteLabelPurpose shownPurpose;
 
     private Vector2 titleGrab;
     private bool titleHeld;
@@ -29,6 +36,24 @@ public partial class WorldMapWindowView : Panel
     private Control Help => GetNode<Control>("HelpBlocker");
 
     private CheckBox ShowOnMinimapBox => GetNode<CheckBox>("Rows/Body/Categories/Footer/ShowOnMinimap");
+
+    private WorldMapEditor? Editor => window?.Editor;
+
+    private Control LabelPrompt => GetNode<Control>("LabelBlocker");
+
+    private LineEdit LabelName => GetNode<LineEdit>("LabelBlocker/Prompt/Margins/Rows/Name");
+
+    private Control DeletePrompt => GetNode<Control>("DeleteBlocker");
+
+    private LineEdit EditName => GetNode<LineEdit>("Rows/BottomBar/EditName");
+
+    private PopupMenu NoteMenu => GetNode<PopupMenu>("NoteMenu");
+
+    private PopupMenu ColourMenu => GetNode<PopupMenu>("NoteMenu/ColourMenu");
+
+    private PopupMenu SendToMenu => GetNode<PopupMenu>("NoteMenu/SendToMenu");
+
+    private static double Now => Time.GetTicksMsec() / 1000.0;
 
     public event Action? NotesChanged;
 
@@ -63,8 +88,14 @@ public partial class WorldMapWindowView : Panel
         ShowOnMinimapBox.Toggled += ShowOnMinimap;
         foreach (var tool in Enum.GetValues<WorldMapTool>())
         {
-            ToolButton(tool).Pressed += () => { window?.Editor.ChooseTool(tool); };
+            ToolButton(tool).Pressed += () => Editor?.ChooseTool(tool);
         }
+
+        Canvas.NoteMenuWanted += OpenNoteMenu;
+        Canvas.NotesEdited += SaveChanges;
+        ConnectPrompts();
+        ConnectEditControls();
+        PrepareMenus();
 
         GetNode<Button>("HelpBlocker/Help/Margins/Rows/Buttons/Back").Pressed += () => ChangeHelpPage(-1);
         GetNode<Button>("HelpBlocker/Help/Margins/Rows/Buttons/Next").Pressed += () => ChangeHelpPage(1);
@@ -78,11 +109,46 @@ public partial class WorldMapWindowView : Panel
             return;
         }
 
-        GetNode<Label>("Rows/BottomBar/Status").Text = window.StatusAt(Time.GetTicksMsec() / 1000.0);
+        GetNode<Label>("Rows/BottomBar/Status").Text = window.StatusAt(Now);
         GetNode<Label>("Rows/BottomBar/Coordinates").Text =
             Canvas.HoveredTile is { } tile ? $"{tile.X}, {tile.Y}" : "";
         GetNode<CheckBox>("Rows/BottomBar/Follow").SetPressedNoSignal(window.Follow);
         ShowOnMinimapBox.SetPressedNoSignal(notes?.ShowOnMinimap == true);
+        ShowTools(window.Editor);
+        ShowEditControls(window.Editor);
+        ShowLabelPrompt(window.Editor);
+    }
+
+    // A click anywhere else takes the map's focus away, so Enter goes back to the chat. While a prompt is up, Escape
+    // cancels it rather than closing the map.
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (Engine.IsEditorHint() || window == null || !Visible)
+        {
+            return;
+        }
+
+        switch (inputEvent)
+        {
+            case InputEventMouseButton { Pressed: true } press:
+                window.Editor.Focused = GetGlobalRect().HasPoint(press.Position) || LabelPrompt.Visible
+                    || DeletePrompt.Visible;
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }
+                when LabelPrompt.Visible || DeletePrompt.Visible:
+                if (LabelPrompt.Visible)
+                {
+                    window.Editor.CancelLabel();
+                }
+
+                DeletePrompt.Visible = false;
+                GetViewport().SetInputAsHandled();
+                break;
+            case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter }
+                when !LabelPrompt.Visible && window.Editor.FinishPendingPath():
+                GetViewport().SetInputAsHandled();
+                break;
+        }
     }
 
     // The window, the map it draws, the notes and the player's tile come from the HUD on every refresh.
@@ -92,19 +158,34 @@ public partial class WorldMapWindowView : Panel
         NoteSet? shownNotes,
         (int X, int Y) playerTile)
     {
+        if (window != shownWindow)
+        {
+            if (window != null)
+            {
+                window.Editor.Problem -= ShowProblem;
+            }
+
+            shownWindow.Editor.Problem += ShowProblem;
+        }
+
         window = shownWindow;
         notes = shownNotes;
+        if (shownNotes != null)
+        {
+            shownWindow.Editor.EnsureCurrentCategory(shownNotes);
+        }
+
         ShowOnMinimapBox.Disabled = shownNotes == null;
         Canvas.Notes = shownNotes;
         Visible = shownWindow.IsOpen;
         Canvas.Window = shownWindow;
         Canvas.Map = map;
         Canvas.PlayerTile = playerTile;
-        foreach (var tool in Enum.GetValues<WorldMapTool>())
+        ShowTools(shownWindow.Editor);
+        if (!Visible)
         {
-            var button = ToolButton(tool);
-            button.Disabled = !WorldMapWindow.IsAvailable(tool, false);
-            button.SetPressedNoSignal(shownWindow.Tool == tool);
+            NoteMenu.Hide();
+            DeletePrompt.Visible = false;
         }
     }
 
@@ -135,6 +216,251 @@ public partial class WorldMapWindowView : Panel
     }
 
     private Button ToolButton(WorldMapTool tool) => GetNode<Button>($"Rows/BottomBar/{tool}");
+
+    private static string Noun(NoteKind kind) => kind switch
+    {
+        NoteKind.Pin => "pin",
+        NoteKind.Text => "text label",
+        NoteKind.Path => "path",
+        _ => throw new UnreachableException(),
+    };
+
+    private static ImageTexture Swatch(int colourIndex)
+    {
+        var rgb = NotePalette.Rgb(colourIndex);
+        var image = Image.CreateEmpty(SwatchSize, SwatchSize, false, Image.Format.Rgba8);
+        image.Fill(Color.Color8((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb));
+        return ImageTexture.CreateFromImage(image);
+    }
+
+    private void SaveChanges()
+    {
+        if (notes?.Changed == true)
+        {
+            NotesChanged?.Invoke();
+        }
+    }
+
+    private void ShowProblem(string problem) => window?.ShowStatus(problem, Now);
+
+    private void ShowTools(WorldMapEditor editor)
+    {
+        foreach (var tool in Enum.GetValues<WorldMapTool>())
+        {
+            var button = ToolButton(tool);
+            button.Disabled = !WorldMapWindow.IsAvailable(tool, editor.CurrentCategoryId != 0);
+            button.SetPressedNoSignal(editor.Tool == tool);
+        }
+    }
+
+    private void ConnectEditControls()
+    {
+        EditName.TextChanged += label => Editor?.RenameEdited(label);
+        EditName.TextSubmitted += _ => SaveEdit();
+        GetNode<Button>("Rows/BottomBar/EditSave").Pressed += SaveEdit;
+        GetNode<Button>("Rows/BottomBar/EditCancel").Pressed += () => Editor?.CancelEdit();
+    }
+
+    // The name box is filled once when an edit starts, and then belongs to the player.
+    private void ShowEditControls(WorldMapEditor editor)
+    {
+        var edited = editor.Edited;
+        var editing = edited != null;
+        EditName.Visible = editing;
+        GetNode<Button>("Rows/BottomBar/EditSave").Visible = editing;
+        GetNode<Button>("Rows/BottomBar/EditCancel").Visible = editing;
+        GetNode<Button>("Rows/BottomBar/EditSave").Disabled = !editor.CanSaveEdit;
+        if (edited != null && edited.Id != editedNameShownFor)
+        {
+            EditName.Text = edited.Label;
+        }
+
+        if (!editing && EditName.HasFocus())
+        {
+            EditName.ReleaseFocus();
+        }
+
+        editedNameShownFor = edited?.Id ?? 0;
+    }
+
+    private void SaveEdit()
+    {
+        if (notes == null || Editor is not { CanSaveEdit: true } editor)
+        {
+            return;
+        }
+
+        editor.SaveEdit(notes);
+        SaveChanges();
+    }
+
+    private void ConnectPrompts()
+    {
+        LabelName.TextChanged += _ => ShowLabelConfirm();
+        LabelName.TextSubmitted += _ => ConfirmLabel();
+        GetNode<Button>("LabelBlocker/Prompt/Margins/Rows/Buttons/Confirm").Pressed += ConfirmLabel;
+        GetNode<Button>("LabelBlocker/Prompt/Margins/Rows/Buttons/Cancel").Pressed += () => Editor?.CancelLabel();
+        GetNode<Button>("DeleteBlocker/Prompt/Margins/Rows/Buttons/Confirm").Pressed += ConfirmDelete;
+        GetNode<Button>("DeleteBlocker/Prompt/Margins/Rows/Buttons/Cancel").Pressed +=
+            () => DeletePrompt.Visible = false;
+    }
+
+    // The name prompt opens empty, ready for typing, whenever the editor asks for a name.
+    private void ShowLabelPrompt(WorldMapEditor editor)
+    {
+        if (editor.LabelPurpose == shownPurpose)
+        {
+            return;
+        }
+
+        shownPurpose = editor.LabelPurpose;
+        LabelPrompt.Visible = shownPurpose != NoteLabelPurpose.None;
+        if (LabelPrompt.Visible)
+        {
+            LabelName.Text = "";
+            LabelName.GrabFocus();
+            ShowLabelConfirm();
+        }
+        else
+        {
+            LabelName.ReleaseFocus();
+        }
+    }
+
+    private void ShowLabelConfirm() =>
+        GetNode<Button>("LabelBlocker/Prompt/Margins/Rows/Buttons/Confirm").Disabled =
+            Editor?.CanConfirmLabel(LabelName.Text) != true;
+
+    private void ConfirmLabel()
+    {
+        if (notes == null || Editor is not { } editor || !editor.CanConfirmLabel(LabelName.Text))
+        {
+            return;
+        }
+
+        editor.ConfirmLabel(notes, LabelName.Text);
+        SaveChanges();
+    }
+
+    private void ConfirmDelete()
+    {
+        DeletePrompt.Visible = false;
+        if (notes != null)
+        {
+            Editor?.Delete(notes, deleteNoteId);
+            SaveChanges();
+        }
+    }
+
+    private void AskToDelete(Note note)
+    {
+        deleteNoteId = note.Id;
+        GetNode<Label>("DeleteBlocker/Prompt/Margins/Rows/Question").Text = note.Label.Length > 0
+            ? $"Delete {Noun(note.Kind)} \"{note.Label}\"?"
+            : $"Delete this unnamed {Noun(note.Kind)}?";
+        DeletePrompt.Visible = true;
+    }
+
+    // The menus are windows of their own, so they are given the window's font; the colour menu is the palette's
+    // swatches and the category's own colour.
+    private void PrepareMenus()
+    {
+        foreach (var menu in (PopupMenu[])[NoteMenu, ColourMenu, SendToMenu])
+        {
+            menu.AddThemeFontOverride("font", GetThemeFont("font", "Label"));
+            menu.AddThemeFontSizeOverride("font_size", GetThemeFontSize("font_size", "Label"));
+        }
+
+        for (var colourIndex = 0; colourIndex < NotePalette.Size; colourIndex++)
+        {
+            ColourMenu.AddIconRadioCheckItem(Swatch(colourIndex), "", colourIndex);
+        }
+
+        ColourMenu.AddRadioCheckItem("Use category colour", CategoryColourItem);
+        NoteMenu.IdPressed += ChooseFromNoteMenu;
+        ColourMenu.IdPressed += id => Recolour(id == CategoryColourItem ? Note.CategoryColour : (int)id);
+        SendToMenu.IdPressed += id => SendTo((int)id);
+    }
+
+    private void OpenNoteMenu(NoteHit hit, Vector2 position)
+    {
+        if (notes?.FindNote(hit.NoteId) is not { } note || notes.OwnerOf(hit.NoteId) is not { } owner)
+        {
+            return;
+        }
+
+        menuHit = hit;
+        NoteMenu.Clear();
+        NoteMenu.AddItem("Edit", (int)NoteMenuItem.Edit);
+        NoteMenu.AddSubmenuNodeItem("Colour", ColourMenu);
+        NoteMenu.AddSubmenuNodeItem("Send to", SendToMenu);
+        NoteMenu.AddSeparator();
+        var editingThis = Editor?.Edited?.Id == note.Id;
+        if (note is { Kind: NoteKind.Path, Segments.Count: > 1 } && hit.SegmentIndex >= 0 && !editingThis)
+        {
+            NoteMenu.AddItem("Delete segment", (int)NoteMenuItem.DeleteSegment);
+        }
+
+        NoteMenu.AddItem("Delete...", (int)NoteMenuItem.Delete);
+        var chosenColour = note.ColourIndex == Note.CategoryColour ? CategoryColourItem : note.ColourIndex;
+        for (var itemIndex = 0; itemIndex < ColourMenu.ItemCount; itemIndex++)
+        {
+            ColourMenu.SetItemChecked(itemIndex, ColourMenu.GetItemId(itemIndex) == chosenColour);
+        }
+
+        SendToMenu.Clear();
+        foreach (var category in notes.Tree())
+        {
+            SendToMenu.AddItem(category.Name, category.Id);
+            var itemIndex = SendToMenu.ItemCount - 1;
+            SendToMenu.SetItemIndent(itemIndex, notes.Depth(category.Id) - 1);
+            SendToMenu.SetItemDisabled(itemIndex, category.Id == owner.Id);
+        }
+
+        NoteMenu.Popup(new Rect2I((Vector2I)position, Vector2I.Zero));
+    }
+
+    private void ChooseFromNoteMenu(long id)
+    {
+        if (notes == null || Editor is not { } editor || notes.FindNote(menuHit.NoteId) is not { } note)
+        {
+            return;
+        }
+
+        switch ((NoteMenuItem)id)
+        {
+            case NoteMenuItem.Edit:
+                editor.BeginEdit(notes, note.Id);
+                break;
+            case NoteMenuItem.DeleteSegment:
+                editor.DeleteSegment(notes, note.Id, menuHit.SegmentIndex);
+                SaveChanges();
+                break;
+            case NoteMenuItem.Delete:
+                AskToDelete(note);
+                break;
+            default:
+                throw new UnreachableException();
+        }
+    }
+
+    private void Recolour(int colourIndex)
+    {
+        if (notes != null)
+        {
+            Editor?.Recolour(notes, menuHit.NoteId, colourIndex);
+            SaveChanges();
+        }
+    }
+
+    private void SendTo(int categoryId)
+    {
+        if (notes != null)
+        {
+            Editor?.SendTo(notes, menuHit.NoteId, categoryId);
+            SaveChanges();
+        }
+    }
 
     // The whole title bar stays on screen, so the window can always be grabbed again.
     private void DragByTitle(InputEvent inputEvent)
@@ -213,5 +539,12 @@ public partial class WorldMapWindowView : Panel
         }
 
         ShowHelpPage();
+    }
+
+    private enum NoteMenuItem
+    {
+        Edit,
+        DeleteSegment,
+        Delete,
     }
 }

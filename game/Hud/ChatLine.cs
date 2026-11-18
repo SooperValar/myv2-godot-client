@@ -55,7 +55,16 @@ public partial class ChatLine : LineEdit
 
     public override void _EnterTree() => ApplyFont();
 
-    public override void _Process(double delta) => QueueRedraw();
+    // Focus left with nobody, such as when a name box on another window lets go, comes back to an open line.
+    public override void _Process(double delta)
+    {
+        if (!Engine.IsEditorHint())
+        {
+            TakeFocusBack();
+        }
+
+        QueueRedraw();
+    }
 
     public override void _ValidateProperty(Dictionary property)
     {
