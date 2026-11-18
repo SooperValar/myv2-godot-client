@@ -223,6 +223,13 @@ public partial class GameScreen : Control
         gameState.Tooltips.SendLook = connection.SendCommand;
         gameState.Tooltips.Enabled = clientSettings.ItemTooltips;
         gameState.ShopRefresh.Send = connection.SendCommand;
+        gameState.BuffWatch.Say = text =>
+        {
+            foreach (var packet in ChatPackets.Say(text))
+            {
+                connection.SendCommand(packet);
+            }
+        };
         screenGamma = new ScreenGammaLayer();
         AddChild(screenGamma);
         screenGamma.ShowGamma(clientSettings.ScreenGamma);
