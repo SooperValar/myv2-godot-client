@@ -34,6 +34,11 @@ public static class GeneralOptions
             false,
             false),
         new(GeneralOption.ExpandedQuickStats, "Show Hit/Parry Score with Weapon/Armor value.", true, false),
+        new(
+            GeneralOption.SkillPlanner,
+            "Enable the skill planner: the Planner button below the skill list and its hotkey.",
+            false,
+            false),
         new(GeneralOption.ItemTooltips, "Show item tooltips for inventory and equipped gear.", true, false),
         new(
             GeneralOption.ItemTooltipsAlways,

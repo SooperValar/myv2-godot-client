@@ -1,18 +1,41 @@
-using System;
+using TheLastGate.Net;
 
 namespace TheLastGate.Windows;
 
+// The skill planner, opened by its button under the skill list or its hotkey while the option is on, and its Advanced
+// window. Closing the planner closes both.
 public sealed class PlannerWindow
 {
-    public bool IsOpen => throw new NotImplementedException();
+    private bool askedForMeta;
+
+    public bool IsOpen { get; private set; }
 
     public bool AdvancedOpen { get; set; }
 
-    public bool Toggle() => throw new NotImplementedException();
+    // The planner shows meta stats by name, which the server only sends when asked, so the first open asks.
+    public bool Toggle()
+    {
+        if (IsOpen)
+        {
+            Close();
+            return false;
+        }
 
-    public bool Close() => throw new NotImplementedException();
+        IsOpen = true;
+        var askNow = !askedForMeta;
+        askedForMeta = true;
+        return askNow;
+    }
 
-    public static string Header(int pointsLeft, int planned) => throw new NotImplementedException();
+    public bool Close()
+    {
+        var wasOpen = IsOpen || AdvancedOpen;
+        IsOpen = false;
+        AdvancedOpen = false;
+        return wasOpen;
+    }
 
-    public static byte[] MetaRequest() => throw new NotImplementedException();
+    public static string Header(int pointsLeft, int planned) => $"Exp left {pointsLeft}    Planned {planned}";
+
+    public static byte[] MetaRequest() => ClientPackets.ShortAndInt(ClientCommand.Meta, 0, 0);
 }

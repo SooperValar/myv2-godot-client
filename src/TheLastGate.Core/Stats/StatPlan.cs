@@ -70,7 +70,11 @@ public sealed class StatPlan
         }
     }
 
-    public void Reset() => throw new NotImplementedException();
+    public void Reset()
+    {
+        Array.Clear(raised);
+        PointsUsed = 0;
+    }
 
     public IReadOnlyList<byte[]> Commit()
     {
@@ -84,8 +88,7 @@ public sealed class StatPlan
             }
         }
 
-        Array.Clear(raised);
-        PointsUsed = 0;
+        Reset();
         return packets;
     }
 
