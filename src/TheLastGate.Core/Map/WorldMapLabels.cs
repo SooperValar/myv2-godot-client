@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using TheLastGate.Notes;
 
 namespace TheLastGate.Map;
@@ -13,58 +14,25 @@ public static class WorldMapLabels
 
     private const double NamesHiddenBelowPixelsPerTile = 2.68;
     private const float NameGap = 4;
-    private const float NearPanelMargin = 256;
     private const float TextPaddingX = 4;
     private const float TextPaddingY = 2;
 
     public static bool NamesHidden(WorldMapView view) => view.PixelsPerTile < NamesHiddenBelowPixelsPerTile;
 
+    // Each shown pin's name, relative to the pin's centre. The names are laid out over the whole map at this zoom, not
+    // the panel, so panning moves them with their pins rather than placing them again. Every marker and text plate is
+    // reserved before any name is placed, so no name covers one, and the selected pin's name goes first so it gets the
+    // best spot. A name with no room is left out; hovering the pin shows it instead. A note being edited is laid out
+    // where the edit has put it.
     public static IReadOnlyDictionary<int, LabelRect> Layout(
         NoteSet notes,
         double pixelsPerTile,
         Func<string, (float Width, float Height)> measure,
         int selectedNoteId = 0,
-        Note? edited = null) =>
-        throw new NotImplementedException();
-
-    public static (float X, float Y) PinCentre(WorldMapView view, double panelWidth, double panelHeight, Note pin)
-    {
-        var (panelX, panelY) = view.TileToPanel(panelWidth, panelHeight, pin.TileX + 0.5, pin.TileY + 0.5);
-        return ((float)Math.Floor(panelX), (float)Math.Floor(panelY));
-    }
-
-    public static (LabelRect Plate, float TextX, float TextY) TextPlate(
-        WorldMapView view,
-        double panelWidth,
-        double panelHeight,
-        Note text,
-        (float Width, float Height) textSize)
-    {
-        var (anchorX, anchorY) = view.TileToPanel(panelWidth, panelHeight, text.TileX + 0.5, text.TileY + 0.5);
-        var textX = MathF.Floor((float)anchorX - textSize.Width / 2);
-        var textY = MathF.Floor((float)anchorY - textSize.Height / 2);
-        var plate = new LabelRect(
-            textX - TextPaddingX,
-            textY - TextPaddingY,
-            textX + MathF.Floor(textSize.Width) + TextPaddingX,
-            textY + MathF.Floor(textSize.Height) + TextPaddingY);
-        return (plate, textX, textY);
-    }
-
-    // Every marker and text plate is reserved before any name is placed, so no name covers one, and the selected pin's
-    // name goes first so it gets the best spot. A name with no room is left out; hovering the pin shows it instead. A
-    // note being edited is laid out where the edit has put it.
-    public static IReadOnlyDictionary<int, LabelRect> Place(
-        NoteSet notes,
-        WorldMapView view,
-        double panelWidth,
-        double panelHeight,
-        Func<string, (float Width, float Height)> measure,
-        int selectedNoteId = 0,
         Note? edited = null)
     {
         var placed = new Dictionary<int, LabelRect>();
-        if (NamesHidden(view))
+        if (pixelsPerTile < NamesHiddenBelowPixelsPerTile)
         {
             return placed;
         }
@@ -82,32 +50,25 @@ public static class WorldMapLabels
             foreach (var stored in category.Notes)
             {
                 var note = edited?.Id == stored.Id ? edited : stored;
-                if (note.Kind == NoteKind.Text)
+                var (mapX, mapY) = MapPixel(pixelsPerTile, note);
+                switch (note.Kind)
                 {
-                    var (plate, _, _) = TextPlate(view, panelWidth, panelHeight, note, measure(note.Label));
-                    if (IsNearPanel(plate.Left, plate.Top))
-                    {
-                        layout.Reserve(plate);
-                    }
+                    case NoteKind.Text:
+                        layout.Reserve(Plate(mapX, mapY, measure(note.Label)).Plate);
+                        break;
+                    case NoteKind.Pin:
+                        var centre = ((float)Math.Floor(mapX), (float)Math.Floor(mapY));
+                        layout.Reserve(MarkerRect(centre));
+                        if (namesShown && note.Label.Length > 0)
+                        {
+                            named.Add((note, centre));
+                        }
 
-                    continue;
-                }
-
-                if (note.Kind != NoteKind.Pin)
-                {
-                    continue;
-                }
-
-                var centre = PinCentre(view, panelWidth, panelHeight, note);
-                if (!IsNearPanel(centre.X, centre.Y))
-                {
-                    continue;
-                }
-
-                layout.Reserve(MarkerRect(centre));
-                if (namesShown && note.Label.Length > 0)
-                {
-                    named.Add((note, centre));
+                        break;
+                    case NoteKind.Path:
+                        break;
+                    default:
+                        throw new UnreachableException();
                 }
             }
         }
@@ -128,10 +89,6 @@ public static class WorldMapLabels
 
         return placed;
 
-        bool IsNearPanel(float panelX, float panelY) =>
-            panelX >= -NearPanelMargin && panelX <= panelWidth + NearPanelMargin
-            && panelY >= -NearPanelMargin && panelY <= panelHeight + NearPanelMargin;
-
         // The text's shadow sits one pixel right and below, so it is part of the name's footprint.
         void PlaceName((Note Pin, (float X, float Y) Centre) entry)
         {
@@ -144,9 +101,75 @@ public static class WorldMapLabels
                 MathF.Floor(height) + 1);
             if (spot is { } rect)
             {
-                placed[entry.Pin.Id] = rect;
+                placed[entry.Pin.Id] = new LabelRect(
+                    rect.Left - entry.Centre.X,
+                    rect.Top - entry.Centre.Y,
+                    rect.Right - entry.Centre.X,
+                    rect.Bottom - entry.Centre.Y);
             }
         }
+    }
+
+    // The names of Layout, moved to where their pins are in the panel.
+    public static IReadOnlyDictionary<int, LabelRect> Place(
+        NoteSet notes,
+        WorldMapView view,
+        double panelWidth,
+        double panelHeight,
+        Func<string, (float Width, float Height)> measure,
+        int selectedNoteId = 0,
+        Note? edited = null)
+    {
+        var placed = new Dictionary<int, LabelRect>();
+        foreach (var (id, name) in Layout(notes, view.PixelsPerTile, measure, selectedNoteId, edited))
+        {
+            var pin = edited?.Id == id ? edited : notes.FindNote(id)!;
+            var (centreX, centreY) = PinCentre(view, panelWidth, panelHeight, pin);
+            placed[id] = new LabelRect(
+                centreX + name.Left,
+                centreY + name.Top,
+                centreX + name.Right,
+                centreY + name.Bottom);
+        }
+
+        return placed;
+    }
+
+    public static (float X, float Y) PinCentre(WorldMapView view, double panelWidth, double panelHeight, Note pin)
+    {
+        var (panelX, panelY) = view.TileToPanel(panelWidth, panelHeight, pin.TileX + 0.5, pin.TileY + 0.5);
+        return ((float)Math.Floor(panelX), (float)Math.Floor(panelY));
+    }
+
+    public static (LabelRect Plate, float TextX, float TextY) TextPlate(
+        WorldMapView view,
+        double panelWidth,
+        double panelHeight,
+        Note text,
+        (float Width, float Height) textSize)
+    {
+        var (anchorX, anchorY) = view.TileToPanel(panelWidth, panelHeight, text.TileX + 0.5, text.TileY + 0.5);
+        return Plate(anchorX, anchorY, textSize);
+    }
+
+    // The middle of a note's tile on the whole map at this zoom, laid out as the panel lays it out: across by tile Y,
+    // down by tile X.
+    private static (double X, double Y) MapPixel(double pixelsPerTile, Note note) =>
+        ((note.TileY + 0.5) * pixelsPerTile, (note.TileX + 0.5) * pixelsPerTile);
+
+    private static (LabelRect Plate, float TextX, float TextY) Plate(
+        double anchorX,
+        double anchorY,
+        (float Width, float Height) textSize)
+    {
+        var textX = MathF.Floor((float)anchorX - textSize.Width / 2);
+        var textY = MathF.Floor((float)anchorY - textSize.Height / 2);
+        var plate = new LabelRect(
+            textX - TextPaddingX,
+            textY - TextPaddingY,
+            textX + MathF.Floor(textSize.Width) + TextPaddingX,
+            textY + MathF.Floor(textSize.Height) + TextPaddingY);
+        return (plate, textX, textY);
     }
 
     // The outline reaches one pixel further right and down, where the centre pixel itself sits.
