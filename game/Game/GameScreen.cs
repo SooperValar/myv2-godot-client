@@ -41,6 +41,7 @@ public partial class GameScreen : Control
     private GameSession session = null!;
     private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
+    private UserDataUpload? userDataUpload;
     private WorldView? worldView;
 
     public override void _Ready()
@@ -62,6 +63,8 @@ public partial class GameScreen : Control
         AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
+
+        userDataUpload = UserDataUpload.For(session.Record, gameState.Chat);
         gameState.Player.NameReceived += SaveCharacterName;
         gameState.UniqueIdReceived += UniqueIdStore.Save;
         gameState.ExitRequested += LeaveOnServerExit;
@@ -99,6 +102,7 @@ public partial class GameScreen : Control
                 {
                     processor.Process(payload);
                     ticksPlayed++;
+                    SendUserData();
                 },
                 connection.SendCommand);
             if (ticksPlayed > 0)
@@ -274,6 +278,23 @@ public partial class GameScreen : Control
         }
 
         connection.SendCommand(packet);
+    }
+
+    // Once sent, the character is no longer changed, so the next login doesn't send it again.
+    private void SendUserData()
+    {
+        if (userDataUpload?.Tick() is not { } packet)
+        {
+            return;
+        }
+
+        connection.SendCommand(packet);
+        if (userDataUpload.Done)
+        {
+            userDataUpload = null;
+            session.Record.Changed = false;
+            CharacterStore.Save(session.Record);
+        }
     }
 
     private void SaveNewCharacter(LoginKey createdKey)

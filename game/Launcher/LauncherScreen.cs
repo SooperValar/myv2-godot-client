@@ -302,6 +302,13 @@ public partial class LauncherScreen : Control
         }
 
         record.Description = descriptionField.Text;
+
+        // An edited description is sent to the server at the next login.
+        if (!showingCharacter)
+        {
+            record.Changed = true;
+        }
+
         SaveEditedCharacter();
     }
 
@@ -386,6 +393,9 @@ public partial class LauncherScreen : Control
         try
         {
             record = CharacterRecord.Read(filePath);
+
+            // As in the current client, a character picked from a file sends its name and description again.
+            record.Changed = true;
         }
         catch (Exception exception) when (exception is IOException or UnauthorizedAccessException
             or InvalidDataException)
