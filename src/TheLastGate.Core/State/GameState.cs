@@ -41,6 +41,7 @@ public sealed class GameState
     public WorldMapWindow WorldMapWindow { get; } = new();
     public ShopRefresh ShopRefresh { get; } = new();
     public UseQueue UseQueue { get; }
+    public GiveMore GiveMore { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }

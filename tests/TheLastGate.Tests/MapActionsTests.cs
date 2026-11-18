@@ -137,6 +137,47 @@ public class MapActionsTests
     }
 
     [Fact]
+    public void CtrlShift_WithAHeldItemGivesItToTheNearestCharacterAndRemembersIt()
+    {
+        var state = GiveMoreState(HeldItem(Candle), Character(28, 27));
+
+        Assert.Equal(
+            new MapAction(Tile(28, 27), MapLayer.Character, MouseCursor.Give, null, null),
+            Decide(state, NearTheNextTile, QueueKeys, MapButton.None));
+        var click = Decide(state, NearTheNextTile, QueueKeys, MapButton.Left);
+        Assert.Equal(MapCommandPackets.ForCharacter(ClientCommand.Give, GuardNumber), click.Command);
+        Assert.True(click.GivesMore);
+    }
+
+    [Fact]
+    public void CtrlShift_GivingMoreWithNoCharacterNearDoesNothing()
+    {
+        var state = GiveMoreState(HeldItem(Candle));
+        state.UseQueue.Enabled = true;
+
+        Assert.Equal(MapAction.Nothing, Decide(state, OnPlayerTile, QueueKeys, MapButton.Left));
+    }
+
+    [Fact]
+    public void CtrlShift_WithAnEmptyHandStillQueuesUses()
+    {
+        var state = GiveMoreState(Item(28, 27, MapFlags.IsUsable));
+        state.UseQueue.Enabled = true;
+
+        Assert.Equal(
+            (OriginX + 28, OriginY + 27),
+            Decide(state, NearTheNextTile, QueueKeys, MapButton.Left).QueuedUse);
+    }
+
+    [Fact]
+    public void Ctrl_GivingAsUsualDoesNotRememberTheGift()
+    {
+        var state = GiveMoreState(HeldItem(Candle), Character(28, 27));
+
+        Assert.False(Decide(state, NearTheNextTile, MapKeys.Ctrl, MapButton.Left).GivesMore);
+    }
+
+    [Fact]
     public void CtrlShift_WithTheQueueOffDoesNothing()
     {
         var state = State(Item(28, 27, MapFlags.IsUsable));
@@ -250,6 +291,13 @@ public class MapActionsTests
     }
 
     private static int Tile(int column, int row) => column + row * WorldMap.Size;
+
+    private static GameState GiveMoreState(params TestCommand[] commands)
+    {
+        var state = State(commands);
+        state.GiveMore.Enabled = true;
+        return state;
+    }
 
     private static GameState QueueState(params TestCommand[] commands)
     {

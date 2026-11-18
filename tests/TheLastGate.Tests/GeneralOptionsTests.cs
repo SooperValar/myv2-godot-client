@@ -10,6 +10,7 @@ public class GeneralOptionsTests
         Assert.Equal(
             [
                 GeneralOption.EscapeClosesWindowsFirst,
+                GeneralOption.GiveMore,
                 GeneralOption.UseQueue,
                 GeneralOption.EnterToTalk,
                 GeneralOption.ExpandedQuickStats,
@@ -21,12 +22,16 @@ public class GeneralOptionsTests
             ],
             GeneralOptions.Rows.Select(row => row.Option));
         Assert.Equal(
-            [false, false, false, false, false, false, false, true, true],
+            [false, false, false, false, false, false, false, false, true, true],
             GeneralOptions.Rows.Select(row => row.GodotOnly));
     }
 
     [Theory]
     [InlineData(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true)]
+    [InlineData(
+        GeneralOption.GiveMore,
+        "Holding Ctrl+Shift when giving an item will attempt to reload that item.",
+        false)]
     [InlineData(GeneralOption.UseQueue, "Holding Ctrl+Shift when using an item queues that use. Limit 5.", false)]
     [InlineData(
         GeneralOption.EnterToTalk,
