@@ -30,6 +30,16 @@ public class WorldMapLabelsTests
     }
 
     [Fact]
+    public void Place_PutsAnEditedPinsNameBesideWhereItIsBeingMoved()
+    {
+        var pin = AddPin(512, 1024, "pin");
+
+        var placed = WorldMapLabels.Place(notes, view, Width, Height, Measure, edited: pin with { TileY = 1034 });
+
+        Assert.Equal(new LabelRect(450, 295, 491, 308), placed[pin.Id]);
+    }
+
+    [Fact]
     public void Place_ShowsNoNamesWhenZoomedFarOut()
     {
         AddPin(512, 1024, "pin");

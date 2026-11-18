@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using TheLastGate.Notes;
 
 namespace TheLastGate.Map;
@@ -51,6 +52,20 @@ public sealed class WorldMapView
         var tileY = (int)Math.Floor(exactY);
         return tileX is >= 0 and < TilesDown && tileY is >= 0 and < TilesAcross ? (tileX, tileY) : null;
     }
+
+    public (int X, int Y, bool OnWorld) NearestTileUnder(
+        double panelWidth,
+        double panelHeight,
+        double panelX,
+        double panelY) =>
+        throw new NotImplementedException();
+
+    public static (int X, int Y)? SnapToEnd(
+        IReadOnlyList<PathSegment> segments,
+        int tileX,
+        int tileY,
+        double maxTiles) =>
+        throw new NotImplementedException();
 
     public void Pan(double panelWidth, double panelHeight, double deltaX, double deltaY)
     {

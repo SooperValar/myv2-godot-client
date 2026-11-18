@@ -28,6 +28,8 @@ public sealed class WorldMapWindow
 
     public WorldMapTool Tool { get; set; }
 
+    public WorldMapEditor Editor { get; } = new();
+
     public int HelpPage { get; private set; }
 
     public string HelpPageText => $"{HelpPage + 1} / {WorldMapHelp.Pages.Count}";
@@ -56,6 +58,8 @@ public sealed class WorldMapWindow
         IsOpen = false;
         return wasOpen;
     }
+
+    public bool CloseByEscape() => throw new NotImplementedException();
 
     public void Panned() => Follow = false;
 

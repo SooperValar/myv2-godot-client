@@ -51,7 +51,8 @@ public static class WorldMapLabels
         double panelWidth,
         double panelHeight,
         Func<string, (float Width, float Height)> measure,
-        int selectedNoteId = 0)
+        int selectedNoteId = 0,
+        Note? edited = null)
     {
         var placed = new Dictionary<int, LabelRect>();
         if (NamesHidden(view))
