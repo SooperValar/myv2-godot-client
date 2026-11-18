@@ -17,6 +17,7 @@ using TheLastGate.Items;
 using TheLastGate.Map;
 using TheLastGate.Net;
 using TheLastGate.Notes;
+using TheLastGate.Planner;
 using TheLastGate.State;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
@@ -37,6 +38,7 @@ public partial class HudView : Control
     private const string TrashCanName = "TrashCan";
     private const string ItemTooltipBinding = "item_tooltip_hotkey";
     private const string WorldMapWindowScenePath = "res://Map/world_map_window.tscn";
+    private const string PlannerWindowScenePath = "res://Planner/planner_window.tscn";
     private const int HintFont = 1;
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
@@ -70,7 +72,6 @@ public partial class HudView : Control
     private readonly byte[] minimapPixels = new byte[MinimapView.Pixels * MinimapView.Pixels * 4];
     private readonly MinimapView minimapView = new();
     private readonly SkillShortcut skillShortcut = new();
-    private readonly StatPlan statPlan = new();
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
@@ -84,9 +85,11 @@ public partial class HudView : Control
     private ImageTexture? minimapTexture;
     private Vector2 mousePosition;
     private bool notesNoticeShown;
+    private PlannerWindowView? plannerWindow;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
     private SpriteLoader? sprites;
+    private StatPlan statPlan = new();
     private GameState? state;
     private WorldMapWindowView? worldMapWindow;
 
@@ -145,6 +148,8 @@ public partial class HudView : Control
 
     public Action? SaveMapNotes { get; set; }
 
+    private bool PlannerEnabled => ClientSettings?.SkillPlanner == true;
+
     public event Action? SettingsChanged;
 
     public event Action? LeaveRequested;
@@ -167,6 +172,7 @@ public partial class HudView : Control
     public void Show(GameState shownState, IFontSet fontSet, Action<byte[]> sendToServer)
     {
         state = shownState;
+        statPlan = shownState.StatPlan;
         sendCommand = sendToServer;
         for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
         {
@@ -298,6 +304,12 @@ public partial class HudView : Control
         worldMapWindow = GD.Load<PackedScene>(WorldMapWindowScenePath).Instantiate<WorldMapWindowView>();
         AddChild(worldMapWindow);
         worldMapWindow.NotesChanged += MapNotesChanged;
+        plannerWindow = GD.Load<PackedScene>(PlannerWindowScenePath).Instantiate<PlannerWindowView>();
+        AddChild(plannerWindow);
+        plannerWindow.CommitPressed += CommitPlan;
+        plannerWindow.ResetPressed += ResetPlan;
+        plannerWindow.ClosePressed += ClosePlanner;
+        GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
         optionsWindow.CloseChosen += CloseOptions;
@@ -392,6 +404,7 @@ public partial class HudView : Control
         ShowQuickStats(player);
         ShowMinimap();
         ShowWorldMap();
+        ShowPlanner();
         var buffIcons = BuffIcons.For(player.Buffs);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
@@ -644,6 +657,12 @@ public partial class HudView : Control
         if (id == "toggle_options_hotkey")
         {
             ToggleOptions();
+            return true;
+        }
+
+        if (id == "toggle_planner_hotkey")
+        {
+            TogglePlanner();
             return true;
         }
 
@@ -1510,12 +1529,85 @@ public partial class HudView : Control
             return;
         }
 
+        CommitPlan();
+    }
+
+    private void CommitPlan()
+    {
+        if (state == null)
+        {
+            return;
+        }
+
         foreach (var packet in statPlan.Commit())
         {
             sendCommand(packet);
         }
 
         ShowStats(state.Player);
+        ShowPlanner();
+    }
+
+    private void ResetPlan()
+    {
+        statPlan.Reset();
+        if (state != null)
+        {
+            ShowStats(state.Player);
+        }
+
+        ShowPlanner();
+    }
+
+    private void ClickPlannerButton(MapButton button)
+    {
+        if (button == MapButton.Left)
+        {
+            TogglePlanner();
+        }
+    }
+
+    // The button and its hotkey do nothing while the option is off.
+    private void TogglePlanner()
+    {
+        if (state == null || !PlannerEnabled)
+        {
+            return;
+        }
+
+        if (state.PlannerWindow.Toggle())
+        {
+            sendCommand(PlannerWindow.MetaRequest());
+        }
+
+        ShowPlanner();
+    }
+
+    private void ClosePlanner()
+    {
+        state?.PlannerWindow.Close();
+        ShowPlanner();
+    }
+
+    private void ShowPlanner()
+    {
+        var enabled = PlannerEnabled;
+        foreach (var name in (string[])["%PlannerBox", "%PlannerLabel", "%PlannerButton"])
+        {
+            GetNode<CanvasItem>(name).Visible = enabled;
+        }
+
+        GetNode<PlannerButtonBox>("%PlannerBox").DarkMode = DarkMode;
+        if (state == null || plannerWindow == null)
+        {
+            return;
+        }
+
+        plannerWindow.ShowWindow(
+            enabled && state.PlannerWindow.IsOpen,
+            DarkMode,
+            state.Player.Points - statPlan.PointsUsed,
+            statPlan.PointsUsed);
     }
 
     private void ShowLook(CharacterLook look)

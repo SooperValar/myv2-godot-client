@@ -1,0 +1,70 @@
+[gd_scene format=3 uid="uid://g4078uc11v8r"]
+
+[ext_resource type="Script" uid="uid://usd3shgqiub" path="res://Planner/PlannerWindowView.cs" id="1_view"]
+[ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_background"]
+bg_color = Color(0.164706, 0.0588235, 0.0392157, 0.941176)
+
+[node name="PlannerWindow" type="Panel" unique_id=1284086976]
+offset_left = 326.0
+offset_top = 25.0
+offset_right = 954.0
+offset_bottom = 695.0
+theme = ExtResource("2_theme")
+theme_override_styles/panel = SubResource("StyleBoxFlat_background")
+script = ExtResource("1_view")
+
+[node name="Frame" type="NinePatchRect" parent="." unique_id=1349039553]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+patch_margin_left = 6
+patch_margin_top = 6
+patch_margin_right = 6
+patch_margin_bottom = 6
+
+[node name="Header" type="Control" parent="." unique_id=909513893]
+anchors_preset = 0
+offset_top = 10.0
+offset_right = 628.0
+offset_bottom = 36.0
+mouse_filter = 2
+
+[node name="Points" type="Label" parent="Header" unique_id=567259165]
+layout_mode = 0
+offset_left = 12.0
+offset_right = 400.0
+offset_bottom = 26.0
+text = "Exp left 0    Planned 0"
+vertical_alignment = 1
+
+[node name="Commit" type="Button" parent="Header" unique_id=764713996]
+layout_mode = 0
+offset_left = 442.0
+offset_top = 3.0
+offset_right = 498.0
+offset_bottom = 22.0
+focus_mode = 0
+text = "Commit"
+
+[node name="Reset" type="Button" parent="Header" unique_id=658605960]
+layout_mode = 0
+offset_left = 502.0
+offset_top = 3.0
+offset_right = 558.0
+offset_bottom = 22.0
+focus_mode = 0
+text = "Reset"
+
+[node name="Close" type="Button" parent="Header" unique_id=1214660830]
+layout_mode = 0
+offset_left = 562.0
+offset_top = 3.0
+offset_right = 618.0
+offset_bottom = 22.0
+focus_mode = 0
+text = "Close"

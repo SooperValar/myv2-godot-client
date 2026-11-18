@@ -26,6 +26,7 @@
 [ext_resource type="PackedScene" uid="uid://c4nhp1yrm7a4i" path="res://Hud/waypoint_window.tscn" id="24_waypointwindow"]
 [ext_resource type="PackedScene" uid="uid://dunfj2uaq4jcb" path="res://Hud/skill_tree_window.tscn" id="25_skilltreewindow"]
 [ext_resource type="PackedScene" uid="uid://datd803sos88d" path="res://Hud/options_window.tscn" id="26_optionswindow"]
+[ext_resource type="Script" uid="uid://gv2wi01n21oy" path="res://Hud/PlannerButtonBox.cs" id="27_plannerbox"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -229,6 +230,38 @@ layout_mode = 0
 offset_left = 137.0
 offset_top = 258.0
 offset_right = 185.0
+offset_bottom = 270.0
+script = ExtResource("8_clickarea")
+
+[node name="PlannerBox" type="Control" parent="." unique_id=182702310]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 5.0
+offset_top = 256.0
+offset_right = 61.0
+offset_bottom = 272.0
+mouse_filter = 2
+script = ExtResource("27_plannerbox")
+
+[node name="PlannerLabel" type="Label" parent="." unique_id=442982855]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 9.0
+offset_top = 260.0
+offset_right = 51.0
+offset_bottom = 269.0
+text = "Planner"
+script = ExtResource("4_hudlabel")
+
+[node name="PlannerButton" type="Control" parent="." unique_id=838215612]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 8.0
+offset_top = 258.0
+offset_right = 60.0
 offset_bottom = 270.0
 script = ExtResource("8_clickarea")
 
