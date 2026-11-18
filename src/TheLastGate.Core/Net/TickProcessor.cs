@@ -56,9 +56,12 @@ public sealed class TickProcessor(GameState state)
                     break;
                 case ServerCommand.SetCharacterItem
                     or ServerCommand.SetCharacterWorn
-                    or ServerCommand.SetCharacterSpell
-                    or ServerCommand.SetCharacterHeldItem:
+                    or ServerCommand.SetCharacterSpell:
                     ItemCommands.Apply(state.Player, state.Tooltips, state.BuffWatch, command);
+                    break;
+                case ServerCommand.SetCharacterHeldItem:
+                    ItemCommands.Apply(state.Player, state.Tooltips, state.BuffWatch, command);
+                    state.GiveMore.HeldItemChanged(state.Player);
                     break;
                 case ServerCommand.SetMap3
                     or ServerCommand.SetMap4

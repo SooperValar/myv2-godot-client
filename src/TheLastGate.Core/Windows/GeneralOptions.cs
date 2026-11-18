@@ -30,6 +30,11 @@ public static class GeneralOptions
     public static IReadOnlyList<OptionRow> Rows { get; } =
     [
         new(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true, false),
+        new(
+            GeneralOption.GiveMore,
+            "Holding Ctrl+Shift when giving an item will attempt to reload that item.",
+            false,
+            false),
         new(GeneralOption.UseQueue, "Holding Ctrl+Shift when using an item queues that use. Limit 5.", false, false),
         new(
             GeneralOption.EnterToTalk,

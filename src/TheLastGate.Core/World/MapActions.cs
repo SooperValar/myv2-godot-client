@@ -43,6 +43,8 @@ public static class MapActions
             MapKeys.Shift => ItemAction(state.Map, mouse, mouseTile, heldItem != 0, button),
             MapKeys.Ctrl => CharacterAction(state.Map, mouse, mouseTile, heldItem != 0, button),
             MapKeys.Alt => SelectAction(state.Map, mouse, mouseTile, button, selectedCharacter),
+            MapKeys.Shift | MapKeys.Ctrl when state.GiveMore.Enabled && heldItem != 0 =>
+                GiveMoreAction(state.Map, mouse, mouseTile, button),
             MapKeys.Shift | MapKeys.Ctrl when state.UseQueue.Enabled =>
                 QueueAction(state.Map, mouse, mouseTile, heldItem != 0, button),
             _ => MapAction.Nothing,
@@ -133,6 +135,25 @@ public static class MapActions
         {
             QueuedUse = queues ? (tile.X, tile.Y) : null,
         };
+    }
+
+    // Ctrl's give, remembered so that another item like it can be picked up once the hand is empty.
+    private static MapAction GiveMoreAction(
+        WorldMap map,
+        (float Column, float Row) mouse,
+        int mouseTile,
+        MapButton button)
+    {
+        if (CharacterNear(map, mouse, mouseTile) is not { } tileIndex)
+        {
+            return MapAction.Nothing;
+        }
+
+        var gives = button == MapButton.Left;
+        var command = gives
+            ? MapCommandPackets.ForCharacter(ClientCommand.Give, map.Tiles[tileIndex].CharacterNumber)
+            : null;
+        return new MapAction(tileIndex, MapLayer.Character, MouseCursor.Give, command, null) { GivesMore = gives };
     }
 
     private static MapAction CharacterAction(
