@@ -5,6 +5,7 @@ using Godot;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Game;
+using TheLastGate.Map;
 using TheLastGate.Net;
 
 namespace TheLastGate.Launcher;
@@ -53,6 +54,8 @@ public partial class LauncherScreen : Control
     private HSlider volumeSlider = null!;
     private Label volumeValue = null!;
     private OptionButton windowTypeOption = null!;
+
+    private string ServerLabel => $"{settings.Server.Host}:{settings.Server.Port}";
 
     public override void _Ready()
     {
@@ -118,6 +121,12 @@ public partial class LauncherScreen : Control
         GetNode<Button>("%DiscordButton").Pressed += () => OS.ShellOpen(DiscordInvite);
         GetNode<Button>("%ExitButton").Pressed += () => GetTree().Quit();
         GetNode<Button>("%StartButton").Pressed += OnStartPressed;
+        GetNode<Button>("%ClearMapButton").Pressed += () => Confirm(
+            "Clear saved map?",
+            $"Do you really want to clear the saved map for {ServerLabel}?",
+            "",
+            "Every area explored on this server, by all of your characters, will be forgotten.",
+            ClearSavedMap);
 
         nameField.TextChanged += OnNameChanged;
         descriptionField.TextChanged += OnDescriptionChanged;
@@ -426,6 +435,13 @@ public partial class LauncherScreen : Control
         }
     }
 
+    private void ClearSavedMap() =>
+        ShowMessage(
+            "FYI",
+            ExploredMapKeeper.ClearSaved(settings.Server)
+                ? $"Saved map data for {ServerLabel} has been cleared."
+                : $"Could not clear the saved map data for {ServerLabel}.");
+
     private void ShowMessage(string title, string text)
     {
         messageTitle.Text = title;
@@ -452,6 +468,7 @@ public partial class LauncherScreen : Control
         confirmTitle.Text = title;
         confirmQuestion.Text = question;
         confirmExplanation.Text = explanation;
+        confirmExplanation.Visible = explanation.Length > 0;
         confirmWarning.Text = warning;
         confirmDialog.CallDeferred(Window.MethodName.PopupCentered);
     }

@@ -19,7 +19,7 @@ public sealed class ExploredMapKeeper
 
     public ExploredMapKeeper(ServerAddress server)
     {
-        ownPath = ProjectSettings.GlobalizePath("user://" + ServerFiles.Name(FilePrefix, server.Host, server.Port));
+        ownPath = OwnPath(server);
         var map = new ExploredMap();
         map.LoadFrom(ServerFiles.PathToLoad(ownPath, ServerFiles.SdlClientPath(FilePrefix, server.Host, server.Port)));
         Recorder = new ExploredMapRecorder(map);
@@ -28,6 +28,9 @@ public sealed class ExploredMapKeeper
     public ExploredMapRecorder Recorder { get; }
 
     public static int ViewCentreCharacter(WorldMap view) => view.Tiles[WorldMap.PlayerTile].CharacterNumber;
+
+    // Forgets every area explored on the server, by every character; the notes are kept.
+    public static bool ClearSaved(ServerAddress server) => ExploredMap.ClearSaved(OwnPath(server));
 
     // The view centre goes first, so a view that has just moved to someone being spectated is never recorded.
     public void See(WorldMap view, SpriteLoader sprites)
@@ -52,6 +55,9 @@ public sealed class ExploredMapKeeper
             Save();
         }
     }
+
+    private static string OwnPath(ServerAddress server) =>
+        ProjectSettings.GlobalizePath("user://" + ServerFiles.Name(FilePrefix, server.Host, server.Port));
 
     public void Save()
     {
