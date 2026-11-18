@@ -9,13 +9,26 @@ namespace TheLastGate.Notes;
 public sealed class NoteSet
 {
     private readonly List<NoteCategory> categories = [];
+    private bool changed;
     private int nextId = 1;
 
     public IReadOnlyList<NoteCategory> Categories => categories;
 
-    public bool Changed { get; set; }
+    public bool Changed
+    {
+        get => changed;
+        set
+        {
+            changed = value;
+            if (value)
+            {
+                Revision++;
+            }
+        }
+    }
 
-    public int Revision => throw new NotImplementedException();
+    // Counts changes, so whatever shows the notes knows when to look again; saving clears Changed but not this.
+    public int Revision { get; private set; }
 
     public bool ShowOnMinimap { get; set; }
 

@@ -27,6 +27,7 @@ public sealed class WorldMapEditor
 
     private const double SnapPixels = 8;
 
+    private readonly HashSet<int> expanded = [];
     private readonly List<PathSegment> pending = [];
     private int labelCategoryId;
     private (int X, int Y) labelTile;
@@ -66,24 +67,129 @@ public sealed class WorldMapEditor
             ? pending
             : [];
 
-    public IReadOnlyCollection<int> ExpandedCategories => throw new NotImplementedException();
+    public IReadOnlyCollection<int> ExpandedCategories => expanded;
+
+    private void ExpandWithAncestors(NoteSet notes, int categoryId)
+    {
+        for (var depth = 0; categoryId != 0 && depth <= NoteLimits.Depth; depth++)
+        {
+            if (notes.FindCategory(categoryId) is not { } category)
+            {
+                return;
+            }
+
+            Expand(categoryId, true);
+            categoryId = category.ParentId;
+        }
+    }
 
     public event Action<string>? Problem;
 
-    public void Expand(int categoryId, bool expanded) => throw new NotImplementedException();
+    public void Expand(int categoryId, bool isExpanded)
+    {
+        if (isExpanded)
+        {
+            expanded.Add(categoryId);
+        }
+        else
+        {
+            expanded.Remove(categoryId);
+        }
+    }
 
-    public void ChooseCategory(int categoryId) => throw new NotImplementedException();
+    public void ChooseCategory(int categoryId) => CurrentCategoryId = categoryId;
 
-    public int CreateCategory(NoteSet notes, string name, int colourIndex, int parentId) =>
-        throw new NotImplementedException();
+    // A new category becomes the one new notes go into, and is shown open under its parent.
+    public int CreateCategory(NoteSet notes, string name, int colourIndex, int parentId)
+    {
+        var created = notes.AddCategory(name, colourIndex, parentId);
+        if (created == 0)
+        {
+            Problem?.Invoke(
+                notes.Depth(parentId) >= NoteLimits.Depth
+                    ? "Categories can only nest 8 deep."
+                    : "Too many categories.");
+            return 0;
+        }
 
-    public void MoveCategory(NoteSet notes, int categoryId, int parentId) => throw new NotImplementedException();
+        CurrentCategoryId = created;
+        if (parentId != 0)
+        {
+            Expand(parentId, true);
+        }
 
-    public void DeleteCategory(NoteSet notes, int categoryId) => throw new NotImplementedException();
+        return created;
+    }
 
-    public int RemoveDuplicatePins(NoteSet notes, int categoryId) => throw new NotImplementedException();
+    public void MoveCategory(NoteSet notes, int categoryId, int parentId)
+    {
+        if (notes.MoveCategory(categoryId, parentId))
+        {
+            ExpandWithAncestors(notes, parentId);
+        }
+    }
 
-    public bool FinishImport(NoteImportResult result, int parentId) => throw new NotImplementedException();
+    // Nothing the editor holds may point into a category that has gone.
+    public void DeleteCategory(NoteSet notes, int categoryId)
+    {
+        if (Edited != null && notes.OwnerOf(Edited.Id)?.Id == categoryId)
+        {
+            CancelEdit();
+        }
+
+        if (SelectedNoteId != 0 && notes.OwnerOf(SelectedNoteId)?.Id == categoryId)
+        {
+            SelectedNoteId = 0;
+        }
+
+        if (PendingCategoryId == categoryId)
+        {
+            pending.Clear();
+        }
+
+        if (CurrentCategoryId == categoryId)
+        {
+            CurrentCategoryId = 0;
+        }
+
+        Expand(categoryId, false);
+        notes.RemoveCategory(categoryId);
+    }
+
+    public int RemoveDuplicatePins(NoteSet notes, int categoryId)
+    {
+        var removed = notes.RemoveDuplicatePins(categoryId);
+        if (Edited != null && notes.FindNote(Edited.Id) == null)
+        {
+            CancelEdit();
+        }
+
+        if (notes.FindNote(SelectedNoteId) == null)
+        {
+            SelectedNoteId = 0;
+        }
+
+        Problem?.Invoke(WorldMapWording.DuplicatePinsRemoved(removed));
+        return removed;
+    }
+
+    // A finished import is chosen and shown open, with the category it went into.
+    public bool FinishImport(NoteImportResult result, int parentId)
+    {
+        if (result.Status != NoteImportStatus.Ok)
+        {
+            return false;
+        }
+
+        CurrentCategoryId = result.RootId;
+        if (parentId != 0)
+        {
+            Expand(parentId, true);
+        }
+
+        Expand(result.RootId, true);
+        return true;
+    }
 
     public void EnsureCurrentCategory(NoteSet notes)
     {
@@ -230,6 +336,8 @@ public sealed class WorldMapEditor
         {
             CancelEdit();
         }
+
+        ExpandWithAncestors(notes, categoryId);
     }
 
     // A press near an end of the path being drawn or edited starts from that end, so segments join up.

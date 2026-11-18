@@ -69,7 +69,19 @@ public sealed class WorldMapWindow
 
     public void Panned() => Follow = false;
 
-    public void ShowNote(Note note) => throw new NotImplementedException();
+    // Picking a note from the list moves the map to it without changing the zoom.
+    public void ShowNote(Note note)
+    {
+        Follow = false;
+        if (note.Kind != NoteKind.Path)
+        {
+            MoveRequest = (note.TileX, note.TileY);
+        }
+        else if (note.Segments.Count > 0)
+        {
+            MoveRequest = (note.Segments[0].StartX, note.Segments[0].StartY);
+        }
+    }
 
     public void ShowStatus(string text, double now) => Show(text, now, StatusSeconds);
 
