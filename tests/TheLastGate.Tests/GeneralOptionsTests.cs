@@ -10,6 +10,7 @@ public class GeneralOptionsTests
         Assert.Equal(
             [
                 GeneralOption.EscapeClosesWindowsFirst,
+                GeneralOption.UseQueue,
                 GeneralOption.EnterToTalk,
                 GeneralOption.ExpandedQuickStats,
                 GeneralOption.SkillPlanner,
@@ -20,12 +21,13 @@ public class GeneralOptionsTests
             ],
             GeneralOptions.Rows.Select(row => row.Option));
         Assert.Equal(
-            [false, false, false, false, false, false, true, true],
+            [false, false, false, false, false, false, false, true, true],
             GeneralOptions.Rows.Select(row => row.GodotOnly));
     }
 
     [Theory]
     [InlineData(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true)]
+    [InlineData(GeneralOption.UseQueue, "Holding Ctrl+Shift when using an item queues that use. Limit 5.", false)]
     [InlineData(
         GeneralOption.EnterToTalk,
         "Press Enter to activate chat mode before typing. Press Enter again to send, or ESC to cancel.",

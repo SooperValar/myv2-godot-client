@@ -11,5 +11,8 @@ public readonly record struct MapAction(
 {
     public const int NoTile = -1;
 
+    // The world tile a click queues a use of.
+    public (int X, int Y)? QueuedUse { get; init; }
+
     public static MapAction Nothing { get; } = new(NoTile, MapLayer.Floor, MouseCursor.None, null, null);
 }

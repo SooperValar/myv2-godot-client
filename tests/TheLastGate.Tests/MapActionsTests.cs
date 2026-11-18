@@ -15,6 +15,8 @@ public class MapActionsTests
     private const int Candle = 1500;
     private const int Guard = 3000;
     private const int GuardNumber = 812;
+
+    private const MapKeys QueueKeys = MapKeys.Shift | MapKeys.Ctrl;
     private static readonly (float Column, float Row) OnPlayerTile = (27.5f, 27.5f);
     private static readonly (float Column, float Row) NearTheNextTile = (27.9f, 27.5f);
 
@@ -122,6 +124,51 @@ public class MapActionsTests
     }
 
     [Fact]
+    public void CtrlShift_QueuesAUseOfTheNearestUsableItem()
+    {
+        var state = QueueState(Item(28, 27, MapFlags.IsUsable));
+
+        Assert.Equal(
+            new MapAction(Tile(28, 27), MapLayer.Object, MouseCursor.Use, null, null),
+            Decide(state, NearTheNextTile, QueueKeys, MapButton.None));
+        var click = Decide(state, NearTheNextTile, QueueKeys, MapButton.Left);
+        Assert.Equal((OriginX + 28, OriginY + 27), click.QueuedUse);
+        Assert.Null(click.Command);
+    }
+
+    [Fact]
+    public void CtrlShift_WithTheQueueOffDoesNothing()
+    {
+        var state = State(Item(28, 27, MapFlags.IsUsable));
+
+        Assert.Equal(MapAction.Nothing, Decide(state, NearTheNextTile, QueueKeys, MapButton.Left));
+    }
+
+    [Fact]
+    public void CtrlShift_OnlyQueuesUsableItemsThatCanBeSeen()
+    {
+        var plain = Decide(QueueState(Item(28, 27)), NearTheNextTile, QueueKeys, MapButton.Left);
+        var hidden = Decide(
+            QueueState(Item(28, 27, MapFlags.IsUsable | MapFlags.Invisible)),
+            NearTheNextTile,
+            QueueKeys,
+            MapButton.Left);
+
+        Assert.Equal((MouseCursor.Take, null), (plain.Cursor, plain.QueuedUse));
+        Assert.Null(hidden.QueuedUse);
+    }
+
+    [Fact]
+    public void CtrlShift_WithAHeldItemShowsTheDropCursorOverEmptyFloor()
+    {
+        var action = Decide(QueueState(HeldItem(Candle)), OnPlayerTile, QueueKeys, MapButton.Left);
+
+        Assert.Equal(
+            new MapAction(Tile(27, 27), MapLayer.Floor, MouseCursor.Drop, null, null),
+            action);
+    }
+
+    [Fact]
     public void Shift_WithNothingNearDoesNothing()
     {
         Assert.Equal(MapAction.Nothing, Decide(State(), OnPlayerTile, MapKeys.Shift, MapButton.Left));
@@ -203,6 +250,13 @@ public class MapActionsTests
     }
 
     private static int Tile(int column, int row) => column + row * WorldMap.Size;
+
+    private static GameState QueueState(params TestCommand[] commands)
+    {
+        var state = State(commands);
+        state.UseQueue.Enabled = true;
+        return state;
+    }
 
     private static TestCommand Item(int column, int row, MapFlags extraFlags = MapFlags.None) =>
         Place(column, row, MapFlags.IsItem | extraFlags, Candle, 0, 0);

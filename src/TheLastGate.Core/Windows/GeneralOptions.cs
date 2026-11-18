@@ -6,6 +6,7 @@ namespace TheLastGate.Windows;
 public enum GeneralOption
 {
     EscapeClosesWindowsFirst,
+    UseQueue,
     EnterToTalk,
     ExpandedQuickStats,
     SkillPlanner,

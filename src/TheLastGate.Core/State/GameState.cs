@@ -19,6 +19,7 @@ public sealed class GameState
         MessageOfTheDay.LineAdded += MessageOfTheDayLines.Add;
         TextWindows = new TextWindows(Pause);
         WaypointWindow = new WaypointWindow(Pause);
+        UseQueue = new UseQueue(Chat);
     }
 
     public PlayerState Player { get; } = new();
@@ -39,6 +40,7 @@ public sealed class GameState
     public OptionsWindow OptionsWindow { get; } = new();
     public WorldMapWindow WorldMapWindow { get; } = new();
     public ShopRefresh ShopRefresh { get; } = new();
+    public UseQueue UseQueue { get; }
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
