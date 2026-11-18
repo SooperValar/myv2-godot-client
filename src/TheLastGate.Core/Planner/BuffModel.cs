@@ -27,9 +27,17 @@ public sealed record BuffModelSkill
     public SkillScale Scale { get; set; }
 
     public SkillGroups Groups { get; set; }
+
+    public bool Equals(BuffModelSkill? other) =>
+        other != null
+        && (ServerTotal, Planned, Scale, Groups) == (other.ServerTotal, other.Planned, other.Scale, other.Groups)
+        && Attributes.SequenceEqual(other.Attributes);
+
+    public override int GetHashCode() => HashCode.Combine(ServerTotal, Planned, Scale, Groups);
 }
 
-public sealed class BuffModelInput
+// Equal to another input with the same numbers.
+public sealed class BuffModelInput : IEquatable<BuffModelInput>
 {
     public const int BuffCount = 3;
 
@@ -82,6 +90,23 @@ public sealed class BuffModelInput
 
     public PlannerEffects Effects { get; set; } = new();
 
+    public bool Equals(BuffModelInput? other) =>
+        other != null
+        && ServerAttributes.Equals(other.ServerAttributes)
+        && BaseAttributes.Equals(other.BaseAttributes)
+        && PlannedAttributes.Equals(other.PlannedAttributes)
+        && (Divisor, SpellMultiplier, SpellBonus, SpellAptitude, RaceModifier, ReducedItemBuffs, ServerWeapon)
+        == (other.Divisor, other.SpellMultiplier, other.SpellBonus, other.SpellAptitude, other.RaceModifier,
+            other.ReducedItemBuffs, other.ServerWeapon)
+        && (ServerArmor, TarotCards, UncappedHitpoints, PlannedHitpoints, UncappedMana, PlannedMana)
+        == (other.ServerArmor, other.TarotCards, other.UncappedHitpoints, other.PlannedHitpoints, other.UncappedMana,
+            other.PlannedMana)
+        && SpellKnown.SequenceEqual(other.SpellKnown)
+        && SpellSkills.SequenceEqual(other.SpellSkills)
+        && Active.SequenceEqual(other.Active)
+        && ShowBuffed.SequenceEqual(other.ShowBuffed)
+        && Effects.Equals(other.Effects);
+
     // The attributes, flags and skills are copied, so planning on the copy leaves this one alone; the buff readings
     // and effects are shared, as nothing changes them.
     public BuffModelInput Copy()
@@ -120,6 +145,10 @@ public sealed class BuffModelInput
 
         return copy;
     }
+
+    public override bool Equals(object? other) => Equals(other as BuffModelInput);
+
+    public override int GetHashCode() => HashCode.Combine(PlannedAttributes, SpellAptitude, TarotCards, Effects);
 }
 
 public sealed class BuffModelResult

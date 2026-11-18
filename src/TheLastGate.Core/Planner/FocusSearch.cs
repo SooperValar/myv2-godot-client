@@ -6,7 +6,7 @@ namespace TheLastGate.Planner;
 
 // Something the focus may put points into, by its stat raise slot: 0-4 an attribute, 5 Hitpoints, 7 Mana, 8 and up a
 // skill.
-public sealed class FocusCandidate
+public sealed class FocusCandidate : IEquatable<FocusCandidate>
 {
     public int RaiseIndex { get; set; }
 
@@ -14,6 +14,15 @@ public sealed class FocusCandidate
 
     // The cost of the 1st..nth extra point; NoCost when the stat is capped.
     public int[] StepCosts { get; } = new int[FocusSearch.MostPoints];
+
+    public bool Equals(FocusCandidate? other) =>
+        other != null
+        && (RaiseIndex, MostPoints) == (other.RaiseIndex, other.MostPoints)
+        && StepCosts.SequenceEqual(other.StepCosts);
+
+    public override bool Equals(object? other) => Equals(other as FocusCandidate);
+
+    public override int GetHashCode() => HashCode.Combine(RaiseIndex, MostPoints, StepCosts[0]);
 }
 
 public sealed record FocusRaise(int RaiseIndex, int Points, int Cost);

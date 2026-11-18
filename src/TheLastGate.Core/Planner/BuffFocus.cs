@@ -1,10 +1,12 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using TheLastGate.Buffs;
 
 namespace TheLastGate.Planner;
 
-public sealed class BuffFocusInput
+// Equal to another input with the same numbers, so a search can be kept until something it reads changes.
+public sealed class BuffFocusInput : IEquatable<BuffFocusInput>
 {
     // The planner's state, plan included.
     public BuffModelInput Model { get; set; } = new();
@@ -27,6 +29,21 @@ public sealed class BuffFocusInput
     public int[] CombatRaiseIndex { get; } = new int[CombatModel.SkillCount];
 
     public List<FocusCandidate> Candidates { get; } = [];
+
+    public bool Equals(BuffFocusInput? other) =>
+        other != null
+        && (FocusedRaiseIndex, ArmorFeedsFocused) == (other.FocusedRaiseIndex, other.ArmorFeedsFocused)
+        && Model.Equals(other.Model)
+        && Focused.Equals(other.Focused)
+        && SpellRaiseIndex.SequenceEqual(other.SpellRaiseIndex)
+        && Combat.Equals(other.Combat)
+        && CombatSkills.SequenceEqual(other.CombatSkills)
+        && CombatRaiseIndex.SequenceEqual(other.CombatRaiseIndex)
+        && Candidates.SequenceEqual(other.Candidates);
+
+    public override bool Equals(object? other) => Equals(other as BuffFocusInput);
+
+    public override int GetHashCode() => HashCode.Combine(Model, Focused, FocusedRaiseIndex, Candidates.Count);
 
     internal static BuffModelSkill[] NewCombatSkills()
     {

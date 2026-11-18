@@ -46,23 +46,38 @@ public sealed class StatPlan
 
     public int? NextCost(int slot, int[] values) => CostAt(slot, values, raised[slot]);
 
-    public int? CostAfter(int slot, int[] values, int extra) => throw new NotImplementedException();
+    public int? CostAfter(int slot, int[] values, int extra) => CostAt(slot, values, raised[slot] + extra);
 
-    public bool RaiseAll(IReadOnlyList<(int Slot, int Points)> raises, Func<int, int[]> valuesFor, int points) =>
-        throw new NotImplementedException();
+    // All or nothing: when any point can't be bought, the plan is left as it was.
+    public bool RaiseAll(IReadOnlyList<(int Slot, int Points)> raises, Func<int, int[]> valuesFor, int points)
+    {
+        var raisedBefore = (int[])raised.Clone();
+        var usedBefore = PointsUsed;
+        foreach (var (slot, count) in raises)
+        {
+            var values = valuesFor(slot);
+            for (var point = 0; point < count; point++)
+            {
+                if (!TryRaise(slot, values, points))
+                {
+                    raisedBefore.CopyTo(raised, 0);
+                    PointsUsed = usedBefore;
+                    return false;
+                }
+            }
+        }
+
+        return true;
+    }
 
     public void Raise(int slot, int[] values, int points, int times)
     {
         for (var time = 0; time < times; time++)
         {
-            var cost = NextCost(slot, values);
-            if (cost == null || cost > points - PointsUsed)
+            if (!TryRaise(slot, values, points))
             {
                 return;
             }
-
-            PointsUsed += cost.Value;
-            raised[slot]++;
         }
     }
 
@@ -95,6 +110,19 @@ public sealed class StatPlan
 
         Reset();
         return packets;
+    }
+
+    private bool TryRaise(int slot, int[] values, int points)
+    {
+        var cost = NextCost(slot, values);
+        if (cost == null || cost > points - PointsUsed)
+        {
+            return false;
+        }
+
+        PointsUsed += cost.Value;
+        raised[slot]++;
+        return true;
     }
 
     private static int? CostAt(int slot, int[] values, int planned)

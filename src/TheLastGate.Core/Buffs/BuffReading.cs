@@ -1,3 +1,4 @@
+using System;
 using TheLastGate.Planner;
 
 namespace TheLastGate.Buffs;
@@ -11,7 +12,7 @@ public enum BuffKind
 }
 
 // One buff as the server's buff list describes it: its power, and with spell knowledge the exact bonuses it gives.
-public sealed class BuffReading
+public sealed class BuffReading : IEquatable<BuffReading>
 {
     public bool Known { get; set; }
 
@@ -24,4 +25,14 @@ public sealed class BuffReading
     public int WeaponBonus { get; set; }
 
     public int ArmorBonus { get; set; }
+
+    public bool Equals(BuffReading? other) =>
+        other != null
+        && (Known, Power, HasExact, WeaponBonus, ArmorBonus)
+        == (other.Known, other.Power, other.HasExact, other.WeaponBonus, other.ArmorBonus)
+        && AttributeBonus.Equals(other.AttributeBonus);
+
+    public override bool Equals(object? other) => Equals(other as BuffReading);
+
+    public override int GetHashCode() => HashCode.Combine(Known, Power, WeaponBonus, ArmorBonus);
 }

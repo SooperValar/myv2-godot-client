@@ -61,10 +61,10 @@ public sealed class PlannerSheet
     private const uint Lycanth = 1u << 16;
 
     // In BuffKind order.
-    private static readonly int[] SpellSkillNumbers = [21, 18, 17];
+    internal static readonly int[] SpellSkillNumbers = [21, 18, 17];
 
     // In CombatSkill order.
-    private static readonly int[] CombatSkillNumbers = [0, 2, 3, 4, 5, 6, 36, 16, TacticsSkill, 38, 53];
+    internal static readonly int[] CombatSkillNumbers = [0, 2, 3, 4, 5, 6, 36, 16, TacticsSkill, 38, 53];
 
     // The first class that matches gives the percent.
     private static readonly (uint Class, int Percent)[] SpellRacePercents =
@@ -74,7 +74,6 @@ public sealed class PlannerSheet
         (Lycanth, DefaultSpellRacePercent),
     ];
 
-    private readonly PlannerGame game;
     private int plannedArmor;
     private BuffModelResult? unplanned;
     private int unplannedArmor;
@@ -82,16 +81,18 @@ public sealed class PlannerSheet
 
     private PlannerSheet(PlannerGame game)
     {
-        this.game = game;
+        Game = game;
         plannedArmor = game.Armor;
         unplannedArmor = game.Armor;
     }
 
     public bool BuffsAvailable => Planned != null;
 
-    public int ServerWeapon => game.Weapon;
+    internal PlannerGame Game { get; }
 
-    public int ServerArmor => game.Armor;
+    public int ServerWeapon => Game.Weapon;
+
+    public int ServerArmor => Game.Armor;
 
     public BuffModelInput? PlannedInput { get; private set; }
 
@@ -138,7 +139,7 @@ public sealed class PlannerSheet
     // "-" while the meta stat hasn't arrived.
     public string MetaText(string name) =>
         Meta(name) is { } value
-            ? FormatMeta(value, game.MetaFormats.GetValueOrDefault(name, new MetaFormat(false, "")))
+            ? FormatMeta(value, Game.MetaFormats.GetValueOrDefault(name, new MetaFormat(false, "")))
             : "-";
 
     public static string FormatMeta(int value, MetaFormat format) =>
@@ -174,9 +175,9 @@ public sealed class PlannerSheet
         return emptySlots;
     }
 
-    private bool Is(uint characterClass) => (game.Kindred & characterClass) != 0;
+    private bool Is(uint characterClass) => (Game.Kindred & characterClass) != 0;
 
-    private int? Meta(string name) => game.MetaStats.TryGetValue(name, out var value) ? value : null;
+    private int? Meta(string name) => Game.MetaStats.TryGetValue(name, out var value) ? value : null;
 
     private void ComputeBuffs()
     {
@@ -202,7 +203,7 @@ public sealed class PlannerSheet
         {
             var shown = BuffModel.CombatShown(PlannedInput, Planned, Combat, CombatSkills(true));
             CombatShown = shown;
-            CombatChanged = shown != new CombatValues(Combat.ServerHit, Combat.ServerParry, game.Weapon, game.Armor)
+            CombatChanged = shown != new CombatValues(Combat.ServerHit, Combat.ServerParry, Game.Weapon, Game.Armor)
                 || Planned.SpellAptitude != PlannedInput.SpellAptitude;
             plannedArmor = shown.Armor;
             unplannedArmor = BuffModel.CombatShown(unplannedInput, unplanned, Combat, CombatSkills(false)).Armor;
@@ -216,47 +217,47 @@ public sealed class PlannerSheet
             return null;
         }
 
-        var choices = game.Choices;
+        var choices = Game.Choices;
         var input = new BuffModelInput
         {
-            Divisor = SkillPreview.AttributeDivisor(game.HardMode),
+            Divisor = SkillPreview.AttributeDivisor(Game.HardMode),
             SpellMultiplier = multiplier,
             SpellBonus = Meta(SpellBonus) ?? 0,
             SpellAptitude = aptitude,
-            RaceModifier = SpellRaceModifier(game.Kindred),
+            RaceModifier = SpellRaceModifier(Game.Kindred),
             ReducedItemBuffs = Is(SeyanDu) || Is(Braver),
-            ServerWeapon = game.Weapon,
-            ServerArmor = game.Armor,
+            ServerWeapon = Game.Weapon,
+            ServerArmor = Game.Armor,
             TarotCards = choices.TarotCards,
             Effects = ItemEffects.Compute(TreeInput(), ItemInput()),
-            UncappedHitpoints = game.HitPoints[UncappedValue],
-            PlannedHitpoints = game.Plan.Raised(StatPlan.HitPointsSlot),
-            UncappedMana = game.Mana[UncappedValue],
-            PlannedMana = game.Plan.Raised(StatPlan.ManaSlot),
+            UncappedHitpoints = Game.HitPoints[UncappedValue],
+            PlannedHitpoints = Game.Plan.Raised(StatPlan.HitPointsSlot),
+            UncappedMana = Game.Mana[UncappedValue],
+            PlannedMana = Game.Plan.Raised(StatPlan.ManaSlot),
         };
         foreach (var attribute in Enum.GetValues<AttributeSlot>())
         {
-            var values = game.Attributes[(int)attribute];
+            var values = Game.Attributes[(int)attribute];
             input.ServerAttributes[attribute] = PlannerGame.Score(values);
             input.BaseAttributes[attribute] = values[0];
-            input.PlannedAttributes[attribute] = game.Plan.Raised((int)attribute);
+            input.PlannedAttributes[attribute] = Game.Plan.Raised((int)attribute);
         }
 
         for (var kind = 0; kind < BuffModelInput.BuffCount; kind++)
         {
             var number = SpellSkillNumbers[kind];
-            var known = InTable(number) && game.Skills[number][0] > 0;
+            var known = InTable(number) && Game.Skills[number][0] > 0;
             input.SpellKnown[kind] = known;
             input.SpellSkills[kind] = InTable(number) ? ModelSkill(number, true) : new BuffModelSkill();
-            if (game.BuffReadings[kind] is { } reading)
+            if (Game.BuffReadings[kind] is { } reading)
             {
                 input.Active[kind] = reading;
             }
 
             // A buff from a spell you don't know stays in the numbers; it has no toggle.
             var toggledOn = ((choices.SpellToggles >> kind) & 1) != 0;
-            var readingReady = !game.BuffActive[kind] || game.BuffReadings[kind] != null;
-            input.ShowBuffed[kind] = known ? toggledOn && readingReady : game.BuffActive[kind];
+            var readingReady = !Game.BuffActive[kind] || Game.BuffReadings[kind] != null;
+            input.ShowBuffed[kind] = known ? toggledOn && readingReady : Game.BuffActive[kind];
         }
 
         return input;
@@ -264,8 +265,8 @@ public sealed class PlannerSheet
 
     private IEnumerable<string> MathLineTexts()
     {
-        var choices = game.Choices;
-        if (game.HardMode)
+        var choices = Game.Choices;
+        if (Game.HardMode)
         {
             yield return "Hard Mode";
         }
@@ -275,7 +276,7 @@ public sealed class PlannerSheet
             var number = SpellSkillNumbers[kind];
             if (Known(number) && ((choices.SpellToggles >> kind) & 1) != 0)
             {
-                yield return game.SkillTexts[number].Name;
+                yield return Game.SkillTexts[number].Name;
             }
         }
 
@@ -325,20 +326,20 @@ public sealed class PlannerSheet
     // A learned node counts under its own name while it is in the math, or as its corruptor once corrupted.
     private IEnumerable<string> TreeLines()
     {
-        var treeClass = TreeEffects.ClassFromKindred(game.Kindred);
+        var treeClass = TreeEffects.ClassFromKindred(Game.Kindred);
         for (var node = 1; node <= PlayerState.TreeNodeCount; node++)
         {
-            if (!TreeEffects.NodeLearned(game.TreePoints, node))
+            if (!TreeEffects.NodeLearned(Game.TreePoints, node))
             {
                 continue;
             }
 
-            var serverNumber = game.TreeNodes[node - 1];
+            var serverNumber = Game.TreeNodes[node - 1];
             if (serverNumber == 0)
             {
                 if (TreeEffects.NodeInMath(treeClass, node))
                 {
-                    yield return game.TreeNodeNames[node - 1];
+                    yield return Game.TreeNodeNames[node - 1];
                 }
             }
             else if (TreeEffects.CorruptorForServerNumber(serverNumber) is { } corruptor)
@@ -353,20 +354,20 @@ public sealed class PlannerSheet
     {
         var input = new TreeEffectsInput
         {
-            TreeClass = TreeEffects.ClassFromKindred(game.Kindred),
-            TreePoints = game.TreePoints,
-            CorruptorTicks = game.Choices.CorruptorTicks,
+            TreeClass = TreeEffects.ClassFromKindred(Game.Kindred),
+            TreePoints = Game.TreePoints,
+            CorruptorTicks = Game.Choices.CorruptorTicks,
         };
-        game.TreeNodes.CopyTo(input.TreeNodes, 0);
-        game.Choices.CorruptorCounts.CopyTo(input.CorruptorCounts, 0);
+        Game.TreeNodes.CopyTo(input.TreeNodes, 0);
+        Game.Choices.CorruptorCounts.CopyTo(input.CorruptorCounts, 0);
         return input;
     }
 
     private ItemEffectsInput ItemInput()
     {
         var input = new ItemEffectsInput
-            { EnchantTicks = game.Choices.EnchantTicks, GearTicks = game.Choices.GearTicks };
-        game.Choices.EnchantCounts.CopyTo(input.EnchantCounts, 0);
+            { EnchantTicks = Game.Choices.EnchantTicks, GearTicks = Game.Choices.GearTicks };
+        Game.Choices.EnchantCounts.CopyTo(input.EnchantCounts, 0);
         return input;
     }
 
@@ -383,9 +384,9 @@ public sealed class PlannerSheet
             ServerHit = hit,
             ServerParry = parry,
             GearClass = GearClass(),
-            Rampart = Is(ArchTemplar) && TreeEffects.NodeLearned(game.TreePoints, RampartNode),
+            Rampart = Is(ArchTemplar) && TreeEffects.NodeLearned(Game.TreePoints, RampartNode),
             Lycanth = Is(Lycanth),
-            EmptySlots = EmptyGearSlots(game.WornSprites),
+            EmptySlots = EmptyGearSlots(Game.WornSprites),
             BaseWeapon = planned.Weapon,
             BaseArmor = planned.Armor,
             BestWeaponSkill = effects.FistsOfHeavens != 0,
@@ -396,13 +397,13 @@ public sealed class PlannerSheet
         {
             var number = CombatSkillNumbers[skill];
             input.Known[skill] = Known(number);
-            input.Current[skill] = PlannerGame.Score(game.Skills[number]);
+            input.Current[skill] = PlannerGame.Score(Game.Skills[number]);
             input.Shown[skill] = input.Known[skill]
                 ? BuffModel.SkillValue(plannedInput, ModelSkill(number, true), planned.Attributes)
                 : input.Current[skill];
         }
 
-        var choices = game.Choices;
+        var choices = Game.Choices;
         if (choices.Weapon == null || choices.Offhand == null)
         {
             choices.Weapon ??= CombatModel.DefaultWeapon(input.Known, input.Current);
@@ -430,19 +431,19 @@ public sealed class PlannerSheet
         return Is(Templar) || Is(Braver) ? CombatGearClass.TemplarOrBraver : CombatGearClass.Other;
     }
 
-    private BuffModelSkill[] CombatSkills(bool withPlan) =>
+    internal BuffModelSkill[] CombatSkills(bool withPlan) =>
         CombatSkillNumbers
             .Select(number => Known(number) ? ModelSkill(number, withPlan) : new BuffModelSkill())
             .ToArray();
 
-    private bool InTable(int number) => number < game.SkillTexts.Length;
+    private bool InTable(int number) => number < Game.SkillTexts.Length;
 
-    private bool Known(int number) => InTable(number) && game.Skills[number][0] > 0;
+    private bool Known(int number) => InTable(number) && Game.Skills[number][0] > 0;
 
-    private BuffModelSkill ModelSkill(int number, bool withPlan) => new()
+    internal BuffModelSkill ModelSkill(int number, bool withPlan) => new()
     {
-        ServerTotal = PlannerGame.Score(game.Skills[number]),
-        Planned = withPlan ? game.Plan.Raised(StatPlan.SkillSlot(number)) : 0,
+        ServerTotal = PlannerGame.Score(Game.Skills[number]),
+        Planned = withPlan ? Game.Plan.Raised(StatPlan.SkillSlot(number)) : 0,
         Attributes = SkillAttributes(number).Select(attribute => (AttributeSlot)attribute).ToArray(),
         Scale = number switch
         {
@@ -455,12 +456,12 @@ public sealed class PlannerSheet
     };
 
     private IEnumerable<int> SkillAttributes(int number) =>
-        game.SkillTexts[number].Attributes.Where(attribute => attribute is >= 0 and < AttributeAmounts.Count);
+        Game.SkillTexts[number].Attributes.Where(attribute => attribute is >= 0 and < AttributeAmounts.Count);
 
     private PlannerRow RaisableRow(string name, int slot, int baseValue, int current)
     {
-        var plan = game.Plan;
-        var cost = plan.NextCost(slot, game.ValuesFor(slot));
+        var plan = Game.Plan;
+        var cost = plan.NextCost(slot, Game.ValuesFor(slot));
         return new PlannerRow(
             name,
             slot,
@@ -470,14 +471,14 @@ public sealed class PlannerSheet
             0,
             0,
             cost,
-            cost <= game.Points - plan.PointsUsed,
+            cost <= Game.Points - plan.PointsUsed,
             plan.Raised(slot) > 0,
             false);
     }
 
     private PlannerRow AttributeRow(int attribute)
     {
-        var values = game.Attributes[attribute];
+        var values = Game.Attributes[attribute];
         var row = RaisableRow(StatLines.AttributeNames[attribute], attribute, values[0], PlannerGame.Score(values));
         if (Planned == null || unplanned == null)
         {
@@ -497,22 +498,22 @@ public sealed class PlannerSheet
 
     private PlannerRow SkillRow(int number)
     {
-        var skillValues = game.Skills[number];
+        var skillValues = Game.Skills[number];
         var row = RaisableRow(
-            game.SkillTexts[number].Name,
+            Game.SkillTexts[number].Name,
             StatPlan.SkillSlot(number),
             skillValues[0],
             PlannerGame.Score(skillValues));
         var attributes = SkillAttributes(number).ToArray();
-        var attributeValues = attributes.Select(attribute => PlannerGame.Score(game.Attributes[attribute])).ToArray();
-        var attributeRaises = attributes.Select(attribute => game.Plan.Raised(attribute)).ToArray();
+        var attributeValues = attributes.Select(attribute => PlannerGame.Score(Game.Attributes[attribute])).ToArray();
+        var attributeRaises = attributes.Select(attribute => Game.Plan.Raised(attribute)).ToArray();
         row = row with
         {
             AttributeGain = SkillPreview.AttributeGain(
                 attributeValues,
                 attributeRaises,
                 PlannedInput?.Divisor
-                ?? SkillPreview.AttributeDivisor(game.HardMode)),
+                ?? SkillPreview.AttributeDivisor(Game.HardMode)),
             UsesRaisedAttribute = SkillPreview.UsesRaisedAttribute(attributeRaises),
         };
         if (PlannedInput == null || Planned == null || unplannedInput == null || unplanned == null)

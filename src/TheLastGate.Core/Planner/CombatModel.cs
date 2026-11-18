@@ -68,7 +68,8 @@ public readonly record struct CombatValues(int Hit, int Parry, int Weapon, int A
     };
 }
 
-public sealed class CombatModelInput
+// Equal to another input with the same numbers.
+public sealed class CombatModelInput : IEquatable<CombatModelInput>
 {
     public bool[] Known { get; } = new bool[CombatModel.SkillCount];
 
@@ -107,6 +108,18 @@ public sealed class CombatModelInput
 
     public bool ParryFeedsHit { get; set; }
 
+    public bool Equals(CombatModelInput? other) =>
+        other != null
+        && (Weapon, Offhand, GearClass, Rampart, Lycanth, EmptySlots, ServerHit)
+        == (other.Weapon, other.Offhand, other.GearClass, other.Rampart, other.Lycanth, other.EmptySlots,
+            other.ServerHit)
+        && (ServerParry, BaseWeapon, BaseArmor, BestWeaponSkill, HitFeedsParry, ParryFeedsHit)
+        == (other.ServerParry, other.BaseWeapon, other.BaseArmor, other.BestWeaponSkill, other.HitFeedsParry,
+            other.ParryFeedsHit)
+        && Known.SequenceEqual(other.Known)
+        && Current.SequenceEqual(other.Current)
+        && Shown.SequenceEqual(other.Shown);
+
     public CombatModelInput Copy()
     {
         var copy = new CombatModelInput
@@ -130,6 +143,10 @@ public sealed class CombatModelInput
         Shown.CopyTo(copy.Shown, 0);
         return copy;
     }
+
+    public override bool Equals(object? other) => Equals(other as CombatModelInput);
+
+    public override int GetHashCode() => HashCode.Combine(Weapon, Offhand, ServerHit, ServerParry, BaseWeapon);
 }
 
 // What the planner shows for Hit, Parry, Weapon Value and Armor Value. The server only sends the totals, so each is

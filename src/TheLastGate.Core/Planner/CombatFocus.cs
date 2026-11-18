@@ -4,7 +4,8 @@ using System.Linq;
 
 namespace TheLastGate.Planner;
 
-public sealed class CombatFocusInput
+// Equal to another input with the same numbers, so a search can be kept until something it reads changes.
+public sealed class CombatFocusInput : IEquatable<CombatFocusInput>
 {
     // The planner's state, plan included.
     public BuffModelInput Model { get; set; } = new();
@@ -23,6 +24,20 @@ public sealed class CombatFocusInput
     public CombatStat Stat { get; set; }
 
     public List<FocusCandidate> Candidates { get; } = [];
+
+    public bool Equals(CombatFocusInput? other) =>
+        other != null
+        && Stat == other.Stat
+        && Model.Equals(other.Model)
+        && Combat.Equals(other.Combat)
+        && CombatSkills.SequenceEqual(other.CombatSkills)
+        && CombatRaiseIndex.SequenceEqual(other.CombatRaiseIndex)
+        && SpellRaiseIndex.SequenceEqual(other.SpellRaiseIndex)
+        && Candidates.SequenceEqual(other.Candidates);
+
+    public override bool Equals(object? other) => Equals(other as CombatFocusInput);
+
+    public override int GetHashCode() => HashCode.Combine(Model, Combat, Stat, Candidates.Count);
 
     private static int[] NoSlots(int count)
     {

@@ -1,4 +1,3 @@
-using System;
 using TheLastGate.Net;
 using TheLastGate.Planner;
 
@@ -16,9 +15,10 @@ public sealed class PlannerWindow
 
     public PlannerFocus? Focus { get; private set; }
 
-    public void ToggleFocus(PlannerFocus focus) => throw new NotImplementedException();
+    // Focusing what is already focused clears the focus.
+    public void ToggleFocus(PlannerFocus focus) => Focus = focus == Focus ? null : focus;
 
-    public void ClearFocus() => throw new NotImplementedException();
+    public void ClearFocus() => Focus = null;
 
     // The planner shows meta stats by name, which the server only sends when asked, so the first open asks.
     public bool Toggle()
