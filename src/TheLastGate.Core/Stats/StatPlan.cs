@@ -46,6 +46,11 @@ public sealed class StatPlan
 
     public int? NextCost(int slot, int[] values) => CostAt(slot, values, raised[slot]);
 
+    public int? CostAfter(int slot, int[] values, int extra) => throw new NotImplementedException();
+
+    public bool RaiseAll(IReadOnlyList<(int Slot, int Points)> raises, Func<int, int[]> valuesFor, int points) =>
+        throw new NotImplementedException();
+
     public void Raise(int slot, int[] values, int points, int times)
     {
         for (var time = 0; time < times; time++)

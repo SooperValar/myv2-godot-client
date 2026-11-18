@@ -1,4 +1,5 @@
 using TheLastGate.Net;
+using TheLastGate.Planner;
 using TheLastGate.State;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
@@ -50,6 +51,36 @@ public class PlannerWindowTests
         Assert.True(state.CloseWindowsByEscape());
 
         Assert.False(state.PlannerWindow.IsOpen);
+    }
+
+    [Fact]
+    public void ToggleFocus_FocusesAndClearsTheSameTarget()
+    {
+        window.ToggleFocus(PlannerFocus.OnSkill(3));
+        Assert.Equal(PlannerFocus.OnSkill(3), window.Focus);
+
+        window.ToggleFocus(PlannerFocus.OnSkill(3));
+        Assert.Null(window.Focus);
+    }
+
+    [Fact]
+    public void ToggleFocus_MovesBetweenSkillsAndCombatStats()
+    {
+        window.ToggleFocus(PlannerFocus.OnSkill(3));
+
+        window.ToggleFocus(PlannerFocus.OnStat(CombatStat.Armor));
+
+        Assert.Equal(PlannerFocus.OnStat(CombatStat.Armor), window.Focus);
+    }
+
+    [Fact]
+    public void ClearFocus_ForgetsTheFocus()
+    {
+        window.ToggleFocus(PlannerFocus.OnStat(CombatStat.Hit));
+
+        window.ClearFocus();
+
+        Assert.Null(window.Focus);
     }
 
     [Fact]

@@ -353,7 +353,7 @@ public class PlannerSheetTests
     private static int FirstIndex<TEntry>(IReadOnlyList<TEntry> entries, Func<TEntry, bool> matches) =>
         entries.Select((entry, index) => (entry, index)).First(pair => matches(pair.entry)).index;
 
-    private static PlannerGame Game()
+    internal static PlannerGame Game()
     {
         var game = new PlannerGame { Points = 1_000_000, Kindred = 1 };
         foreach (var values in game.Attributes)

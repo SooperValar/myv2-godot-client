@@ -182,4 +182,53 @@ public class StatPlanTests
         Assert.Equal("Raise Dagger.", StatPlan.RaiseHelp("Dagger"));
         Assert.Equal("Lower Mana.", StatPlan.LowerHelp("Mana"));
     }
+
+    [Fact]
+    public void CostAfter_IsTheCostOfAPointBeyondThePlannedOnes()
+    {
+        int[] values = [10, 0, 13, 3, 0, 12];
+        var plan = new StatPlan();
+        plan.Raise(0, values, Plenty, 1);
+
+        Assert.Equal(199, plan.CostAfter(0, values, 0));
+        Assert.Equal(12 * 12 * 12 * 3 / 20, plan.CostAfter(0, values, 1));
+        Assert.Null(plan.CostAfter(0, values, 2));
+    }
+
+    [Fact]
+    public void RaiseAll_PlansEveryPoint()
+    {
+        int[] values = [10, 0, 50, 3, 0, 12];
+        var plan = new StatPlan();
+
+        Assert.True(plan.RaiseAll([(0, 2), (1, 1)], _ => values, Plenty));
+
+        Assert.Equal((2, 1), (plan.Raised(0), plan.Raised(1)));
+        Assert.Equal(150 + 199 + 150, plan.PointsUsed);
+    }
+
+    [Fact]
+    public void RaiseAll_PlansNothingWhenAPointCantBeBought()
+    {
+        int[] values = [10, 0, 50, 3, 0, 12];
+        int[] capped = [10, 0, 11, 3, 0, 12];
+        var plan = new StatPlan();
+        plan.Raise(2, values, Plenty, 1);
+
+        Assert.False(plan.RaiseAll([(0, 1), (1, 2)], slot => slot == 1 ? capped : values, Plenty));
+
+        Assert.Equal((0, 0, 1), (plan.Raised(0), plan.Raised(1), plan.Raised(2)));
+        Assert.Equal(150, plan.PointsUsed);
+    }
+
+    [Fact]
+    public void RaiseAll_PlansNothingWithTooFewPoints()
+    {
+        int[] values = [10, 0, 50, 3, 0, 12];
+        var plan = new StatPlan();
+
+        Assert.False(plan.RaiseAll([(0, 1), (1, 1)], _ => values, 200));
+
+        Assert.Equal(0, plan.PointsUsed);
+    }
 }
