@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TheLastGate.Items;
+using TheLastGate.State;
 using TheLastGate.Stats;
 
 namespace TheLastGate.Planner;
@@ -40,6 +41,7 @@ public sealed class PlannerSheet
     private const int ShownSkill = 1;
     private const int RampartNode = 10;
     private const int DefaultSpellRacePercent = 100;
+    private const int MetaHundredths = 100;
 
     private const int TacticsSkill = 12;
     private const int ResistSkill = 23;
@@ -87,6 +89,10 @@ public sealed class PlannerSheet
 
     public bool BuffsAvailable => Planned != null;
 
+    public int ServerWeapon => game.Weapon;
+
+    public int ServerArmor => game.Armor;
+
     public BuffModelInput? PlannedInput { get; private set; }
 
     public BuffModelResult? Planned { get; private set; }
@@ -94,13 +100,13 @@ public sealed class PlannerSheet
     public CombatModelInput? Combat { get; private set; }
 
     // Hit, Parry, Weapon and Armor Value with the plan and the buffs shown; missing until Hit and Parry have arrived.
-    public CombatValues? CombatShown => throw new NotImplementedException();
+    public CombatValues? CombatShown { get; private set; }
 
     // The plan or the buffs change a combat number or the spell aptitude.
-    public bool CombatChanged => throw new NotImplementedException();
+    public bool CombatChanged { get; private set; }
 
     // What feeds the numbers besides the stats, one line each: the game mode, the spells, cards, tree and items.
-    public IReadOnlyList<string> MathLines => throw new NotImplementedException();
+    public IReadOnlyList<string> MathLines { get; private set; } = [];
 
     // A first look picked the weapon and off-hand, so the choices want saving.
     public bool ChoicesChanged { get; private set; }
@@ -125,13 +131,20 @@ public sealed class PlannerSheet
             .Where(number => number < game.SkillTexts.Length && game.SkillTexts[number].Show == ShownSkill)
             .Select(sheet.SkillRow)
             .ToArray();
+        sheet.MathLines = sheet.MathLineTexts().ToArray();
         return sheet;
     }
 
     // "-" while the meta stat hasn't arrived.
-    public string MetaText(string name) => throw new NotImplementedException();
+    public string MetaText(string name) =>
+        Meta(name) is { } value
+            ? FormatMeta(value, game.MetaFormats.GetValueOrDefault(name, new MetaFormat(false, "")))
+            : "-";
 
-    public static string FormatMeta(int value, MetaFormat format) => throw new NotImplementedException();
+    public static string FormatMeta(int value, MetaFormat format) =>
+        format.Decimal
+            ? $"{value / MetaHundredths}.{value % MetaHundredths:00}{format.Affix}"
+            : $"{value}{format.Affix}";
 
     public static int SpellRaceModifier(uint kindred)
     {
@@ -187,7 +200,11 @@ public sealed class PlannerSheet
         Combat = CombatInput(PlannedInput, Planned);
         if (Combat != null)
         {
-            plannedArmor = BuffModel.CombatShown(PlannedInput, Planned, Combat, CombatSkills(true)).Armor;
+            var shown = BuffModel.CombatShown(PlannedInput, Planned, Combat, CombatSkills(true));
+            CombatShown = shown;
+            CombatChanged = shown != new CombatValues(Combat.ServerHit, Combat.ServerParry, game.Weapon, game.Armor)
+                || Planned.SpellAptitude != PlannedInput.SpellAptitude;
+            plannedArmor = shown.Armor;
             unplannedArmor = BuffModel.CombatShown(unplannedInput, unplanned, Combat, CombatSkills(false)).Armor;
         }
     }
@@ -243,6 +260,93 @@ public sealed class PlannerSheet
         }
 
         return input;
+    }
+
+    private IEnumerable<string> MathLineTexts()
+    {
+        var choices = game.Choices;
+        if (game.HardMode)
+        {
+            yield return "Hard Mode";
+        }
+
+        for (var kind = 0; kind < BuffModelInput.BuffCount; kind++)
+        {
+            var number = SpellSkillNumbers[kind];
+            if (Known(number) && ((choices.SpellToggles >> kind) & 1) != 0)
+            {
+                yield return game.SkillTexts[number].Name;
+            }
+        }
+
+        foreach (var card in TarotMath.ModelledCards)
+        {
+            if (TarotMath.Has(choices.TarotCards, card))
+            {
+                yield return TarotMath.CardNames[(int)card];
+            }
+        }
+
+        foreach (var node in TreeLines())
+        {
+            yield return $"{node} (skill tree)";
+        }
+
+        for (var corruptor = 0; corruptor < TreeEffects.CorruptorCount; corruptor++)
+        {
+            var count = choices.CorruptorCounts[corruptor];
+            if ((choices.CorruptorTicks & (1u << corruptor)) != 0 && count != 0)
+            {
+                yield return $"{TreeEffects.Corruptors[corruptor].Name} x{count}";
+            }
+        }
+
+        var items = ItemInput();
+        foreach (var enchant in Enum.GetValues<Enchant>())
+        {
+            var copies = ItemEffects.EnchantCopies(items, enchant);
+            var info = ItemEffects.Enchants[(int)enchant];
+            if (copies != 0)
+            {
+                yield return info.Counted ? $"{info.Name} x{copies}" : info.Name;
+            }
+        }
+
+        for (var gear = 0; gear < ItemEffects.GearCount; gear++)
+        {
+            var info = ItemEffects.Gears[gear];
+            if ((choices.GearTicks & (1u << gear)) != 0)
+            {
+                yield return info.Modelled ? info.Name : $"{info.Name} (not modelled)";
+            }
+        }
+    }
+
+    // A learned node counts under its own name while it is in the math, or as its corruptor once corrupted.
+    private IEnumerable<string> TreeLines()
+    {
+        var treeClass = TreeEffects.ClassFromKindred(game.Kindred);
+        for (var node = 1; node <= PlayerState.TreeNodeCount; node++)
+        {
+            if (!TreeEffects.NodeLearned(game.TreePoints, node))
+            {
+                continue;
+            }
+
+            var serverNumber = game.TreeNodes[node - 1];
+            if (serverNumber == 0)
+            {
+                if (TreeEffects.NodeInMath(treeClass, node))
+                {
+                    yield return game.TreeNodeNames[node - 1];
+                }
+            }
+            else if (TreeEffects.CorruptorForServerNumber(serverNumber) is { } corruptor)
+            {
+                var info = TreeEffects.Corruptors[(int)corruptor];
+                yield return info.Modelled ? info.Name : $"{info.Name} (not modelled)";
+            }
+        }
     }
 
     private TreeEffectsInput TreeInput()

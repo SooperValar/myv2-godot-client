@@ -1,5 +1,5 @@
-using System;
 using System.Collections.Generic;
+using System.Linq;
 
 namespace TheLastGate.Planner;
 
@@ -40,6 +40,13 @@ public static class TarotMath
     private const int HangedReversedWeaponPercent = 85;
     private const int TemperanceReversedPercentPerStack = 10;
 
+    private static readonly string[] UprightNames =
+    [
+        "The Fool", "The Magician", "The High Priestess", "The Empress", "The Emperor", "The Hierophant", "The Lovers",
+        "The Chariot", "Strength", "The Hermit", "Wheel of Fortune", "Justice", "The Hanged Man", "Death", "Temperance",
+        "The Devil", "The Tower", "The Star", "The Moon", "The Sun", "Judgement", "The World",
+    ];
+
     private static readonly TarotCard[] Modelled =
     [
         TarotCard.Magician, TarotCard.Lovers, TarotCard.Hermit, TarotCard.FoolReversed, TarotCard.LoversReversed,
@@ -50,7 +57,8 @@ public static class TarotMath
     public static IReadOnlyList<TarotCard> ModelledCards => Modelled;
 
     // By card number: the 22 cards upright, then reversed.
-    public static IReadOnlyList<string> CardNames => throw new NotImplementedException();
+    public static IReadOnlyList<string> CardNames { get; } =
+        UprightNames.Concat(UprightNames.Select(name => name + ", Reversed")).ToArray();
 
     public static bool Has(ulong cards, int cardIndex) =>
         cardIndex is >= 0 and < CardCount && ((cards >> cardIndex) & 1) != 0;

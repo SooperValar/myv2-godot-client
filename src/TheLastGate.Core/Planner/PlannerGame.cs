@@ -104,10 +104,16 @@ public sealed class PlannerGame
         player.Mana.CopyTo(game.Mana, 0);
         foreach (var meta in terminology.MetaStats)
         {
-            if (meta.Name.Length > 0)
+            if (meta.Name.Length > 0 && game.MetaStats.TryAdd(meta.Name, meta.Value))
             {
-                game.MetaStats.TryAdd(meta.Name, meta.Value);
+                game.MetaFormats[meta.Name] = new MetaFormat(meta.Flag != 0, meta.Affix);
             }
+        }
+
+        var classTree = terminology.Trees[0];
+        for (var node = 0; node < PlayerState.TreeNodeCount; node++)
+        {
+            game.TreeNodeNames[node] = classTree[node].Name;
         }
 
         foreach (var kind in Enum.GetValues<BuffKind>())
