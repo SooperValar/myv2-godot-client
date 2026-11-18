@@ -46,9 +46,13 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetCharacterTree
                     or ServerCommand.SetCharacterGold
                     or ServerCommand.SetCharacterLocation1
-                    or ServerCommand.SetCharacterLocation2
-                    or ServerCommand.SetTarget:
+                    or ServerCommand.SetCharacterLocation2:
                     PlayerCommands.Apply(state.Player, command);
+                    break;
+                case ServerCommand.SetTarget:
+                    var previousTarget = state.Player.Target;
+                    PlayerCommands.Apply(state.Player, command);
+                    state.UseQueue.TargetChanged(previousTarget, state.Player.Target);
                     break;
                 case ServerCommand.SetCharacterItem
                     or ServerCommand.SetCharacterWorn

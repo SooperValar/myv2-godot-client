@@ -29,6 +29,7 @@ public static class GeneralOptions
     public static IReadOnlyList<OptionRow> Rows { get; } =
     [
         new(GeneralOption.EscapeClosesWindowsFirst, "Escape closes windows before canceling movement.", true, false),
+        new(GeneralOption.UseQueue, "Holding Ctrl+Shift when using an item queues that use. Limit 5.", false, false),
         new(
             GeneralOption.EnterToTalk,
             "Press Enter to activate chat mode before typing. Press Enter again to send, or ESC to cancel.",

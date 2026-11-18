@@ -43,6 +43,8 @@ public static class MapActions
             MapKeys.Shift => ItemAction(state.Map, mouse, mouseTile, heldItem != 0, button),
             MapKeys.Ctrl => CharacterAction(state.Map, mouse, mouseTile, heldItem != 0, button),
             MapKeys.Alt => SelectAction(state.Map, mouse, mouseTile, button, selectedCharacter),
+            MapKeys.Shift | MapKeys.Ctrl when state.UseQueue.Enabled =>
+                QueueAction(state.Map, mouse, mouseTile, heldItem != 0, button),
             _ => MapAction.Nothing,
         };
     }
@@ -98,6 +100,39 @@ public static class MapActions
         }
 
         return MapAction.Nothing;
+    }
+
+    // Ctrl+Shift points at items as Shift does, but a left click on a usable item queues its use instead of sending
+    // it.
+    private static MapAction QueueAction(
+        WorldMap map,
+        (float Column, float Row) mouse,
+        int mouseTile,
+        bool holdingItem,
+        MapButton button)
+    {
+        var tileIndex = mouseTile;
+        if (!holdingItem && MapPicking.NearestTile(map, MapFlags.IsItem, mouse) is var (column, row))
+        {
+            tileIndex = column + row * WorldMap.Size;
+        }
+
+        ref readonly var tile = ref map.Tiles[tileIndex];
+        var flags = (MapFlags)tile.Flags;
+        if (!flags.HasFlag(MapFlags.IsItem))
+        {
+            return holdingItem
+                ? new MapAction(tileIndex, MapLayer.Floor, MouseCursor.Drop, null, null)
+                : MapAction.Nothing;
+        }
+
+        var usable = flags.HasFlag(MapFlags.IsUsable);
+        var cursor = usable ? MouseCursor.Use : holdingItem ? MouseCursor.None : MouseCursor.Take;
+        var queues = button == MapButton.Left && usable && !flags.HasFlag(MapFlags.Invisible);
+        return new MapAction(tileIndex, MapLayer.Object, cursor, null, null)
+        {
+            QueuedUse = queues ? (tile.X, tile.Y) : null,
+        };
     }
 
     private static MapAction CharacterAction(
