@@ -15,6 +15,7 @@ public class GeneralOptionsTests
                 GeneralOption.EnterToTalk,
                 GeneralOption.ExpandedQuickStats,
                 GeneralOption.SkillPlanner,
+                GeneralOption.AdaptivePacing,
                 GeneralOption.ItemTooltips,
                 GeneralOption.ItemTooltipsAlways,
                 GeneralOption.GlideMovement,
@@ -22,7 +23,7 @@ public class GeneralOptionsTests
             ],
             GeneralOptions.Rows.Select(row => row.Option));
         Assert.Equal(
-            [false, false, false, false, false, false, false, false, true, true],
+            [false, false, false, false, false, false, false, false, false, true, true],
             GeneralOptions.Rows.Select(row => row.GodotOnly));
     }
 
@@ -38,6 +39,10 @@ public class GeneralOptionsTests
         "Press Enter to activate chat mode before typing. Press Enter again to send, or ESC to cancel.",
         false)]
     [InlineData(GeneralOption.ExpandedQuickStats, "Show Hit/Parry Score with Weapon/Armor value.", true)]
+    [InlineData(
+        GeneralOption.AdaptivePacing,
+        "Adaptive network smoothing: lower delay on steady connections, more buffering when the connection is uneven.",
+        false)]
     [InlineData(GeneralOption.ItemTooltips, "Show item tooltips for inventory and equipped gear.", true)]
     [InlineData(
         GeneralOption.ItemTooltipsAlways,

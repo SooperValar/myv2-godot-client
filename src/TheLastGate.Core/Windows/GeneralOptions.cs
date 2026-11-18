@@ -11,6 +11,7 @@ public enum GeneralOption
     EnterToTalk,
     ExpandedQuickStats,
     SkillPlanner,
+    AdaptivePacing,
     ItemTooltips,
     ItemTooltipsAlways,
     GlideMovement,
