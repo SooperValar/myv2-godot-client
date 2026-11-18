@@ -271,17 +271,34 @@ public sealed class ExploredMapTests : IDisposable
     }
 
     [Fact]
-    public void Delete_RemovesTheFileAndAnyHalfWrittenOne()
+    public void ClearSaved_LeavesABlankMapInPlaceOfTheOldOne()
     {
         var path = Path.Combine(folder, "TLGMap_test_1.dat");
-        new ExploredMap(Width, Height).SaveTo(path);
+        var explored = new ExploredMap();
+        explored.SetTile(1, 1, 0x123456);
+        explored.SaveTo(path);
         File.WriteAllText(path + ".tmp", "half written");
 
-        Assert.True(ExploredMap.Delete(path));
+        Assert.True(ExploredMap.ClearSaved(path));
 
-        Assert.False(File.Exists(path));
+        var reloaded = new ExploredMap();
+        Assert.True(reloaded.LoadFrom(path));
+        Assert.Equal(0u, reloaded.ColourAt(1, 1));
         Assert.False(File.Exists(path + ".tmp"));
-        Assert.True(ExploredMap.Delete(path));
+    }
+
+    [Fact]
+    public void ClearSaved_KeepsTheCurrentClientsMapFromBeingImportedAgain()
+    {
+        var ownPath = Path.Combine(folder, "own", "TLGMap_test_1.dat");
+        var sdlPath = Path.Combine(folder, "sdl", "TLGMap_test_1.dat");
+        Directory.CreateDirectory(Path.GetDirectoryName(ownPath)!);
+        Directory.CreateDirectory(Path.GetDirectoryName(sdlPath)!);
+        new ExploredMap().SaveTo(sdlPath);
+
+        ExploredMap.ClearSaved(ownPath);
+
+        Assert.Equal(ownPath, ServerFiles.PathToLoad(ownPath, sdlPath));
     }
 
     private static byte[] MapFile(uint format, int width, int height, byte[] tiles)

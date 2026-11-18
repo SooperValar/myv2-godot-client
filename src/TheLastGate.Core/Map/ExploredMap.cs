@@ -37,19 +37,7 @@ public sealed class ExploredMap
 
     private static ReadOnlySpan<byte> Magic => "TLGM"u8;
 
-    public static bool Delete(string path)
-    {
-        try
-        {
-            File.Delete(path + TemporarySuffix);
-            File.Delete(path);
-            return !File.Exists(path);
-        }
-        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
-        {
-            return false;
-        }
-    }
+    public static bool ClearSaved(string path) => throw new NotImplementedException();
 
     public uint ColourAt(int tileX, int tileY) => IsOnMap(tileX, tileY) ? tiles[tileX * Height + tileY] : 0;
 
