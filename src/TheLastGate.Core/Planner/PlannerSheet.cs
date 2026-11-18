@@ -324,7 +324,7 @@ public sealed class PlannerSheet
     }
 
     // A learned node counts under its own name while it is in the math, or as its corruptor once corrupted.
-    private IEnumerable<string> TreeLines()
+    internal IEnumerable<string> TreeLines()
     {
         var treeClass = TreeEffects.ClassFromKindred(Game.Kindred);
         for (var node = 1; node <= PlayerState.TreeNodeCount; node++)
@@ -350,7 +350,7 @@ public sealed class PlannerSheet
         }
     }
 
-    private TreeEffectsInput TreeInput()
+    internal TreeEffectsInput TreeInput()
     {
         var input = new TreeEffectsInput
         {
@@ -438,7 +438,7 @@ public sealed class PlannerSheet
 
     private bool InTable(int number) => number < Game.SkillTexts.Length;
 
-    private bool Known(int number) => InTable(number) && Game.Skills[number][0] > 0;
+    internal bool Known(int number) => InTable(number) && Game.Skills[number][0] > 0;
 
     internal BuffModelSkill ModelSkill(int number, bool withPlan) => new()
     {

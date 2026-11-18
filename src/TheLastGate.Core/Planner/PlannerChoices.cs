@@ -9,6 +9,8 @@ namespace TheLastGate.Planner;
 // The planner's picks for one character. A weapon or off-hand not picked yet follows the character's best skill.
 public sealed class PlannerChoices
 {
+    public const int MostCopies = 20;
+
     public CombatWeapon? Weapon { get; set; }
 
     public CombatOffhand? Offhand { get; set; }
@@ -29,19 +31,36 @@ public sealed class PlannerChoices
 
     public uint GearTicks { get; set; }
 
-    public void ToggleSpell(BuffKind kind) => throw new NotImplementedException();
+    public void ToggleSpell(BuffKind kind) => SpellToggles ^= 1u << (int)kind;
 
-    public void ToggleCard(TarotCard card) => throw new NotImplementedException();
+    public void ToggleCard(TarotCard card) => TarotCards ^= 1ul << (int)card;
 
-    public void ToggleCorruptor(int corruptor) => throw new NotImplementedException();
+    // Ticking one with no copies gives it one; unticking keeps the count for next time.
+    public void ToggleCorruptor(int corruptor)
+    {
+        CorruptorTicks ^= 1u << corruptor;
+        if ((CorruptorTicks & (1u << corruptor)) != 0 && CorruptorCounts[corruptor] == 0)
+        {
+            CorruptorCounts[corruptor] = 1;
+        }
+    }
 
-    public void ToggleEnchant(int enchant) => throw new NotImplementedException();
+    public void ToggleEnchant(int enchant)
+    {
+        EnchantTicks ^= 1u << enchant;
+        if ((EnchantTicks & (1u << enchant)) != 0 && ItemEffects.Enchants[enchant].Counted
+            && EnchantCounts[enchant] == 0)
+        {
+            EnchantCounts[enchant] = 1;
+        }
+    }
 
-    public void ToggleGear(int gear) => throw new NotImplementedException();
+    public void ToggleGear(int gear) => GearTicks ^= 1u << gear;
 
-    public void SetCorruptorCount(int corruptor, int count) => throw new NotImplementedException();
+    public void SetCorruptorCount(int corruptor, int count) =>
+        CorruptorCounts[corruptor] = Math.Clamp(count, 1, MostCopies);
 
-    public void SetEnchantCount(int enchant, int count) => throw new NotImplementedException();
+    public void SetEnchantCount(int enchant, int count) => EnchantCounts[enchant] = Math.Clamp(count, 1, MostCopies);
 }
 
 // The planner's picks for every character, in the current client's file layout: a format word and a record count, then
@@ -56,7 +75,6 @@ public static class PlannerChoicesStore
     private const int CurrentFormat = 4;
     private const int HeaderSize = 8;
     private const int MostRecords = 256;
-    private const int MostCopies = 20;
     private const int CorruptorCountSlots = 28;
     private const int EnchantCountSlots = 16;
     private const int NotPicked = -1;
@@ -143,7 +161,7 @@ public static class PlannerChoicesStore
     private static int CheckedCopies(byte stored, uint ticks, int bit)
     {
         var ticked = ((ticks >> bit) & 1) != 0;
-        return stored > MostCopies ? MostCopies : ticked && stored == 0 ? 1 : stored;
+        return stored > PlannerChoices.MostCopies ? PlannerChoices.MostCopies : ticked && stored == 0 ? 1 : stored;
     }
 
     // A missing or damaged file holds nothing.
