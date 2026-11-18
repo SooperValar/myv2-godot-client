@@ -1,4 +1,5 @@
 using System;
+using TheLastGate.Buffs;
 using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.Windows;
@@ -13,6 +14,7 @@ public sealed class GameState
     public GameState()
     {
         Tooltips = new ItemTooltips(Chat);
+        BuffWatch = new BuffWatch(Player);
         MessageOfTheDay.LineAdded += MessageOfTheDayLines.Add;
         TextWindows = new TextWindows(Pause);
         WaypointWindow = new WaypointWindow(Pause);
@@ -25,6 +27,7 @@ public sealed class GameState
     public Terminology Terminology { get; } = new();
     public CharacterNames Names { get; } = new();
     public ItemTooltips Tooltips { get; }
+    public BuffWatch BuffWatch { get; }
     public MessageOfTheDayLines MessageOfTheDayLines { get; } = new();
     public WindowPause Pause { get; } = new();
     public TextWindows TextWindows { get; }
