@@ -9,7 +9,7 @@ public static class PortraitBars
 
     public static BarWidths For(int current, int maximum, int reservedPercent)
     {
-        var reserved = reservedPercent > 0 ? Math.Min(Length, Length * reservedPercent / 100 + 1) : 0;
+        var reserved = ReservedBar.Width(Length, reservedPercent);
         if (maximum <= 0)
         {
             return new BarWidths(0, reserved, 0);
