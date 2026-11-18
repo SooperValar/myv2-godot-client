@@ -9,7 +9,7 @@ using TheLastGate.Windows;
 namespace TheLastGate.Map;
 
 // The current client's World Map window, drawn with the game's window and button sprites: a title bar to drag it by,
-// the category column (filled by a later step), the map with the player's notes on it, and a bar of tools, Follow
+// the category column, the map with the player's notes on it, and a bar of tools, Follow
 // player, the edited note's name and the tile under the cursor. Its own clicks change its own state; the HUD only
 // opens it and tells it what to show. Every change to the notes is handed straight back to be saved.
 [Tool]
@@ -36,6 +36,8 @@ public partial class WorldMapWindowView : Panel
     private Control Help => GetNode<Control>("HelpBlocker");
 
     private CheckBox ShowOnMinimapBox => GetNode<CheckBox>("Rows/Body/Categories/Footer/ShowOnMinimap");
+
+    private WorldMapCategories CategoryColumn => GetNode<WorldMapCategories>("Rows/Body/Categories");
 
     private WorldMapEditor? Editor => window?.Editor;
 
@@ -93,6 +95,8 @@ public partial class WorldMapWindowView : Panel
 
         Canvas.NoteMenuWanted += OpenNoteMenu;
         Canvas.NotesEdited += SaveChanges;
+        CategoryColumn.NoteMenuWanted += OpenNoteMenu;
+        CategoryColumn.NotesChanged += () => NotesChanged?.Invoke();
         ConnectPrompts();
         ConnectEditControls();
         PrepareMenus();
@@ -132,7 +136,7 @@ public partial class WorldMapWindowView : Panel
         {
             case InputEventMouseButton { Pressed: true } press:
                 window.Editor.Focused = GetGlobalRect().HasPoint(press.Position) || LabelPrompt.Visible
-                    || DeletePrompt.Visible;
+                    || DeletePrompt.Visible || CategoryColumn.PromptOpen;
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Escape }
                 when LabelPrompt.Visible || DeletePrompt.Visible:
@@ -145,7 +149,7 @@ public partial class WorldMapWindowView : Panel
                 GetViewport().SetInputAsHandled();
                 break;
             case InputEventKey { Pressed: true, Echo: false, Keycode: Key.Enter or Key.KpEnter }
-                when !LabelPrompt.Visible && window.Editor.FinishPendingPath():
+                when !LabelPrompt.Visible && !CategoryColumn.PromptOpen && window.Editor.FinishPendingPath():
                 GetViewport().SetInputAsHandled();
                 break;
         }
@@ -181,11 +185,13 @@ public partial class WorldMapWindowView : Panel
         Canvas.Window = shownWindow;
         Canvas.Map = map;
         Canvas.PlayerTile = playerTile;
+        CategoryColumn.Show(shownWindow, shownNotes);
         ShowTools(shownWindow.Editor);
         if (!Visible)
         {
             NoteMenu.Hide();
             DeletePrompt.Visible = false;
+            CategoryColumn.CloseAll();
         }
     }
 
@@ -216,22 +222,6 @@ public partial class WorldMapWindowView : Panel
     }
 
     private Button ToolButton(WorldMapTool tool) => GetNode<Button>($"Rows/BottomBar/{tool}");
-
-    private static string Noun(NoteKind kind) => kind switch
-    {
-        NoteKind.Pin => "pin",
-        NoteKind.Text => "text label",
-        NoteKind.Path => "path",
-        _ => throw new UnreachableException(),
-    };
-
-    private static ImageTexture Swatch(int colourIndex)
-    {
-        var rgb = NotePalette.Rgb(colourIndex);
-        var image = Image.CreateEmpty(SwatchSize, SwatchSize, false, Image.Format.Rgba8);
-        image.Fill(Color.Color8((byte)(rgb >> 16), (byte)(rgb >> 8), (byte)rgb));
-        return ImageTexture.CreateFromImage(image);
-    }
 
     private void SaveChanges()
     {
@@ -355,9 +345,7 @@ public partial class WorldMapWindowView : Panel
     private void AskToDelete(Note note)
     {
         deleteNoteId = note.Id;
-        GetNode<Label>("DeleteBlocker/Prompt/Margins/Rows/Question").Text = note.Label.Length > 0
-            ? $"Delete {Noun(note.Kind)} \"{note.Label}\"?"
-            : $"Delete this unnamed {Noun(note.Kind)}?";
+        GetNode<Label>("DeleteBlocker/Prompt/Margins/Rows/Question").Text = WorldMapWording.DeleteNoteQuestion(note);
         DeletePrompt.Visible = true;
     }
 
@@ -373,7 +361,10 @@ public partial class WorldMapWindowView : Panel
 
         for (var colourIndex = 0; colourIndex < NotePalette.Size; colourIndex++)
         {
-            ColourMenu.AddIconRadioCheckItem(Swatch(colourIndex), "", colourIndex);
+            ColourMenu.AddIconRadioCheckItem(
+                NoteSwatches.Of(NotePalette.Rgb(colourIndex), SwatchSize),
+                "",
+                colourIndex);
         }
 
         ColourMenu.AddRadioCheckItem("Use category colour", CategoryColourItem);

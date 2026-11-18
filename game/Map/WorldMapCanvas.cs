@@ -80,6 +80,12 @@ public partial class WorldMapCanvas : Control
             Window.CentreOnPlayer = false;
         }
 
+        if (Window.MoveRequest is { } target)
+        {
+            view.MoveTo(target.X, target.Y);
+            Window.MoveRequest = null;
+        }
+
         if (Window.Follow)
         {
             view.MoveTo(PlayerTile.X, PlayerTile.Y);
