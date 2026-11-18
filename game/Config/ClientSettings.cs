@@ -57,6 +57,7 @@ public sealed class ClientSettings
         EnterToTalk = file.GetValue(GeneralSection, "enter_to_talk", false).AsBool();
         ExpandedQuickStats = file.GetValue(GeneralSection, "expanded_quick_stats", true).AsBool();
         SkillPlanner = file.GetValue(GeneralSection, "skill_planner", false).AsBool();
+        AdaptivePacing = file.GetValue(GeneralSection, "adaptive_tick_pacing", false).AsBool();
         ItemTooltips = file.GetValue(GeneralSection, "item_tooltips", true).AsBool();
         ItemTooltipsAlways = file.GetValue(GeneralSection, "item_tooltips_always", true).AsBool();
         PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
@@ -83,6 +84,7 @@ public sealed class ClientSettings
     public bool EnterToTalk { get; set; }
     public bool ExpandedQuickStats { get; set; }
     public bool SkillPlanner { get; set; }
+    public bool AdaptivePacing { get; set; }
     public bool ItemTooltips { get; set; }
     public bool ItemTooltipsAlways { get; set; }
     public bool PickTileDrawnUnderMouse { get; set; }
@@ -102,6 +104,7 @@ public sealed class ClientSettings
             GeneralOption.EnterToTalk => EnterToTalk,
             GeneralOption.ExpandedQuickStats => ExpandedQuickStats,
             GeneralOption.SkillPlanner => SkillPlanner,
+            GeneralOption.AdaptivePacing => AdaptivePacing,
             GeneralOption.ItemTooltips => ItemTooltips,
             GeneralOption.ItemTooltipsAlways => ItemTooltipsAlways,
             GeneralOption.GlideMovement => GlideMovement,
@@ -129,6 +132,9 @@ public sealed class ClientSettings
                     break;
                 case GeneralOption.SkillPlanner:
                     SkillPlanner = value;
+                    break;
+                case GeneralOption.AdaptivePacing:
+                    AdaptivePacing = value;
                     break;
                 case GeneralOption.ItemTooltips:
                     ItemTooltips = value;
@@ -171,6 +177,7 @@ public sealed class ClientSettings
         file.SetValue(GeneralSection, "enter_to_talk", EnterToTalk);
         file.SetValue(GeneralSection, "expanded_quick_stats", ExpandedQuickStats);
         file.SetValue(GeneralSection, "skill_planner", SkillPlanner);
+        file.SetValue(GeneralSection, "adaptive_tick_pacing", AdaptivePacing);
         file.SetValue(GeneralSection, "item_tooltips", ItemTooltips);
         file.SetValue(GeneralSection, "item_tooltips_always", ItemTooltipsAlways);
         file.SetValue(WorldSection, "pick_tile_drawn_under_mouse", PickTileDrawnUnderMouse);

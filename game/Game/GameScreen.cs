@@ -165,6 +165,7 @@ public partial class GameScreen : Control
         gameState.Tooltips.Enabled = settings.ItemTooltips;
         gameState.UseQueue.Enabled = settings.UseQueue;
         gameState.GiveMore.Enabled = settings.GiveMore;
+        pacer.Adaptive = settings.AdaptivePacing;
         screenGamma?.ShowGamma(settings.ScreenGamma);
         if (worldView != null)
         {
@@ -236,6 +237,7 @@ public partial class GameScreen : Control
         // A queued use has already clicked when it was queued.
         gameState.UseQueue.Send = connection.SendCommand;
         gameState.GiveMore.Enabled = clientSettings.GiveMore;
+        pacer.Adaptive = clientSettings.AdaptivePacing;
         gameState.GiveMore.Send = SendAction;
         gameState.ShopRefresh.Send = connection.SendCommand;
         gameState.BuffWatch.Say = text =>
