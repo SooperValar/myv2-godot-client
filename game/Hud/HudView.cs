@@ -424,6 +424,11 @@ public partial class HudView : Control
         {
             mousePosition = mouse.Position;
         }
+
+        if (inputEvent is InputEventMouseButton press)
+        {
+            TextFields.StopOnClickOutside(GetViewport(), press);
+        }
     }
 
     // Held keys repeat their hotkey, as in the current client.
@@ -433,6 +438,16 @@ public partial class HudView : Control
     {
         if (inputEvent is not InputEventKey { Pressed: true } key)
         {
+            return;
+        }
+
+        if (TextFields.BeingTypedIn(GetViewport()) is { } field)
+        {
+            if (TextFields.StopOnEscape(field, key))
+            {
+                GetViewport().SetInputAsHandled();
+            }
+
             return;
         }
 
