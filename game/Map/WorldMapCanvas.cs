@@ -37,13 +37,20 @@ public partial class WorldMapCanvas : Control
 
     private readonly byte[] pixels = new byte[WorldMapPicture.Width * WorldMapPicture.Height * BytesPerPixel];
     private readonly WorldMapView view = new();
+
     private Vector2 mouse;
+
+    // Each shown name relative to its pin, kept while panning; laid out again when what it depends on changes.
+    private IReadOnlyDictionary<int, LabelRect> nameOffsets = new Dictionary<int, LabelRect>();
+
+    private (NoteSet Notes, int Revision, double PixelsPerTile, int Selected, Note? Edited, Font Font, int Size)?
+        namesFor;
+
     private bool panning;
     private Image? picture;
     private ulong pictureMadeAt;
     private int pictureRevision = -1;
     private ImageTexture? pictureTexture;
-    private IReadOnlyDictionary<int, LabelRect> placedNames = new Dictionary<int, LabelRect>();
 
     public ExploredMap? Map { get; set; }
 
@@ -147,7 +154,7 @@ public partial class WorldMapCanvas : Control
             || view.HitTest(Notes, Size.X, Size.Y, atPosition.X, atPosition.Y, PinHoverRadius) is not { } hit
             || Notes.FindNote(hit.NoteId) is not { Kind: NoteKind.Pin } pin
             || pin.Label.Length == 0
-            || placedNames.ContainsKey(pin.Id))
+            || nameOffsets.ContainsKey(pin.Id))
         {
             return "";
         }
@@ -244,7 +251,8 @@ public partial class WorldMapCanvas : Control
     {
         if (Notes == null)
         {
-            placedNames = new Dictionary<int, LabelRect>();
+            nameOffsets = new Dictionary<int, LabelRect>();
+            namesFor = null;
             return;
         }
 
@@ -252,7 +260,13 @@ public partial class WorldMapCanvas : Control
         var fontSize = TextSize;
         var selectedId = Editor?.SelectedNoteId ?? 0;
         var edited = Editor?.Edited;
-        placedNames = WorldMapLabels.Place(Notes, view, Size.X, Size.Y, Measure, selectedId, edited);
+        var namesNeeded = (Notes, Notes.Revision, view.PixelsPerTile, selectedId, edited, font, fontSize);
+        if (namesFor != namesNeeded)
+        {
+            nameOffsets = WorldMapLabels.Layout(Notes, view.PixelsPerTile, Measure, selectedId, edited);
+            namesFor = namesNeeded;
+        }
+
         foreach (var category in Notes.Categories)
         {
             if (!Notes.IsShown(category))
@@ -302,9 +316,9 @@ public partial class WorldMapCanvas : Control
 
         DrawDiamond(centre, WorldMapLabels.PinMarkerExtent, Colors.Black);
         DrawDiamond(centre, WorldMapLabels.PinRadius, colour);
-        if (placedNames.TryGetValue(pin.Id, out var name))
+        if (nameOffsets.TryGetValue(pin.Id, out var name))
         {
-            DrawShadowedText(new Vector2(name.Left, name.Top), pin.Label, colour);
+            DrawShadowedText(centre + new Vector2(name.Left, name.Top), pin.Label, colour);
         }
     }
 
