@@ -48,6 +48,11 @@ public static class GeneralOptions
             "Enable the skill planner: the Planner button below the skill list and its hotkey.",
             false,
             false),
+        new(
+            GeneralOption.AdaptivePacing,
+            "Adaptive network smoothing: lower delay on steady connections, more buffering when the connection is uneven.",
+            false,
+            false),
         new(GeneralOption.ItemTooltips, "Show item tooltips for inventory and equipped gear.", true, false),
         new(
             GeneralOption.ItemTooltipsAlways,
