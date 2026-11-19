@@ -25,6 +25,7 @@ public partial class OptionsWindowView : Panel
     private const string ConfirmResetAllText = "Confirm?";
 
     private readonly Dictionary<string, Button> keyButtons = [];
+    private readonly Dictionary<string, Label> keyWarnings = [];
     private string? capturing;
     private IReadOnlyList<KeybindRow> shownKeybindRows = [];
 
@@ -39,6 +40,8 @@ public partial class OptionsWindowView : Panel
     private HSlider ScreenGamma => GetNode<HSlider>("Pages/Display/ScreenGammaRow/ScreenGamma");
 
     private HSlider WorldGamma => GetNode<HSlider>("Pages/Display/WorldGammaRow/WorldGamma");
+
+    private Label TypingWarning => OptionBox(GeneralOption.EnterToTalk).GetParent().GetNode<Label>("Warning");
 
     public event Action<OptionsTab>? TabChosen;
 
@@ -72,7 +75,11 @@ public partial class OptionsWindowView : Panel
     {
         ApplyButtonSprite();
         AddOptionRows();
-        ShowKeybinds(KeybindsTab.Sections(new CharacterSettings()), new KeyBindings(), new OptionsWindow());
+        ShowKeybinds(
+            KeybindsTab.Sections(new CharacterSettings()),
+            BindingActions.Current(),
+            false,
+            new OptionsWindow());
         if (Engine.IsEditorHint())
         {
             return;
@@ -135,7 +142,7 @@ public partial class OptionsWindowView : Panel
         {
             CaptureUnbound?.Invoke();
         }
-        else if (HotkeyInput.Chord(key) is { } chord)
+        else if (BindingActions.ToChord(key) is { } chord)
         {
             KeyCaptured?.Invoke(chord);
         }
@@ -168,7 +175,9 @@ public partial class OptionsWindowView : Panel
         ShowGammaValue(ScreenGamma, settings.ScreenGamma);
         WorldGamma.SetValueNoSignal(settings.WorldGamma);
         ShowGammaValue(WorldGamma, settings.WorldGamma);
-        ShowKeybinds(KeybindsTab.Sections(characterSettings), settings.KeyBindings, window);
+        var bindings = BindingActions.Current();
+        ShowKeybinds(KeybindsTab.Sections(characterSettings), bindings, settings.EnterToTalk, window);
+        ShowTypingWarning(BindingRules.TypingHotkeysWarning(bindings, settings.EnterToTalk));
     }
 
     // Buttons draw the game's button sprite, which lives in the sprite archives rather than in the project.
@@ -207,12 +216,21 @@ public partial class OptionsWindowView : Panel
                 Indent(rowNode);
             }
 
+            if (row.Option == GeneralOption.EnterToTalk)
+            {
+                MakeRoomForWarning(rowNode);
+            }
+
             GetNode(row.GodotOnly ? "Pages/General/Rows/GodotOptions" : "Pages/General/Rows/ClientOptions")
                 .AddChild(rowNode);
         }
     }
 
-    private void ShowKeybinds(IReadOnlyList<KeybindSection> sections, KeyBindings bindings, OptionsWindow window)
+    private void ShowKeybinds(
+        IReadOnlyList<KeybindSection> sections,
+        IReadOnlyDictionary<string, KeyChord?> bindings,
+        bool enterToTalk,
+        OptionsWindow window)
     {
         var rows = sections.SelectMany(section => section.Rows).ToList();
         if (!rows.SequenceEqual(shownKeybindRows))
@@ -225,8 +243,11 @@ public partial class OptionsWindowView : Panel
         {
             var waiting = row.Id == window.Capturing;
             var keyButton = keyButtons[row.Id];
-            keyButton.Text = waiting ? WaitingText : bindings.LongName(row.Id);
+            keyButton.Text = waiting ? WaitingText : BindingRules.LongName(bindings[row.Id]);
             keyButton.TooltipText = waiting ? WaitingHint : "";
+            var warning = BindingRules.TypingHotkeyWarning(bindings, row.Id, enterToTalk);
+            keyWarnings[row.Id].Visible = warning != null;
+            keyWarnings[row.Id].TooltipText = warning ?? "";
         }
 
         GetNode<Button>("Pages/Keybinds/Rows/ResetAll").Text =
@@ -243,6 +264,7 @@ public partial class OptionsWindowView : Panel
         }
 
         keyButtons.Clear();
+        keyWarnings.Clear();
         var sectionScene = GD.Load<PackedScene>(KeybindSectionScenePath);
         var rowScene = GD.Load<PackedScene>(KeybindRowScenePath);
         foreach (var section in sections)
@@ -258,12 +280,27 @@ public partial class OptionsWindowView : Panel
                 var keyButton = rowNode.GetNode<Button>("Key");
                 keyButton.Pressed += () => CaptureChosen?.Invoke(row.Id);
                 keyButtons[row.Id] = keyButton;
+                keyWarnings[row.Id] = rowNode.GetNode<Label>("Warning");
                 rowNode.GetNode<Button>("Reset").Pressed += () => BindingResetChosen?.Invoke(row.Id);
                 sectionNode.GetNode("Rows").AddChild(rowNode);
             }
 
             KeybindSections.AddChild(sectionNode);
         }
+    }
+
+    private void ShowTypingWarning(string? warning)
+    {
+        TypingWarning.Visible = warning != null;
+        TypingWarning.TooltipText = warning ?? "";
+    }
+
+    // The warning's place is kept even while it's hidden, so the text doesn't reflow when it shows.
+    private static void MakeRoomForWarning(Control rowNode)
+    {
+        var warning = rowNode.GetNode<Control>("Warning");
+        var text = rowNode.GetNode<Control>("Text");
+        text.CustomMinimumSize -= new Vector2(warning.CustomMinimumSize.X + rowNode.GetThemeConstant("separation"), 0);
     }
 
     // The text gives up the indent's width so the row stays inside the page.

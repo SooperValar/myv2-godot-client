@@ -1,5 +1,8 @@
 # Godot
 .godot/
+
+# The runner scene gdUnit4's test adapter writes on every run
+gdunit4_testadapter_v5/
 /game/android/
 
 # .NET build output and packaged releases

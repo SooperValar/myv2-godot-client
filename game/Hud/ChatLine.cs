@@ -50,21 +50,20 @@ public partial class ChatLine : LineEdit
         }
 
         TextSubmitted += Send;
-        FocusExited += () => CallDeferred(MethodName.TakeFocusBack);
+        GetViewport().GuiFocusChanged += TakeFocusFrom;
+    }
+
+    public override void _ExitTree()
+    {
+        if (!Engine.IsEditorHint())
+        {
+            GetViewport().GuiFocusChanged -= TakeFocusFrom;
+        }
     }
 
     public override void _EnterTree() => ApplyFont();
 
-    // Focus left with nobody, such as when a name box on another window lets go, comes back to an open line.
-    public override void _Process(double delta)
-    {
-        if (!Engine.IsEditorHint())
-        {
-            TakeFocusBack();
-        }
-
-        QueueRedraw();
-    }
+    public override void _Process(double delta) => QueueRedraw();
 
     public override void _ValidateProperty(Dictionary property)
     {
@@ -78,7 +77,7 @@ public partial class ChatLine : LineEdit
 
     public override void _GuiInput(InputEvent inputEvent)
     {
-        if (inputEvent is not InputEventKey { Pressed: true } key)
+        if (!mode.TakesTyping || inputEvent is not InputEventKey { Pressed: true } key)
         {
             return;
         }
@@ -119,7 +118,7 @@ public partial class ChatLine : LineEdit
         AcceptEvent();
     }
 
-    // Asked only while the line is closed, when it holds no focus and its keys reach the HUD instead.
+    // Asked only while the line is closed, when it can't be typed in and its keys reach the HUD instead.
     public bool Open(ChatKey key)
     {
         switch (mode.Press(key))
@@ -202,27 +201,59 @@ public partial class ChatLine : LineEdit
         }
     }
 
-    // A closed line can't be clicked into and holds no focus, so typing goes nowhere and keys reach the hotkeys.
-    private void FollowMode()
+    // The line keeps focus while it's closed; it only can't be typed in, so its keys go on to the hotkeys.
+    private void FollowMode() => Editable = mode.TakesTyping;
+
+    // Only a window's text field may take focus from the line, and the line takes it back when the field lets go. A
+    // line field stops editing on Escape or Enter but would keep focus, so it lets go then.
+    private void TakeFocusFrom(Control owner)
     {
-        if (mode.TakesTyping)
+        if (owner == this)
         {
-            FocusMode = FocusModeEnum.All;
-            GrabFocus();
-            // Focus taken while an arrow key is held counts as keyboard navigation, which doesn't start editing,
-            // and the first Enter would only start it.
-            Edit();
+            return;
         }
-        else
+
+        if (owner is LineEdit field)
         {
-            ReleaseFocus();
-            FocusMode = FocusModeEnum.None;
+            LetGoWhenEditingEnds(field);
+        }
+
+        if (owner is LineEdit or TextEdit)
+        {
+            owner.Connect(
+                Control.SignalName.FocusExited,
+                Callable.From(TakeFocusIfNobodyHasIt),
+                (uint)ConnectFlags.OneShot | (uint)ConnectFlags.Deferred);
+            return;
+        }
+
+        CallDeferred(Control.MethodName.GrabFocus);
+    }
+
+    private static void LetGoWhenEditingEnds(LineEdit field)
+    {
+        field.EditingToggled += LetGo;
+        field.FocusExited += StopWatching;
+        return;
+
+        void LetGo(bool editing)
+        {
+            if (!editing)
+            {
+                field.ReleaseFocus();
+            }
+        }
+
+        void StopWatching()
+        {
+            field.EditingToggled -= LetGo;
+            field.FocusExited -= StopWatching;
         }
     }
 
-    private void TakeFocusBack()
+    private void TakeFocusIfNobodyHasIt()
     {
-        if (IsInsideTree() && mode.TakesTyping && GetViewport().GuiGetFocusOwner() == null)
+        if (IsInsideTree() && GetViewport().GuiGetFocusOwner() == null)
         {
             GrabFocus();
         }

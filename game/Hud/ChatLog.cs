@@ -55,25 +55,7 @@ public partial class ChatLog : Control
         }
     }
 
-    public override void _UnhandledKeyInput(InputEvent inputEvent)
-    {
-        if (inputEvent is not InputEventKey { Pressed: true } key)
-        {
-            return;
-        }
-
-        var lines = key.Keycode switch
-        {
-            Key.Pageup => LogScroll.PageLines,
-            Key.Pagedown => -LogScroll.PageLines,
-            _ => 0,
-        };
-        if (lines != 0)
-        {
-            GetViewport().SetInputAsHandled();
-            ScrollBy(lines);
-        }
-    }
+    public void ScrollPages(int pages) => ScrollBy(pages * LogScroll.PageLines);
 
     public void Show(TextLog shownLog, IFontSet fontSet)
     {

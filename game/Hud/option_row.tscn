@@ -20,3 +20,13 @@ layout_mode = 2
 size_flags_vertical = 0
 text = "Escape closes windows before canceling movement."
 autowrap_mode = 3
+
+[node name="Warning" type="Label" parent="." unique_id=2093315517]
+visible = false
+custom_minimum_size = Vector2(16, 0)
+layout_mode = 2
+size_flags_vertical = 0
+mouse_filter = 0
+theme_override_colors/font_color = Color(1, 0.35, 0.35, 1)
+text = "!"
+horizontal_alignment = 1

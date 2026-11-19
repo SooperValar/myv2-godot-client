@@ -28,6 +28,7 @@ public partial class GameScreen : Control
 
     private readonly ServerConnection connection = new();
     private readonly GameState gameState = new();
+    private readonly NavigationKeys navigationKeys = new();
     private readonly TickPacer pacer = new();
     private readonly HashSet<string> reportedUnusualData = [];
     private ExploredMapKeeper? exploredMap;
@@ -46,6 +47,7 @@ public partial class GameScreen : Control
 
     public override void _Ready()
     {
+        navigationKeys.TurnOff();
         hudView = GetNode<HudView>("%HudView");
         soundEffects = GetNode<SoundEffects>("%SoundEffects");
         hudView.LeaveRequested += ReturnToLauncher;
@@ -126,6 +128,7 @@ public partial class GameScreen : Control
 
     public override void _ExitTree()
     {
+        navigationKeys.TurnOn();
         exploredMap?.Save();
         mapNotes?.Save();
         CursorShapes.Clear();
@@ -216,7 +219,6 @@ public partial class GameScreen : Control
         hudView.DarkMode = clientSettings.DarkMode;
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
-        hudView.KeyBindings = clientSettings.KeyBindings;
         hudView.ClientSettings = clientSettings;
         hudView.PlannerChoices = new PlannerChoicesKeeper(() => session.Record.Key.UserNumber);
         hudView.ClientSettingsChanged += () => ApplyClientSettings(clientSettings);

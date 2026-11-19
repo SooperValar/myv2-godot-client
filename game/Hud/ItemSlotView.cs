@@ -77,7 +77,7 @@ public partial class ItemSlotView : ClickArea
         hotbarKey.Visible = button != null;
         if (button is { } slot)
         {
-            hotbarKey.Text = HudView.HotbarKeyName(this, slot);
+            hotbarKey.Text = HudView.HotbarKeyName(slot);
         }
     }
 

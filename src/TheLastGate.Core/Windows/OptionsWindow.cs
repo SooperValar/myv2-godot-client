@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using System.Linq;
 using TheLastGate.Assets;
 using TheLastGate.Hotkeys;
@@ -5,6 +6,8 @@ using TheLastGate.State;
 using TheLastGate.World;
 
 namespace TheLastGate.Windows;
+
+public sealed record KeybindChange(IReadOnlyList<BindingChange> Changes, LogLine? Line);
 
 public enum OptionsTab
 {
@@ -51,7 +54,7 @@ public sealed class OptionsWindow
     public void StartCapture(string id) => Capturing = id;
 
     // The slash stays free for chat commands, and a modifier alone only makes sense for a binding that is held.
-    public LogLine? Capture(KeyChord chord, KeyBindings bindings)
+    public KeybindChange? Capture(KeyChord chord, IReadOnlyDictionary<string, KeyChord?> current)
     {
         if (Capturing is not { } id || chord.Key == ChatCommandKey)
         {
@@ -69,28 +72,27 @@ public sealed class OptionsWindow
         }
 
         Capturing = null;
-        if (bindings.Assign(id, chord) is not { } displaced)
+        var reassignment = BindingRules.Assign(current, id, chord);
+        if (reassignment.DisplacedId is not { } displaced)
         {
-            return null;
+            return new KeybindChange(reassignment.Changes, null);
         }
 
         var name = Bindings.All.First(binding => binding.Id == displaced).Name;
-        return new LogLine($"Unbound {name} ({chord.LongName}) - key reassigned.", (int)TextColour.Red);
+        var line = new LogLine($"Unbound {name} ({chord.LongName}) - key reassigned.", (int)TextColour.Red);
+        return new KeybindChange(reassignment.Changes, line);
     }
 
     public void CancelCapture() => Capturing = null;
 
-    public void UnbindCaptured(KeyBindings bindings)
+    public BindingChange? UnbindCaptured()
     {
-        if (Capturing is { } id)
-        {
-            bindings.Clear(id);
-        }
-
+        var change = Capturing is { } id ? new BindingChange(id, null) : (BindingChange?)null;
         Capturing = null;
+        return change;
     }
 
-    public LogLine? ChooseResetAll(KeyBindings bindings)
+    public LogLine? ChooseResetAll()
     {
         if (!ConfirmingReset)
         {
@@ -98,7 +100,6 @@ public sealed class OptionsWindow
             return null;
         }
 
-        bindings.ResetAll();
         ConfirmingReset = false;
         return new LogLine("Keybinds have been set to their defaults.", (int)TextColour.Green);
     }

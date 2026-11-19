@@ -26,7 +26,7 @@ public partial class HotbarButtonView : ClickArea
     {
         if (IsInsideTree())
         {
-            GetNode<Label>("Key").Text = HudView.HotbarKeyName(this, slot);
+            GetNode<Label>("Key").Text = HudView.HotbarKeyName(slot);
         }
     }
 }

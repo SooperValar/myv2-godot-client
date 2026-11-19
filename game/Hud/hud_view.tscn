@@ -963,6 +963,7 @@ vertical_alignment = 2
 [node name="ChatLine" type="LineEdit" parent="." unique_id=777391917]
 unique_name_in_owner = true
 layout_mode = 0
+focus_mode = 1
 offset_left = 977.0
 offset_top = 233.0
 offset_right = 1265.0

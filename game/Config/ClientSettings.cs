@@ -62,7 +62,7 @@ public sealed class ClientSettings
         ItemTooltipsAlways = file.GetValue(GeneralSection, "item_tooltips_always", true).AsBool();
         PickTileDrawnUnderMouse = file.GetValue(WorldSection, "pick_tile_drawn_under_mouse", false).AsBool();
         GlideMovement = file.GetValue(WorldSection, "glide_movement", false).AsBool();
-        KeyBindings.Load(SavedBindings(file));
+        LoadKeyBindings(file);
         CursorScale = Math.Clamp(
             file.GetValue(DisplaySection, "cursor_scale", 1f).AsSingle(),
             SmallestCursorScale,
@@ -89,7 +89,6 @@ public sealed class ClientSettings
     public bool ItemTooltipsAlways { get; set; }
     public bool PickTileDrawnUnderMouse { get; set; }
     public bool GlideMovement { get; set; }
-    public KeyBindings KeyBindings { get; } = new();
     public float CursorScale { get; set; }
     public float ScreenGamma { get; set; }
     public float WorldGamma { get; set; }
@@ -190,8 +189,9 @@ public sealed class ClientSettings
             LauncherSection,
             "character_files",
             CharacterHistory.Entries.Select(entry => entry.FilePath).ToArray());
-        // A binding this client no longer has, such as the old gamma key, would otherwise stay in the file forever.
-        var savedBindings = KeyBindings.Saved();
+        // Only bindings that differ from the defaults are kept, so one put back to its default, or one this client no
+        // longer has such as the old gamma key, comes out of the file.
+        var savedBindings = BindingRules.Saved(BindingActions.Defaults(), BindingActions.Current());
         if (file.HasSection(KeybindsSection))
         {
             foreach (var oldId in file.GetSectionKeys(KeybindsSection).Where(id => !savedBindings.ContainsKey(id)))
@@ -206,6 +206,14 @@ public sealed class ClientSettings
         }
 
         return file.Save(FilePath);
+    }
+
+    // The defaults are read before the saved keys go into the InputMap, while it still holds only the project's.
+    private static void LoadKeyBindings(ConfigFile file)
+    {
+        var defaults = BindingActions.Defaults();
+        var loaded = BindingRules.Load(defaults, SavedBindings(file));
+        BindingActions.Apply(loaded.Select(binding => new BindingChange(binding.Key, binding.Value)));
     }
 
     private static Dictionary<string, string> SavedBindings(ConfigFile file) =>

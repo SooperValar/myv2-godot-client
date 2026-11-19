@@ -8,7 +8,16 @@ namespace TheLastGate.Tests;
 
 public class KeybindCaptureTests
 {
-    private readonly KeyBindings bindings = new();
+    private static readonly KeyChord FunctionOne = new("F1", MapKeys.None);
+
+    private static readonly IReadOnlyDictionary<string, KeyChord?> Current = new Dictionary<string, KeyChord?>
+    {
+        ["speed_fast_hotkey"] = FunctionOne,
+        ["speed_slow_hotkey"] = new KeyChord("F3", MapKeys.None),
+        ["toggle_worldmap_hotkey"] = null,
+        ["item_tooltip_hotkey"] = new KeyChord(KeyNames.Alt, MapKeys.None),
+    };
+
     private readonly OptionsWindow window = new();
 
     public KeybindCaptureTests()
@@ -39,11 +48,12 @@ public class KeybindCaptureTests
     public void Capture_BindsTheKeyWithItsModifiersAndStopsWaiting()
     {
         window.StartCapture("toggle_worldmap_hotkey");
+        var ctrlAltM = new KeyChord("M", MapKeys.Ctrl | MapKeys.Alt);
 
-        var line = window.Capture(new KeyChord("M", MapKeys.Ctrl | MapKeys.Alt), bindings);
+        var change = window.Capture(ctrlAltM, Current);
 
-        Assert.Null(line);
-        Assert.Equal("Ctrl+Alt+M", bindings.LongName("toggle_worldmap_hotkey"));
+        Assert.Equal([new BindingChange("toggle_worldmap_hotkey", ctrlAltM)], change?.Changes);
+        Assert.Null(change?.Line);
         Assert.Null(window.Capturing);
     }
 
@@ -52,11 +62,12 @@ public class KeybindCaptureTests
     {
         window.StartCapture("toggle_worldmap_hotkey");
 
-        var line = window.Capture(new KeyChord("F1", MapKeys.None), bindings);
+        var change = window.Capture(FunctionOne, Current);
 
-        Assert.Equal(new LogLine("Unbound Fast Mode (F1) - key reassigned.", (int)TextColour.Red), line);
-        Assert.Equal("F1", bindings.LongName("toggle_worldmap_hotkey"));
-        Assert.Equal("Not Set", bindings.LongName("speed_fast_hotkey"));
+        Assert.Equal(
+            [new BindingChange("speed_fast_hotkey", null), new BindingChange("toggle_worldmap_hotkey", FunctionOne)],
+            change?.Changes);
+        Assert.Equal(new LogLine("Unbound Fast Mode (F1) - key reassigned.", (int)TextColour.Red), change?.Line);
     }
 
     [Theory]
@@ -66,9 +77,7 @@ public class KeybindCaptureTests
     {
         window.StartCapture("toggle_worldmap_hotkey");
 
-        window.Capture(new KeyChord("/", modifiers), bindings);
-
-        Assert.Equal("Not Set", bindings.LongName("toggle_worldmap_hotkey"));
+        Assert.Null(window.Capture(new KeyChord("/", modifiers), Current));
         Assert.Equal("toggle_worldmap_hotkey", window.Capturing);
     }
 
@@ -76,10 +85,11 @@ public class KeybindCaptureTests
     public void Capture_AcceptsTheKeypadSlash()
     {
         window.StartCapture("toggle_worldmap_hotkey");
+        var keypadSlash = new KeyChord("Keypad /", MapKeys.None);
 
-        window.Capture(new KeyChord("Keypad /", MapKeys.None), bindings);
+        var change = window.Capture(keypadSlash, Current);
 
-        Assert.Equal("Keypad /", bindings.LongName("toggle_worldmap_hotkey"));
+        Assert.Equal([new BindingChange("toggle_worldmap_hotkey", keypadSlash)], change?.Changes);
     }
 
     [Theory]
@@ -90,9 +100,7 @@ public class KeybindCaptureTests
     {
         window.StartCapture("toggle_worldmap_hotkey");
 
-        window.Capture(new KeyChord(modifier, MapKeys.None), bindings);
-
-        Assert.Equal("Not Set", bindings.LongName("toggle_worldmap_hotkey"));
+        Assert.Null(window.Capture(new KeyChord(modifier, MapKeys.None), Current));
         Assert.Equal("toggle_worldmap_hotkey", window.Capturing);
     }
 
@@ -101,31 +109,28 @@ public class KeybindCaptureTests
     {
         window.StartCapture("item_tooltip_hotkey");
 
-        window.Capture(new KeyChord(KeyNames.Shift, MapKeys.Ctrl), bindings);
+        var change = window.Capture(new KeyChord(KeyNames.Shift, MapKeys.Ctrl), Current);
 
-        Assert.Equal("Shift", bindings.LongName("item_tooltip_hotkey"));
+        Assert.Equal(
+            [new BindingChange("item_tooltip_hotkey", new KeyChord(KeyNames.Shift, MapKeys.None))],
+            change?.Changes);
         Assert.Null(window.Capturing);
     }
 
     [Fact]
     public void Capture_DoesNothingWhenNoRowIsWaiting()
     {
-        var line = window.Capture(new KeyChord("F1", MapKeys.Ctrl), bindings);
-
-        Assert.Null(line);
-        Assert.Equal("F1", bindings.LongName("speed_fast_hotkey"));
-        Assert.Null(bindings.Find(new KeyChord("F1", MapKeys.Ctrl)));
+        Assert.Null(window.Capture(new KeyChord("F1", MapKeys.Ctrl), Current));
     }
 
     [Fact]
-    public void CancelCapture_KeepsTheBinding()
+    public void CancelCapture_StopsWaiting()
     {
         window.StartCapture("speed_fast_hotkey");
 
         window.CancelCapture();
 
         Assert.Null(window.Capturing);
-        Assert.Equal("F1", bindings.LongName("speed_fast_hotkey"));
     }
 
     [Fact]
@@ -133,10 +138,14 @@ public class KeybindCaptureTests
     {
         window.StartCapture("speed_fast_hotkey");
 
-        window.UnbindCaptured(bindings);
-
+        Assert.Equal(new BindingChange("speed_fast_hotkey", null), window.UnbindCaptured());
         Assert.Null(window.Capturing);
-        Assert.Equal("Not Set", bindings.LongName("speed_fast_hotkey"));
+    }
+
+    [Fact]
+    public void UnbindCaptured_DoesNothingWhenNoRowIsWaiting()
+    {
+        Assert.Null(window.UnbindCaptured());
     }
 
     [Fact]
@@ -172,26 +181,19 @@ public class KeybindCaptureTests
     [Fact]
     public void ChooseResetAll_FirstAsksForConfirmation()
     {
-        bindings.Clear("speed_fast_hotkey");
-
-        var line = window.ChooseResetAll(bindings);
-
-        Assert.Null(line);
+        Assert.Null(window.ChooseResetAll());
         Assert.True(window.ConfirmingReset);
-        Assert.Equal("Not Set", bindings.LongName("speed_fast_hotkey"));
     }
 
     [Fact]
-    public void ChooseResetAll_Twice_RestoresEveryDefaultAndSaysSoInGreen()
+    public void ChooseResetAll_Twice_ResetsAndSaysSoInGreen()
     {
-        bindings.Clear("speed_fast_hotkey");
-        window.ChooseResetAll(bindings);
+        window.ChooseResetAll();
 
-        var line = window.ChooseResetAll(bindings);
+        var line = window.ChooseResetAll();
 
         Assert.Equal(new LogLine("Keybinds have been set to their defaults.", (int)TextColour.Green), line);
         Assert.False(window.ConfirmingReset);
-        Assert.Equal("F1", bindings.LongName("speed_fast_hotkey"));
     }
 
     [Theory]
@@ -199,7 +201,7 @@ public class KeybindCaptureTests
     [InlineData(OptionsTab.General)]
     public void ChoosingATab_DropsTheConfirmation(OptionsTab tab)
     {
-        window.ChooseResetAll(bindings);
+        window.ChooseResetAll();
 
         window.Show(tab);
 
@@ -209,7 +211,7 @@ public class KeybindCaptureTests
     [Fact]
     public void TogglingTheWindow_DropsTheConfirmation()
     {
-        window.ChooseResetAll(bindings);
+        window.ChooseResetAll();
 
         window.Toggle();
         window.Toggle();
@@ -220,7 +222,7 @@ public class KeybindCaptureTests
     [Fact]
     public void ClosingTheWindow_DropsTheConfirmation()
     {
-        window.ChooseResetAll(bindings);
+        window.ChooseResetAll();
 
         window.Close();
 

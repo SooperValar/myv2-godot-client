@@ -64,9 +64,6 @@ public partial class HudView : Control
 
     private static readonly Vector2 OffScreen = new(-1, -1);
 
-    // Labels shown in the editor, where no settings are loaded.
-    private static readonly KeyBindings DefaultBindings = new();
-
     private readonly DepotPage depotPage = new();
     private readonly ExitSequence exit = new();
     private readonly FocusCache focusCache = new();
@@ -118,7 +115,6 @@ public partial class HudView : Control
     }
 
     public CharacterSettings Settings { get; set; } = new();
-    public KeyBindings KeyBindings { get; set; } = new();
     public ClientSettings? ClientSettings { get; set; }
 
     public PlannerChoicesKeeper? PlannerChoices { get; set; }
@@ -343,18 +339,36 @@ public partial class HudView : Control
         optionsWindow.CursorScaleChanged += scale => ChangeClientSettings(settings => settings.CursorScale = scale);
         optionsWindow.CaptureChosen += id => ChangeOptionsWindow(window => window.StartCapture(id));
         optionsWindow.CaptureCancelled += () => ChangeOptionsWindow(window => window.CancelCapture());
-        optionsWindow.CaptureUnbound += () => ChangeKeyBindings((window, bindings) =>
+        optionsWindow.CaptureUnbound += () => ChangeKeyBindings(window =>
         {
-            window.UnbindCaptured(bindings);
+            if (window.UnbindCaptured() is { } change)
+            {
+                BindingActions.Apply([change]);
+            }
+
             return null;
         });
-        optionsWindow.KeyCaptured += chord => ChangeKeyBindings((window, bindings) => window.Capture(chord, bindings));
-        optionsWindow.BindingResetChosen += id => ChangeKeyBindings((_, bindings) =>
+        optionsWindow.KeyCaptured += chord => ChangeKeyBindings(window =>
         {
-            bindings.Reset(id);
+            var captured = window.Capture(chord, BindingActions.Current());
+            BindingActions.Apply(captured?.Changes ?? []);
+            return captured?.Line;
+        });
+        optionsWindow.BindingResetChosen += id => ChangeKeyBindings(_ =>
+        {
+            BindingActions.Apply([new BindingChange(id, BindingActions.Defaults()[id])]);
             return null;
         });
-        optionsWindow.ResetAllChosen += () => ChangeKeyBindings((window, bindings) => window.ChooseResetAll(bindings));
+        optionsWindow.ResetAllChosen += () => ChangeKeyBindings(window =>
+        {
+            var line = window.ChooseResetAll();
+            if (line != null)
+            {
+                BindingActions.ResetAll();
+            }
+
+            return line;
+        });
         optionsWindow.ScreenGammaChanged += gamma => ChangeClientSettings(settings => settings.ScreenGamma = gamma);
         optionsWindow.WorldGammaChanged += gamma => ChangeClientSettings(settings => settings.WorldGamma = gamma);
 
@@ -444,32 +458,12 @@ public partial class HudView : Control
         {
             TextFields.StopOnClickOutside(GetViewport(), press);
         }
-
-        if (inputEvent is InputEventKey { Pressed: true } key)
-        {
-            RunHotkeyBeforeChatLine(key);
-        }
     }
 
-    // Hotkeys go before the chat line's own editing keys, such as Ctrl+A or Insert. A hotkey that also types a
-    // character still types it, as the current client gets typed text apart from key presses.
-    private void RunHotkeyBeforeChatLine(InputEventKey key)
-    {
-        if (GetViewport().GuiGetFocusOwner() is ChatLine { RunsHotkeys: true }
-            && RunBoundHotkey(key)
-            && !TypesCharacter(key))
-        {
-            GetViewport().SetInputAsHandled();
-        }
-    }
-
-    private static bool TypesCharacter(InputEventKey key) =>
-        key.Unicode >= ' ' && !key.CtrlPressed && !key.AltPressed && !key.MetaPressed;
-
-    // Held keys repeat their hotkey, as in the current client.
-    // A chat line with focus has its hotkeys run in _Input. A closed enter-to-talk chat line holds no focus, so the keys that
-    // open it, and Escape, arrive here; a key can run its hotkey and open the line too, as in the current client.
-    public override void _UnhandledKeyInput(InputEvent inputEvent)
+    // Only keys the chat line didn't take arrive here: an open line keeps its typing and editing keys, and a closed one
+    // takes none. Held keys repeat their hotkey, and a key can run its hotkey and open the line too, as in the current
+    // client.
+    public override void _ShortcutInput(InputEvent inputEvent)
     {
         if (inputEvent is not InputEventKey { Pressed: true } key)
         {
@@ -487,7 +481,7 @@ public partial class HudView : Control
         }
 
         var chatLine = GetNode<ChatLine>("%ChatLine");
-        var handled = chatLine.RunsHotkeys && !chatLine.HasFocus() && RunBoundHotkey(key);
+        var handled = chatLine.RunsHotkeys && RunBoundHotkey(key);
         if (!chatLine.TakesTyping && ChatKeyFor(key.Keycode) is { } chatKey)
         {
             if (chatKey == ChatKey.Escape)
@@ -501,14 +495,29 @@ public partial class HudView : Control
             }
         }
 
+        if (LogPagesFor(key.Keycode) is { } pages)
+        {
+            GetNode<ChatLog>("%ChatLog").ScrollPages(pages);
+            handled = true;
+        }
+
         if (handled)
         {
             GetViewport().SetInputAsHandled();
         }
     }
 
+    private static int? LogPagesFor(Key key) => key switch
+    {
+        Key.Pageup => 1,
+        Key.Pagedown => -1,
+        _ => null,
+    };
+
     private bool RunBoundHotkey(InputEventKey key) =>
-        HotkeyInput.Chord(key) is { } chord && KeyBindings.Find(chord) is { } binding && RunHotkey(binding.Id);
+        Bindings.All.FirstOrDefault(binding => !binding.Hold && key.IsActionPressed(binding.Id, true, true))
+            is { } binding
+        && RunHotkey(binding.Id);
 
     private static ChatKey? ChatKeyFor(Key key) => key switch
     {
@@ -520,8 +529,7 @@ public partial class HudView : Control
         _ => null,
     };
 
-    public static string HotbarKeyName(Node node, int slot) =>
-        (Containing(node)?.KeyBindings ?? DefaultBindings).ShortName(Bindings.SpellId(slot));
+    public static string HotbarKeyName(int slot) => BindingRules.ShortName(BindingActions.For(Bindings.SpellId(slot)));
 
     public override void _Process(double delta)
     {
@@ -1335,7 +1343,7 @@ public partial class HudView : Control
     }
 
     // The hotbar's key labels are refreshed with the window, since they show the bindings too.
-    private void ChangeKeyBindings(Func<OptionsWindow, KeyBindings, LogLine?> change)
+    private void ChangeKeyBindings(Func<OptionsWindow, LogLine?> change)
     {
         if (state == null)
         {
@@ -1343,7 +1351,7 @@ public partial class HudView : Control
         }
 
         LogLine? line = null;
-        ChangeClientSettings(settings => line = change(state.OptionsWindow, settings.KeyBindings));
+        ChangeClientSettings(_ => line = change(state.OptionsWindow));
         if (line is { } shown)
         {
             state.Chat.Add(shown);
@@ -1464,7 +1472,7 @@ public partial class HudView : Control
         || GeneralOptions.ShowsItemTooltips(
             settings.ItemTooltips,
             settings.ItemTooltipsAlways,
-            KeyBindings.For(ItemTooltipBinding) is { } chord && HotkeyInput.IsHeld(chord));
+            Input.IsActionPressed(ItemTooltipBinding));
 
     // Godot looks for a tooltip again only when the mouse enters a control or moves 5 pixels, so when the tooltip
     // key goes down or up the mouse is moved off everything and back, entering the slot afresh.
@@ -1573,7 +1581,7 @@ public partial class HudView : Control
         var name = action < HotbarButtons.FirstInventoryAction
             ? state!.Terminology.Skills[action].Name
             : HotbarButtons.ItemName(action);
-        var keyName = KeyBindings.ShortName(Bindings.SpellId(slot));
+        var keyName = HotbarKeyName(slot);
         state!.Chat.Add(HotbarAssignments.Assign(Settings, slot, action, name, keyName));
         HotbarChanged();
     }
