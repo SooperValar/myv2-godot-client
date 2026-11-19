@@ -707,6 +707,7 @@ focus_mode = 0
 text = "Cancel"
 
 [node name="Menu" type="PopupMenu" parent="Rows/Body/Categories" unique_id=293570930]
+canvas_item_default_texture_filter = 0
 theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
 theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
@@ -715,6 +716,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
 theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")
 
 [node name="Colour" type="PopupMenu" parent="Rows/Body/Categories/Menu" unique_id=1754746528]
+canvas_item_default_texture_filter = 0
 theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
 theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
@@ -723,6 +725,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
 theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")
 
 [node name="SendTo" type="PopupMenu" parent="Rows/Body/Categories/Menu" unique_id=952449963]
+canvas_item_default_texture_filter = 0
 theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
 theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
@@ -1114,6 +1117,7 @@ focus_mode = 0
 text = "Cancel"
 
 [node name="NoteMenu" type="PopupMenu" parent="." unique_id=667558932]
+canvas_item_default_texture_filter = 0
 theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
 theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
@@ -1122,6 +1126,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
 theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")
 
 [node name="ColourMenu" type="PopupMenu" parent="NoteMenu" unique_id=1204124788]
+canvas_item_default_texture_filter = 0
 theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
 theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
@@ -1130,6 +1135,7 @@ theme_override_styles/hover = SubResource("StyleBoxFlat_menu_hover")
 theme_override_styles/separator = SubResource("StyleBoxLine_menu_separator")
 
 [node name="SendToMenu" type="PopupMenu" parent="NoteMenu" unique_id=1380966892]
+canvas_item_default_texture_filter = 0
 theme_override_colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
 theme_override_colors/font_disabled_color = Color(0.282353, 0.317647, 0.317647, 1)
 theme_override_colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)

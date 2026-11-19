@@ -1556,6 +1556,7 @@ offset_bottom = 600.0
 
 [node name="HotbarMenu" type="PopupMenu" parent="." unique_id=1133469277]
 unique_name_in_owner = true
+canvas_item_default_texture_filter = 0
 theme_override_styles/panel = SubResource("StyleBoxFlat_hotbar_menu")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hotbar_menu_hover")
 script = ExtResource("16_hotbarmenu")
