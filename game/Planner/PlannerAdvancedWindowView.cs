@@ -173,23 +173,23 @@ public partial class PlannerAdvancedWindowView : Panel
         }
     }
 
-    // Only the spells you know are shown.
+    // Only the spells you know are shown. Hiding a row, even for a moment, drops a click on its tick, so each row's
+    // visibility is set once.
     private void ShowSpells(IReadOnlyList<AdvancedSpell> spells, PlannerChoices choices)
     {
         var rows = Rows("Body/Sections/Spells");
-        foreach (var row in rows)
+        foreach (var kind in Enum.GetValues<BuffKind>())
         {
-            row.Visible = false;
-        }
-
-        foreach (var spell in spells)
-        {
-            var spellRow = rows[2 * (int)spell.Kind];
-            var noteRow = rows[2 * (int)spell.Kind + 1];
-            spellRow.Visible = true;
-            spellRow.Show(spell.Label, ((choices.SpellToggles >> (int)spell.Kind) & 1) != 0, spell.Ready);
-            noteRow.Visible = spell.Warning != null;
-            noteRow.ShowNote(spell.Warning ?? "");
+            var spell = spells.FirstOrDefault(known => known.Kind == kind);
+            var spellRow = rows[2 * (int)kind];
+            var noteRow = rows[2 * (int)kind + 1];
+            spellRow.Visible = spell != null;
+            noteRow.Visible = spell?.Warning != null;
+            if (spell != null)
+            {
+                spellRow.Show(spell.Label, ((choices.SpellToggles >> (int)kind) & 1) != 0, spell.Ready);
+                noteRow.ShowNote(spell.Warning ?? "");
+            }
         }
     }
 
