@@ -54,6 +54,7 @@ public partial class LauncherScreen : Control
     private CheckBox shadowsCheck = null!;
     private bool showingCharacter;
     private CheckBox soundCheck = null!;
+    private GameSession? startingSession;
     private UpdateWindowView updateWindow = null!;
     private HSlider volumeSlider = null!;
     private Label volumeValue = null!;
@@ -65,6 +66,7 @@ public partial class LauncherScreen : Control
 
     public override void _Ready()
     {
+        SetProcess(false);
         if (VelopackStartup.HandledHook(GetTree()))
         {
             return;
@@ -386,8 +388,53 @@ public partial class LauncherScreen : Control
             passwordField.Text,
             uniqueId.Low,
             uniqueId.High);
-        GameSession.Begin(new GameSession(record, handshake, settings.Server));
-        GetTree().ChangeSceneToFile("res://Game/game.tscn");
+        var connection = new ServerConnection();
+        startingSession = new GameSession(record, handshake, settings.Server, connection);
+        connection.Start(settings.Server, handshake);
+        ShowMessage("Connection", "STATUS: Connecting...");
+        LetMessageClose(false);
+        SetProcess(true);
+    }
+
+    public override void _Process(double delta)
+    {
+        if (startingSession is not { } session)
+        {
+            return;
+        }
+
+        // The state is read before the messages, because the connection queues its last message
+        // before it changes state.
+        var state = session.Connection.State;
+        while (session.Connection.TryDequeueMessage(out var message))
+        {
+            messageText.Text = $"STATUS: {message}";
+        }
+
+        if (state == ConnectionState.Connected)
+        {
+            EndStarting();
+            GameSession.Begin(session);
+            GetTree().ChangeSceneToFile("res://Game/game.tscn");
+        }
+        else if (state is ConnectionState.Failed or ConnectionState.Closed)
+        {
+            EndStarting();
+            session.Connection.Dispose();
+            LetMessageClose(true);
+        }
+    }
+
+    private void EndStarting()
+    {
+        startingSession = null;
+        SetProcess(false);
+    }
+
+    private void LetMessageClose(bool canClose)
+    {
+        messageDialog.GetOkButton().Disabled = !canClose;
+        messageDialog.DialogCloseOnEscape = canClose;
     }
 
     private void OnCreateAccountPressed() =>

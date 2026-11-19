@@ -26,11 +26,11 @@ public partial class GameScreen : Control
     private const int ErrorFont = 0;
     private const int StatusFont = 1;
 
-    private readonly ServerConnection connection = new();
     private readonly GameState gameState = new();
     private readonly NavigationKeys navigationKeys = new();
     private readonly TickPacer pacer = new();
     private readonly HashSet<string> reportedUnusualData = [];
+    private ServerConnection connection = null!;
     private ExploredMapKeeper? exploredMap;
     private HudView hudView = null!;
     private ConnectionState lastConnectionState;
@@ -60,6 +60,7 @@ public partial class GameScreen : Control
         }
 
         session = startedSession;
+        connection = startedSession.Connection;
         CursorShapes.Register(ClientSettings.Load().CursorScale);
         OpenExploredMap();
         AddWorldView();
@@ -71,7 +72,6 @@ public partial class GameScreen : Control
         gameState.UniqueIdReceived += UniqueIdStore.Save;
         gameState.ExitRequested += LeaveOnServerExit;
         gameState.UnusualDataSeen += ReportUnusualDataOnce;
-        connection.Start(session.Server, session.Handshake);
     }
 
     public override void _Process(double delta)
@@ -132,7 +132,7 @@ public partial class GameScreen : Control
         exploredMap?.Save();
         mapNotes?.Save();
         CursorShapes.Clear();
-        connection.Dispose();
+        connection?.Dispose();
         sprites?.Dispose();
     }
 

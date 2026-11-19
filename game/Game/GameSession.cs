@@ -3,7 +3,11 @@ using TheLastGate.Net;
 
 namespace TheLastGate.Game;
 
-public sealed record GameSession(CharacterRecord Record, LoginHandshake Handshake, ServerAddress Server)
+public sealed record GameSession(
+    CharacterRecord Record,
+    LoginHandshake Handshake,
+    ServerAddress Server,
+    ServerConnection Connection)
 {
     private static GameSession? pending;
 
