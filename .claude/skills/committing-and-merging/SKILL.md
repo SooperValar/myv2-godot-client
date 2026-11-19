@@ -62,6 +62,10 @@ fix(items): stop the gold count flickering after a sale
 - If a branch changes nothing a player would notice, line 1 is a hidden type (for example `chore: add Godot script UIDs`) and there are no entry lines.
 - Put `!` after the type (`feat!:`) only when the user says a change is breaking.
 
+## Releasing
+
+Before merging the Release Please release PR, run the `release-notes` skill, so the launcher shows players notes grouped by feature instead of the commit lines.
+
 ## Common mistakes
 
 | Mistake | Fix |
