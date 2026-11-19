@@ -140,6 +140,7 @@ public sealed class TickProcessor(GameState state)
 
         state.Pause.EndOfTick();
         state.ShopRefresh.EndOfTick(state.OpenShop, state.Shop.Number);
+        state.AutoWalk.EndOfTick(state.Map);
         state.ClientTick++;
         var tiles = state.Map.Tiles;
         for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)

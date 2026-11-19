@@ -221,10 +221,23 @@ public partial class WorldView : Node2D
             return;
         }
 
+        if (button == MapButton.Left
+            && AutoWalk.ButtonAt((int)click.Position.X, (int)click.Position.Y) is { } walkDirection)
+        {
+            State.AutoWalk.Start(walkDirection);
+            GetViewport().SetInputAsHandled();
+            return;
+        }
+
         var keys = (click.ShiftPressed ? MapKeys.Shift : MapKeys.None)
             | (click.CtrlPressed ? MapKeys.Ctrl : MapKeys.None)
             | (click.AltPressed ? MapKeys.Alt : MapKeys.None);
         var action = MapActions.Decide(State, PointUnder(click.Position), keys, button, SelectedCharacter);
+        if (action.Command != null || action.NewSelection != null)
+        {
+            State.AutoWalk.Stop();
+        }
+
         if (action.GivesMore)
         {
             State.GiveMore.Gave(State.Player.HeldItem);
