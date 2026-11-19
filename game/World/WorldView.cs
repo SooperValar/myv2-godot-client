@@ -51,6 +51,19 @@ public partial class WorldView : Node2D
     private readonly TileEffects?[] tileEffects = new TileEffects?[TileCount];
     private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
     private readonly Sprite2D walkMarker = new() { Centered = false, Visible = false };
+
+    // The tiles are put together at a whole-number scale of the virtual resolution, and only the finished picture is
+    // stretched to the window. Stretching each tile on its own leaves dark specks where diamond corners meet whenever
+    // the scale isn't a whole number, because some GPUs round those corner texels to transparent. The scale is rounded
+    // up rather than fixed at 1, so gliding sprites keep their sub-pixel positions.
+    private readonly SubViewport worldCanvas = new()
+    {
+        TransparentBg = true,
+        GuiDisableInput = true,
+        CanvasItemDefaultTextureFilter = Viewport.DefaultCanvasItemTextureFilter.Nearest,
+    };
+
+    private readonly Sprite2D worldPicture = new() { Centered = false };
     private Node2D floorLayer = null!;
     private MovementGlide glide = new();
     private bool glideMovement;
@@ -124,6 +137,11 @@ public partial class WorldView : Node2D
     public override void _Ready()
     {
         nameplateScene = GD.Load<PackedScene>(NameplateScenePath);
+        AddChild(worldCanvas);
+        AddChild(worldPicture);
+        worldPicture.Texture = worldCanvas.GetTexture();
+        FitWorldCanvasToWindow();
+        GetTree().Root.SizeChanged += FitWorldCanvasToWindow;
         floorLayer = AddLayer();
         objectLayer = AddLayer();
         for (var row = WorldMap.Size - 1; row >= 0; row--)
@@ -315,10 +333,22 @@ public partial class WorldView : Node2D
         return shadow;
     }
 
+    private void FitWorldCanvasToWindow()
+    {
+        var virtualSize = GetViewportRect().Size;
+        var windowSize = (Vector2)GetTree().Root.Size;
+        var scale = Math.Max(
+            1,
+            (int)Math.Ceiling(Math.Max(windowSize.X / virtualSize.X, windowSize.Y / virtualSize.Y)));
+        worldCanvas.Size = (Vector2I)(virtualSize * scale);
+        worldCanvas.CanvasTransform = Transform2D.Identity.Scaled(new Vector2(scale, scale));
+        worldPicture.Scale = new Vector2(1f / scale, 1f / scale);
+    }
+
     private Node2D AddLayer()
     {
         var layer = new Node2D { Position = mapShift };
-        AddChild(layer);
+        worldCanvas.AddChild(layer);
         return layer;
     }
 
@@ -651,6 +681,7 @@ public partial class WorldView : Node2D
     // Pooled nameplates are outside the tree, so nothing else frees them.
     public override void _ExitTree()
     {
+        GetTree().Root.SizeChanged -= FitWorldCanvasToWindow;
         while (freeNameplates.TryPop(out var nameplate))
         {
             nameplate.Free();
