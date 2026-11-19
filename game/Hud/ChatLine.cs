@@ -209,6 +209,9 @@ public partial class ChatLine : LineEdit
         {
             FocusMode = FocusModeEnum.All;
             GrabFocus();
+            // Focus taken while an arrow key is held counts as keyboard navigation, which doesn't start editing,
+            // and the first Enter would only start it.
+            Edit();
         }
         else
         {
