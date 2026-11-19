@@ -5,12 +5,7 @@ namespace TheLastGate.Net;
 
 public static class UniqueIdFile
 {
-    public static string SdlClientFilePath() =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TheLastGate",
-            "TheLastGate",
-            "unique.dat");
+    public static string SdlClientFilePath() => SdlClientFolder.FilePath("unique.dat");
 
     public static UniqueId LoadOrCreate(string filePath, string sdlClientFilePath, Random random)
     {

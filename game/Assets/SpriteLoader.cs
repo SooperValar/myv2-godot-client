@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
 using Godot;
+using TheLastGate.Config;
 using TheLastGate.Map;
 
 namespace TheLastGate.Assets;
@@ -19,7 +20,7 @@ public sealed class SpriteLoader : IDisposable
 
     public SpriteLoader(string dataPath, long cacheBudgetBytes)
     {
-        overrides = SpriteOverrides.Find(Path.Combine(dataPath, DataLayout.Overrides));
+        overrides = SpriteOverrides.Find(Path.Combine(dataPath, DataLayout.Overrides), DataPaths.PlayerOverrides());
         uiFolder = Path.Combine(dataPath, DataLayout.Ui);
         var archiveFolder = Path.Combine(dataPath, DataLayout.Archives);
         pngLibrary = new PngLibrary(

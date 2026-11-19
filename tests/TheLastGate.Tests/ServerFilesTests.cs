@@ -23,13 +23,9 @@ public sealed class ServerFilesTests : IDisposable
     [Fact]
     public void SdlClientPath_IsInTheCurrentClientsSettingsFolder()
     {
-        var expected = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TheLastGate",
-            "TheLastGate",
-            "TLGMap_tlg.abyss.codes_5555.dat");
-
-        Assert.Equal(expected, ServerFiles.SdlClientPath("TLGMap_", "tlg.abyss.codes", 5555));
+        Assert.Equal(
+            SdlClientFolder.FilePath("TLGMap_tlg.abyss.codes_5555.dat"),
+            ServerFiles.SdlClientPath("TLGMap_", "tlg.abyss.codes", 5555));
     }
 
     [Fact]

@@ -1,4 +1,3 @@
-using System;
 using System.IO;
 using System.Linq;
 
@@ -15,11 +14,7 @@ public static class ServerFiles
     }
 
     public static string SdlClientPath(string prefix, string host, int port) =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TheLastGate",
-            "TheLastGate",
-            Name(prefix, host, port));
+        SdlClientFolder.FilePath(Name(prefix, host, port));
 
     // The current client's file is read once, to start from; after that this client keeps to its own.
     public static string PathToLoad(string ownPath, string sdlClientPath) =>

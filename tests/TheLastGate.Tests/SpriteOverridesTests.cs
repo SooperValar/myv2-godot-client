@@ -77,6 +77,21 @@ public class SpriteOverridesTests
     }
 
     [Fact]
+    public void Find_LetsALaterFolderReplaceAnEarlierFoldersSprite()
+    {
+        using var shipped = new TempFolder();
+        using var player = new TempFolder();
+        shipped.Write("00001.png", []);
+        var shippedOnlyPath = shipped.Write("18001.png", []);
+        var playerPath = player.Write("00001.bmp", []);
+
+        var overrides = SpriteOverrides.Find(shipped.FolderPath, player.FolderPath);
+
+        Assert.Equal(playerPath, overrides[1]);
+        Assert.Equal(shippedOnlyPath, overrides[18001]);
+    }
+
+    [Fact]
     public void Find_ReturnsNothingWhenTheFolderIsMissing()
     {
         using var folder = new TempFolder();

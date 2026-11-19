@@ -8,9 +8,14 @@ namespace TheLastGate.Config;
 public static class DataPaths
 {
     private const string DataFolderName = "data";
+    private const string PlayerOverridesFolder = "user://overrides";
 
     public static string Root() =>
         OS.HasFeature("editor")
             ? Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", DataFolderName))
             : Path.Combine(Path.GetDirectoryName(OS.GetExecutablePath())!, DataFolderName);
+
+    // The data folder can be read-only (inside the Linux AppImage) and is replaced by every update, so sprites a
+    // player adds live in their own folder.
+    public static string PlayerOverrides() => ProjectSettings.GlobalizePath(PlayerOverridesFolder);
 }

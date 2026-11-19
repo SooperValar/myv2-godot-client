@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 
 namespace TheLastGate.Assets;
 
@@ -13,7 +14,18 @@ public static class SpriteOverrides
 
     // Only names the current client would open count: the number zero padded to five digits, with a .png chosen over
     // a .bmp.
-    public static IReadOnlyDictionary<int, string> Find(string folder)
+    public static IReadOnlyDictionary<int, string> Find(params string[] folders)
+    {
+        var filesBySprite = new Dictionary<int, string>();
+        foreach (var (spriteNumber, filePath) in folders.SelectMany(FindIn))
+        {
+            filesBySprite[spriteNumber] = filePath;
+        }
+
+        return filesBySprite;
+    }
+
+    private static Dictionary<int, string> FindIn(string folder)
     {
         var filesBySprite = new Dictionary<int, string>();
         if (!Directory.Exists(folder))

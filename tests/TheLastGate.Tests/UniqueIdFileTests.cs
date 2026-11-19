@@ -71,12 +71,6 @@ public class UniqueIdFileTests
     [Fact]
     public void SdlClientFilePath_IsInTheSdlClientsSettingsFolder()
     {
-        var expected = Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TheLastGate",
-            "TheLastGate",
-            "unique.dat");
-
-        Assert.Equal(expected, UniqueIdFile.SdlClientFilePath());
+        Assert.Equal(SdlClientFolder.FilePath("unique.dat"), UniqueIdFile.SdlClientFilePath());
     }
 }

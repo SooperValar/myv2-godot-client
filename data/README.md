@@ -7,7 +7,7 @@ It is stored in Git LFS, so run `git lfs pull` after cloning. The client reads i
 | Folder | Holds |
 |---|---|
 | `archives/` | `bmplib.idx/.dat` and `pnglib.idx/.dat`, compiled from `art/sprites/` |
-| `overrides/` | Loose sprites drawn instead of the archived sprite with the same number |
+| `overrides/` | Loose sprites drawn instead of the archived sprite with the same number. A player's own sprites go in `user://overrides` and win over these. |
 | `ui/` | UI images |
 | `sounds/` | `.wav` sound effects |
 

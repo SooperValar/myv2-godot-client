@@ -1,7 +1,6 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
-using System.IO;
 
 namespace TheLastGate.Characters;
 
@@ -14,12 +13,7 @@ public static class SdlClientCharacterList
     private const int PathLength = 512;
     private const int EntrySize = NameLength + PathLength;
 
-    public static string FilePath() =>
-        Path.Combine(
-            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
-            "TheLastGate",
-            "TheLastGate",
-            "TLGCharacters.dat");
+    public static string FilePath() => SdlClientFolder.FilePath("TLGCharacters.dat");
 
     public static List<PreviousCharacter> Parse(ReadOnlySpan<byte> fileBytes)
     {
