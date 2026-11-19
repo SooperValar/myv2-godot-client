@@ -7,8 +7,6 @@ namespace TheLastGate.Windows;
 // window. Closing the planner closes both.
 public sealed class PlannerWindow
 {
-    private bool askedForMeta;
-
     public bool IsOpen { get; private set; }
 
     public bool AdvancedOpen { get; set; }
@@ -20,7 +18,6 @@ public sealed class PlannerWindow
 
     public void ClearFocus() => Focus = null;
 
-    // The planner shows meta stats by name, which the server only sends when asked, so the first open asks.
     public bool Toggle()
     {
         if (IsOpen)
@@ -30,9 +27,7 @@ public sealed class PlannerWindow
         }
 
         IsOpen = true;
-        var askNow = !askedForMeta;
-        askedForMeta = true;
-        return askNow;
+        return true;
     }
 
     public bool Close()

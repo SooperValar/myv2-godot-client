@@ -66,6 +66,25 @@ text = "150"
 horizontal_alignment = 2
 script = ExtResource("2_label")
 
+[node name="MetaValue" type="Label" parent="." unique_id=392051657]
+visible = false
+layout_mode = 0
+offset_left = 140.0
+offset_right = 182.0
+offset_bottom = 9.0
+text = "12.34"
+horizontal_alignment = 2
+script = ExtResource("2_label")
+
+[node name="Affix" type="Label" parent="." unique_id=565779471]
+visible = false
+layout_mode = 0
+offset_left = 189.0
+offset_right = 231.0
+offset_bottom = 9.0
+text = "%"
+script = ExtResource("2_label")
+
 [node name="NameArea" type="Control" parent="." unique_id=1348014694]
 layout_mode = 0
 offset_left = 6.0

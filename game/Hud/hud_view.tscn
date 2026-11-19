@@ -27,6 +27,7 @@
 [ext_resource type="PackedScene" uid="uid://dunfj2uaq4jcb" path="res://Hud/skill_tree_window.tscn" id="25_skilltreewindow"]
 [ext_resource type="PackedScene" uid="uid://datd803sos88d" path="res://Hud/options_window.tscn" id="26_optionswindow"]
 [ext_resource type="Script" uid="uid://gv2wi01n21oy" path="res://Hud/PlannerButtonBox.cs" id="27_plannerbox"]
+[ext_resource type="Script" uid="uid://c1ilumk25t2g2" path="res://Hud/StatModeButton.cs" id="28_statmode"]
 
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_scroll"]
 
@@ -40,6 +41,14 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(1, 0, 0, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_marker_both"]
+draw_center = false
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0, 1, 0, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_grabber"]
 bg_color = Color(0, 0.380392157, 0, 1)
@@ -93,6 +102,7 @@ SpriteNumber = 1
 DarkSpriteNumber = 18001
 
 [node name="SkillPanel" type="TextureRect" parent="." unique_id=925108062]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 134.0
 offset_top = 3.0
@@ -102,6 +112,19 @@ mouse_filter = 2
 script = ExtResource("2_6ebvl")
 SpriteNumber = 99
 DarkSpriteNumber = 18099
+
+[node name="MetaPanel" type="TextureRect" parent="." unique_id=1389347476]
+unique_name_in_owner = true
+visible = false
+layout_mode = 0
+offset_left = 134.0
+offset_top = 3.0
+offset_right = 134.0
+offset_bottom = 3.0
+mouse_filter = 2
+script = ExtResource("2_6ebvl")
+SpriteNumber = 18097
+DarkSpriteNumber = 18098
 
 [node name="StatRows" type="VBoxContainer" parent="." unique_id=1128480661]
 unique_name_in_owner = true
@@ -148,7 +171,7 @@ offset_right = 232.0
 offset_bottom = 255.0
 theme_override_constants/separation = 5
 script = ExtResource("14_skilllist")
-ScrollBarPath = NodePath("../SkillScrollBar")
+ScrollBarPath = NodePath("../SkillScrollBackground/SkillScrollBar")
 
 [node name="Skill0" parent="SkillRows" unique_id=1401575804 instance=ExtResource("13_statrow")]
 layout_mode = 2
@@ -190,12 +213,20 @@ PreviewName = "Stealth"
 layout_mode = 2
 PreviewName = "Swimming"
 
-[node name="SkillScrollBar" type="VScrollBar" parent="." unique_id=1395506844]
+[node name="SkillScrollBackground" type="ColorRect" parent="." unique_id=1426859393]
 layout_mode = 0
 offset_left = 234.0
-offset_top = 152.0
+offset_top = 118.0
 offset_right = 245.0
-offset_bottom = 222.0
+offset_bottom = 256.0
+color = Color(0.0901960784, 0, 0.0196078431, 1)
+
+[node name="SkillScrollBar" type="VScrollBar" parent="SkillScrollBackground" unique_id=1395506844]
+layout_mode = 0
+offset_left = 2.0
+offset_top = 2.0
+offset_right = 9.0
+offset_bottom = 136.0
 theme_override_styles/scroll = SubResource("StyleBoxEmpty_scroll")
 theme_override_styles/scroll_focus = SubResource("StyleBoxEmpty_scroll")
 theme_override_styles/grabber = SubResource("StyleBoxFlat_skill_grabber")
@@ -204,7 +235,81 @@ theme_override_styles/grabber_pressed = SubResource("StyleBoxFlat_skill_grabber_
 max_value = 45.0
 step = 1.0
 
+[node name="StatModeButtons" type="Control" parent="." unique_id=303390523]
+unique_name_in_owner = true
+layout_mode = 0
+offset_left = 260.0
+offset_top = 181.0
+offset_right = 327.0
+offset_bottom = 226.0
+mouse_filter = 2
+
+[node name="ListSkills" type="Control" parent="StatModeButtons" unique_id=1861344508]
+layout_mode = 0
+offset_top = 0.0
+offset_right = 67.0
+offset_bottom = 15.0
+script = ExtResource("28_statmode")
+Mode = 0
+
+[node name="Marker" type="Panel" parent="StatModeButtons/ListSkills" unique_id=1952717109]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 66.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="BothMarker" type="Panel" parent="StatModeButtons/ListSkills" unique_id=1208078834]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 66.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker_both")
+
+[node name="ListOffense" type="Control" parent="StatModeButtons" unique_id=836117959]
+layout_mode = 0
+offset_top = 15.0
+offset_right = 67.0
+offset_bottom = 30.0
+script = ExtResource("28_statmode")
+Mode = 2
+
+[node name="Marker" type="Panel" parent="StatModeButtons/ListOffense" unique_id=2142488696]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 66.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
+[node name="ListDefense" type="Control" parent="StatModeButtons" unique_id=560702507]
+layout_mode = 0
+offset_top = 30.0
+offset_right = 67.0
+offset_bottom = 45.0
+script = ExtResource("28_statmode")
+Mode = 3
+
+[node name="Marker" type="Panel" parent="StatModeButtons/ListDefense" unique_id=1717171717]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_top = 1.0
+offset_right = 66.0
+offset_bottom = 14.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_marker")
+
 [node name="UpdateLabel" type="Label" parent="." unique_id=261780883]
+unique_name_in_owner = true
 layout_mode = 0
 offset_left = 144.0
 offset_top = 260.0

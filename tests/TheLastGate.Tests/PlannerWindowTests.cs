@@ -21,11 +21,9 @@ public class PlannerWindowTests
     }
 
     [Fact]
-    public void TheFirstOpen_AsksForTheMetaStats()
+    public void Toggle_TellsWhetherItOpened()
     {
         Assert.True(window.Toggle());
-        window.Toggle();
-
         Assert.False(window.Toggle());
     }
 

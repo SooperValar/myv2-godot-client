@@ -212,6 +212,13 @@ public partial class HudView : Control
             row.GetNode<ClickArea>("LowerArea").Released += button => ClickStat(row, false, button);
         }
 
+        foreach (var node in GetNode("%StatModeButtons").GetChildren())
+        {
+            var modeButton = (StatModeButton)node;
+            modeButton.Released += button => ClickStatMode(modeButton.Mode, button);
+            modeButton.MouseEntered += AskForMetaText;
+        }
+
         GetNode<ClickArea>("%UpdateButton").Released += ClickUpdate;
         foreach (var node in GetNode("%Hotbar").GetChildren())
         {
@@ -1079,8 +1086,36 @@ public partial class HudView : Control
 
     private void ShowStats(PlayerState player)
     {
-        var rows = GetNode("%StatRows");
+        var skillList = GetNode<SkillList>("%SkillRows");
+        var panel = skillList.Panel;
         var showBase = Settings.ShowStatBase;
+        if (panel.ShowsMetaOnTop)
+        {
+            ShowTopMeta(panel);
+        }
+        else
+        {
+            ShowAttributes(player, showBase);
+        }
+
+        skillList.Show(player, state!.Terminology, statPlan, showBase);
+        SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+        var skillsBelow = !panel.ShowsMetaStats;
+        foreach (var name in (string[])["%SkillPanel", "%UpdateLabel", "%UpdatePoints", "%UpdateButton"])
+        {
+            GetNode<CanvasItem>(name).Visible = skillsBelow;
+        }
+
+        GetNode<CanvasItem>("%MetaPanel").Visible = panel.Mode == StatListMode.SkillsAndMeta;
+        foreach (var node in GetNode("%StatModeButtons").GetChildren())
+        {
+            ((StatModeButton)node).ShowMarked(panel);
+        }
+    }
+
+    private void ShowAttributes(PlayerState player, bool showBase)
+    {
+        var rows = GetNode("%StatRows");
         for (var attribute = 0; attribute < PlayerState.AttributeCount; attribute++)
         {
             var line = StatLines.Attribute(attribute, player.Attributes[attribute], statPlan, player.Points);
@@ -1091,8 +1126,42 @@ public partial class HudView : Control
         rows.GetChild<StatRow>(HitPointsRow).Show(hitPoints, StatPlan.HitPointsSlot, showBase);
         var mana = StatLines.Mana(player.Mana, statPlan, player.Points);
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatPlan.ManaSlot, showBase);
-        GetNode<SkillList>("%SkillRows").Show(player, state!.Terminology, statPlan, showBase);
-        SetText("UpdatePoints", Number(player.Points - statPlan.PointsUsed));
+    }
+
+    private void ShowTopMeta(StatPanel panel)
+    {
+        var rows = GetNode("%StatRows");
+        for (var row = 0; row < StatPanel.TopRows; row++)
+        {
+            var meta = panel.TopMeta(row)!.Value;
+            rows.GetChild<StatRow>(row).ShowMeta(MetaLines.For(state!.Terminology.MetaStats[meta]), meta);
+        }
+    }
+
+    private void AskForMetaText()
+    {
+        if (state?.Terminology.AskForMetaText() == true)
+        {
+            sendCommand(PlannerWindow.MetaRequest());
+        }
+    }
+
+    private void ClickStatMode(StatListMode mode, MapButton button)
+    {
+        if (button == MapButton.Right)
+        {
+            state?.Chat.Add(new LogLine(StatPanel.Help(mode), HintFont));
+            return;
+        }
+
+        if (button != MapButton.Left || state == null)
+        {
+            return;
+        }
+
+        GetNode<SkillList>("%SkillRows").Choose(mode);
+        ShowStats(state.Player);
+        ShowPlanner();
     }
 
     private void ClickShop(int cell, MapButton button)
@@ -1530,6 +1599,20 @@ public partial class HudView : Control
             return;
         }
 
+        if (row.Meta is { } meta)
+        {
+            var stat = state.Terminology.MetaStats[meta];
+            if (button == MapButton.Right && stat.Show != 0)
+            {
+                foreach (var line in MetaLines.Description(stat.Name, stat.Description))
+                {
+                    state.Chat.Add(line);
+                }
+            }
+
+            return;
+        }
+
         if (row.Slot < StatPlan.FirstSkillSlot)
         {
             if (button == MapButton.Right)
@@ -1561,7 +1644,7 @@ public partial class HudView : Control
 
     private void ClickStat(StatRow row, bool raise, MapButton button)
     {
-        if (state == null)
+        if (state == null || row.Meta != null)
         {
             return;
         }
@@ -1699,7 +1782,7 @@ public partial class HudView : Control
 
         if (state.PlannerWindow.Toggle())
         {
-            sendCommand(PlannerWindow.MetaRequest());
+            AskForMetaText();
         }
 
         ShowPlanner();
@@ -1734,9 +1817,10 @@ public partial class HudView : Control
     private void ShowPlanner()
     {
         var enabled = PlannerEnabled;
+        var buttonShown = enabled && !GetNode<SkillList>("%SkillRows").Panel.ShowsMetaStats;
         foreach (var name in (string[])["%PlannerBox", "%PlannerLabel", "%PlannerButton"])
         {
-            GetNode<CanvasItem>(name).Visible = enabled;
+            GetNode<CanvasItem>(name).Visible = buttonShown;
         }
 
         GetNode<PlannerButtonBox>("%PlannerBox").DarkMode = DarkMode;
