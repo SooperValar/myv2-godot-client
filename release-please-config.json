@@ -4,6 +4,8 @@
   "packages": {
     ".": {
       "release-type": "simple",
+      "draft": true,
+      "force-tag-creation": true,
       "extra-files": ["Directory.Build.props"],
       "changelog-sections": [
         { "type": "feat", "section": "Features" },

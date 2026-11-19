@@ -1,0 +1,212 @@
+name: Package
+
+# Release Please calls this for every release. Pushing a tag named updater-test-v<version> makes a test
+# release on the test-win and test-linux channels, which real clients never read. Releases are immutable once
+# published, so each one stays a draft until its packages and feed are attached.
+on:
+  workflow_call:
+    inputs:
+      tag:
+        required: true
+        type: string
+      version:
+        required: true
+        type: string
+  push:
+    tags: ["updater-test-v*"]
+
+permissions:
+  contents: write
+
+env:
+  GODOT_RELEASE: 4.7.2-stable
+  GODOT_TEMPLATES: 4.7.2.stable.mono
+  VPK_VERSION: 1.2.161
+
+jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.release.outputs.tag }}
+      version: ${{ steps.release.outputs.version }}
+      channel_prefix: ${{ steps.release.outputs.channel_prefix }}
+      previous_tag: ${{ steps.release.outputs.previous_tag }}
+    steps:
+      - id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ inputs.tag }}
+          RELEASE_VERSION: ${{ inputs.version }}
+        run: |
+          set -euo pipefail
+          if [ -z "$RELEASE_TAG" ]; then
+            tag="$GITHUB_REF_NAME"
+            version="${tag#updater-test-v}"
+            previous=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --limit 50 \
+              --json tagName,isPrerelease -q '.[] | select(.isPrerelease) | .tagName' \
+              | grep '^updater-test-v' | sort -V | tail -n 1 || true)
+            gh release create "$tag" --repo "$GITHUB_REPOSITORY" --verify-tag --draft --prerelease \
+              --title "Updater test $version" --notes "Test build for the updater. Delete it after testing."
+            printf '## [%s](https://github.com/%s/compare/v0...v%s) (%s)\n\n\n### Features\n\n* **launcher:** Updater test build %s\n' \
+              "$version" "$GITHUB_REPOSITORY" "$version" "$(date -u +%F)" "$version" > notes.md
+            echo "channel_prefix=test-" >> "$GITHUB_OUTPUT"
+          else
+            tag="$RELEASE_TAG"
+            version="$RELEASE_VERSION"
+            gh release view "$tag" --repo "$GITHUB_REPOSITORY" --json body -q .body > notes.md
+            previous=$(gh release list --repo "$GITHUB_REPOSITORY" --exclude-drafts --exclude-pre-releases --limit 20 \
+              --json tagName -q ".[].tagName" | grep -vx "$tag" | head -n 1 || true)
+            echo "channel_prefix=" >> "$GITHUB_OUTPUT"
+          fi
+          echo "previous_tag=$previous" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: notes
+          path: notes.md
+
+  pack:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: win
+            godot_folder: Godot_v4.7.2-stable_mono_win64
+            godot_executable: Godot_v4.7.2-stable_mono_win64_console.exe
+          - os: ubuntu-latest
+            platform: linux
+            godot_folder: Godot_v4.7.2-stable_mono_linux_x86_64
+            godot_executable: Godot_v4.7.2-stable_mono_linux.x86_64
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      VERSION: ${{ needs.prepare.outputs.version }}
+      CHANNEL: ${{ needs.prepare.outputs.channel_prefix }}${{ matrix.platform }}
+      PREVIOUS_TAG: ${{ needs.prepare.outputs.previous_tag }}
+      GODOT_CACHE: ${{ github.workspace }}/../godot
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Fetch the game data from Git LFS
+        run: git lfs pull --include "data/**"
+
+      - uses: actions/setup-dotnet@0f4a354dd5547a28c70b7853dbd95d5b67886e73 # v6.1.0
+        with:
+          dotnet-version: 8.0.x
+
+      - name: Install the native AOT toolchain
+        if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y clang zlib1g-dev
+
+      - id: godot-cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ${{ env.GODOT_CACHE }}
+          key: godot-${{ env.GODOT_RELEASE }}-mono-${{ runner.os }}
+
+      - name: Download Godot and its export templates
+        if: steps.godot-cache.outputs.cache-hit != 'true'
+        run: |
+          set -euo pipefail
+          base="https://github.com/godotengine/godot-builds/releases/download/$GODOT_RELEASE"
+          mkdir -p "$GODOT_CACHE"
+          curl -fsSL "$base/${{ matrix.godot_folder }}.zip" -o "$GODOT_CACHE/editor.zip"
+          curl -fsSL "$base/Godot_v${GODOT_RELEASE}_mono_export_templates.tpz" -o "$GODOT_CACHE/templates.tpz"
+          python -c "import sys, zipfile; zipfile.ZipFile(sys.argv[1]).extractall(sys.argv[2])" \
+            "$GODOT_CACHE/editor.zip" "$GODOT_CACHE"
+          rm "$GODOT_CACHE/editor.zip"
+
+      - name: Install the export templates
+        run: |
+          set -euo pipefail
+          if [ "$RUNNER_OS" = Windows ]; then
+            templates="$APPDATA/Godot/export_templates/$GODOT_TEMPLATES"
+          else
+            templates="$HOME/.local/share/godot/export_templates/$GODOT_TEMPLATES"
+          fi
+          mkdir -p "$templates"
+          python -c "
+          import os, sys, zipfile
+          with zipfile.ZipFile(sys.argv[1]) as archive:
+              for entry in archive.infolist():
+                  if not entry.is_dir():
+                      with open(os.path.join(sys.argv[2], os.path.basename(entry.filename)), 'wb') as target:
+                          target.write(archive.read(entry))
+          " "$GODOT_CACHE/templates.tpz" "$templates"
+          godot="$GODOT_CACHE/${{ matrix.godot_folder }}/${{ matrix.godot_executable }}"
+          chmod +x "$godot"
+          echo "GODOT=$godot" >> "$GITHUB_ENV"
+
+      - name: Install vpk
+        run: |
+          dotnet tool install --global vpk --version "$VPK_VERSION"
+          echo "$HOME/.dotnet/tools" >> "$GITHUB_PATH"
+
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          name: notes
+
+      - name: Fetch the previous release for the delta
+        run: |
+          set -euo pipefail
+          mkdir -p releases
+          repository="https://github.com/$GITHUB_REPOSITORY/releases/download"
+          if [ -n "$PREVIOUS_TAG" ] && curl -fsSL "$repository/$PREVIOUS_TAG/releases.$CHANNEL.json" -o previous.json; then
+            newest=$(jq -c '[.Assets[] | select(.Type == "Full")] | sort_by(.Version | split(".") | map(tonumber)) | last' previous.json)
+            if [ "$newest" != null ]; then
+              file=$(jq -r .FileName <<< "$newest")
+              version=$(jq -r .Version <<< "$newest")
+              tag_prefix=v
+              case "$CHANNEL" in test-*) tag_prefix=updater-test-v ;; esac
+              curl -fsSL "$repository/$tag_prefix$version/$file" -o "releases/$file"
+            fi
+          else
+            echo "No earlier release on $CHANNEL; this one has no delta."
+            echo '{"Assets":[]}' > previous.json
+          fi
+
+      - name: Package
+        run: bash tools/package-release.sh "${{ matrix.platform }}" "$VERSION" "$CHANNEL" notes.md releases
+
+      - name: Keep every earlier release in the feed
+        run: |
+          set -euo pipefail
+          feed="releases/releases.$CHANNEL.json"
+          jq -s '{Assets: ([.[].Assets[]] | unique_by(.FileName))}' previous.json "$feed" > merged.json
+          mv merged.json "$feed"
+          jq -r '.Assets[] | "\(.Version) \(.Type) \(.FileName)"' "$feed"
+
+      - name: Attach the packages to the release
+        run: |
+          set -euo pipefail
+          files=("releases/releases.$CHANNEL.json")
+          for file in releases/TheLastGateGodot-"$VERSION"-"$CHANNEL"-*.nupkg releases/*Setup.exe releases/*Portable.zip releases/*.AppImage; do
+            if [ -f "$file" ]; then
+              files+=("$file")
+            fi
+          done
+          printf 'Uploading %s\n' "${files[@]}"
+          gh release upload "$TAG" "${files[@]}" --repo "$GITHUB_REPOSITORY" --clobber
+
+  publish:
+    needs: [prepare, pack]
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TAG: ${{ needs.prepare.outputs.tag }}
+      CHANNEL_PREFIX: ${{ needs.prepare.outputs.channel_prefix }}
+    steps:
+      - name: Publish the release
+        run: |
+          if [ "$CHANNEL_PREFIX" = test- ]; then
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --prerelease --latest=false
+          else
+            gh release edit "$TAG" --repo "$GITHUB_REPOSITORY" --draft=false --latest
+          fi

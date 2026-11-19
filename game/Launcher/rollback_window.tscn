@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://da79wvuny6ya"]
+
+[ext_resource type="Script" uid="uid://bu6fsraki1xp" path="res://Launcher/RollbackWindowView.cs" id="1_script"]
+
+[node name="RollbackWindow" type="ConfirmationDialog" unique_id=590473672]
+title = "Roll back to an earlier version"
+initial_position = 2
+size = Vector2i(800, 540)
+borderless = true
+ok_button_text = "Roll back"
+dialog_hide_on_ok = false
+cancel_button_text = "Close"
+script = ExtResource("1_script")
+
+[node name="Content" type="VBoxContainer" parent="." unique_id=276398463]
+theme_override_constants/separation = 0
+
+[node name="TitleBar" type="PanelContainer" parent="Content" unique_id=1000560091]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+theme_type_variation = &"DialogTitleBar"
+
+[node name="Title" type="Label" parent="Content/TitleBar" unique_id=1329046897]
+layout_mode = 2
+text = "Roll back to an earlier version"
+vertical_alignment = 1
+
+[node name="Body" type="MarginContainer" parent="Content" unique_id=195294742]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="Columns" type="HBoxContainer" parent="Content/Body" unique_id=936345759]
+layout_mode = 2
+theme_override_constants/separation = 12
+
+[node name="VersionScroll" type="ScrollContainer" parent="Content/Body/Columns" unique_id=1275515270]
+custom_minimum_size = Vector2(210, 0)
+layout_mode = 2
+horizontal_scroll_mode = 0
+
+[node name="Versions" type="VBoxContainer" parent="Content/Body/Columns/VersionScroll" unique_id=1259320503]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 4
+
+[node name="Details" type="VBoxContainer" parent="Content/Body/Columns" unique_id=861251275]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 8
+
+[node name="Caption" type="Label" parent="Content/Body/Columns/Details" unique_id=1991418702]
+unique_name_in_owner = true
+layout_mode = 2
+theme_type_variation = &"DialogText"
+
+[node name="Undone" type="RichTextLabel" parent="Content/Body/Columns/Details" unique_id=517475860]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"ChangelogText"
+selection_enabled = true
+
+[node name="Info" type="Label" parent="Content/Body/Columns/Details" unique_id=1312690208]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(540, 0)
+layout_mode = 2
+theme_type_variation = &"DialogText"
+autowrap_mode = 3
+
+[node name="Progress" type="ProgressBar" parent="Content/Body/Columns/Details" unique_id=1998700311]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Error" type="Label" parent="Content/Body/Columns/Details" unique_id=1285539448]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(540, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.25, 0.2, 1)
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="Content" unique_id=1186117174]
+layout_mode = 2

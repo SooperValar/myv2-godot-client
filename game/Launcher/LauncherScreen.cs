@@ -8,6 +8,7 @@ using TheLastGate.Config;
 using TheLastGate.Game;
 using TheLastGate.Map;
 using TheLastGate.Net;
+using TheLastGate.Updates;
 
 namespace TheLastGate.Launcher;
 
@@ -44,6 +45,7 @@ public partial class LauncherScreen : Control
     private VBoxContainer previousCharacterList = null!;
     private (Label Label, OptionButton Option)[] raceRows = [];
     private CharacterRecord record = null!;
+    private RollbackWindowView rollbackWindow = null!;
     private FileDialog saveDialog = null!;
     private OptionButton seasonOption = null!;
     private int selectableClassCount;
@@ -52,6 +54,7 @@ public partial class LauncherScreen : Control
     private CheckBox shadowsCheck = null!;
     private bool showingCharacter;
     private CheckBox soundCheck = null!;
+    private UpdateWindowView updateWindow = null!;
     private HSlider volumeSlider = null!;
     private Label volumeValue = null!;
     private OptionButton windowTypeOption = null!;
@@ -62,6 +65,11 @@ public partial class LauncherScreen : Control
 
     public override void _Ready()
     {
+        if (VelopackStartup.HandledHook(GetTree()))
+        {
+            return;
+        }
+
         ApplyFonts();
         FindNodes();
 
@@ -78,6 +86,7 @@ public partial class LauncherScreen : Control
         ShowPreviousCharacters();
 
         ConnectSignals();
+        StartUpdates();
     }
 
     // Buttons are written in the bold font, everything else in the regular one.
@@ -124,6 +133,8 @@ public partial class LauncherScreen : Control
         confirmWarning = GetNode<Label>("%ConfirmWarning");
         loadDialog = GetNode<FileDialog>("%LoadDialog");
         saveDialog = GetNode<FileDialog>("%SaveDialog");
+        updateWindow = GetNode<UpdateWindowView>("%UpdateWindow");
+        rollbackWindow = GetNode<RollbackWindowView>("%RollbackWindow");
     }
 
     private void ConnectSignals()
@@ -161,9 +172,13 @@ public partial class LauncherScreen : Control
         saveDialog.FileSelected += OnSaveFileSelected;
         confirmDialog.Confirmed += OnConfirmed;
         confirmDialog.Canceled += () => pendingConfirmation = null;
-        confirmDialog.VisibilityChanged += OnConfirmDialogVisibilityChanged;
+        confirmDialog.VisibilityChanged += () => KeepButtonsTogetherWhenShown(confirmDialog);
+        updateWindow.VisibilityChanged += () => KeepButtonsTogetherWhenShown(updateWindow);
+        rollbackWindow.VisibilityChanged += () => KeepButtonsTogetherWhenShown(rollbackWindow);
         messageDialog.VisibilityChanged += ShowModalDim;
         confirmDialog.VisibilityChanged += ShowModalDim;
+        updateWindow.VisibilityChanged += ShowModalDim;
+        rollbackWindow.VisibilityChanged += ShowModalDim;
         StartIfAsked();
     }
 
@@ -458,6 +473,25 @@ public partial class LauncherScreen : Control
         }
     }
 
+    private void StartUpdates()
+    {
+        updateWindow.Fonts = Fonts;
+        rollbackWindow.Fonts = Fonts;
+        var updateButton = GetNode<UpdateButtonView>("%UpdateButton");
+        var updater = Updaters.Choose(OS.GetCmdlineUserArgs());
+        if (updater is PreviewUpdater preview)
+        {
+            preview.Applied += version =>
+                ShowMessage("Preview", $"A real update would now restart the launcher on version {version}.");
+        }
+        else
+        {
+            updateButton.Restarting += () => GetTree().Quit();
+        }
+
+        updateButton.Start(updater, updateWindow, rollbackWindow);
+    }
+
     private void ClearSavedMap() =>
         ShowMessage(
             "FYI",
@@ -496,13 +530,15 @@ public partial class LauncherScreen : Control
         confirmDialog.CallDeferred(Window.MethodName.PopupCentered);
     }
 
-    private void ShowModalDim() => modalDim.Visible = messageDialog.Visible || confirmDialog.Visible;
+    private void ShowModalDim() =>
+        modalDim.Visible = messageDialog.Visible || confirmDialog.Visible || updateWindow.Visible
+            || rollbackWindow.Visible;
 
-    private void OnConfirmDialogVisibilityChanged()
+    private static void KeepButtonsTogetherWhenShown(ConfirmationDialog dialog)
     {
-        if (confirmDialog.Visible)
+        if (dialog.Visible)
         {
-            Callable.From(() => KeepButtonsTogether(confirmDialog)).CallDeferred();
+            Callable.From(() => KeepButtonsTogether(dialog)).CallDeferred();
         }
     }
 

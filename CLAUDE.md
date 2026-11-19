@@ -18,7 +18,8 @@ Pixel accuracy matters. The world view should match the current client at the 12
 | Folder | Holds |
 |---|---|
 | `game/` | The Godot project: `project.godot`, `TheLastGate.csproj` and Godot's own `TheLastGate.sln`. Godot can't see anything outside this folder. |
-| `src/TheLastGate.Core/` | Code with no Godot dependency (file formats, protocol, caching), shared by the game, tools and tests |
+| `src/TheLastGate.Core/` | Code with no Godot dependency (file formats, protocol, caching, updates), shared by the game, tools and tests |
+| `src/TheLastGate.Starter/` | The small executable Velopack installs as the app's entry point. It answers Velopack's install and update hooks without starting Godot, then starts the game. Ships with every build. |
 | `tools/SpriteCompiler/` | Console tool that builds the sprite archives. Never referenced by the game. |
 | `tests/TheLastGate.Tests/` | xUnit tests for Core and the tools; they run without the engine |
 | `art/` | Source art the build turns into game data. Not shipped. |
@@ -77,8 +78,11 @@ dotnet run --project tools/SpriteCompiler
 powershell -ExecutionPolicy Bypass -File tools/view-sprites.ps1
 godot --path game --editor
 godot --path game -- --start-as=<character name>
+bash tools/package-release.sh <win|linux> <version> <channel> <notes-file> <releases-dir>
 ```
 - `--start-as` presses Start in the launcher only if the character it has loaded has that name, so a check in game can begin without clicking through.
+- `tools/package-release.sh` exports the game into `build/`, adds `data/` and the Starter, and packs it with Velopack (`vpk` 1.2.161 must be on PATH). Channels are `win` and `linux` for releases, and `test-win` and `test-linux` for test builds, which real clients never see.
+- Every Release Please release is packaged by `.github/workflows/package.yml` for Windows and Linux and attached to that release. To make a test release, push a tag `updater-test-v<version>` (for example `updater-test-v0.1.0`). It builds on the `test-win` and `test-linux` channels as a prerelease, and test builds find the newest published one through GitHub's API. Releases are immutable once published, so every release stays a draft until CI has attached its files. Delete test releases afterwards with `gh release delete <tag> -y`.
 - PowerShell scripts in `tools/` run with `-ExecutionPolicy Bypass`, because this machine blocks scripts by default. It applies to that one run only.
 - Godot version: 4.7.2-stable .NET (mono), installed through winget. It isn't on PATH as `godot`. The console executable is `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine.Mono_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`
 - .NET SDK version: 10.0.403. Every project targets .NET 8.

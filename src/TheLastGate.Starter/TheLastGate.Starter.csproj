@@ -1,0 +1,17 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Velopack's main executable: answers install and update hooks without starting Godot, then starts the game. -->
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <RootNamespace>TheLastGate.Starter</RootNamespace>
+    <AssemblyName>TheLastGateStarter</AssemblyName>
+    <PublishAot>true</PublishAot>
+    <InvariantGlobalization>true</InvariantGlobalization>
+    <ApplicationIcon>../../game/images/app-icon.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <PackageReference Include="Velopack" Version="1.2.161" />
+  </ItemGroup>
+</Project>

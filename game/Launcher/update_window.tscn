@@ -1,0 +1,63 @@
+[gd_scene format=3 uid="uid://cmqqt3xuysrn"]
+
+[ext_resource type="Script" uid="uid://bk78myremvgj" path="res://Launcher/UpdateWindowView.cs" id="1_script"]
+
+[node name="UpdateWindow" type="ConfirmationDialog" unique_id=1567237895]
+title = "Update available"
+initial_position = 2
+size = Vector2i(700, 500)
+borderless = true
+ok_button_text = "Update"
+dialog_hide_on_ok = false
+cancel_button_text = "Close"
+script = ExtResource("1_script")
+
+[node name="Content" type="VBoxContainer" parent="." unique_id=934004973]
+theme_override_constants/separation = 0
+
+[node name="TitleBar" type="PanelContainer" parent="Content" unique_id=678080474]
+custom_minimum_size = Vector2(0, 22)
+layout_mode = 2
+theme_type_variation = &"DialogTitleBar"
+
+[node name="Title" type="Label" parent="Content/TitleBar" unique_id=797293888]
+layout_mode = 2
+text = "Update available"
+vertical_alignment = 1
+
+[node name="Body" type="MarginContainer" parent="Content" unique_id=319737364]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 12
+theme_override_constants/margin_top = 12
+theme_override_constants/margin_right = 12
+theme_override_constants/margin_bottom = 8
+
+[node name="Lines" type="VBoxContainer" parent="Content/Body" unique_id=1544866151]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="Changelog" type="RichTextLabel" parent="Content/Body/Lines" unique_id=1363224424]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_vertical = 3
+theme_type_variation = &"ChangelogText"
+selection_enabled = true
+
+[node name="Progress" type="ProgressBar" parent="Content/Body/Lines" unique_id=1576154054]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="Error" type="Label" parent="Content/Body/Lines" unique_id=1935529315]
+unique_name_in_owner = true
+visible = false
+custom_minimum_size = Vector2(660, 0)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.85, 0.25, 0.2, 1)
+horizontal_alignment = 1
+autowrap_mode = 3
+
+[node name="Separator" type="HSeparator" parent="Content" unique_id=789868520]
+layout_mode = 2

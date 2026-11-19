@@ -3,6 +3,9 @@
 [ext_resource type="Theme" uid="uid://cca5jb3y02bv3" path="res://themes/LauncherTheme.tres" id="1_theme"]
 [ext_resource type="Texture2D" uid="uid://cxiy108mu58wx" path="res://images/launcher-background.png" id="2_background"]
 [ext_resource type="Script" uid="uid://d67a2myk3bsw" path="res://Launcher/LauncherScreen.cs" id="3_script"]
+[ext_resource type="PackedScene" uid="uid://cmqqt3xuysrn" path="res://Launcher/update_window.tscn" id="4_update_window"]
+[ext_resource type="Script" uid="uid://dw3k8qnupx5ra" path="res://Launcher/UpdateButtonView.cs" id="5_update_button"]
+[ext_resource type="PackedScene" uid="uid://da79wvuny6ya" path="res://Launcher/rollback_window.tscn" id="6_rollback_window"]
 
 [node name="Launcher" type="Control" unique_id=1439109952]
 layout_mode = 3
@@ -328,9 +331,9 @@ text = "Clear saved map data (destructive)"
 
 [node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1148077398]
 layout_mode = 0
-offset_left = 315.0
+offset_left = 255.0
 offset_top = 659.0
-offset_right = 955.0
+offset_right = 1025.0
 offset_bottom = 689.0
 theme_override_constants/separation = 10
 
@@ -339,6 +342,14 @@ unique_name_in_owner = true
 custom_minimum_size = Vector2(120, 30)
 layout_mode = 2
 text = "Start"
+
+[node name="UpdateButton" type="Button" parent="ButtonRow" unique_id=779654049]
+unique_name_in_owner = true
+custom_minimum_size = Vector2(120, 30)
+layout_mode = 2
+disabled = true
+text = "Checking..."
+script = ExtResource("5_update_button")
 
 [node name="LoadButton" type="Button" parent="ButtonRow" unique_id=471641441]
 unique_name_in_owner = true
@@ -375,6 +386,14 @@ grow_horizontal = 2
 grow_vertical = 2
 mouse_filter = 2
 color = Color(0.8, 0.8, 0.8, 0.35)
+
+[node name="UpdateWindow" parent="." unique_id=427394217 instance=ExtResource("4_update_window")]
+unique_name_in_owner = true
+visible = false
+
+[node name="RollbackWindow" parent="." unique_id=1469071643 instance=ExtResource("6_rollback_window")]
+unique_name_in_owner = true
+visible = false
 
 [node name="MessageDialog" type="AcceptDialog" parent="." unique_id=887065322]
 unique_name_in_owner = true
