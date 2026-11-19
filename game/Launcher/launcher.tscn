@@ -329,6 +329,26 @@ offset_right = 1025.0
 offset_bottom = 302.0
 text = "Clear saved map data (destructive)"
 
+[node name="FolderRow" type="HBoxContainer" parent="." unique_id=430585449]
+layout_mode = 0
+offset_left = 711.0
+offset_top = 310.0
+offset_right = 1025.0
+offset_bottom = 340.0
+theme_override_constants/separation = 10
+
+[node name="OpenDataFolderButton" type="Button" parent="FolderRow" unique_id=772298444]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Open data folder"
+
+[node name="OpenOverridesFolderButton" type="Button" parent="FolderRow" unique_id=427049097]
+unique_name_in_owner = true
+layout_mode = 2
+size_flags_horizontal = 3
+text = "Open sprite overrides"
+
 [node name="ButtonRow" type="HBoxContainer" parent="." unique_id=1148077398]
 layout_mode = 0
 offset_left = 255.0

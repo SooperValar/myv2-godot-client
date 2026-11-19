@@ -151,6 +151,8 @@ public partial class LauncherScreen : Control
             "",
             "Every area explored on this server, by all of your characters, will be forgotten.",
             ClearSavedMap);
+        GetNode<Button>("%OpenDataFolderButton").Pressed += () => OpenFolder(DataPaths.PlayerData());
+        GetNode<Button>("%OpenOverridesFolderButton").Pressed += () => OpenFolder(DataPaths.PlayerOverrides());
 
         nameField.TextChanged += OnNameChanged;
         descriptionField.TextChanged += OnDescriptionChanged;
@@ -498,6 +500,27 @@ public partial class LauncherScreen : Control
             ExploredMapKeeper.ClearSaved(settings.Server)
                 ? $"Saved map data for {ServerLabel} has been cleared."
                 : $"Could not clear the saved map data for {ServerLabel}.");
+
+    private void OpenFolder(string folder)
+    {
+        try
+        {
+            Directory.CreateDirectory(folder);
+        }
+        catch (Exception exception) when (exception is IOException or UnauthorizedAccessException)
+        {
+            GD.PushError($"Couldn't create the folder {folder}: {exception.Message}");
+            ShowMessage("FYI", $"Could not open the folder {folder}");
+            return;
+        }
+
+        var opened = OS.ShellOpen(folder);
+        if (opened != Error.Ok)
+        {
+            GD.PushError($"Couldn't open the folder {folder}: {opened}");
+            ShowMessage("FYI", $"Could not open the folder {folder}");
+        }
+    }
 
     private void ShowMessage(string title, string text)
     {
