@@ -6,16 +6,18 @@ namespace TheLastGate.Tests;
 public class BindingsTests
 {
     [Fact]
-    public void All_HasEveryBindingOfTheCurrentClientOnceButGamma()
+    public void All_HasEveryBindingOfTheCurrentClientOnce()
     {
-        Assert.Equal(48, Bindings.All.Count);
+        Assert.Equal(49, Bindings.All.Count);
         Assert.Equal(Bindings.All.Count, Bindings.All.Select(binding => binding.Id).Distinct().Count());
     }
 
     [Fact]
-    public void All_LeavesGammaToTheDisplaySliders()
+    public void All_PutsTheGammaKeyAfterTheOptionsWindow()
     {
-        Assert.DoesNotContain(Bindings.All, binding => binding.Id == "toggle_gamma_hotkey");
+        var ids = Bindings.All.Select(binding => binding.Id).ToList();
+
+        Assert.Equal(ids.IndexOf("toggle_options_hotkey") + 1, ids.IndexOf("toggle_gamma_hotkey"));
     }
 
     [Theory]
@@ -27,6 +29,7 @@ public class BindingsTests
     [InlineData("toggle_percent_hotkey", "Toggle Health %", BindingCategory.World)]
     [InlineData("toggle_health_bars_hotkey", "Toggle Health Bars", BindingCategory.World)]
     [InlineData("toggle_options_hotkey", "Options Window", BindingCategory.Window)]
+    [InlineData("toggle_gamma_hotkey", "Toggle World Gamma", BindingCategory.Window)]
     [InlineData("reset_window_size_hotkey", "Reset Window Size", BindingCategory.Window)]
     [InlineData("toggle_planner_hotkey", "Skill Planner", BindingCategory.Window)]
     [InlineData("toggle_worldmap_hotkey", "World Map", BindingCategory.Window)]

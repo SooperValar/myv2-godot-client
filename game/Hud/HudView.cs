@@ -771,6 +771,12 @@ public partial class HudView : Control
             return true;
         }
 
+        if (id == "toggle_gamma_hotkey")
+        {
+            StepWorldGamma();
+            return true;
+        }
+
         if (id == "reset_window_size_hotkey")
         {
             ResetWindowSize();
@@ -799,6 +805,18 @@ public partial class HudView : Control
     }
 
     // A maximised window is brought back to a plain window first, or the new size would not show.
+    private void StepWorldGamma()
+    {
+        if (ClientSettings == null)
+        {
+            return;
+        }
+
+        ChangeClientSettings(settings => settings.WorldGamma = Gamma.NextStep(settings.WorldGamma));
+        ShowOptions();
+        state?.Chat.Add(Gamma.WorldGammaLine(ClientSettings.WorldGamma));
+    }
+
     private void ResetWindowSize()
     {
         if (WindowReset.Line(ClientSettings?.Windowed ?? true) is not { } line)

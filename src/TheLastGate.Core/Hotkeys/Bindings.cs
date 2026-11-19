@@ -21,8 +21,7 @@ public sealed record Binding(string Id, string Name, BindingCategory Category)
     public bool Hold { get; init; }
 }
 
-// The current client's bindings and ids, in its order; their default keys are in the project's Input Map. Its gamma key
-// is left out because the Display tab's sliders replace it.
+// The current client's bindings and ids, in its order; their default keys are in the project's Input Map.
 public static class Bindings
 {
     public const int SpellCount = 20;
@@ -42,6 +41,7 @@ public static class Bindings
         new("toggle_names_hotkey", "Toggle Names", BindingCategory.World),
         new("toggle_health_bars_hotkey", "Toggle Health Bars", BindingCategory.World),
         new("toggle_options_hotkey", "Options Window", BindingCategory.Window),
+        new("toggle_gamma_hotkey", "Toggle World Gamma", BindingCategory.Window),
         new("reset_window_size_hotkey", "Reset Window Size", BindingCategory.Window),
         new("toggle_planner_hotkey", "Skill Planner", BindingCategory.Window),
         new("toggle_worldmap_hotkey", "World Map", BindingCategory.Window),

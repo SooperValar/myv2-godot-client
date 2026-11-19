@@ -1,3 +1,5 @@
+using TheLastGate.Assets;
+using TheLastGate.State;
 using TheLastGate.World;
 
 namespace TheLastGate.Tests;
@@ -30,5 +32,32 @@ public class GammaTests
     public void Text_ShowsTwoDecimalPlaces(float gamma, string text)
     {
         Assert.Equal(text, Gamma.Text(gamma));
+    }
+
+    [Theory]
+    [InlineData(1f, 1.05f)]
+    [InlineData(1.05f, 1.1f)]
+    [InlineData(1.1f, 1.15f)]
+    [InlineData(1.15f, 1.2f)]
+    [InlineData(1.2f, 1f)]
+    public void NextStep_GoesUpInTheCurrentClientsStepsAndWrapsAfterTheBrightest(float gamma, float next)
+    {
+        Assert.Equal(next, Gamma.NextStep(gamma));
+    }
+
+    [Theory]
+    [InlineData(1.01f, 1.05f)]
+    [InlineData(1.04f, 1.05f)]
+    [InlineData(1.13f, 1.15f)]
+    [InlineData(1.19f, 1.2f)]
+    public void NextStep_MovesASliderValueUpToTheNextStep(float gamma, float next)
+    {
+        Assert.Equal(next, Gamma.NextStep(gamma));
+    }
+
+    [Fact]
+    public void WorldGammaLine_SaysTheNewWorldGammaInGreen()
+    {
+        Assert.Equal(new LogLine("Set world gamma to 1.05", (int)TextColour.Green), Gamma.WorldGammaLine(1.05f));
     }
 }
