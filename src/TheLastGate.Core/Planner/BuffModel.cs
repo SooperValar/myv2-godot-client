@@ -191,6 +191,7 @@ public static class BuffModel
     private const int AptitudeAttributeFactor = 5;
     private const int IntrospectionAptitudeDivisor = 50;
     private const int GuardianAngelDivisor = 20;
+    private const int MaxBlessRecasts = 20;
     private const int FistsNumerator = 6;
     private const int FistsDenominator = 5;
     private const int GrimoireNumerator = 11;
@@ -652,6 +653,29 @@ public static class BuffModel
         return AttributesWithChanges(input, changes);
     }
 
+    // The server casts Bless from the Bless skill you have, which an active Bless has already raised, so each recast
+    // can come out stronger than the last until it settles.
+    private static int SettledBlessPower(
+        BuffModelInput input,
+        int aptitude,
+        AttributeAmounts unbuffedChanges,
+        AttributeAmounts unbuffed)
+    {
+        var power = BlessCastPower(input, aptitude, unbuffed);
+        for (var recast = 0; recast < MaxBlessRecasts; recast++)
+        {
+            var recastPower = BlessCastPower(input, aptitude, AttributesWithBless(input, unbuffedChanges, power));
+            if (recastPower <= power)
+            {
+                break;
+            }
+
+            power = recastPower;
+        }
+
+        return power;
+    }
+
     private static void ComputeBless(
         BuffModelInput input,
         BuffModelResult result,
@@ -661,11 +685,7 @@ public static class BuffModel
         result.CastPower[Bless] = 0;
         if (input.SpellKnown[Bless])
         {
-            var firstCast = AttributesWithBless(
-                input,
-                unbuffedChanges,
-                BlessCastPower(input, result.SpellAptitude, unbuffed));
-            result.CastPower[Bless] = BlessCastPower(input, result.SpellAptitude, firstCast);
+            result.CastPower[Bless] = SettledBlessPower(input, result.SpellAptitude, unbuffedChanges, unbuffed);
         }
 
         result.EffectivePower[Bless] = ShownPower(input, result, Bless);

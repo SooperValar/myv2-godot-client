@@ -27,7 +27,7 @@ public class BuffModelTests
     }
 
     [Fact]
-    public void Bless_IsCastTwice()
+    public void Bless_StopsWhereARecastNoLongerRaisesIt()
     {
         var result = BuffModel.Compute(Fixture());
 
@@ -66,8 +66,8 @@ public class BuffModelTests
 
         var result = BuffModel.Compute(input);
 
-        Assert.Equal(118, result.CastPower[Bless]);
-        Assert.Equal(AttributeAmounts.Of(68, 68, 68, 68, 67), result.Attributes);
+        Assert.Equal(121, result.CastPower[Bless]);
+        Assert.Equal(AttributeAmounts.Of(69, 68, 68, 68, 68), result.Attributes);
     }
 
     [Fact]

@@ -32,7 +32,6 @@ offset_left = 170.0
 offset_right = 300.0
 offset_bottom = 19.0
 theme_override_colors/font_color = Color(0.282353, 0.317647, 0.317647, 1)
-text = "+3% Strength"
 vertical_alignment = 1
 
 [node name="Count" type="LineEdit" parent="." unique_id=1412824124]

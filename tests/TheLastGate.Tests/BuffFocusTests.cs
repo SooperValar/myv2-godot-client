@@ -20,10 +20,10 @@ public class BuffFocusTests
         var result = BuffFocus.Search(Fixture());
 
         Assert.Equal(106, result.CurrentValue);
-        AssertSingle(result.Best, BlessSlot, 8, 160);
+        AssertSingle(result.Best, BlessSlot, 7, 140);
         AssertSingle(result.Direct, FocusedSlot, 1, 1000);
         AssertSingle(result.ThroughAttributes, 4, 1, 500);
-        AssertSingle(result.ThroughBless, BlessSlot, 8, 160);
+        AssertSingle(result.ThroughBless, BlessSlot, 7, 140);
     }
 
     [Fact]
@@ -37,7 +37,7 @@ public class BuffFocusTests
         AssertSingle(result.Best, FocusedSlot, 1, 10);
         AssertSingle(result.Direct, FocusedSlot, 1, 10);
         AssertSingle(result.ThroughAttributes, 4, 1, 500);
-        AssertSingle(result.ThroughBless, BlessSlot, 8, 160);
+        AssertSingle(result.ThroughBless, BlessSlot, 7, 140);
     }
 
     [Fact]
@@ -55,7 +55,7 @@ public class BuffFocusTests
         AssertSingle(result.ThroughAttributes, 4, 1, 500);
 
         // A Bless point the route would succeed without doesn't make it a route through Bless.
-        Assert.Equal(1780, result.ThroughBless?.TotalCost);
+        Assert.Equal(1180, result.ThroughBless?.TotalCost);
     }
 
     [Fact]
@@ -167,10 +167,10 @@ public class BuffFocusTests
         var result = BuffFocus.Search(input);
 
         Assert.Equal(FocusSearch.MostCandidates, input.Candidates.Count);
-        AssertSingle(result.Best, BlessSlot, 8, 160);
+        AssertSingle(result.Best, BlessSlot, 7, 140);
         AssertSingle(result.Direct, FocusedSlot, 1, 1000);
         AssertSingle(result.ThroughAttributes, 4, 1, 500);
-        AssertSingle(result.ThroughBless, BlessSlot, 8, 160);
+        AssertSingle(result.ThroughBless, BlessSlot, 7, 140);
     }
 
     [Fact]
