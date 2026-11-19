@@ -437,11 +437,31 @@ public partial class HudView : Control
         {
             TextFields.StopOnClickOutside(GetViewport(), press);
         }
+
+        if (inputEvent is InputEventKey { Pressed: true } key)
+        {
+            RunHotkeyBeforeChatLine(key);
+        }
     }
 
+    // Hotkeys go before the chat line's own editing keys, such as Ctrl+A or Insert. A hotkey that also types a
+    // character still types it, as the current client gets typed text apart from key presses.
+    private void RunHotkeyBeforeChatLine(InputEventKey key)
+    {
+        if (GetViewport().GuiGetFocusOwner() is ChatLine { RunsHotkeys: true }
+            && RunBoundHotkey(key)
+            && !TypesCharacter(key))
+        {
+            GetViewport().SetInputAsHandled();
+        }
+    }
+
+    private static bool TypesCharacter(InputEventKey key) =>
+        key.Unicode >= ' ' && !key.CtrlPressed && !key.AltPressed && !key.MetaPressed;
+
     // Held keys repeat their hotkey, as in the current client.
-    // A closed enter-to-talk chat line holds no focus, so the keys that open it, and Escape, arrive here; a key can
-    // run its hotkey and open the line too, as in the current client.
+    // A chat line with focus has its hotkeys run in _Input. A closed enter-to-talk chat line holds no focus, so the keys that
+    // open it, and Escape, arrive here; a key can run its hotkey and open the line too, as in the current client.
     public override void _UnhandledKeyInput(InputEvent inputEvent)
     {
         if (inputEvent is not InputEventKey { Pressed: true } key)
@@ -460,10 +480,7 @@ public partial class HudView : Control
         }
 
         var chatLine = GetNode<ChatLine>("%ChatLine");
-        var handled = chatLine.RunsHotkeys
-            && HotkeyInput.Chord(key) is { } chord
-            && KeyBindings.Find(chord) is { } binding
-            && RunHotkey(binding.Id);
+        var handled = chatLine.RunsHotkeys && !chatLine.HasFocus() && RunBoundHotkey(key);
         if (!chatLine.TakesTyping && ChatKeyFor(key.Keycode) is { } chatKey)
         {
             if (chatKey == ChatKey.Escape)
@@ -482,6 +499,9 @@ public partial class HudView : Control
             GetViewport().SetInputAsHandled();
         }
     }
+
+    private bool RunBoundHotkey(InputEventKey key) =>
+        HotkeyInput.Chord(key) is { } chord && KeyBindings.Find(chord) is { } binding && RunHotkey(binding.Id);
 
     private static ChatKey? ChatKeyFor(Key key) => key switch
     {
