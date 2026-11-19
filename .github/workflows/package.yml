@@ -158,14 +158,27 @@ jobs:
           set -euo pipefail
           mkdir -p releases
           repository="https://github.com/$GITHUB_REPOSITORY/releases/download"
-          if [ -n "$PREVIOUS_TAG" ] && curl -fsSL "$repository/$PREVIOUS_TAG/releases.$CHANNEL.json" -o previous.json; then
+          tag_prefix=v
+          case "$CHANNEL" in test-*) tag_prefix=updater-test-v ;; esac
+          if [ -n "$PREVIOUS_TAG" ] && curl -fsSL "$repository/$PREVIOUS_TAG/releases.$CHANNEL.json" -o listed.json; then
+            # A feed can list a package its release never received (1.0.0 shipped without its Windows package),
+            # so only packages that can still be downloaded carry over.
+            jq -c '.Assets[]' listed.json | while read -r asset; do
+              file=$(jq -r .FileName <<< "$asset")
+              version=$(jq -r .Version <<< "$asset")
+              if curl -fsIL -o /dev/null "$repository/$tag_prefix$version/$file"; then
+                printf '%s\n' "$asset"
+              else
+                echo "Leaving $file out of the feed: its release doesn't have it." >&2
+              fi
+            done | jq -s '{Assets: .}' > previous.json
             newest=$(jq -c '[.Assets[] | select(.Type == "Full")] | sort_by(.Version | split(".") | map(tonumber)) | last' previous.json)
             if [ "$newest" != null ]; then
               file=$(jq -r .FileName <<< "$newest")
               version=$(jq -r .Version <<< "$newest")
-              tag_prefix=v
-              case "$CHANNEL" in test-*) tag_prefix=updater-test-v ;; esac
               curl -fsSL "$repository/$tag_prefix$version/$file" -o "releases/$file"
+            else
+              echo "No earlier full package on $CHANNEL; this release has no delta."
             fi
           else
             echo "No earlier release on $CHANNEL; this one has no delta."
@@ -187,7 +200,7 @@ jobs:
         run: |
           set -euo pipefail
           files=("releases/releases.$CHANNEL.json")
-          for file in releases/TheLastGateGodot-"$VERSION"-"$CHANNEL"-*.nupkg releases/*Setup.exe releases/*Portable.zip releases/*.AppImage; do
+          for file in releases/TheLastGateGodot-"$VERSION"-*.nupkg releases/*Setup.exe releases/*Portable.zip releases/*.AppImage; do
             if [ -f "$file" ]; then
               files+=("$file")
             fi
