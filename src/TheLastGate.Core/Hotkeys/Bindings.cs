@@ -45,6 +45,7 @@ public static class Bindings
         new("reset_window_size_hotkey", "Reset Window Size", BindingCategory.Window),
         new("toggle_planner_hotkey", "Skill Planner", BindingCategory.Window),
         new("toggle_worldmap_hotkey", "World Map", BindingCategory.Window),
+        new("toggle_session_stats_hotkey", "Session Stats", BindingCategory.Window),
         new("item_tooltip_hotkey", "Item Tooltip (hold)", BindingCategory.Window) { Hold = true },
         new("fightback_hotkey", "Toggle Fightback", BindingCategory.General),
         new("swap_gear_hotkey", "Swap Gearset", BindingCategory.General),

@@ -39,6 +39,7 @@ public partial class HudView : Control
     private const string ItemTooltipBinding = "item_tooltip_hotkey";
     private const string WorldMapWindowScenePath = "res://Map/world_map_window.tscn";
     private const string PlannerWindowScenePath = "res://Planner/planner_window.tscn";
+    private const string SessionStatsScenePath = "res://Hud/session_stats_window.tscn";
     private const string PlannerAdvancedScenePath = "res://Planner/planner_advanced_window.tscn";
     private const int HintFont = 1;
     private const int WarningFont = 0;
@@ -89,6 +90,7 @@ public partial class HudView : Control
     private PlannerWindowView? plannerWindow;
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
+    private SessionStatsWindowView? sessionStatsWindow;
     private SpriteLoader? sprites;
     private StatPlan statPlan = new();
     private GameState? state;
@@ -338,6 +340,11 @@ public partial class HudView : Control
         AddChild(plannerAdvanced);
         plannerAdvanced.ClosePressed += ClosePlannerAdvanced;
         plannerAdvanced.ChoiceChanged += ChangePlannerChoices;
+        sessionStatsWindow = GD.Load<PackedScene>(SessionStatsScenePath).Instantiate<SessionStatsWindowView>();
+        AddChild(sessionStatsWindow);
+        sessionStatsWindow.ResetPressed += () => state?.SessionCurrencies.Reset(state.Player);
+        sessionStatsWindow.ClosePressed += () => ShowSessionStats(false);
+        ShowSessionStats(false);
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
@@ -430,6 +437,7 @@ public partial class HudView : Control
         }
 
         ShowTextWindows();
+        RefreshSessionStats();
         GetNode<ShopWindowView>("%ShopWindow").ShowItems(state);
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
         GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
@@ -707,6 +715,9 @@ public partial class HudView : Control
                 case PlannerAdvancedWindowView advanced:
                     advanced.ApplyFrameSprite();
                     break;
+                case SessionStatsWindowView sessionStats:
+                    sessionStats.ApplyCloseSprite();
+                    break;
             }
 
             Reload(child);
@@ -791,6 +802,12 @@ public partial class HudView : Control
         if (id == "toggle_planner_hotkey")
         {
             TogglePlanner();
+            return true;
+        }
+
+        if (id == "toggle_session_stats_hotkey")
+        {
+            ShowSessionStats(state is { SessionStatsOpen: false });
             return true;
         }
 
@@ -1849,6 +1866,25 @@ public partial class HudView : Control
         }
 
         ShowPlanner();
+    }
+
+    private void ShowSessionStats(bool open)
+    {
+        if (state != null)
+        {
+            state.SessionStatsOpen = open;
+        }
+
+        RefreshSessionStats();
+    }
+
+    private void RefreshSessionStats()
+    {
+        if (state != null)
+        {
+            var session = state.SessionCurrencies;
+            sessionStatsWindow?.ShowWindow(state.SessionStatsOpen, session.Tallies, session.Elapsed);
+        }
     }
 
     private void ClosePlanner()

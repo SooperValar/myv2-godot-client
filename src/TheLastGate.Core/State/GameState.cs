@@ -2,6 +2,7 @@ using System;
 using TheLastGate.Buffs;
 using TheLastGate.Items;
 using TheLastGate.Net;
+using TheLastGate.Session;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
 using TheLastGate.World;
@@ -43,6 +44,8 @@ public sealed class GameState
     public UseQueue UseQueue { get; }
     public GiveMore GiveMore { get; } = new();
     public AutoWalk AutoWalk { get; } = new();
+    public SessionCurrencies SessionCurrencies { get; } = new();
+    public bool SessionStatsOpen { get; set; }
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
@@ -92,8 +95,10 @@ public sealed class GameState
         var closedWorldMap = WorldMapWindow.CloseByEscape();
         var closedPlanner = PlannerWindow.Close();
         var closedShop = CloseShop();
+        var closedSessionStats = SessionStatsOpen;
+        SessionStatsOpen = false;
         return closedText || closedWaypoints || closedTree || closedOptions || closedWorldMap || closedPlanner
-            || closedShop;
+            || closedShop || closedSessionStats;
     }
 
     internal void ShutWindows()

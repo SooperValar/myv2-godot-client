@@ -26,6 +26,7 @@ public class BindingActionsTests
         ["reset_window_size_hotkey"] = "Shift+F10",
         ["toggle_planner_hotkey"] = "Ctrl+P",
         ["toggle_worldmap_hotkey"] = null,
+        ["toggle_session_stats_hotkey"] = null,
         ["item_tooltip_hotkey"] = "Alt",
         ["fightback_hotkey"] = null,
         ["swap_gear_hotkey"] = "Insert",

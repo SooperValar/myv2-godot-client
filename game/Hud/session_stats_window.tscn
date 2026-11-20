@@ -1,0 +1,75 @@
+[gd_scene format=3 uid="uid://hqohkevjjn0f8"]
+
+[ext_resource type="Script" uid="uid://5obr5q32l04x0" path="res://Hud/SessionStatsWindowView.cs" id="1_view"]
+[ext_resource type="Theme" uid="uid://bxevvm0ssb2pb" path="res://themes/OptionsTheme.tres" id="2_theme"]
+[ext_resource type="Script" uid="uid://73lezprqfzqlh" path="res://Hud/DataTable.cs" id="3_table"]
+
+[node name="SessionStatsWindow" type="CenterContainer" unique_id=1150167463]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+theme = ExtResource("2_theme")
+script = ExtResource("1_view")
+
+[node name="Window" type="HBoxContainer" parent="." unique_id=1631682080]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 2
+
+[node name="CloseBalance" type="Control" parent="Window" unique_id=1160421821]
+layout_mode = 2
+custom_minimum_size = Vector2(14, 0)
+mouse_filter = 2
+
+[node name="Frame" type="PanelContainer" parent="Window" unique_id=1414308950]
+layout_mode = 2
+custom_minimum_size = Vector2(700, 0)
+theme_type_variation = &"DarkWindowFrame"
+
+[node name="Layout" type="VBoxContainer" parent="Window/Frame" unique_id=1789875731]
+layout_mode = 2
+theme_override_constants/separation = 2
+
+[node name="Body" type="PanelContainer" parent="Window/Frame/Layout" unique_id=2013678403]
+layout_mode = 2
+theme_type_variation = &"DarkWindowPanel"
+
+[node name="Table" type="VBoxContainer" parent="Window/Frame/Layout/Body" unique_id=909464210]
+layout_mode = 2
+theme_type_variation = &"DataTable"
+script = ExtResource("3_table")
+
+[node name="Footer" type="PanelContainer" parent="Window/Frame/Layout" unique_id=485615459]
+layout_mode = 2
+theme_type_variation = &"DarkWindowFooter"
+
+[node name="Row" type="HBoxContainer" parent="Window/Frame/Layout/Footer" unique_id=1553552833]
+layout_mode = 2
+
+[node name="Caption" type="Label" parent="Window/Frame/Layout/Footer/Row" unique_id=569162047]
+layout_mode = 2
+theme_type_variation = &"TableCellDim"
+text = "Session"
+
+[node name="Elapsed" type="Label" parent="Window/Frame/Layout/Footer/Row" unique_id=2139107505]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_type_variation = &"TableCell"
+text = "0:00:00"
+
+[node name="Reset" type="Button" parent="Window/Frame/Layout/Footer/Row" unique_id=1368158111]
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"DarkButton"
+text = "Reset"
+
+[node name="Close" type="TextureButton" parent="Window" unique_id=345298505]
+layout_mode = 2
+custom_minimum_size = Vector2(14, 14)
+size_flags_vertical = 0
+focus_mode = 0
+tooltip_text = "Close"

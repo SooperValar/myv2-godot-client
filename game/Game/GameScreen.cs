@@ -32,6 +32,7 @@ public partial class GameScreen : Control
     private readonly NavigationKeys navigationKeys = new();
     private readonly TickPacer pacer = new();
     private readonly HashSet<string> reportedUnusualData = [];
+    private readonly Stopwatch sessionClock = Stopwatch.StartNew();
     private ServerConnection connection = null!;
     private ExploredMapKeeper? exploredMap;
     private HudView hudView = null!;
@@ -106,6 +107,7 @@ public partial class GameScreen : Control
                 payload =>
                 {
                     processor.Process(payload);
+                    gameState.SessionCurrencies.Observe(gameState.Player, sessionClock.Elapsed);
                     ticksPlayed++;
                     SendUserData();
                 },
