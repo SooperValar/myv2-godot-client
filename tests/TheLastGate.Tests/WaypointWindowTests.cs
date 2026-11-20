@@ -11,6 +11,8 @@ public class WaypointWindowTests
     private const int LizardTempleSouth = 20;
     private const int NothingFound = 0;
 
+    private const int AllFound = (1 << Waypoints.Count) - 1;
+
     private readonly GameState state = new();
     private readonly WaypointWindow window = new(new WindowPause());
 
@@ -48,31 +50,12 @@ public class WaypointWindowTests
     [Theory]
     [InlineData(3, 3)]
     [InlineData(-1, 0)]
-    [InlineData(25, WaypointWindow.MaxScroll)]
+    [InlineData(25, Waypoints.Count - WaypointWindow.VisibleRows)]
     public void ScrollBy_StaysWithinTheList(int rows, int scroll)
     {
         window.ScrollBy(rows);
 
         Assert.Equal(scroll, window.Scroll);
-    }
-
-    [Theory]
-    [InlineData(MapKeys.None, 2)]
-    [InlineData(MapKeys.Shift, 8)]
-    [InlineData(MapKeys.Ctrl, 8)]
-    [InlineData(MapKeys.Alt, 8)]
-    public void ArrowStep_ScrollsFurtherWithAModifierHeld(MapKeys keys, int rows)
-    {
-        Assert.Equal(rows, WaypointWindow.ArrowStep(keys));
-    }
-
-    [Theory]
-    [InlineData(0, 36)]
-    [InlineData(10, 128)]
-    [InlineData(WaypointWindow.MaxScroll, 212)]
-    public void BarTop_SlidesTheBarDownTheScrollbar(int scroll, int top)
-    {
-        Assert.Equal(top, WaypointWindow.BarTop(scroll));
     }
 
     [Fact]
@@ -198,6 +181,110 @@ public class WaypointWindowTests
                 .UInt32(20)
                 .Bytes(0, 0)),
     ];
+
+    [Fact]
+    public void SetSearch_ShowsOnlyFoundWaypointsWhoseNameMatches()
+    {
+        window.SetSearch("pent", AllFound);
+
+        Assert.Equal(7, window.ShownCount);
+        Assert.Equal(13, window.At(0).Number);
+        Assert.Equal(0, window.ScrollLimit);
+        Assert.False(window.HasRow(7));
+    }
+
+    [Fact]
+    public void SetSearch_LeavesOutUnfoundWaypoints()
+    {
+        window.SetSearch("lynbore", 1 << LynboreTavern);
+
+        Assert.Equal(1, window.ShownCount);
+        Assert.Equal(LynboreTavern, window.At(0).Number);
+    }
+
+    [Fact]
+    public void SetSearch_SameTextKeepsTheScroll()
+    {
+        window.ScrollBy(5);
+
+        window.SetSearch("", AllFound);
+
+        Assert.Equal(5, window.Scroll);
+    }
+
+    [Fact]
+    public void Choose_AnEmptyRowSendsNothing()
+    {
+        window.SetSearch("tower", AllFound);
+
+        Assert.Null(window.Choose(1, MapButton.Left, AllFound));
+    }
+
+    [Fact]
+    public void SetSearch_SelectsTheTopMatch()
+    {
+        window.SetSearch("pent", AllFound);
+
+        Assert.Equal(0, window.Selected);
+        Assert.True(window.IsSelected(0));
+    }
+
+    [Fact]
+    public void MoveSelection_WithNothingSelectedPicksTheTopRowInView()
+    {
+        window.ScrollBy(5);
+
+        window.MoveSelection(1);
+
+        Assert.Equal(5, window.Selected);
+        Assert.True(window.IsSelected(0));
+    }
+
+    [Fact]
+    public void MoveSelection_ScrollsToKeepTheSelectionInView()
+    {
+        window.MoveSelection(1);
+        window.MoveSelection(WaypointWindow.VisibleRows);
+
+        Assert.Equal(WaypointWindow.VisibleRows, window.Selected);
+        Assert.Equal(1, window.Scroll);
+
+        window.MoveSelection(-WaypointWindow.VisibleRows);
+
+        Assert.Equal(0, window.Scroll);
+    }
+
+    [Fact]
+    public void MoveSelection_StopsAtTheEndsOfTheList()
+    {
+        window.SetSearch("pent", AllFound);
+
+        window.MoveSelection(-3);
+        Assert.Equal(0, window.Selected);
+
+        window.MoveSelection(20);
+        Assert.Equal(6, window.Selected);
+    }
+
+    [Fact]
+    public void ClearSearch_ShowsEveryWaypointWithNothingSelected()
+    {
+        window.SetSearch("pent", AllFound);
+
+        window.ClearSearch(AllFound);
+
+        Assert.Equal(Waypoints.Count, window.ShownCount);
+        Assert.Null(window.Selected);
+        Assert.Null(window.ChooseSelected(AllFound));
+    }
+
+    [Fact]
+    public void ChooseSelected_TravelsToTheSelectedWaypoint()
+    {
+        window.SetSearch("tower", AllFound);
+
+        Assert.Equal(ClientPackets.OneValue(ClientCommand.Waypoints, 23), window.ChooseSelected(AllFound));
+    }
 
     private void Process(params TestCommand[] commands) =>
         new TickProcessor(state).Process(TestCommand.Payload(commands));

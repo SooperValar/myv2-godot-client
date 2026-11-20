@@ -300,9 +300,10 @@ public partial class HudView : Control
 
         var waypointWindow = GetNode<WaypointWindowView>("%WaypointWindow");
         waypointWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseWaypoints;
-        waypointWindow.GetNode<ClickArea>("ScrollUp").Released += button => ClickScrollWaypoints(-1, button);
-        waypointWindow.GetNode<ClickArea>("ScrollDown").Released += button => ClickScrollWaypoints(1, button);
+        waypointWindow.ScrollBar.ValueChanged += DragWaypoints;
         waypointWindow.GetNode<Control>("Blocker").GuiInput += ScrollWaypoints;
+        waypointWindow.SelectedChosen += ChooseSelectedWaypoint;
+        waypointWindow.CloseAsked += () => ClickCloseWaypoints(MapButton.Left);
         for (var row = 0; row < WaypointWindow.VisibleRows; row++)
         {
             var shownRow = row;
@@ -1322,6 +1323,15 @@ public partial class HudView : Control
         }
     }
 
+    private void ChooseSelectedWaypoint()
+    {
+        if (state?.WaypointWindow.ChooseSelected(state.Player.Waypoints) is { } packet)
+        {
+            sendCommand(packet);
+            ShowWaypoints();
+        }
+    }
+
     private void ClickWaypoint(int row, MapButton button)
     {
         if (state?.WaypointWindow.Choose(row, button, state.Player.Waypoints) is { } packet)
@@ -1331,11 +1341,11 @@ public partial class HudView : Control
         }
     }
 
-    private void ClickScrollWaypoints(int direction, MapButton button)
+    private void DragWaypoints(double row)
     {
-        if (button == MapButton.Left && state != null)
+        if (state != null)
         {
-            state.WaypointWindow.ScrollBy(direction * WaypointWindow.ArrowStep(HeldKeys.Current()));
+            state.WaypointWindow.ScrollTo((int)row);
             ShowWaypoints();
         }
     }

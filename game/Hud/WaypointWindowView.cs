@@ -1,3 +1,4 @@
+using System;
 using Godot;
 using TheLastGate.State;
 using TheLastGate.Windows;
@@ -15,6 +16,20 @@ public partial class WaypointWindowView : Control
 
     // The current client's wheel area, relative to the blocker: the rows, not the scrollbar.
     private static readonly Rect2 WheelArea = new(0, 1, 266, 279);
+    private int? hoveredRow;
+
+    private GameState? state;
+    private bool wasOpen;
+
+    public LineEdit Search => GetNode<LineEdit>("Search");
+
+    public ScrollBar ScrollBar => GetNode<ScrollBar>("ScrollBackground/ScrollBar");
+
+    private Control List => GetNode<Control>("Blocker");
+
+    public event Action? SelectedChosen;
+
+    public event Action? CloseAsked;
 
     public static bool InWheelArea(Vector2 position) => WheelArea.HasPoint(position);
 
@@ -24,17 +39,23 @@ public partial class WaypointWindowView : Control
     {
         for (var row = 0; row < WaypointWindow.VisibleRows; row++)
         {
-            var picture = Row(row).GetNode<CanvasItem>("Picture");
-            var highlighted = new Color(HighlightBrightness, HighlightBrightness, HighlightBrightness);
-            Row(row).MouseEntered += () => picture.Modulate = highlighted;
-            Row(row).MouseExited += () => picture.Modulate = Colors.White;
+            var shownRow = row;
+            Row(row).MouseEntered += () => Hover(shownRow);
+            Row(row).MouseExited += () => Hover(null);
         }
+
+        List.GuiInput += ListKey;
+        Search.TextChanged += SearchFor;
+        Search.TextSubmitted += _ => SelectedChosen?.Invoke();
+        Search.GuiInput += SearchKey;
     }
 
-    public void ShowWaypoints(GameState state)
+    public void ShowWaypoints(GameState shownState)
     {
+        state = shownState;
         var window = state.WaypointWindow;
         Visible = window.IsOpen;
+        FollowOpening(window.IsOpen);
         if (!Visible)
         {
             return;
@@ -42,16 +63,173 @@ public partial class WaypointWindowView : Control
 
         for (var row = 0; row < WaypointWindow.VisibleRows; row++)
         {
+            var rowNode = Row(row);
+            rowNode.Visible = window.HasRow(row);
+            if (!rowNode.Visible)
+            {
+                continue;
+            }
+
             var waypoint = window.At(row);
             var found = Waypoints.Found(state.Player.Waypoints, waypoint.Number);
-            var rowNode = Row(row);
-            rowNode.GetNode<ArchiveSprite>("Picture").SpriteNumber =
-                (found ? FoundPicture : UnknownPicture) + waypoint.Number;
+            var picture = rowNode.GetNode<ArchiveSprite>("Picture");
+            picture.SpriteNumber = (found ? FoundPicture : UnknownPicture) + waypoint.Number;
+            var bright = window.IsSelected(row) || hoveredRow == row;
+            picture.Modulate = bright
+                ? new Color(HighlightBrightness, HighlightBrightness, HighlightBrightness)
+                : Colors.White;
             rowNode.GetNode<Label>("Name").Text = found ? waypoint.Name : UnknownName;
             rowNode.GetNode<Label>("Description").Text = found ? waypoint.Description : UnknownDescription;
         }
 
-        var bar = GetNode<Control>("Bar");
-        bar.Position = bar.Position with { Y = WaypointWindow.BarTop(window.Scroll) };
+        ShowScroll(window);
+    }
+
+    // Zeroed first so a shorter list's maximum never clamps the value and sends a scroll of its own.
+    private void ShowScroll(WaypointWindow window)
+    {
+        ScrollBar.SetValueNoSignal(0);
+        ScrollBar.MaxValue = window.ShownCount;
+        ScrollBar.SetValueNoSignal(window.Scroll);
+    }
+
+    private void Redraw()
+    {
+        if (state != null)
+        {
+            ShowWaypoints(state);
+        }
+    }
+
+    private void Hover(int? row)
+    {
+        hoveredRow = row;
+        Redraw();
+    }
+
+    private void FollowOpening(bool isOpen)
+    {
+        if (isOpen == wasOpen)
+        {
+            return;
+        }
+
+        wasOpen = isOpen;
+        if (isOpen)
+        {
+            Search.Clear();
+            state?.WaypointWindow.ClearSearch(state.Player.Waypoints);
+            Search.GrabFocus();
+            Search.Edit();
+        }
+        else if (Search.HasFocus() || List.HasFocus())
+        {
+            GetViewport().GuiReleaseFocus();
+        }
+    }
+
+    private void SearchFor(string search)
+    {
+        state?.WaypointWindow.SetSearch(search, state.Player.Waypoints);
+        Redraw();
+    }
+
+    private void ClearAndType()
+    {
+        Search.Clear();
+        state?.WaypointWindow.ClearSearch(state.Player.Waypoints);
+        TypeInSearch();
+        Redraw();
+    }
+
+    private void TypeInSearch()
+    {
+        Search.GrabFocus();
+        Search.Edit();
+    }
+
+    private void MoveSelection(int rows)
+    {
+        state?.WaypointWindow.MoveSelection(rows);
+        Redraw();
+    }
+
+    // Escape clears a search first, and closes the window once the field is empty.
+    private void SearchKey(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventKey { Pressed: true } key)
+        {
+            return;
+        }
+
+        if (inputEvent.IsAction("ui_down"))
+        {
+            MoveSelection(1);
+            List.GrabFocus();
+        }
+        else if (inputEvent.IsAction("ui_focus_next"))
+        {
+            ClearAndType();
+        }
+        else if (key.Keycode == Key.Escape && Search.Text.Length > 0)
+        {
+            ClearAndType();
+        }
+        else if (key.Keycode == Key.Escape)
+        {
+            CloseAsked?.Invoke();
+        }
+        else
+        {
+            return;
+        }
+
+        AcceptEvent();
+    }
+
+    // A letter typed in the list goes to the search, so typing never reaches the hotkeys.
+    private void ListKey(InputEvent inputEvent)
+    {
+        if (inputEvent is not InputEventKey { Pressed: true } key)
+        {
+            return;
+        }
+
+        if (inputEvent.IsAction("ui_down"))
+        {
+            MoveSelection(1);
+        }
+        else if (inputEvent.IsAction("ui_up") && state?.WaypointWindow.Selected == 0)
+        {
+            TypeInSearch();
+        }
+        else if (inputEvent.IsAction("ui_up"))
+        {
+            MoveSelection(-1);
+        }
+        else if (inputEvent.IsAction("ui_text_submit"))
+        {
+            SelectedChosen?.Invoke();
+        }
+        else if (inputEvent.IsAction("ui_focus_next"))
+        {
+            ClearAndType();
+        }
+        else if (key.Keycode == Key.Escape)
+        {
+            CloseAsked?.Invoke();
+        }
+        else if (key.Unicode >= ' ' && !key.CtrlPressed && !key.AltPressed && !key.MetaPressed)
+        {
+            TypeInSearch();
+            Search.InsertTextAtCaret(char.ConvertFromUtf32((int)key.Unicode));
+            SearchFor(Search.Text);
+        }
+        else
+        {
+            return;
+        }
+
+        AcceptEvent();
     }
 }
