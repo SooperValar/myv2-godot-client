@@ -17,6 +17,10 @@ config/custom_user_dir_name="TheLastGateGodot"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://images/app-icon.png"
 
+[autoload]
+
+MCPRuntimeServer="*res://addons/godot_mcp_toolkit/runtime/mcp_runtime_server.gd"
+
 [display]
 
 window/size/viewport_width=1280
@@ -27,6 +31,10 @@ window/stretch/aspect="ignore"
 [dotnet]
 
 project/assembly_name="TheLastGate"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/godot_mcp_toolkit/plugin.cfg")
 
 [gui]
 

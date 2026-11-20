@@ -1,12 +1,14 @@
 #!/bin/sh
 # Rejects Godot scenes (.tscn) and resources (.tres) still in hand-written form. The Godot editor
 # gives each file a uid, a uid on every file reference, and a unique_id on every scene node.
+# Third-party addons in game/addons/ are skipped, because they are shipped as their authors wrote them.
 #
 # Usage: tools/check-godot-files.sh --staged     check the staged files (the pre-commit hook)
 #        tools/check-godot-files.sh --hook       check the file in a Claude Code hook's input
 #        tools/check-godot-files.sh [files...]   check these files, or every tracked one
 
 problems() {
+    case "$1" in game/addons/* | */game/addons/*) return ;; esac
     case "$1" in *.tscn) scene=1 ;; *) scene=0 ;; esac
     CHECKED_FILE="$1" SCENE="$scene" awk '
         BEGIN { name = ENVIRON["CHECKED_FILE"]; scene = ENVIRON["SCENE"] == 1 }
