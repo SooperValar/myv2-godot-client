@@ -1,10 +1,13 @@
 using System.Net;
+using GdUnit4;
 using TheLastGate.Updates;
 using Velopack.Logging;
 using Velopack.Sources;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Updates;
 
+[TestSuite]
 public class GithubReleaseSourceTests
 {
     private const string FeedJson = """
@@ -13,7 +16,7 @@ public class GithubReleaseSourceTests
         "NotesMarkdown":"## 1.2.0"}]}
         """;
 
-    [Fact]
+    [TestCase]
     public async Task GetReleaseFeed_FetchesTheChannelsFeed()
     {
         var downloader = new RecordingDownloader(FeedJson);
@@ -21,13 +24,14 @@ public class GithubReleaseSourceTests
         var feed = await new GithubReleaseSource(downloader)
             .GetReleaseFeed(new NullVelopackLogger(), "TheLastGateGodot", "win");
 
-        Assert.Equal(
-            ["https://github.com/jamesblack/thelastgate-godot/releases/latest/download/releases.win.json"],
-            downloader.Urls);
-        Assert.Equal("TheLastGateGodot-1.2.0-full.nupkg", Assert.Single(feed.Assets).FileName);
+        AssertThat(downloader.Urls)
+            .ContainsExactly(
+                "https://github.com/jamesblack/thelastgate-godot/releases/latest/download/releases.win.json");
+        AssertThat(feed.Assets).HasSize(1);
+        AssertThat(feed.Assets[0].FileName).IsEqual("TheLastGateGodot-1.2.0-full.nupkg");
     }
 
-    [Fact]
+    [TestCase]
     public async Task GetReleaseFeed_TestChannelReadsTheNewestTestReleasesFeed()
     {
         var downloader = new RecordingDownloader(
@@ -39,15 +43,13 @@ public class GithubReleaseSourceTests
             "TheLastGateGodot",
             "test-win");
 
-        Assert.Equal(
-            [
+        AssertThat(downloader.Urls)
+            .ContainsExactly(
                 "https://api.github.com/repos/jamesblack/thelastgate-godot/releases?per_page=100",
-                "https://github.com/jamesblack/thelastgate-godot/releases/download/updater-test-v0.1.1/releases.test-win.json",
-            ],
-            downloader.Urls);
+                "https://github.com/jamesblack/thelastgate-godot/releases/download/updater-test-v0.1.1/releases.test-win.json");
     }
 
-    [Fact]
+    [TestCase]
     public async Task DownloadReleaseEntry_DownloadsFromTheVersionsTag()
     {
         var downloader = new RecordingDownloader(FeedJson);
@@ -61,30 +63,31 @@ public class GithubReleaseSourceTests
             _ => { },
             CancellationToken.None);
 
-        Assert.Equal(
-            "https://github.com/jamesblack/thelastgate-godot/releases/download/v1.2.0/TheLastGateGodot-1.2.0-full.nupkg",
-            downloader.Urls[^1]);
+        AssertThat(downloader.Urls[^1])
+            .IsEqual(
+                "https://github.com/jamesblack/thelastgate-godot/releases/download/v1.2.0/TheLastGateGodot-1.2.0-full.nupkg");
     }
 
-    [Fact]
+    [TestCase]
     public async Task GetReleaseFeed_Feed404IsACheckFailure()
     {
         var downloader = new RecordingDownloader(new HttpRequestException("Not found", null, HttpStatusCode.NotFound));
 
-        var failure = await Assert.ThrowsAsync<HttpRequestException>(() =>
+        var failure = await AssertThrown(
             new GithubReleaseSource(downloader).GetReleaseFeed(new NullVelopackLogger(), "TheLastGateGodot", "win"));
 
-        Assert.Equal(HttpStatusCode.NotFound, failure.StatusCode);
+        failure!.IsInstanceOf<HttpRequestException>().HasPropertyValue("StatusCode", HttpStatusCode.NotFound);
     }
 
-    [Fact]
+    [TestCase]
     public async Task RecordingSource_KeepsTheLastFeed()
     {
         var source = new RecordingSource(new GithubReleaseSource(new RecordingDownloader(FeedJson)));
 
         await source.GetReleaseFeed(new NullVelopackLogger(), "TheLastGateGodot", "win");
 
-        Assert.Equal("TheLastGateGodot-1.2.0-full.nupkg", Assert.Single(source.LastFeed!.Assets).FileName);
+        AssertThat(source.LastFeed!.Assets).HasSize(1);
+        AssertThat(source.LastFeed.Assets[0].FileName).IsEqual("TheLastGateGodot-1.2.0-full.nupkg");
     }
 
     private sealed class RecordingDownloader : IFileDownloader

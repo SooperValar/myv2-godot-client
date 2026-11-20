@@ -1,7 +1,10 @@
+using GdUnit4;
 using TheLastGate.Updates;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Updates;
 
+[TestSuite]
 public class TestReleasesTests
 {
     private static string Release(string tag, bool draft, params string[] assets) =>
@@ -9,7 +12,7 @@ public class TestReleasesTests
 
     private static string Releases(params string[] releases) => $"[{string.Join(",", releases)}]";
 
-    [Fact]
+    [TestCase]
     public void NewestWithFeed_PicksTheHighestVersion()
     {
         var json = Releases(
@@ -17,20 +20,20 @@ public class TestReleasesTests
             Release("updater-test-v0.1.10", false, "releases.test-win.json"),
             Release("updater-test-v0.1.2", false, "releases.test-win.json"));
 
-        Assert.Equal("updater-test-v0.1.10", TestReleases.NewestWithFeed(json, "test-win"));
+        AssertThat(TestReleases.NewestWithFeed(json, "test-win")).IsEqual("updater-test-v0.1.10");
     }
 
-    [Fact]
+    [TestCase]
     public void NewestWithFeed_IgnoresReleasesWithoutTheChannelsFeed()
     {
         var json = Releases(
             Release("updater-test-v0.1.1", false, "releases.test-linux.json"),
             Release("updater-test-v0.1.0", false, "releases.test-win.json"));
 
-        Assert.Equal("updater-test-v0.1.0", TestReleases.NewestWithFeed(json, "test-win"));
+        AssertThat(TestReleases.NewestWithFeed(json, "test-win")).IsEqual("updater-test-v0.1.0");
     }
 
-    [Fact]
+    [TestCase]
     public void NewestWithFeed_IgnoresDraftsAndOtherTags()
     {
         var json = Releases(
@@ -38,12 +41,11 @@ public class TestReleasesTests
             Release("v1.0.0", false, "releases.test-win.json"),
             Release("updater-test-v0.1.0", false, "releases.test-win.json"));
 
-        Assert.Equal("updater-test-v0.1.0", TestReleases.NewestWithFeed(json, "test-win"));
+        AssertThat(TestReleases.NewestWithFeed(json, "test-win")).IsEqual("updater-test-v0.1.0");
     }
 
-    [Fact]
-    public void NewestWithFeed_IsNullWithoutAnyTestRelease()
-    {
-        Assert.Null(TestReleases.NewestWithFeed(Releases(Release("v1.0.0", false, "releases.win.json")), "test-win"));
-    }
+    [TestCase]
+    public void NewestWithFeed_IsNullWithoutAnyTestRelease() =>
+        AssertThat(TestReleases.NewestWithFeed(Releases(Release("v1.0.0", false, "releases.win.json")), "test-win"))
+            .IsNull();
 }

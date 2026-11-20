@@ -11,6 +11,7 @@
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="Microsoft.CodeAnalysis.BannedApiAnalyzers" Version="3.3.4" PrivateAssets="all" />
+    <PackageReference Include="Velopack" Version="1.2.161" />
     <AdditionalFiles Include="BannedSymbols.txt" />
   </ItemGroup>
 </Project>

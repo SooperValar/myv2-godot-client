@@ -1,11 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
-  <!-- Code with no Godot dependency (file formats, protocol), shared by the game, tools and tests. -->
+  <!-- Everything a headless client needs: the protocol, the game state, and the file formats those use. -->
   <PropertyGroup>
     <TargetFramework>net8.0</TargetFramework>
     <Nullable>enable</Nullable>
     <RootNamespace>TheLastGate</RootNamespace>
   </PropertyGroup>
-  <ItemGroup>
-    <PackageReference Include="Velopack" Version="1.2.161" />
-  </ItemGroup>
 </Project>
