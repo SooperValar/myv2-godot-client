@@ -1,0 +1,2 @@
+M:Godot.Node.GetParent;Call down, signal up: the parent passes down what a child needs, and the child signals up
+M:Godot.Node.GetParentOrNull``1;Call down, signal up: the parent passes down what a child needs, and the child signals up

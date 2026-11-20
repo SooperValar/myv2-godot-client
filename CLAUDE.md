@@ -9,19 +9,21 @@ A new **Godot 4 .NET (C#)** client for **The Last Gate**, an MMORPG built on a m
 Stages:
 1. **Test project (done):** prove the risky parts work (zlib stream, sprite archives, isometric drawing).
 2. **MVP (done):** log in, walk, fight, chat, inventory and equipment, stats, sound.
-3. **Feature parity (current stage)** with the current client: shop, depot, skill tree, skill planner, item tooltips, buff watch, and the other client mods. Everything from the earlier Godot attempt (tag `old-main`) has been carried over. Only after parity will current players be asked to switch.
+3. **Feature parity (done)** with the SDL client: shop, depot, skill tree, skill planner, item tooltips, buff watch, and the other client mods.
+4. **Its own client (current stage):** the client no longer follows the SDL client's behaviour or code. The only contract is with the server.
 
-Pixel accuracy matters. The world view should match the current client at the 1280×720 virtual resolution.
+Everything is laid out for a 1280×720 virtual resolution (`viewport_width`/`viewport_height` in `project.godot`), and the window scales it. Pixel accuracy matters at that size.
 
 ## Repository layout
 
 | Folder | Holds |
 |---|---|
 | `game/` | The Godot project: `project.godot`, `TheLastGate.csproj` and Godot's own `TheLastGate.sln`. Godot can't see anything outside this folder. |
-| `src/TheLastGate.Core/` | Code with no Godot dependency (file formats, protocol, caching, updates), shared by the game, tools and tests |
+| `src/TheLastGate.Core/` | Everything a headless client needs: the protocol, the game state, and the file formats those use |
 | `src/TheLastGate.Starter/` | The small executable Velopack installs as the app's entry point. It answers Velopack's install and update hooks without starting Godot, then starts the game. Ships with every build. |
 | `tools/SpriteCompiler/` | Console tool that builds the sprite archives. Never referenced by the game. |
 | `tests/TheLastGate.Tests/` | xUnit tests for Core and the tools; they run without the engine |
+| `tests/TheLastGate.GodotTests/` | GdUnit4 tests for code in `game/`. It is a Godot project of its own that references the game, so tests can run engine behaviour (input, nodes, scenes) as well as plain C# |
 | `art/` | Source art the build turns into game data. Not shipped. |
 | `data/` | Game data the client reads at run time. Everything here ships. |
 
@@ -29,27 +31,11 @@ The root `TheLastGate.sln` holds every project and is the one to open in Rider. 
 
 ## Reference code (read-only from here)
 
-**Current client (C/C++, SDL2 + OpenGL + ImGui):** `C:\Code\thelastgate-sdl\Source\Client`
+**Server source:** the live server is `C:\Code\TheLastGateReal` (`ZarroTsu/TheLastGate` on GitHub). It is the only contract this client keeps: the protocol, packet lengths and what the server's data means. Protocol questions are answered from it. `C:\Code\thelastgate-sdl\Source\Server` is out of date, so don't rely on it.
 
-This is the source of truth for the protocol, file formats and drawing. Where to look:
-
-| Topic | File(s) |
-|---|---|
-| Login handshake, `xcrypt`, start of the zlib stream | `src/net/connection.c` |
-| Tick framing, zlib inflate, command dispatch (`sv_cmd`), every `sv_*` handler | `src/net/socket.c` |
-| Packet IDs (`SV_*`, `CL_*`), map tile struct (`struct cmap`), player struct (`struct cplayer`) | `common.h` |
-| `NETWORKING_VERSION`, `RENDERDIST`, `MAXSPRITE` | `inter.h` |
-| Sprite archives (`pnglib`, `gx00`), magenta colour key | `src/graphics/loader.c` |
-| Isometric projection (`sdl_copysprite`) | `src/graphics/sdl.c` |
-| World draw order and layers (`eng_display`), character/item animation (`eng_char`, `eng_item`, `speedo`) | `engine.c` |
-| Old UI hit-testing, client commands sent to the server (`cmd*`) | `inter.c` |
-| Planner, combat and buff models (pure logic, with tests) | `src/planner/`, `src/mods/`, `tests/` |
+**SDL client:** `C:\Code\thelastgate-sdl\Source\Client` is no longer a reference for this client's behaviour or code. Don't consult or copy it unless a task says to. Features that read its files on the player's machine to migrate them (`unique.dat`, `TLGCharacters.dat`, the explored map and notes) are features of this client and stay.
 
 **Where the game data came from:** the SDL repo's `Resources\Packaged Files\` and `Resources\Gfx Compiler\gfx\`. They were copied once into `art/` and `data/` and are now reference only.
-
-**Server source:** the live server is `C:\Code\TheLastGateReal`. `C:\Code\thelastgate-sdl\Source\Server` is out of date, so don't rely on it. Use the server only to answer protocol questions the client source can't.
-
-**Related plans in the C client repo (local only):** `C:\Code\thelastgate-sdl\docs\superpowers\plans\`. These include the C → C++ migration plan, whose Phase 4 (moving the old UI to ImGui) is waiting on how this Godot work turns out.
 
 ## Game data and art (in Git LFS)
 
@@ -72,6 +58,7 @@ While the SDL client is still live, new art is also added to the SDL repo by han
 ```powershell
 dotnet build TheLastGate.sln
 dotnet test tests/TheLastGate.Tests
+dotnet test tests/TheLastGate.GodotTests
 sh tools/check-code-cleanup.sh
 sh tools/check-godot-files.sh
 dotnet run --project tools/SpriteCompiler
@@ -80,6 +67,7 @@ godot --path game --editor
 godot --path game -- --start-as=<character name>
 bash tools/package-release.sh <win|linux> <version> <channel> <notes-file> <releases-dir>
 ```
+- `dotnet test tests/TheLastGate.GodotTests` builds the game, then starts Godot to run the GdUnit4 tests (about 25 seconds). GdUnit4 finds Godot through the `GODOT_BIN` environment variable, which is set on this machine to the console executable listed below.
 - `--start-as` presses Start in the launcher only if the character it has loaded has that name, so a check in game can begin without clicking through.
 - `tools/package-release.sh` exports the game into `build/`, adds `data/` and the Starter, and packs it with Velopack (`vpk` 1.2.161 must be on PATH). Channels are `win` and `linux` for releases, and `test-win` and `test-linux` for test builds, which real clients never see.
 - Every Release Please release is packaged by `.github/workflows/package.yml` for Windows and Linux and attached to that release. To make a test release, push a tag `updater-test-v<version>`. The version must be higher than any earlier test release and never used before, because GitHub won't recreate a tag that belonged to an immutable release (0.1.0 to 0.1.5 are used up). It builds on the `test-win` and `test-linux` channels as a prerelease, and test builds find the newest published one through GitHub's API. Releases are immutable once published, so every release stays a draft until CI has attached its files. Delete test releases afterwards with `gh release delete <tag> -y`.
@@ -87,7 +75,7 @@ bash tools/package-release.sh <win|linux> <version> <channel> <notes-file> <rele
 - Godot version: 4.7.2-stable .NET (mono), installed through winget. It isn't on PATH as `godot`. The console executable is `%LOCALAPPDATA%\Microsoft\WinGet\Packages\GodotEngine.GodotEngine.Mono_Microsoft.Winget.Source_8wekyb3d8bbwe\Godot_v4.7.2-stable_mono_win64\Godot_v4.7.2-stable_mono_win64_console.exe`
 - .NET SDK version: 10.0.403. Every project targets .NET 8.
 - Claude may build and run tests without asking. Run only the tests that cover the changed code (`--filter`), and the full suite at the end of a finished chain of work.
-- Connecting to the live game server is allowed. The host and proxy addresses are `MHOST` / `MPROXY` in `C:\Code\thelastgate-sdl\Source\Client\common.h` (the `#ifdef` there chooses between two sets), on port 5555 (`host_port` in `src/net/connection.c`). Keep test sessions short, and don't send commands that change a real character's state (giving, dropping, trading or deleting items, raising stats) unless the user asks.
+- Connecting to the live game server is allowed. Its host, proxy and port are `ServerAddress.Live` in `src/TheLastGate.Core/Net/ServerAddress.cs`. Keep test sessions short, and don't send commands that change a real character's state (giving, dropping, trading or deleting items, raising stats) unless the user asks.
 - Passwords are never stored, in files, settings or source. The player types theirs in the launcher each time, for the character loaded from its `.moa` file.
 - After cloning, run `git config core.hooksPath .githooks` once. The pre-commit hook runs two checks on what is staged:
   - `tools/check-godot-files.sh` rejects a `.tscn` or `.tres` without a `uid` in its header and on every `ext_resource`, or with a node that has no `unique_id`. A Claude Code hook runs the same check whenever Claude writes one.
@@ -100,18 +88,19 @@ bash tools/package-release.sh <win|linux> <version> <channel> <notes-file> <rele
 
 ## Architecture guidelines
 
-- **Keep protocol and file-format code free of Godot types** by putting it in `TheLastGate.Core`. Plain C# over `ReadOnlySpan<byte>` / `BinaryPrimitives` (little-endian) can be tested with `dotnet test`, without the engine.
+- **Core holds only what a headless client needs.** A headless client logs in, keeps the game state from the ticks, and sends commands, with no screen. If it wouldn't use something, that code belongs in `game/` beside the nodes that use it. Core mirrors as much client state as it can, including state it has to ask the server for, such as buff readings and item looks.
+- **Testability is not a reason to put code in Core.** Engine behaviour is tested with GdUnit4 (`tests/TheLastGate.GodotTests`), which can also run plain C# tests on code in `game/` without starting Godot.
+- **Protocol and file-format code is plain C#** over `ReadOnlySpan<byte>` / `BinaryPrimitives` (little-endian).
 - **The game references Core, never the tools.** Code only the build needs (the sprite compiler and its image decoding) stays in `tools/`, so it never ships to players.
 - **All packet reads go through a bounds-checked `PacketReader`.** Every command type needs an exact length, because one wrong length loses the client's place in the tick stream.
 - **One inflater for the whole session,** started after login succeeds. Decompressing each frame on its own fails from the second frame on.
 - Sprites load on first use into a size-limited cache. Never import the archives as Godot resources.
 - Networking runs off the main thread. The game state is updated once per tick on the main thread.
-- The main screen recreates the current client's sprite HUD. Overlay windows (options, world map, planner) are styled Godot Controls. Layout lives in scenes and containers, not in computed coordinates, and `[Tool]` scripts give runtime content a preview in the editor.
+- **Call down, signal up.** A parent calls methods on its children and sets their properties. A child tells its parent something only through a signal or event, and never reaches up to it (`GetParent`, walking the tree for an ancestor). Core works the same way: it raises events, and the game decides what to do with them.
+- The main screen recreates the classic sprite HUD. Overlay windows (options, world map, planner) are styled Godot Controls. Layout lives in scenes and containers, not in computed coordinates, and `[Tool]` scripts give runtime content a preview in the editor.
 - Scenes sit beside their scripts, named in snake_case (`game/Planner/planner_window.tscn` beside `PlannerWindowView.cs`).
 - Text is drawn in a swappable font set, never a hard-wired font. Everything in game uses the HUD's `IFontSet`, which `WindowFonts` puts on every window under the HUD. The launcher has its own `ILauncherFontSet`.
 - Text inputs are plain `LineEdit` and `TextEdit` nodes, so `TextFields` can keep hotkeys and chat keys away from a field while it is being typed in. Numbers are typed, not picked from drop-downs.
-- When a behaviour detail is unclear (a limit, a timing, a volume), follow the current SDL client.
-
 ## Code style
 
 `.editorconfig` holds the rules and `Directory.Build.props` makes the build enforce them, so a violation fails `dotnet build`.

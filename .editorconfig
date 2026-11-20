@@ -127,3 +127,10 @@ dotnet_naming_rule.private_fields_are_camel_case.severity = error
 dotnet_naming_rule.locals_and_parameters_are_camel_case.symbols = locals_and_parameters
 dotnet_naming_rule.locals_and_parameters_are_camel_case.style = camel_case
 dotnet_naming_rule.locals_and_parameters_are_camel_case.severity = error
+
+# game/BannedSymbols.txt: call down, signal up. A child never asks for its parent.
+dotnet_diagnostic.RS0030.severity = error
+
+# Not migrated yet (issue #8, piece 11). Remove a file from this list when it is.
+[{game/Hud/HudView.cs,game/Hud/ItemTooltipView.cs,game/Hud/OptionsWindowView.cs,game/Launcher/LauncherScreen.cs,game/World/WorldView.cs}]
+dotnet_diagnostic.RS0030.severity = none
