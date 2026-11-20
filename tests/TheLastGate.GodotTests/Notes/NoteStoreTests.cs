@@ -1,57 +1,63 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
 using System.Text;
+using GdUnit4;
 using TheLastGate.Notes;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Notes;
 
-public sealed class NoteStoreTests : IDisposable
+[TestSuite]
+public sealed class NoteStoreTests
 {
     private const int HeaderSize = 16;
 
-    private readonly string folder = Directory.CreateTempSubdirectory("note-store-").FullName;
+    private string folder = "";
 
-    public void Dispose() => Directory.Delete(folder, true);
+    [BeforeTest]
+    public void MakeAFolder() => folder = Directory.CreateTempSubdirectory("note-store-").FullName;
 
-    [Fact]
+    [AfterTest]
+    public void DeleteTheFolder() => Directory.Delete(folder, true);
+
+    [TestCase]
     public void Save_WritesTheCurrentClientsHeaderThenZlib()
     {
         var file = NoteStore.Save(Sample());
 
-        Assert.Equal("TLGA"u8.ToArray(), file[..4]);
-        Assert.Equal(3u, BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(4)));
+        AssertThat(file[..4]).IsEqual("TLGA"u8.ToArray());
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(4))).IsEqual(3u);
         var payloadSize = BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(8));
-        Assert.Equal((uint)(file.Length - HeaderSize), BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(12)));
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(12))).IsEqual((uint)(file.Length - HeaderSize));
         var payload = Inflate(file[HeaderSize..]);
-        Assert.Equal(payloadSize, (uint)payload.Length);
-        Assert.Equal(1, payload[0]);
+        AssertThat((uint)payload.Length).IsEqual(payloadSize);
+        AssertThat(payload[0]).IsEqual(1);
     }
 
-    [Fact]
+    [TestCase]
     public void ASavedSet_LoadsBackAsItWas()
     {
         var loaded = NoteStore.Load(NoteStore.Save(Sample()))!;
 
-        Assert.False(loaded.Changed);
-        Assert.True(loaded.ShowOnMinimap);
-        Assert.Equal(["Keys", "Route"], loaded.Tree().Select(category => category.Name));
+        AssertThat(loaded.Changed).IsFalse();
+        AssertThat(loaded.ShowOnMinimap).IsTrue();
+        AssertThat(loaded.Tree().Select(category => category.Name)).ContainsExactly("Keys", "Route");
         var keys = loaded.Tree()[0];
         var route = loaded.Tree()[1];
-        Assert.True(keys.Visible);
-        Assert.False(keys.ShowLabels);
-        Assert.False(route.Visible);
-        Assert.True(route.ShowLabels);
-        Assert.Equal(2, keys.ColourIndex);
-        Assert.Equal(5, route.ColourIndex);
-        Assert.Equal(
-            [(NoteKind.Pin, "Red key", 100, 200), (NoteKind.Text, "Beware", 300, 400)],
-            keys.Notes.Select(note => (note.Kind, note.Label, note.TileX, note.TileY)));
-        Assert.Equal("Maze", route.Notes[0].Label);
-        Assert.Equal(3, route.Notes[0].Segments.Count);
-        Assert.Equal(90, route.Notes[0].Segments[2].EndY);
+        AssertThat(keys.Visible).IsTrue();
+        AssertThat(keys.ShowLabels).IsFalse();
+        AssertThat(route.Visible).IsFalse();
+        AssertThat(route.ShowLabels).IsTrue();
+        AssertThat(keys.ColourIndex).IsEqual(2);
+        AssertThat(route.ColourIndex).IsEqual(5);
+        AssertThat(keys.Notes.Select(note => (note.Kind, note.Label, note.TileX, note.TileY)))
+            .ContainsExactly((NoteKind.Pin, "Red key", 100, 200), (NoteKind.Text, "Beware", 300, 400));
+        AssertThat(route.Notes[0].Label).IsEqual("Maze");
+        AssertThat(route.Notes[0].Segments.Count).IsEqual(3);
+        AssertThat(route.Notes[0].Segments[2].EndY).IsEqual(90);
     }
 
-    [Fact]
+    [TestCase]
     public void Load_KeepsTheNestingAndCousinsWithTheSameName()
     {
         var saved = new NoteSet { ShowOnMinimap = true };
@@ -63,34 +69,32 @@ public sealed class NoteStoreTests : IDisposable
 
         var loaded = NoteStore.Load(NoteStore.Save(saved))!;
 
-        Assert.Equal(
-            ["Aston", "Quest Givers", "Neiseer", "Quest Givers"],
-            loaded.Tree().Select(category => category.Name));
+        AssertThat(loaded.Tree().Select(category => category.Name))
+            .ContainsExactly("Aston", "Quest Givers", "Neiseer", "Quest Givers");
         var elder = loaded.Tree()[3];
-        Assert.Equal(6, elder.ColourIndex);
-        Assert.Equal("Neiseer", loaded.FindCategory(elder.ParentId)!.Name);
-        Assert.Equal((55, 66), (elder.Notes[0].TileX, elder.Notes[0].TileY));
+        AssertThat(elder.ColourIndex).IsEqual(6);
+        AssertThat(loaded.FindCategory(elder.ParentId)!.Name).IsEqual("Neiseer");
+        AssertThat((elder.Notes[0].TileX, elder.Notes[0].TileY)).IsEqual((55, 66));
     }
 
-    [Theory]
-    [InlineData("garbage")]
-    [InlineData("TLGA")]
+    [TestCase("garbage")]
+    [TestCase("TLGA")]
     public void Load_OfAnUnreadableFile_GivesNothing(string contents)
     {
-        Assert.Null(NoteStore.Load(Encoding.ASCII.GetBytes(contents)));
+        AssertThat(NoteStore.Load(Encoding.ASCII.GetBytes(contents))).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Load_RefusesBytesLeftOverAfterTheTree()
     {
         var payload = new List<byte> { 0 };
         NoteCodec.EncodeTree(Sample(), 0, payload);
         payload.Add(0);
 
-        Assert.Null(NoteStore.Load(StoreFile(3, payload.ToArray())));
+        AssertThat(NoteStore.Load(StoreFile(3, payload.ToArray()))).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void AFormatOneFile_LoadsWithLabelsShown()
     {
         var source = new NoteSet();
@@ -99,14 +103,15 @@ public sealed class NoteStoreTests : IDisposable
 
         var loaded = NoteStore.Load(LegacyFile(1, source))!;
 
-        var category = Assert.Single(loaded.Categories);
-        Assert.Equal("Old", category.Name);
-        Assert.True(category.ShowLabels);
-        Assert.Single(category.Notes);
-        Assert.True(loaded.ShowOnMinimap);
+        AssertThat(loaded.Categories).HasSize(1);
+        var category = loaded.Categories[0];
+        AssertThat(category.Name).IsEqual("Old");
+        AssertThat(category.ShowLabels).IsTrue();
+        AssertThat(category.Notes).HasSize(1);
+        AssertThat(loaded.ShowOnMinimap).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void AFormatTwoFile_KeepsItsFlagsAndNamesThatClash()
     {
         var source = new NoteSet();
@@ -115,28 +120,29 @@ public sealed class NoteStoreTests : IDisposable
 
         var loaded = NoteStore.Load(LegacyFile(2, source))!;
 
-        Assert.Equal(["Aston", "aston"], loaded.Categories.Select(category => category.Name));
-        Assert.Equal([3, 4], loaded.Categories.Select(category => category.ColourIndex));
-        Assert.Equal([true, false], loaded.Categories.Select(category => category.Visible));
-        Assert.Equal([false, true], loaded.Categories.Select(category => category.ShowLabels));
-        Assert.All(loaded.Categories, category => Assert.Equal(0, category.ParentId));
-        Assert.NotEqual(0, lower);
+        AssertThat(loaded.Categories.Select(category => category.Name)).ContainsExactly("Aston", "aston");
+        AssertThat(loaded.Categories.Select(category => category.ColourIndex)).ContainsExactly(3, 4);
+        AssertThat(loaded.Categories.Select(category => category.Visible)).ContainsExactly(true, false);
+        AssertThat(loaded.Categories.Select(category => category.ShowLabels)).ContainsExactly(false, true);
+        AssertThat(loaded.Categories.Select(category => category.ParentId).Distinct()).ContainsExactly(0);
+        AssertThat(lower).IsNotEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void SaveTo_WritesTheFileAndMarksTheSetSaved()
     {
         var path = Path.Combine(folder, "TLGAnnotations_test_1.dat");
         var set = Sample();
 
-        Assert.True(NoteStore.SaveTo(path, set));
+        AssertThat(NoteStore.SaveTo(path, set)).IsTrue();
 
-        Assert.False(set.Changed);
-        Assert.False(File.Exists(path + ".tmp"));
-        Assert.Equal(["Keys", "Route"], NoteStore.Load(File.ReadAllBytes(path))!.Tree().Select(c => c.Name));
+        AssertThat(set.Changed).IsFalse();
+        AssertThat(File.Exists(path + ".tmp")).IsFalse();
+        AssertThat(NoteStore.Load(File.ReadAllBytes(path))!.Tree().Select(c => c.Name))
+            .ContainsExactly("Keys", "Route");
     }
 
-    [Fact]
+    [TestCase]
     public void Open_LoadsTheOwnFile()
     {
         var own = Path.Combine(folder, "own.dat");
@@ -144,12 +150,12 @@ public sealed class NoteStoreTests : IDisposable
 
         var (set, setAside) = NoteStore.Open(own, Path.Combine(folder, "sdl.dat"));
 
-        Assert.Equal(["Keys", "Route"], set.Tree().Select(category => category.Name));
-        Assert.False(setAside);
-        Assert.False(set.Changed);
+        AssertThat(set.Tree().Select(category => category.Name)).ContainsExactly("Keys", "Route");
+        AssertThat(setAside).IsFalse();
+        AssertThat(set.Changed).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Open_ImportsTheCurrentClientsFileWhenThereIsNoOwnFile()
     {
         var sdlClient = Path.Combine(folder, "sdl.dat");
@@ -157,22 +163,23 @@ public sealed class NoteStoreTests : IDisposable
 
         var (set, _) = NoteStore.Open(Path.Combine(folder, "own.dat"), sdlClient);
 
-        Assert.Equal(["Keys", "Route"], set.Tree().Select(category => category.Name));
+        AssertThat(set.Tree().Select(category => category.Name)).ContainsExactly("Keys", "Route");
     }
 
-    [Fact]
+    [TestCase]
     public void Open_StartsWithMyNotesWhenThereIsNothingToLoad()
     {
         var (set, setAside) = NoteStore.Open(Path.Combine(folder, "own.dat"), Path.Combine(folder, "sdl.dat"));
 
-        var category = Assert.Single(set.Categories);
-        Assert.Equal("My notes", category.Name);
-        Assert.Equal(1, category.ColourIndex);
-        Assert.False(set.Changed);
-        Assert.False(setAside);
+        AssertThat(set.Categories).HasSize(1);
+        var category = set.Categories[0];
+        AssertThat(category.Name).IsEqual("My notes");
+        AssertThat(category.ColourIndex).IsEqual(1);
+        AssertThat(set.Changed).IsFalse();
+        AssertThat(setAside).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Open_SetsADamagedOwnFileAsideReplacingAnOlderOne()
     {
         var own = Path.Combine(folder, "own.dat");
@@ -181,13 +188,14 @@ public sealed class NoteStoreTests : IDisposable
 
         var (set, setAside) = NoteStore.Open(own, Path.Combine(folder, "sdl.dat"));
 
-        Assert.True(setAside);
-        Assert.False(File.Exists(own));
-        Assert.Equal("garbage", File.ReadAllText(own + ".bad"));
-        Assert.Equal("My notes", Assert.Single(set.Categories).Name);
+        AssertThat(setAside).IsTrue();
+        AssertThat(File.Exists(own)).IsFalse();
+        AssertThat(File.ReadAllText(own + ".bad")).IsEqual("garbage");
+        AssertThat(set.Categories).HasSize(1);
+        AssertThat(set.Categories[0].Name).IsEqual("My notes");
     }
 
-    [Fact]
+    [TestCase]
     public void Open_NeverMovesTheCurrentClientsFile()
     {
         var sdlClient = Path.Combine(folder, "sdl.dat");
@@ -195,10 +203,11 @@ public sealed class NoteStoreTests : IDisposable
 
         var (set, setAside) = NoteStore.Open(Path.Combine(folder, "own.dat"), sdlClient);
 
-        Assert.False(setAside);
-        Assert.Equal("garbage", File.ReadAllText(sdlClient));
-        Assert.False(File.Exists(sdlClient + ".bad"));
-        Assert.Equal("My notes", Assert.Single(set.Categories).Name);
+        AssertThat(setAside).IsFalse();
+        AssertThat(File.ReadAllText(sdlClient)).IsEqual("garbage");
+        AssertThat(File.Exists(sdlClient + ".bad")).IsFalse();
+        AssertThat(set.Categories).HasSize(1);
+        AssertThat(set.Categories[0].Name).IsEqual("My notes");
     }
 
     private static NoteSet Sample()

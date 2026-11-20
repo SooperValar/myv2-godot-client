@@ -1,24 +1,34 @@
+using GdUnit4;
 using TheLastGate.Notes;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Notes;
 
+[TestSuite]
 public class NoteImportTests
 {
-    private readonly NoteSet imported = new();
-    private readonly NoteSet set = new();
+    private NoteSet imported = new();
+    private NoteSet set = new();
 
-    [Fact]
+    [BeforeTest]
+    public void StartWithNoNotes()
+    {
+        imported = new NoteSet();
+        set = new NoteSet();
+    }
+
+    [TestCase]
     public void Conflict_PrefersAnExactNameThenTheFirstIgnoringCase()
     {
         var lower = set.AddCategory("dungeons", 0);
         var upper = set.Attach(NoteCategory.Detached("Dungeons", 0, true, true, []), 0);
 
-        Assert.Equal(upper, NoteImport.Conflict(set, Incoming("Dungeons"), 0));
-        Assert.Equal(lower, NoteImport.Conflict(set, Incoming("DUNGEONS"), 0));
-        Assert.Equal(0, NoteImport.Conflict(set, Incoming("Keys"), 0));
+        AssertThat(NoteImport.Conflict(set, Incoming("Dungeons"), 0)).IsEqual(upper);
+        AssertThat(NoteImport.Conflict(set, Incoming("DUNGEONS"), 0)).IsEqual(lower);
+        AssertThat(NoteImport.Conflict(set, Incoming("Keys"), 0)).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Add_WithANewName_TakesTheWholeTreeAndItsSettings()
     {
         set.AddPoint(set.AddCategory("Dungeons", 1), NoteKind.Pin, 1, 1, "Home");
@@ -30,30 +40,32 @@ public class NoteImportTests
 
         var result = NoteImport.Add(set, imported, 0, "Friend Dungeons");
 
-        Assert.Equal(NoteImportStatus.Ok, result.Status);
-        Assert.Equal(4, set.Categories.Count);
+        AssertThat(result.Status).IsEqual(NoteImportStatus.Ok);
+        AssertThat(set.Categories.Count).IsEqual(4);
         var root = set.FindCategory(result.RootId)!;
-        Assert.Equal(("Friend Dungeons", 0, 4, false), (root.Name, root.ParentId, root.ColourIndex, root.ShowLabels));
-        Assert.Equal(["Cold Cavern", "Ice Lair"], Children(result.RootId));
+        AssertThat((root.Name, root.ParentId, root.ColourIndex, root.ShowLabels))
+            .IsEqual(("Friend Dungeons", 0, 4, false));
+        AssertThat(Children(result.RootId)).ContainsExactly("Cold Cavern", "Ice Lair");
         var cavern = Child(result.RootId, "Cold Cavern")!;
-        Assert.Equal(2, cavern.ColourIndex);
-        Assert.Equal(3, Assert.Single(cavern.Notes).TileX);
-        Assert.NotNull(Child(0, "Dungeons"));
+        AssertThat(cavern.ColourIndex).IsEqual(2);
+        AssertThat(cavern.Notes).HasSize(1);
+        AssertThat(cavern.Notes[0].TileX).IsEqual(3);
+        AssertThat(Child(0, "Dungeons")).IsNotNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Add_WithATakenName_ChangesNothing()
     {
         set.AddCategory("Dungeons", 1);
         var incomingRoot = imported.AddCategory("DUNGEONS", 4);
         imported.AddCategory("Cold Cavern", 2, incomingRoot);
 
-        Assert.Equal(NoteImportStatus.NameTaken, NoteImport.Add(set, imported, 0, null).Status);
-        Assert.Equal(NoteImportStatus.NameTaken, NoteImport.Add(set, imported, 0, "dungeons").Status);
-        Assert.Single(set.Categories);
+        AssertThat(NoteImport.Add(set, imported, 0, null).Status).IsEqual(NoteImportStatus.NameTaken);
+        AssertThat(NoteImport.Add(set, imported, 0, "dungeons").Status).IsEqual(NoteImportStatus.NameTaken);
+        AssertThat(set.Categories).HasSize(1);
     }
 
-    [Fact]
+    [TestCase]
     public void Add_GivesDuplicateSiblingsTheirOwnNames()
     {
         var incomingRoot = imported.AddCategory("Dungeons", 0);
@@ -62,11 +74,11 @@ public class NoteImportTests
 
         var result = NoteImport.Add(set, imported, 0, null);
 
-        Assert.Equal(NoteImportStatus.Ok, result.Status);
-        Assert.Equal(["Cold Cavern", "Cold Cavern (2)"], Children(result.RootId));
+        AssertThat(result.Status).IsEqual(NoteImportStatus.Ok);
+        AssertThat(Children(result.RootId)).ContainsExactly("Cold Cavern", "Cold Cavern (2)");
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_GivesDuplicateSiblingsWithNoMatchTheirOwnNames()
     {
         var localRoot = set.AddCategory("Dungeons", 0);
@@ -74,12 +86,12 @@ public class NoteImportTests
         imported.AddCategory("Cold Cavern", 0, incomingRoot);
         imported.Attach(NoteCategory.Detached("Cold Cavern", 0, true, true, []), incomingRoot);
 
-        Assert.Equal(NoteImportStatus.Ok, NoteImport.Merge(set, imported, localRoot).Status);
+        AssertThat(NoteImport.Merge(set, imported, localRoot).Status).IsEqual(NoteImportStatus.Ok);
 
-        Assert.Equal(["Cold Cavern", "Cold Cavern (2)"], Children(localRoot));
+        AssertThat(Children(localRoot)).ContainsExactly("Cold Cavern", "Cold Cavern (2)");
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_MatchesByNameAndKeepsTheLocalSettings()
     {
         var localRoot = set.AddCategory("Dungeons", 1);
@@ -92,25 +104,25 @@ public class NoteImportTests
         var incomingLair = imported.AddCategory("Ice Lair", 5, incomingRoot);
         imported.AddPoint(incomingLair, NoteKind.Pin, 30, 30, "Lair");
 
-        Assert.Equal(localRoot, NoteImport.Conflict(set, imported, 0));
+        AssertThat(NoteImport.Conflict(set, imported, 0)).IsEqual(localRoot);
         var result = NoteImport.Merge(set, imported, localRoot);
 
-        Assert.Equal(NoteImportStatus.Ok, result.Status);
-        Assert.Equal(localRoot, result.RootId);
-        Assert.Equal(3, set.Categories.Count);
-        Assert.Equal(1, set.FindCategory(localRoot)!.ColourIndex);
+        AssertThat(result.Status).IsEqual(NoteImportStatus.Ok);
+        AssertThat(result.RootId).IsEqual(localRoot);
+        AssertThat(set.Categories.Count).IsEqual(3);
+        AssertThat(set.FindCategory(localRoot)!.ColourIndex).IsEqual(1);
         var cavern = set.FindCategory(localCavern)!;
-        Assert.Equal(("Cold Cavern", false, 1), (cavern.Name, cavern.Visible, cavern.ColourIndex));
-        Assert.Equal([10, 20], cavern.Notes.Select(note => note.TileX));
-        Assert.Equal(old, cavern.Notes[0].Id);
-        Assert.NotEqual(cavern.Notes[0].Id, cavern.Notes[1].Id);
+        AssertThat((cavern.Name, cavern.Visible, cavern.ColourIndex)).IsEqual(("Cold Cavern", false, 1));
+        AssertThat(cavern.Notes.Select(note => note.TileX)).ContainsExactly(10, 20);
+        AssertThat(cavern.Notes[0].Id).IsEqual(old);
+        AssertThat(cavern.Notes[1].Id).IsNotEqual(cavern.Notes[0].Id);
         var lair = Child(localRoot, "Ice Lair")!;
-        Assert.Equal(5, lair.ColourIndex);
-        Assert.Single(lair.Notes);
-        Assert.True(set.Changed);
+        AssertThat(lair.ColourIndex).IsEqual(5);
+        AssertThat(lair.Notes).HasSize(1);
+        AssertThat(set.Changed).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_SkipsPinsWithTheSameLabelAndTile()
     {
         var localRoot = set.AddCategory("Dungeons", 1);
@@ -121,14 +133,14 @@ public class NoteImportTests
         imported.AddPoint(incomingRoot, NoteKind.Pin, 5, 5, "gate");
         imported.AddPoint(incomingRoot, NoteKind.Pin, 6, 5, "Gate");
 
-        Assert.Equal(NoteImportStatus.Ok, NoteImport.Merge(set, imported, localRoot).Status);
+        AssertThat(NoteImport.Merge(set, imported, localRoot).Status).IsEqual(NoteImportStatus.Ok);
 
         var notes = set.FindCategory(localRoot)!.Notes;
-        Assert.Equal(["Gate", "gate", "Gate"], notes.Select(note => note.Label));
-        Assert.Equal(6, notes[2].TileX);
+        AssertThat(notes.Select(note => note.Label)).ContainsExactly("Gate", "gate", "Gate");
+        AssertThat(notes[2].TileX).IsEqual(6);
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_KeepsRecolouredText()
     {
         var localRoot = set.AddCategory("Dungeons", 1);
@@ -139,10 +151,10 @@ public class NoteImportTests
 
         NoteImport.Merge(set, imported, localRoot);
 
-        Assert.Equal(2, set.FindCategory(localRoot)!.Notes.Count);
+        AssertThat(set.FindCategory(localRoot)!.Notes.Count).IsEqual(2);
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_ReachesEveryLevel()
     {
         var localRoot = set.AddCategory("Dungeons", 1);
@@ -156,15 +168,15 @@ public class NoteImportTests
         imported.AddPoint(incomingIce, NoteKind.Pin, 6, 6, "Door");
         imported.AddCategory("Lava", 4, incomingCaves);
 
-        Assert.Equal(NoteImportStatus.Ok, NoteImport.Merge(set, imported, localRoot).Status);
+        AssertThat(NoteImport.Merge(set, imported, localRoot).Status).IsEqual(NoteImportStatus.Ok);
 
-        Assert.Equal(4, set.Categories.Count);
-        Assert.Single(Children(localRoot));
-        Assert.Equal(["Ice", "Lava"], Children(localCaves));
-        Assert.Equal(["Gate", "Door"], set.FindCategory(localIce)!.Notes.Select(note => note.Label));
+        AssertThat(set.Categories.Count).IsEqual(4);
+        AssertThat(Children(localRoot)).HasSize(1);
+        AssertThat(Children(localCaves)).ContainsExactly("Ice", "Lava");
+        AssertThat(set.FindCategory(localIce)!.Notes.Select(note => note.Label)).ContainsExactly("Gate", "Door");
     }
 
-    [Fact]
+    [TestCase]
     public void Add_UnderACategory_NestsTheImport()
     {
         var shared = set.AddCategory("Shared", 0);
@@ -173,18 +185,18 @@ public class NoteImportTests
         var incomingRoot = imported.AddCategory("Bosses", 2);
         imported.AddCategory("Dragon", 2, incomingRoot);
 
-        Assert.Equal(0, NoteImport.Conflict(set, imported, shared));
+        AssertThat(NoteImport.Conflict(set, imported, shared)).IsEqual(0);
         var result = NoteImport.Add(set, imported, shared, null);
 
-        Assert.Equal(NoteImportStatus.Ok, result.Status);
+        AssertThat(result.Status).IsEqual(NoteImportStatus.Ok);
         var bosses = set.FindCategory(result.RootId)!;
-        Assert.Equal((shared, "Bosses"), (bosses.ParentId, bosses.Name));
-        Assert.Equal(["Dragon"], Children(result.RootId));
-        Assert.Equal(2, Children(shared).Count);
-        Assert.Equal(2, Children(0).Count);
+        AssertThat((bosses.ParentId, bosses.Name)).IsEqual((shared, "Bosses"));
+        AssertThat(Children(result.RootId)).ContainsExactly("Dragon");
+        AssertThat(Children(shared).Count).IsEqual(2);
+        AssertThat(Children(0).Count).IsEqual(2);
     }
 
-    [Fact]
+    [TestCase]
     public void Add_UnderACategory_ChecksTheNamesThere()
     {
         var shared = set.AddCategory("Shared", 0);
@@ -192,15 +204,15 @@ public class NoteImportTests
         var incomingRoot = imported.AddCategory("BOSSES", 2);
         imported.AddCategory("Dragon", 2, incomingRoot);
 
-        Assert.Equal(existingBosses, NoteImport.Conflict(set, imported, shared));
-        Assert.Equal(0, NoteImport.Conflict(set, imported, 0));
-        Assert.Equal(NoteImportStatus.NameTaken, NoteImport.Add(set, imported, shared, null).Status);
-        Assert.Equal(2, set.Categories.Count);
-        Assert.Equal(NoteImportStatus.Ok, NoteImport.Add(set, imported, shared, "Their Bosses").Status);
-        Assert.Equal(2, Children(shared).Count);
+        AssertThat(NoteImport.Conflict(set, imported, shared)).IsEqual(existingBosses);
+        AssertThat(NoteImport.Conflict(set, imported, 0)).IsEqual(0);
+        AssertThat(NoteImport.Add(set, imported, shared, null).Status).IsEqual(NoteImportStatus.NameTaken);
+        AssertThat(set.Categories.Count).IsEqual(2);
+        AssertThat(NoteImport.Add(set, imported, shared, "Their Bosses").Status).IsEqual(NoteImportStatus.Ok);
+        AssertThat(Children(shared).Count).IsEqual(2);
     }
 
-    [Fact]
+    [TestCase]
     public void Add_UnderTheDeepestCategory_ChangesNothing()
     {
         var parent = 0;
@@ -211,11 +223,11 @@ public class NoteImportTests
 
         imported.AddCategory("Bosses", 2);
 
-        Assert.Equal(NoteImportStatus.TooDeep, NoteImport.Add(set, imported, parent, null).Status);
-        Assert.Equal(NoteLimits.Depth, set.Categories.Count);
+        AssertThat(NoteImport.Add(set, imported, parent, null).Status).IsEqual(NoteImportStatus.TooDeep);
+        AssertThat(set.Categories.Count).IsEqual(NoteLimits.Depth);
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_OverTheNoteLimit_ChangesNothing()
     {
         var localRoot = set.AddCategory("Dungeons", 1);
@@ -233,13 +245,13 @@ public class NoteImportTests
 
         var result = NoteImport.Merge(set, imported, localRoot);
 
-        Assert.Equal(NoteImportStatus.CategoryFull, result.Status);
-        Assert.Equal("Cold Cavern", result.CategoryName);
-        Assert.Equal(2, set.Categories.Count);
-        Assert.Equal(NoteLimits.NotesPerCategory - 1, set.FindCategory(localCavern)!.Notes.Count);
+        AssertThat(result.Status).IsEqual(NoteImportStatus.CategoryFull);
+        AssertThat(result.CategoryName).IsEqual("Cold Cavern");
+        AssertThat(set.Categories.Count).IsEqual(2);
+        AssertThat(set.FindCategory(localCavern)!.Notes.Count).IsEqual(NoteLimits.NotesPerCategory - 1);
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_CountsEveryMatchAgainstTheLimit()
     {
         var localRoot = set.AddCategory("Dungeons", 1);
@@ -257,12 +269,12 @@ public class NoteImportTests
 
         var result = NoteImport.Merge(set, imported, localRoot);
 
-        Assert.Equal(NoteImportStatus.CategoryFull, result.Status);
-        Assert.Equal("Cold Cavern", result.CategoryName);
-        Assert.Equal(NoteLimits.NotesPerCategory - 1, set.FindCategory(localCavern)!.Notes.Count);
+        AssertThat(result.Status).IsEqual(NoteImportStatus.CategoryFull);
+        AssertThat(result.CategoryName).IsEqual("Cold Cavern");
+        AssertThat(set.FindCategory(localCavern)!.Notes.Count).IsEqual(NoteLimits.NotesPerCategory - 1);
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_DeeperThanEightLevels_ChangesNothing()
     {
         var parent = 0;
@@ -274,16 +286,16 @@ public class NoteImportTests
         var deepRoot = imported.AddCategory("Level", 0);
         imported.AddCategory("Inner", 0, imported.AddCategory("Outer", 0, deepRoot));
 
-        Assert.Equal(NoteImportStatus.TooDeep, NoteImport.Merge(set, imported, parent).Status);
-        Assert.Equal(7, set.Categories.Count);
+        AssertThat(NoteImport.Merge(set, imported, parent).Status).IsEqual(NoteImportStatus.TooDeep);
+        AssertThat(set.Categories.Count).IsEqual(7);
 
         var shallow = new NoteSet();
         shallow.AddCategory("Outer", 0, shallow.AddCategory("Level", 0));
-        Assert.Equal(NoteImportStatus.Ok, NoteImport.Merge(set, shallow, parent).Status);
-        Assert.Equal(8, set.Categories.Count);
+        AssertThat(NoteImport.Merge(set, shallow, parent).Status).IsEqual(NoteImportStatus.Ok);
+        AssertThat(set.Categories.Count).IsEqual(8);
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_OverTheCategoryLimit_ChangesNothing()
     {
         var localRoot = set.AddCategory("Dungeons", 0);
@@ -296,30 +308,27 @@ public class NoteImportTests
         imported.AddCategory("New A", 0, incomingRoot);
         imported.AddCategory("New B", 0, incomingRoot);
 
-        Assert.Equal(NoteImportStatus.TooManyCategories, NoteImport.Merge(set, imported, localRoot).Status);
-        Assert.Equal(NoteLimits.Categories - 1, set.Categories.Count);
+        AssertThat(NoteImport.Merge(set, imported, localRoot).Status).IsEqual(NoteImportStatus.TooManyCategories);
+        AssertThat(set.Categories.Count).IsEqual(NoteLimits.Categories - 1);
     }
 
-    [Theory]
-    [InlineData(NoteImportStatus.NameTaken, "", "That name is already taken.")]
-    [InlineData(NoteImportStatus.TooManyCategories, "", "Import would go over the 256 category limit.")]
-    [InlineData(NoteImportStatus.TooDeep, "", "Import would nest categories more than 8 deep.")]
-    [InlineData(NoteImportStatus.CategoryFull, "Cold Cavern", "Import would overfill \"Cold Cavern\".")]
-    [InlineData(NoteImportStatus.Failed, "", "Import failed.")]
+    [TestCase(NoteImportStatus.NameTaken, "", "That name is already taken.")]
+    [TestCase(NoteImportStatus.TooManyCategories, "", "Import would go over the 256 category limit.")]
+    [TestCase(NoteImportStatus.TooDeep, "", "Import would nest categories more than 8 deep.")]
+    [TestCase(NoteImportStatus.CategoryFull, "Cold Cavern", "Import would overfill \"Cold Cavern\".")]
+    [TestCase(NoteImportStatus.Failed, "", "Import failed.")]
     public void Problem_UsesTheCurrentClientsWords(NoteImportStatus status, string categoryName, string message)
     {
-        Assert.Equal(message, NoteImport.Problem(new NoteImportResult(status, 0, categoryName)));
+        AssertThat(NoteImport.Problem(new NoteImportResult(status, 0, categoryName))).IsEqual(message);
     }
 
-    [Fact]
+    [TestCase]
     public void ConflictMessages_NameTheCategories()
     {
-        Assert.Equal(
-            "You already have a category called \"Bosses\".",
-            NoteImport.ConflictMessage(null, "Bosses"));
-        Assert.Equal(
-            "\"Shared\" already has a category called \"Bosses\".",
-            NoteImport.ConflictMessage("Shared", "Bosses"));
+        AssertThat(NoteImport.ConflictMessage(null, "Bosses"))
+            .IsEqual("You already have a category called \"Bosses\".");
+        AssertThat(NoteImport.ConflictMessage("Shared", "Bosses"))
+            .IsEqual("\"Shared\" already has a category called \"Bosses\".");
     }
 
     private static NoteSet Incoming(string name)

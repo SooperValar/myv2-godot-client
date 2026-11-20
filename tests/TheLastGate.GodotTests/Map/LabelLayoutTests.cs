@@ -1,7 +1,10 @@
+using GdUnit4;
 using TheLastGate.Map;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Map;
 
+[TestSuite]
 public class LabelLayoutTests
 {
     private const float Anchor = 100;
@@ -9,18 +12,18 @@ public class LabelLayoutTests
     private const float Width = 40;
     private const float Height = 10;
 
-    [Fact]
+    [TestCase]
     public void PlaceBeside_PutsALabelInFreeSpaceToTheRight()
     {
         var layout = new LabelLayout();
 
         var placed = layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height);
 
-        Assert.Equal(new LabelRect(108, 95, 148, 105), placed);
-        Assert.Equal(1, layout.Count);
+        AssertThat(placed).IsEqual(new LabelRect(108, 95, 148, 105));
+        AssertThat(layout.Count).IsEqual(1);
     }
 
-    [Fact]
+    [TestCase]
     public void PlaceBeside_FallsBackToTheLeftWhenTheRightIsTaken()
     {
         var layout = new LabelLayout();
@@ -28,11 +31,11 @@ public class LabelLayoutTests
 
         var placed = layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height);
 
-        Assert.Equal(92, placed?.Right);
-        Assert.Equal(95, placed?.Top);
+        AssertThat(placed?.Right).IsEqual(92);
+        AssertThat(placed?.Top).IsEqual(95);
     }
 
-    [Fact]
+    [TestCase]
     public void PlaceBeside_KeepsASecondLabelAtTheSameAnchorOffTheFirst()
     {
         var layout = new LabelLayout();
@@ -40,29 +43,29 @@ public class LabelLayoutTests
         var first = layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height)!.Value;
         var second = layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height)!.Value;
 
-        Assert.False(first.Overlaps(second));
+        AssertThat(first.Overlaps(second)).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void PlaceBeside_GivesUpWhenEverySpotIsTaken()
     {
         var layout = new LabelLayout();
         layout.Reserve(new LabelRect(0, 0, 300, 300));
 
-        Assert.Null(layout.PlaceBeside(150, 150, Clearance, Width, Height));
-        Assert.Equal(1, layout.Count);
+        AssertThat(layout.PlaceBeside(150, 150, Clearance, Width, Height)).IsNull();
+        AssertThat(layout.Count).IsEqual(1);
     }
 
-    [Fact]
+    [TestCase]
     public void PlaceBeside_TreatsTouchingEdgesAsFree()
     {
         var layout = new LabelLayout();
         layout.Reserve(new LabelRect(148, 0, 200, 200));
 
-        Assert.Equal(108, layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height)?.Left);
+        AssertThat(layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height)?.Left).IsEqual(108);
     }
 
-    [Fact]
+    [TestCase]
     public void PlaceBeside_FindsSixSpotsThatAllClearAPinMarker()
     {
         var layout = new LabelLayout();
@@ -70,18 +73,18 @@ public class LabelLayoutTests
 
         for (var attempt = 0; attempt < 6; attempt++)
         {
-            Assert.NotNull(layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height));
+            AssertThat(layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height)).IsNotNull();
         }
     }
 
-    [Fact]
+    [TestCase]
     public void AFullLayout_RefusesMoreWithoutStoringThem()
     {
         var layout = new LabelLayout(1);
 
-        Assert.True(layout.Reserve(new LabelRect(0, 0, 1, 1)));
-        Assert.False(layout.Reserve(new LabelRect(5, 5, 6, 6)));
-        Assert.Null(layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height));
-        Assert.Equal(1, layout.Count);
+        AssertThat(layout.Reserve(new LabelRect(0, 0, 1, 1))).IsTrue();
+        AssertThat(layout.Reserve(new LabelRect(5, 5, 6, 6))).IsFalse();
+        AssertThat(layout.PlaceBeside(Anchor, Anchor, Clearance, Width, Height)).IsNull();
+        AssertThat(layout.Count).IsEqual(1);
     }
 }

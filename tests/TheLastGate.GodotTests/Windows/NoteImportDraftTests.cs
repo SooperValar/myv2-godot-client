@@ -1,85 +1,91 @@
+using GdUnit4;
 using TheLastGate.Notes;
 using TheLastGate.Windows;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Windows;
 
+[TestSuite]
 public class NoteImportDraftTests
 {
-    private readonly NoteSet notes = new();
+    private NoteSet notes = new();
 
-    [Fact]
+    [BeforeTest]
+    public void StartWithNoNotes() => notes = new NoteSet();
+
+    [TestCase]
     public void AClipboardCode_IsPastedInReadyToAdd()
     {
         var code = CampsCode();
 
         var draft = new NoteImportDraft(notes, 0, "  \r\n" + code);
 
-        Assert.Equal(code, draft.Text);
-        Assert.Equal("Camps: 1 category, 1 pins, 0 labels, 0 paths", draft.Preview);
-        Assert.True(draft.IsReady);
-        Assert.False(draft.HasConflict);
+        AssertThat(draft.Text).IsEqual(code);
+        AssertThat(draft.Preview).IsEqual("Camps: 1 category, 1 pins, 0 labels, 0 paths");
+        AssertThat(draft.IsReady).IsTrue();
+        AssertThat(draft.HasConflict).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void AClipboardWithNoCode_LeavesTheBoxEmpty()
     {
         var draft = new NoteImportDraft(notes, 0, "hello");
 
-        Assert.Equal("", draft.Text);
-        Assert.Equal("", draft.Preview);
-        Assert.False(draft.IsReady);
+        AssertThat(draft.Text).IsEqual("");
+        AssertThat(draft.Preview).IsEqual("");
+        AssertThat(draft.IsReady).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void ChangeText_SaysWhatIsWrongWithTheCode()
     {
         var draft = new NoteImportDraft(notes, 0, "");
 
         draft.ChangeText("hello");
 
-        Assert.Equal("That is not a world map code.", draft.Preview);
-        Assert.False(draft.IsReady);
+        AssertThat(draft.Preview).IsEqual("That is not a world map code.");
+        AssertThat(draft.IsReady).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Add_PutsTheCategoryInTheNotes()
     {
         var draft = new NoteImportDraft(notes, 0, CampsCode());
 
         var result = draft.Add();
 
-        Assert.Equal(NoteImportStatus.Ok, result?.Status);
+        AssertThat(result?.Status).IsEqual(NoteImportStatus.Ok);
         var camps = notes.FindCategory(result!.RootId)!;
-        Assert.Equal("Camps", camps.Name);
-        Assert.Single(camps.Notes);
+        AssertThat(camps.Name).IsEqual("Camps");
+        AssertThat(camps.Notes).HasSize(1);
     }
 
-    [Fact]
+    [TestCase]
     public void ACategoryOfTheSameName_IsAConflict()
     {
         notes.AddCategory("camps", 0);
 
         var draft = new NoteImportDraft(notes, 0, CampsCode());
 
-        Assert.True(draft.HasConflict);
-        Assert.Equal("You already have a category called \"Camps\".", draft.ConflictMessage);
-        Assert.Equal("Camps", draft.RootName);
-        Assert.False(draft.CanAddAsNew);
+        AssertThat(draft.HasConflict).IsTrue();
+        AssertThat(draft.ConflictMessage).IsEqual("You already have a category called \"Camps\".");
+        AssertThat(draft.RootName).IsEqual("Camps");
+        AssertThat(draft.CanAddAsNew).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void AddAsNew_UsesTheNewName()
     {
         notes.AddCategory("Camps", 0);
         var draft = new NoteImportDraft(notes, 0, CampsCode()) { RootName = "Camps 2" };
 
-        Assert.True(draft.CanAddAsNew);
+        AssertThat(draft.CanAddAsNew).IsTrue();
         var result = draft.AddAsNew();
 
-        Assert.Equal("Camps 2", notes.FindCategory(result!.RootId)!.Name);
+        AssertThat(notes.FindCategory(result!.RootId)!.Name).IsEqual("Camps 2");
     }
 
-    [Fact]
+    [TestCase]
     public void Merge_AddsTheNotesToTheCategoryAlreadyThere()
     {
         var camps = notes.AddCategory("Camps", 0);
@@ -87,11 +93,11 @@ public class NoteImportDraftTests
 
         var result = draft.Merge();
 
-        Assert.Equal(camps, result!.RootId);
-        Assert.Single(notes.FindCategory(camps)!.Notes);
+        AssertThat(result!.RootId).IsEqual(camps);
+        AssertThat(notes.FindCategory(camps)!.Notes).HasSize(1);
     }
 
-    [Fact]
+    [TestCase]
     public void ImportingIntoACategory_NamesIt()
     {
         var shared = notes.AddCategory("Shared", 0);
@@ -99,11 +105,11 @@ public class NoteImportDraftTests
 
         var draft = new NoteImportDraft(notes, shared, CampsCode());
 
-        Assert.Equal("Shared", draft.DestinationName);
-        Assert.Equal("\"Shared\" already has a category called \"Camps\".", draft.ConflictMessage);
+        AssertThat(draft.DestinationName).IsEqual("Shared");
+        AssertThat(draft.ConflictMessage).IsEqual("\"Shared\" already has a category called \"Camps\".");
     }
 
-    [Fact]
+    [TestCase]
     public void DestinationGone_WhenTheCategoryToImportIntoIsDeleted()
     {
         var shared = notes.AddCategory("Shared", 0);
@@ -111,10 +117,10 @@ public class NoteImportDraftTests
 
         notes.RemoveCategory(shared);
 
-        Assert.True(draft.DestinationGone);
+        AssertThat(draft.DestinationGone).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void AnImportThatFails_SaysWhy()
     {
         var parent = 0;
@@ -127,16 +133,16 @@ public class NoteImportDraftTests
 
         var result = draft.Add();
 
-        Assert.Equal(NoteImportStatus.TooDeep, result?.Status);
-        Assert.Equal(NoteImport.Problem(result!), draft.Error);
+        AssertThat(result?.Status).IsEqual(NoteImportStatus.TooDeep);
+        AssertThat(draft.Error).IsEqual(NoteImport.Problem(result!));
     }
 
-    [Fact]
+    [TestCase]
     public void Add_IsNotPossibleWithoutACode()
     {
         var draft = new NoteImportDraft(notes, 0, "");
 
-        Assert.Null(draft.Add());
+        AssertThat(draft.Add()).IsNull();
     }
 
     private static string CampsCode()

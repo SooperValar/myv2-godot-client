@@ -1,8 +1,11 @@
+using GdUnit4;
 using TheLastGate.Map;
 using TheLastGate.Notes;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Map;
 
+[TestSuite]
 public class MinimapOverlayTests
 {
     private const int Size = MinimapView.Pixels;
@@ -15,10 +18,36 @@ public class MinimapOverlayTests
         new(200, 2047, 600, 0), new(400, 420, 400, 420), new(0, 2047, 2047, 0), new(1500, 470, 0, 431),
     ];
 
-    private readonly NoteSet notes = new() { ShowOnMinimap = true };
-    private readonly byte[] rgba = new byte[Size * Size * BytesPerPixel];
+    private NoteSet notes = new();
+    private byte[] rgba = [];
 
-    [Fact]
+    public static IEnumerable<object[]> ClippedSegments
+    {
+        get
+        {
+            int[][] origins = [[0, 0], [330, 400], [390, 410], [1900, 1900]];
+            int[] magnifications = [1, 2, 3, 5];
+            for (var segmentIndex = 0; segmentIndex < Segments.Length; segmentIndex++)
+            {
+                foreach (var origin in origins)
+                {
+                    foreach (var magnification in magnifications)
+                    {
+                        yield return [segmentIndex, origin[0], origin[1], magnification];
+                    }
+                }
+            }
+        }
+    }
+
+    [BeforeTest]
+    public void StartWithAnEmptyMinimap()
+    {
+        notes = new NoteSet { ShowOnMinimap = true };
+        rgba = new byte[Size * Size * BytesPerPixel];
+    }
+
+    [TestCase]
     public void Paint_DrawsNothingUnlessNotesAreShownOnTheMinimap()
     {
         notes.AddPoint(notes.AddCategory("Pins", 0), NoteKind.Pin, 10, 20, "pin");
@@ -26,10 +55,10 @@ public class MinimapOverlayTests
 
         MinimapOverlay.Paint(notes, rgba, 0, 0, 1);
 
-        Assert.Equal(0, CountPainted());
+        AssertThat(CountPainted()).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_DrawsAPinAsAFiveByFiveDiamond()
     {
         notes.AddPoint(notes.AddCategory("Pins", 0), NoteKind.Pin, 10, 20, "pin");
@@ -40,14 +69,14 @@ public class MinimapOverlayTests
         {
             for (var offsetY = -2; offsetY <= 2; offsetY++)
             {
-                Assert.Equal(Math.Abs(offsetX) + Math.Abs(offsetY) <= 2, IsPainted(10 + offsetX, 20 + offsetY));
+                AssertThat(IsPainted(10 + offsetX, 20 + offsetY)).IsEqual(Math.Abs(offsetX) + Math.Abs(offsetY) <= 2);
             }
         }
 
-        Assert.Equal(13, CountPainted());
+        AssertThat(CountPainted()).IsEqual(13);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_DrawsAMagnifiedSegmentOneDottedPixelWide()
     {
         notes.AddPath(notes.AddCategory("Paths", 0), [new PathSegment(0, 0, 0, 3)], "path");
@@ -56,13 +85,13 @@ public class MinimapOverlayTests
 
         for (var column = 1; column <= 7; column++)
         {
-            Assert.Equal(column % 2 == 1, IsPainted(1, column));
+            AssertThat(IsPainted(1, column)).IsEqual(column % 2 == 1);
         }
 
-        Assert.Equal(4, CountPainted());
+        AssertThat(CountPainted()).IsEqual(4);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_SkipsHiddenCategoriesAndText()
     {
         var shown = notes.AddCategory("Shown", 0);
@@ -73,10 +102,10 @@ public class MinimapOverlayTests
 
         MinimapOverlay.Paint(notes, rgba, 0, 0, 1);
 
-        Assert.Equal(0, CountPainted());
+        AssertThat(CountPainted()).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_SkipsTheChildOfAHiddenCategory()
     {
         var parent = notes.AddCategory("Parent", 0);
@@ -86,11 +115,11 @@ public class MinimapOverlayTests
 
         MinimapOverlay.Paint(notes, rgba, 0, 0, 1);
 
-        Assert.Equal(0, CountPainted());
-        Assert.Null(MinimapOverlay.PinAt(notes, 0, 0, 1, 10, 20));
+        AssertThat(CountPainted()).IsEqual(0);
+        AssertThat(MinimapOverlay.PinAt(notes, 0, 0, 1, 10, 20)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_ClipsToTheMinimap()
     {
         var category = notes.AddCategory("Pins", 0);
@@ -100,52 +129,52 @@ public class MinimapOverlayTests
 
         MinimapOverlay.Paint(notes, rgba, 0, 0, 1);
 
-        Assert.True(IsPainted(126, 126));
-        Assert.False(IsPainted(127, 127));
+        AssertThat(IsPainted(126, 126)).IsTrue();
+        AssertThat(IsPainted(127, 127)).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_DrawsOnlyTheVisiblePartOfALongRow()
     {
-        Assert.True(PaintMatchesReference(new PathSegment(10, 0, 10, 2000), 0, 0, 1));
+        AssertThat(PaintMatchesReference(new PathSegment(10, 0, 10, 2000), 0, 0, 1)).IsTrue();
         for (var column = 0; column < Size; column++)
         {
-            Assert.Equal(column % 2 == 0, IsPainted(10, column));
+            AssertThat(IsPainted(10, column)).IsEqual(column % 2 == 0);
         }
 
-        Assert.Equal(Size / 2, CountPainted());
+        AssertThat(CountPainted()).IsEqual(Size / 2);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_DrawsOnlyTheVisiblePartOfALongColumn()
     {
-        Assert.True(PaintMatchesReference(new PathSegment(0, 10, 2000, 10), 0, 0, 1));
+        AssertThat(PaintMatchesReference(new PathSegment(0, 10, 2000, 10), 0, 0, 1)).IsTrue();
         for (var row = 0; row < Size; row++)
         {
-            Assert.Equal(row % 2 == 0, IsPainted(row, 10));
+            AssertThat(IsPainted(row, 10)).IsEqual(row % 2 == 0);
         }
 
-        Assert.Equal(Size / 2, CountPainted());
+        AssertThat(CountPainted()).IsEqual(Size / 2);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_DrawsNothingForSegmentsOutsideTheMinimap()
     {
-        Assert.True(PaintMatchesReference(new PathSegment(500, 0, 500, 2000), 0, 0, 1));
-        Assert.Equal(0, CountPainted());
-        Assert.True(PaintMatchesReference(new PathSegment(0, 0, 40, 40), 300, 300, 1));
-        Assert.Equal(0, CountPainted());
+        AssertThat(PaintMatchesReference(new PathSegment(500, 0, 500, 2000), 0, 0, 1)).IsTrue();
+        AssertThat(CountPainted()).IsEqual(0);
+        AssertThat(PaintMatchesReference(new PathSegment(0, 0, 40, 40), 300, 300, 1)).IsTrue();
+        AssertThat(CountPainted()).IsEqual(0);
     }
 
     // Clipping must not move a single dot: each clipped segment matches a full walk from its start.
-    [Theory]
-    [MemberData(nameof(ClippedSegments))]
+    [TestCase]
+    [DataPoint(nameof(ClippedSegments))]
     public void Paint_ClipsSegmentsWithoutMovingTheirDots(int segmentIndex, int originX, int originY, int magnification)
     {
-        Assert.True(PaintMatchesReference(Segments[segmentIndex], originX, originY, magnification));
+        AssertThat(PaintMatchesReference(Segments[segmentIndex], originX, originY, magnification)).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_DrawsNothingForAFloodOfSegmentsOffTheMinimap()
     {
         var segments = Enumerable.Range(0, NoteLimits.SegmentsPerPath)
@@ -162,10 +191,10 @@ public class MinimapOverlayTests
 
         MinimapOverlay.Paint(notes, rgba, 0, 0, 1);
 
-        Assert.Equal(0, CountPainted());
+        AssertThat(CountPainted()).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Paint_UsesANotesOwnColour()
     {
         var pin = notes.AddPoint(notes.AddCategory("Pins", 0), NoteKind.Pin, 10, 20, "pin");
@@ -174,24 +203,23 @@ public class MinimapOverlayTests
         MinimapOverlay.Paint(notes, rgba, 0, 0, 1);
 
         var colour = NotePalette.Rgb(2);
-        Assert.Equal(
-            new byte[] { (byte)(colour >> 16), (byte)(colour >> 8), (byte)colour, 255 },
-            rgba.AsSpan((10 * Size + 20) * BytesPerPixel, BytesPerPixel).ToArray());
+        AssertThat(rgba.AsSpan((10 * Size + 20) * BytesPerPixel, BytesPerPixel).ToArray())
+            .ContainsExactly((byte)(colour >> 16), (byte)(colour >> 8), (byte)colour, (byte)255);
     }
 
-    [Fact]
+    [TestCase]
     public void PinAt_FindsAPinWithinThreePixelsOfTheCursor()
     {
         notes.AddPoint(notes.AddCategory("Pins", 0), NoteKind.Pin, 10, 20, "key");
 
-        Assert.Equal("key", MinimapOverlay.PinAt(notes, 0, 0, 1, 11, 22)?.Label);
-        Assert.Null(MinimapOverlay.PinAt(notes, 0, 0, 1, 14, 20));
-        Assert.Equal("key", MinimapOverlay.PinAt(notes, 5, 10, 2, 11, 21)?.Label);
-        Assert.Equal("key", MinimapOverlay.PinAt(notes, 5, 10, 2, 10, 20)?.Label);
-        Assert.Null(MinimapOverlay.PinAt(notes, 5, 10, 2, 16, 21));
+        AssertThat(MinimapOverlay.PinAt(notes, 0, 0, 1, 11, 22)?.Label).IsEqual("key");
+        AssertThat(MinimapOverlay.PinAt(notes, 0, 0, 1, 14, 20)).IsNull();
+        AssertThat(MinimapOverlay.PinAt(notes, 5, 10, 2, 11, 21)?.Label).IsEqual("key");
+        AssertThat(MinimapOverlay.PinAt(notes, 5, 10, 2, 10, 20)?.Label).IsEqual("key");
+        AssertThat(MinimapOverlay.PinAt(notes, 5, 10, 2, 16, 21)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void PinAt_PicksTheNearestShownPin()
     {
         var shown = notes.AddCategory("Shown", 0);
@@ -202,30 +230,12 @@ public class MinimapOverlayTests
         notes.AddPoint(hidden, NoteKind.Pin, 10, 22, "hidden");
         notes.FindCategory(hidden)!.Visible = false;
 
-        Assert.Equal("near", MinimapOverlay.PinAt(notes, 0, 0, 1, 10, 22)?.Label);
+        AssertThat(MinimapOverlay.PinAt(notes, 0, 0, 1, 10, 22)?.Label).IsEqual("near");
 
         notes.ShowOnMinimap = false;
-        Assert.Null(MinimapOverlay.PinAt(notes, 0, 0, 1, 10, 22));
+        AssertThat(MinimapOverlay.PinAt(notes, 0, 0, 1, 10, 22)).IsNull();
     }
 
-    public static TheoryData<int, int, int, int> ClippedSegments()
-    {
-        var cases = new TheoryData<int, int, int, int>();
-        int[][] origins = [[0, 0], [330, 400], [390, 410], [1900, 1900]];
-        int[] magnifications = [1, 2, 3, 5];
-        for (var segmentIndex = 0; segmentIndex < Segments.Length; segmentIndex++)
-        {
-            foreach (var origin in origins)
-            {
-                foreach (var magnification in magnifications)
-                {
-                    cases.Add(segmentIndex, origin[0], origin[1], magnification);
-                }
-            }
-        }
-
-        return cases;
-    }
 
     private bool PaintMatchesReference(PathSegment segment, int originX, int originY, int magnification)
     {

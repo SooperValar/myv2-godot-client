@@ -1,77 +1,83 @@
 using System.Buffers.Binary;
 using System.IO.Compression;
+using GdUnit4;
 using TheLastGate.Map;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Map;
 
-public sealed class ExploredMapTests : IDisposable
+[TestSuite]
+public sealed class ExploredMapTests
 {
     private const int Width = 64;
     private const int Height = 32;
     private const int HeaderSize = 20;
 
-    private readonly string folder = Directory.CreateTempSubdirectory("explored-map-").FullName;
+    private string folder = "";
 
-    public void Dispose() => Directory.Delete(folder, true);
+    [BeforeTest]
+    public void MakeAFolder() => folder = Directory.CreateTempSubdirectory("explored-map-").FullName;
 
-    [Fact]
+    [AfterTest]
+    public void DeleteTheFolder() => Directory.Delete(folder, true);
+
+    [TestCase]
     public void ANewMap_IsTheCurrentClientsSizeAndUnexplored()
     {
         var map = new ExploredMap();
 
-        Assert.Equal(2048, map.Width);
-        Assert.Equal(2048, map.Height);
-        Assert.Equal(0u, map.ColourAt(1000, 1000));
-        Assert.False(map.Changed);
+        AssertThat(map.Width).IsEqual(2048);
+        AssertThat(map.Height).IsEqual(2048);
+        AssertThat(map.ColourAt(1000, 1000)).IsEqual(0u);
+        AssertThat(map.Changed).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void SetTile_MarksTheMapChangedOnlyWhenTheColourDiffers()
     {
         var map = new ExploredMap(Width, Height);
 
         map.SetTile(3, 4, 0x1234);
-        Assert.Equal(0x1234u, map.ColourAt(3, 4));
-        Assert.True(map.Changed);
+        AssertThat(map.ColourAt(3, 4)).IsEqual(0x1234u);
+        AssertThat(map.Changed).IsTrue();
 
         map.MarkSaved();
         map.SetTile(3, 4, 0x1234);
-        Assert.False(map.Changed);
+        AssertThat(map.Changed).IsFalse();
 
         map.SetTile(3, 4, 0x4321);
-        Assert.Equal(0x4321u, map.ColourAt(3, 4));
-        Assert.True(map.Changed);
+        AssertThat(map.ColourAt(3, 4)).IsEqual(0x4321u);
+        AssertThat(map.Changed).IsTrue();
     }
 
-    [Theory]
-    [InlineData(-1, 0)]
-    [InlineData(Width, 0)]
-    [InlineData(0, Height)]
+    [TestCase(-1, 0)]
+    [TestCase(Width, 0)]
+    [TestCase(0, Height)]
     public void SetTile_IgnoresTilesOffTheMap(int tileX, int tileY)
     {
         var map = new ExploredMap(Width, Height);
 
         map.SetTile(tileX, tileY, 0x1111);
 
-        Assert.False(map.Changed);
-        Assert.Equal(0, map.Revision);
+        AssertThat(map.Changed).IsFalse();
+        AssertThat(map.Revision).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Revision_CountsEveryChangeAndEveryLoad()
     {
         var map = new ExploredMap(Width, Height);
 
         map.SetTile(1, 1, 0x0101);
-        Assert.Equal(1, map.Revision);
+        AssertThat(map.Revision).IsEqual(1);
         map.SetTile(1, 1, 0x0101);
-        Assert.Equal(1, map.Revision);
+        AssertThat(map.Revision).IsEqual(1);
 
         map.Load([]);
-        Assert.Equal(2, map.Revision);
+        AssertThat(map.Revision).IsEqual(2);
     }
 
-    [Fact]
+    [TestCase]
     public void ClearBox_WipesOnlyTheBox()
     {
         var map = new ExploredMap(Width, Height);
@@ -82,13 +88,13 @@ public sealed class ExploredMapTests : IDisposable
 
         map.ClearBox(1, 1, 2, 2);
 
-        Assert.Equal(0u, map.ColourAt(1, 1));
-        Assert.Equal(0u, map.ColourAt(2, 2));
-        Assert.Equal(0x0505u, map.ColourAt(5, 5));
-        Assert.True(map.Changed);
+        AssertThat(map.ColourAt(1, 1)).IsEqual(0u);
+        AssertThat(map.ColourAt(2, 2)).IsEqual(0u);
+        AssertThat(map.ColourAt(5, 5)).IsEqual(0x0505u);
+        AssertThat(map.Changed).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void ClearBox_StaysInsideTheMap()
     {
         var map = new ExploredMap(Width, Height);
@@ -97,20 +103,20 @@ public sealed class ExploredMapTests : IDisposable
         map.ClearBox(Width - 1, Height - 1, 1000, 1000);
         map.ClearBox(-10, -10, 5, 5);
 
-        Assert.Equal(0u, map.ColourAt(Width - 1, Height - 1));
+        AssertThat(map.ColourAt(Width - 1, Height - 1)).IsEqual(0u);
     }
 
-    [Fact]
+    [TestCase]
     public void ClearBox_OfUnexploredTiles_IsNotAChange()
     {
         var map = new ExploredMap(Width, Height);
 
         map.ClearBox(0, 0, 4, 4);
 
-        Assert.False(map.Changed);
+        AssertThat(map.Changed).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Save_WritesTheCurrentClientsHeaderThenZlibTiles()
     {
         var map = new ExploredMap(Width, Height);
@@ -118,17 +124,18 @@ public sealed class ExploredMapTests : IDisposable
 
         var file = map.Save();
 
-        Assert.Equal("TLGM"u8.ToArray(), file[..4]);
-        Assert.Equal(2u, BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(4)));
-        Assert.Equal((uint)Width, BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(8)));
-        Assert.Equal((uint)Height, BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(12)));
-        Assert.Equal((uint)(file.Length - HeaderSize), BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(16)));
+        AssertThat(file[..4]).IsEqual("TLGM"u8.ToArray());
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(4))).IsEqual(2u);
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(8))).IsEqual(Width);
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(12))).IsEqual(Height);
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(file.AsSpan(16))).IsEqual((uint)(file.Length - HeaderSize));
         var tiles = Inflate(file[HeaderSize..]);
-        Assert.Equal(Width * Height * sizeof(uint), tiles.Length);
-        Assert.Equal(0xABCDEFu, BinaryPrimitives.ReadUInt32LittleEndian(tiles.AsSpan(tiles.Length - sizeof(uint))));
+        AssertThat(tiles.Length).IsEqual(Width * Height * sizeof(uint));
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(tiles.AsSpan(tiles.Length - sizeof(uint))))
+            .IsEqual(0xABCDEFu);
     }
 
-    [Fact]
+    [TestCase]
     public void SavedTiles_AreColumnMajor()
     {
         var map = new ExploredMap(Width, Height);
@@ -136,10 +143,10 @@ public sealed class ExploredMapTests : IDisposable
 
         var tiles = Inflate(map.Save()[HeaderSize..]);
 
-        Assert.Equal(0x010000u, BinaryPrimitives.ReadUInt32LittleEndian(tiles.AsSpan(Height * sizeof(uint))));
+        AssertThat(BinaryPrimitives.ReadUInt32LittleEndian(tiles.AsSpan(Height * sizeof(uint)))).IsEqual(0x010000u);
     }
 
-    [Fact]
+    [TestCase]
     public void ASavedMap_LoadsBackUnchanged()
     {
         var saved = new ExploredMap(Width, Height);
@@ -149,32 +156,32 @@ public sealed class ExploredMapTests : IDisposable
         }
 
         var loaded = new ExploredMap(Width, Height);
-        Assert.True(loaded.Load(saved.Save()));
+        AssertThat(loaded.Load(saved.Save())).IsTrue();
 
         for (var tileX = 0; tileX < Width; tileX++)
         {
-            Assert.Equal(saved.ColourAt(tileX, tileX % Height), loaded.ColourAt(tileX, tileX % Height));
+            AssertThat(loaded.ColourAt(tileX, tileX % Height)).IsEqual(saved.ColourAt(tileX, tileX % Height));
         }
 
-        Assert.False(loaded.Changed);
+        AssertThat(loaded.Changed).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Load_OfAnEmptyOrGarbageFile_GivesABlankMap()
     {
         var map = new ExploredMap(Width, Height);
         map.SetTile(1, 1, 0x0101);
 
-        Assert.False(map.Load([]));
-        Assert.Equal(0u, map.ColourAt(1, 1));
+        AssertThat(map.Load([])).IsFalse();
+        AssertThat(map.ColourAt(1, 1)).IsEqual(0u);
 
         map.SetTile(1, 1, 0x0101);
-        Assert.False(map.Load("not a map file at all"u8));
-        Assert.Equal(0u, map.ColourAt(1, 1));
-        Assert.False(map.Changed);
+        AssertThat(map.Load("not a map file at all"u8)).IsFalse();
+        AssertThat(map.ColourAt(1, 1)).IsEqual(0u);
+        AssertThat(map.Changed).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Load_OfATruncatedFile_GivesABlankMap()
     {
         var saved = new ExploredMap(Width, Height);
@@ -183,11 +190,11 @@ public sealed class ExploredMapTests : IDisposable
 
         var loaded = new ExploredMap(Width, Height);
 
-        Assert.False(loaded.Load(file[..^4]));
-        Assert.Equal(0u, loaded.ColourAt(2, 2));
+        AssertThat(loaded.Load(file[..^4])).IsFalse();
+        AssertThat(loaded.ColourAt(2, 2)).IsEqual(0u);
     }
 
-    [Fact]
+    [TestCase]
     public void Load_OfAMapOfAnotherSize_GivesABlankMap()
     {
         var saved = new ExploredMap(Width, Height);
@@ -195,11 +202,11 @@ public sealed class ExploredMapTests : IDisposable
 
         var loaded = new ExploredMap(Height, Width);
 
-        Assert.False(loaded.Load(saved.Save()));
-        Assert.Equal(0u, loaded.ColourAt(2, 2));
+        AssertThat(loaded.Load(saved.Save())).IsFalse();
+        AssertThat(loaded.ColourAt(2, 2)).IsEqual(0u);
     }
 
-    [Fact]
+    [TestCase]
     public void Load_OfAnUnknownFormat_GivesABlankMap()
     {
         var saved = new ExploredMap(Width, Height);
@@ -209,11 +216,11 @@ public sealed class ExploredMapTests : IDisposable
 
         var loaded = new ExploredMap(Width, Height);
 
-        Assert.False(loaded.Load(file));
-        Assert.Equal(0u, loaded.ColourAt(2, 2));
+        AssertThat(loaded.Load(file)).IsFalse();
+        AssertThat(loaded.ColourAt(2, 2)).IsEqual(0u);
     }
 
-    [Fact]
+    [TestCase]
     public void Load_ExpandsAnOldRgb555FileToFullColour()
     {
         var packed = new byte[Width * Height * sizeof(ushort)];
@@ -222,28 +229,28 @@ public sealed class ExploredMapTests : IDisposable
 
         var map = new ExploredMap(Width, Height);
 
-        Assert.True(map.Load(MapFile(1, Width, Height, packed)));
-        Assert.Equal(0xFF0000u, map.ColourAt(Width - 1, Height - 1));
-        Assert.Equal(0x840008u, map.ColourAt(0, 0));
+        AssertThat(map.Load(MapFile(1, Width, Height, packed))).IsTrue();
+        AssertThat(map.ColourAt(Width - 1, Height - 1)).IsEqual(0xFF0000u);
+        AssertThat(map.ColourAt(0, 0)).IsEqual(0x840008u);
     }
 
-    [Fact]
+    [TestCase]
     public void SaveTo_WritesTheFileAndMarksTheMapSaved()
     {
         var path = Path.Combine(folder, "TLGMap_test_1.dat");
         var map = new ExploredMap(Width, Height);
         map.SetTile(2, 2, 0x0202);
 
-        Assert.True(map.SaveTo(path));
+        AssertThat(map.SaveTo(path)).IsTrue();
 
-        Assert.False(map.Changed);
-        Assert.False(File.Exists(path + ".tmp"));
+        AssertThat(map.Changed).IsFalse();
+        AssertThat(File.Exists(path + ".tmp")).IsFalse();
         var loaded = new ExploredMap(Width, Height);
-        Assert.True(loaded.LoadFrom(path));
-        Assert.Equal(0x0202u, loaded.ColourAt(2, 2));
+        AssertThat(loaded.LoadFrom(path)).IsTrue();
+        AssertThat(loaded.ColourAt(2, 2)).IsEqual(0x0202u);
     }
 
-    [Fact]
+    [TestCase]
     public void SaveTo_ReplacesAnEarlierSave()
     {
         var path = Path.Combine(folder, "TLGMap_test_1.dat");
@@ -252,25 +259,25 @@ public sealed class ExploredMapTests : IDisposable
         map.SaveTo(path);
 
         map.SetTile(2, 2, 0x0303);
-        Assert.True(map.SaveTo(path));
+        AssertThat(map.SaveTo(path)).IsTrue();
 
         var loaded = new ExploredMap(Width, Height);
         loaded.LoadFrom(path);
-        Assert.Equal(0x0303u, loaded.ColourAt(2, 2));
+        AssertThat(loaded.ColourAt(2, 2)).IsEqual(0x0303u);
     }
 
-    [Fact]
+    [TestCase]
     public void LoadFrom_AMissingFile_GivesABlankMap()
     {
         var map = new ExploredMap(Width, Height);
         map.SetTile(1, 1, 0x0101);
 
-        Assert.False(map.LoadFrom(Path.Combine(folder, "missing.dat")));
+        AssertThat(map.LoadFrom(Path.Combine(folder, "missing.dat"))).IsFalse();
 
-        Assert.Equal(0u, map.ColourAt(1, 1));
+        AssertThat(map.ColourAt(1, 1)).IsEqual(0u);
     }
 
-    [Fact]
+    [TestCase]
     public void ClearSaved_LeavesABlankMapInPlaceOfTheOldOne()
     {
         var path = Path.Combine(folder, "TLGMap_test_1.dat");
@@ -279,15 +286,15 @@ public sealed class ExploredMapTests : IDisposable
         explored.SaveTo(path);
         File.WriteAllText(path + ".tmp", "half written");
 
-        Assert.True(ExploredMap.ClearSaved(path));
+        AssertThat(ExploredMap.ClearSaved(path)).IsTrue();
 
         var reloaded = new ExploredMap();
-        Assert.True(reloaded.LoadFrom(path));
-        Assert.Equal(0u, reloaded.ColourAt(1, 1));
-        Assert.False(File.Exists(path + ".tmp"));
+        AssertThat(reloaded.LoadFrom(path)).IsTrue();
+        AssertThat(reloaded.ColourAt(1, 1)).IsEqual(0u);
+        AssertThat(File.Exists(path + ".tmp")).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void ClearSaved_KeepsTheCurrentClientsMapFromBeingImportedAgain()
     {
         var ownPath = Path.Combine(folder, "own", "TLGMap_test_1.dat");
@@ -298,7 +305,7 @@ public sealed class ExploredMapTests : IDisposable
 
         ExploredMap.ClearSaved(ownPath);
 
-        Assert.Equal(ownPath, ServerFiles.PathToLoad(ownPath, sdlPath));
+        AssertThat(ServerFiles.PathToLoad(ownPath, sdlPath)).IsEqual(ownPath);
     }
 
     private static byte[] MapFile(uint format, int width, int height, byte[] tiles)

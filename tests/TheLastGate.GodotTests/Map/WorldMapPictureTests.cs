@@ -1,12 +1,15 @@
+using GdUnit4;
 using TheLastGate.Map;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Map;
 
+[TestSuite]
 public class WorldMapPictureTests
 {
     private const int BytesPerPixel = 4;
 
-    [Fact]
+    [TestCase]
     public void Render_SpreadsMapYAcrossAndMapXDownOverTheWorldsTopHalf()
     {
         var map = new ExploredMap();
@@ -17,11 +20,11 @@ public class WorldMapPictureTests
 
         WorldMapPicture.Render(map, rgba);
 
-        Assert.Equal(2048, WorldMapPicture.Width);
-        Assert.Equal(1024, WorldMapPicture.Height);
-        Assert.Equal(new byte[] { 0x11, 0x22, 0x33, 255 }, Pixel(rgba, 5, 3));
-        Assert.Equal(new byte[] { 0x44, 0x55, 0x66, 255 }, Pixel(rgba, 2047, 1023));
-        Assert.Equal(new byte[] { 0, 0, 0, 255 }, Pixel(rgba, 0, 0));
+        AssertThat(WorldMapPicture.Width).IsEqual(2048);
+        AssertThat(WorldMapPicture.Height).IsEqual(1024);
+        AssertThat(Pixel(rgba, 5, 3)).IsEqual(new byte[] { 0x11, 0x22, 0x33, 255 });
+        AssertThat(Pixel(rgba, 2047, 1023)).IsEqual(new byte[] { 0x44, 0x55, 0x66, 255 });
+        AssertThat(Pixel(rgba, 0, 0)).IsEqual(new byte[] { 0, 0, 0, 255 });
     }
 
     private static byte[] Pixel(byte[] rgba, int across, int down) =>

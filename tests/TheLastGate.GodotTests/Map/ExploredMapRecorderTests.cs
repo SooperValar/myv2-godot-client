@@ -1,9 +1,12 @@
+using GdUnit4;
 using TheLastGate.Map;
 using TheLastGate.State;
 using TheLastGate.World;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Map;
 
+[TestSuite]
 public class ExploredMapRecorderTests
 {
     private const int Floor = 1100;
@@ -11,51 +14,55 @@ public class ExploredMapRecorderTests
     private const int Own = 11;
     private const int Target = 22;
 
-    private readonly ExploredMap map = new(64, 64);
-    private readonly ExploredMapRecorder recorder;
+    private ExploredMap map = new(64, 64);
+    private ExploredMapRecorder recorder = new(new ExploredMap(64, 64));
 
-    public ExploredMapRecorderTests() => recorder = new ExploredMapRecorder(map);
+    [BeforeTest]
+    public void StartRecordingABlankMap()
+    {
+        map = new ExploredMap(64, 64);
+        recorder = new ExploredMapRecorder(map);
+    }
 
-    [Fact]
+    [TestCase]
     public void SpriteToAverage_PrefersTheItemOverTheFloor()
     {
-        Assert.Equal(Item, ExploredMapRecorder.SpriteToAverage(0, Floor, Item));
-        Assert.Equal(Floor, ExploredMapRecorder.SpriteToAverage(0, Floor, 0));
+        AssertThat(ExploredMapRecorder.SpriteToAverage(0, Floor, Item)).IsEqual(Item);
+        AssertThat(ExploredMapRecorder.SpriteToAverage(0, Floor, 0)).IsEqual(Floor);
     }
 
-    [Fact]
+    [TestCase]
     public void SpriteToAverage_SkipsTilesThePlayerCanNotSee()
     {
-        Assert.Null(ExploredMapRecorder.SpriteToAverage((uint)MapFlags.Invisible, Floor, Item));
+        AssertThat(ExploredMapRecorder.SpriteToAverage((uint)MapFlags.Invisible, Floor, Item)).IsNull();
     }
 
-    [Theory]
-    [InlineData(0)]
-    [InlineData(ExploredMapRecorder.EmptyFloorSprite)]
+    [TestCase(0)]
+    [TestCase(ExploredMapRecorder.EmptyFloorSprite)]
     public void SpriteToAverage_SkipsUnlitAndOffMapTiles(int floor)
     {
-        Assert.Null(ExploredMapRecorder.SpriteToAverage(0, floor, Item));
+        AssertThat(ExploredMapRecorder.SpriteToAverage(0, floor, Item)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void See_RecordsTheColourAtTheTilesWorldPosition()
     {
         recorder.See(12, 34, 0x445566);
 
-        Assert.Equal(0x445566u, map.ColourAt(12, 34));
+        AssertThat(map.ColourAt(12, 34)).IsEqual(0x445566u);
     }
 
-    [Fact]
+    [TestCase]
     public void ClearBox_UnexploresTheBox()
     {
         recorder.See(5, 5, 0x0505);
 
         recorder.ClearBox(new MinimapBox(4, 4, 2, 2));
 
-        Assert.Equal(0u, map.ColourAt(5, 5));
+        AssertThat(map.ColourAt(5, 5)).IsEqual(0u);
     }
 
-    [Fact]
+    [TestCase]
     public void WhileSpectating_NothingIsRecordedOrCleared()
     {
         recorder.See(5, 5, 0x0505);
@@ -64,12 +71,12 @@ public class ExploredMapRecorderTests
         recorder.See(6, 6, 0x0606);
         recorder.ClearBox(new MinimapBox(4, 4, 2, 2));
 
-        Assert.True(recorder.Paused);
-        Assert.Equal(0u, map.ColourAt(6, 6));
-        Assert.Equal(0x0505u, map.ColourAt(5, 5));
+        AssertThat(recorder.Paused).IsTrue();
+        AssertThat(map.ColourAt(6, 6)).IsEqual(0u);
+        AssertThat(map.ColourAt(5, 5)).IsEqual(0x0505u);
     }
 
-    [Fact]
+    [TestCase]
     public void ComingBackToTheOwnCharacter_ResumesRecording()
     {
         recorder.NoteLogLine("Now spectating Bob. Use /spectate self to return.", Own);
@@ -78,7 +85,7 @@ public class ExploredMapRecorderTests
         recorder.NoteViewCentre(Own);
         recorder.See(6, 6, 0x0606);
 
-        Assert.False(recorder.Paused);
-        Assert.Equal(0x0606u, map.ColourAt(6, 6));
+        AssertThat(recorder.Paused).IsFalse();
+        AssertThat(map.ColourAt(6, 6)).IsEqual(0x0606u);
     }
 }

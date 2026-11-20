@@ -1,75 +1,77 @@
 using System.IO.Compression;
 using System.Text;
+using GdUnit4;
 using TheLastGate.Notes;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Notes;
 
+[TestSuite]
 public class NoteShareCodeTests
 {
-    [Fact]
+    [TestCase]
     public void Export_WritesATreeCodeThatImportsBack()
     {
         var (set, dungeons, _) = DungeonSet();
 
         var code = NoteShareCode.Export(set, dungeons)!;
 
-        Assert.StartsWith("TLGMAP2:", code);
-        Assert.Equal(NoteCodeStatus.Ok, NoteShareCode.Import(code, out var imported));
-        Assert.False(imported!.Changed);
-        Assert.Equal(["Dungeons", "Cold Cavern"], imported.Tree().Select(category => category.Name));
+        AssertThat(code).StartsWith("TLGMAP2:");
+        AssertThat(NoteShareCode.Import(code, out var imported)).IsEqual(NoteCodeStatus.Ok);
+        AssertThat(imported!.Changed).IsFalse();
+        AssertThat(imported.Tree().Select(category => category.Name)).ContainsExactly("Dungeons", "Cold Cavern");
         var root = imported.Tree()[0];
         var cavern = imported.Tree()[1];
-        Assert.Equal(0, root.ParentId);
-        Assert.False(root.ShowLabels);
-        Assert.Equal(root.Id, cavern.ParentId);
-        Assert.False(cavern.Visible);
-        Assert.Equal(2, cavern.Notes.Count);
-        Assert.Equal(2, cavern.Notes[0].ColourIndex);
+        AssertThat(root.ParentId).IsEqual(0);
+        AssertThat(root.ShowLabels).IsFalse();
+        AssertThat(cavern.ParentId).IsEqual(root.Id);
+        AssertThat(cavern.Visible).IsFalse();
+        AssertThat(cavern.Notes.Count).IsEqual(2);
+        AssertThat(cavern.Notes[0].ColourIndex).IsEqual(2);
     }
 
-    [Fact]
+    [TestCase]
     public void Export_OfNoCategoryOrAnUnknownOne_GivesNothing()
     {
         var (set, _, _) = DungeonSet();
 
-        Assert.Null(NoteShareCode.Export(set, 0));
-        Assert.Null(NoteShareCode.Export(set, 9999));
+        AssertThat(NoteShareCode.Export(set, 0)).IsNull();
+        AssertThat(NoteShareCode.Export(set, 9999)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void ACodeBrokenUpWithSpacesAndLines_StillImports()
     {
         var (set, dungeons, _) = DungeonSet();
         var code = NoteShareCode.Export(set, dungeons)!;
         var spaced = " " + string.Join(" \n", code.Chunk(40).Select(part => new string(part))) + " ";
 
-        Assert.Equal(NoteCodeStatus.Ok, NoteShareCode.Import(spaced, out var imported));
-        Assert.Equal(2, imported!.Categories.Count);
+        AssertThat(NoteShareCode.Import(spaced, out var imported)).IsEqual(NoteCodeStatus.Ok);
+        AssertThat(imported!.Categories.Count).IsEqual(2);
     }
 
-    [Theory]
-    [InlineData("hello")]
-    [InlineData("TLGMAP3:eNoDAAAAAAE=")]
-    [InlineData("")]
+    [TestCase("hello")]
+    [TestCase("TLGMAP3:eNoDAAAAAAE=")]
+    [TestCase("")]
     public void TextWithoutAKnownPrefix_IsNotACode(string text)
     {
-        Assert.Equal(NoteCodeStatus.NotACode, NoteShareCode.Import(text, out var imported));
-        Assert.Null(imported);
+        AssertThat(NoteShareCode.Import(text, out var imported)).IsEqual(NoteCodeStatus.NotACode);
+        AssertThat(imported).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void ACodeCutShort_IsDamaged()
     {
         var (set, dungeons, _) = DungeonSet();
         var code = NoteShareCode.Export(set, dungeons)!;
         var shorter = code[..^8];
 
-        Assert.Equal(0, (shorter.Length - "TLGMAP2:".Length) % 4);
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(shorter, out _));
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(shorter[..^2], out _));
+        AssertThat((shorter.Length - "TLGMAP2:".Length) % 4).IsEqual(0);
+        AssertThat(NoteShareCode.Import(shorter, out _)).IsEqual(NoteCodeStatus.Damaged);
+        AssertThat(NoteShareCode.Import(shorter[..^2], out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void ACoordinateOffTheMap_IsDamaged()
     {
         var category = Header("Bad", 1);
@@ -77,10 +79,10 @@ public class NoteShareCodeTests
         Zigzag(category, 3000);
         Zigzag(category, 0);
 
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(LegacyCode(category), out _));
+        AssertThat(NoteShareCode.Import(LegacyCode(category), out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void AHugeStep_IsDamaged()
     {
         var category = Header("Huge delta", 1);
@@ -88,16 +90,16 @@ public class NoteShareCodeTests
         NoteCodec.WriteVarint(category, 0xFFFFFFFE);
         Zigzag(category, 0);
 
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(LegacyCode(category), out _));
+        AssertThat(NoteShareCode.Import(LegacyCode(category), out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void AHugeNoteCount_IsTooLarge()
     {
-        Assert.Equal(NoteCodeStatus.TooLarge, NoteShareCode.Import(LegacyCode(Header("Huge", 100000)), out _));
+        AssertThat(NoteShareCode.Import(LegacyCode(Header("Huge", 100000)), out _)).IsEqual(NoteCodeStatus.TooLarge);
     }
 
-    [Fact]
+    [TestCase]
     public void ATypicalMazeGuide_FitsInOneDiscordMessage()
     {
         var set = new NoteSet();
@@ -117,19 +119,19 @@ public class NoteShareCodeTests
             set.AddPoint(guide, NoteKind.Pin, 400 + key * 7, 400 + key * 5, $"Key {key}");
         }
 
-        Assert.True(NoteShareCode.Export(set, guide)!.Length < NoteShareCode.DiscordLimit);
+        AssertThat(NoteShareCode.Export(set, guide)!.Length < NoteShareCode.DiscordLimit).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void ACategoryOverItsSegmentLimit_IsTooLarge()
     {
         var pathsAtLimit = NoteLimits.SegmentsPerCategory / NoteLimits.SegmentsPerPath;
 
-        Assert.Equal(NoteCodeStatus.Ok, NoteShareCode.Import(FloodCode(pathsAtLimit), out _));
-        Assert.Equal(NoteCodeStatus.TooLarge, NoteShareCode.Import(FloodCode(pathsAtLimit + 1), out _));
+        AssertThat(NoteShareCode.Import(FloodCode(pathsAtLimit), out _)).IsEqual(NoteCodeStatus.Ok);
+        AssertThat(NoteShareCode.Import(FloodCode(pathsAtLimit + 1), out _)).IsEqual(NoteCodeStatus.TooLarge);
     }
 
-    [Fact]
+    [TestCase]
     public void ANamelessCategory_ImportsAsImported()
     {
         var category = Header("", 1);
@@ -137,12 +139,12 @@ public class NoteShareCodeTests
         Zigzag(category, 10);
         Zigzag(category, 20);
 
-        Assert.Equal(NoteCodeStatus.Ok, NoteShareCode.Import(LegacyCode(category), out var imported));
-        Assert.Equal("Imported", imported!.Categories[0].Name);
-        Assert.Equal("", imported.Categories[0].Notes[0].Label);
+        AssertThat(NoteShareCode.Import(LegacyCode(category), out var imported)).IsEqual(NoteCodeStatus.Ok);
+        AssertThat(imported!.Categories[0].Name).IsEqual("Imported");
+        AssertThat(imported.Categories[0].Notes[0].Label).IsEqual("");
     }
 
-    [Fact]
+    [TestCase]
     public void TextWithoutALabel_IsDamaged()
     {
         var category = Header("Notes", 1);
@@ -150,10 +152,10 @@ public class NoteShareCodeTests
         Zigzag(category, 10);
         Zigzag(category, 20);
 
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(LegacyCode(category), out _));
+        AssertThat(NoteShareCode.Import(LegacyCode(category), out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void BytesAfterTheCategory_AreDamaged()
     {
         var category = Header("Keys", 1);
@@ -162,56 +164,55 @@ public class NoteShareCodeTests
         Zigzag(category, 20);
         category.Add(0);
 
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(LegacyCode(category), out _));
+        AssertThat(NoteShareCode.Import(LegacyCode(category), out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void AFirstVersionCodeFromTheCurrentClient_StillImports()
     {
         const string code = "TLGMAP1:eNpj8U6tLGZiYmQPSk1RyE6tPME4gZmZxTexKpVZg4FBDowYGOQAuoUHpg==";
 
-        Assert.Equal(NoteCodeStatus.Ok, NoteShareCode.Import(code, out var imported));
+        AssertThat(NoteShareCode.Import(code, out var imported)).IsEqual(NoteCodeStatus.Ok);
 
-        var keys = Assert.Single(imported!.Categories);
-        Assert.Equal("Keys", keys.Name);
-        Assert.Equal(2, keys.ColourIndex);
-        Assert.True(keys.Visible);
-        Assert.True(keys.ShowLabels);
+        AssertThat(imported!.Categories).HasSize(1);
+        var keys = imported.Categories[0];
+        AssertThat(keys.Name).IsEqual("Keys");
+        AssertThat(keys.ColourIndex).IsEqual(2);
+        AssertThat(keys.Visible).IsTrue();
+        AssertThat(keys.ShowLabels).IsTrue();
         var pin = keys.Notes[0];
-        Assert.Equal((NoteKind.Pin, "Red key", 100, 200), (pin.Kind, pin.Label, pin.TileX, pin.TileY));
-        Assert.Equal(Note.CategoryColour, pin.ColourIndex);
+        AssertThat((pin.Kind, pin.Label, pin.TileX, pin.TileY)).IsEqual((NoteKind.Pin, "Red key", 100, 200));
+        AssertThat(pin.ColourIndex).IsEqual(Note.CategoryColour);
         var path = keys.Notes[1];
-        Assert.Equal((NoteKind.Path, "Maze", 120, 200), (path.Kind, path.Label, path.TileX, path.TileY));
-        Assert.Equal(
-            [
-                new PathSegment(120, 200, 120, 215), new PathSegment(120, 215, 135, 215),
-                new PathSegment(135, 215, 135, 230),
-            ],
-            path.Segments);
+        AssertThat((path.Kind, path.Label, path.TileX, path.TileY)).IsEqual((NoteKind.Path, "Maze", 120, 200));
+        AssertThat(path.Segments)
+            .ContainsExactly(
+                new PathSegment(120, 200, 120, 215),
+                new PathSegment(120, 215, 135, 215),
+                new PathSegment(135, 215, 135, 230));
     }
 
-    [Theory]
-    [InlineData("TLGMAP1:x", true)]
-    [InlineData("TLGMAP2:x", true)]
-    [InlineData("TLGMAP3:x", false)]
-    [InlineData("TLGMAP", false)]
-    [InlineData("", false)]
+    [TestCase("TLGMAP1:x", true)]
+    [TestCase("TLGMAP2:x", true)]
+    [TestCase("TLGMAP3:x", false)]
+    [TestCase("TLGMAP", false)]
+    [TestCase("", false)]
     public void HasPrefix_KnowsBothVersions(string text, bool hasPrefix)
     {
-        Assert.Equal(hasPrefix, NoteShareCode.HasPrefix(text));
+        AssertThat(NoteShareCode.HasPrefix(text)).IsEqual(hasPrefix);
     }
 
-    [Fact]
+    [TestCase]
     public void ATreeCodeWithTwoTopCategories_IsDamaged()
     {
         var (set, _, _) = DungeonSet();
         var bytes = new List<byte>();
         NoteCodec.EncodeTree(set, 0, bytes);
 
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(Code("TLGMAP2:", bytes.ToArray()), out _));
+        AssertThat(NoteShareCode.Import(Code("TLGMAP2:", bytes.ToArray()), out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void ATreeCodeWithBytesLeftOver_IsDamaged()
     {
         var (set, dungeons, _) = DungeonSet();
@@ -219,58 +220,55 @@ public class NoteShareCodeTests
         NoteCodec.EncodeTree(set, dungeons, bytes);
         bytes.Add(0);
 
-        Assert.Equal(NoteCodeStatus.Damaged, NoteShareCode.Import(Code("TLGMAP2:", bytes.ToArray()), out _));
+        AssertThat(NoteShareCode.Import(Code("TLGMAP2:", bytes.ToArray()), out _)).IsEqual(NoteCodeStatus.Damaged);
     }
 
-    [Fact]
+    [TestCase]
     public void ATreeCodeOver16MiB_IsTooLarge()
     {
         var zeros = new byte[16 * 1024 * 1024 + 1];
 
-        Assert.Equal(NoteCodeStatus.TooLarge, NoteShareCode.Import(Code("TLGMAP2:", zeros), out _));
+        AssertThat(NoteShareCode.Import(Code("TLGMAP2:", zeros), out _)).IsEqual(NoteCodeStatus.TooLarge);
     }
 
-    [Theory]
-    [InlineData(262144, NoteCodeStatus.Damaged)]
-    [InlineData(262145, NoteCodeStatus.TooLarge)]
+    [TestCase(262144, NoteCodeStatus.Damaged)]
+    [TestCase(262145, NoteCodeStatus.TooLarge)]
     public void AFirstVersionCode_KeepsItsSmallerLimit(int size, NoteCodeStatus status)
     {
-        Assert.Equal(status, NoteShareCode.Import(Code("TLGMAP1:", new byte[size]), out _));
+        AssertThat(NoteShareCode.Import(Code("TLGMAP1:", new byte[size]), out _)).IsEqual(status);
     }
 
-    [Fact]
+    [TestCase]
     public void Describe_SummarisesTheImportAsTheCurrentClientDoes()
     {
         var (set, dungeons, _) = DungeonSet();
         NoteShareCode.Import(NoteShareCode.Export(set, dungeons)!, out var imported);
 
-        Assert.Equal("Dungeons: 2 categories, 1 pins, 0 labels, 1 paths", NoteShareCode.Describe(imported!));
+        AssertThat(NoteShareCode.Describe(imported!)).IsEqual("Dungeons: 2 categories, 1 pins, 0 labels, 1 paths");
     }
 
-    [Fact]
+    [TestCase]
     public void Describe_SaysCategoryForOne()
     {
         NoteShareCode.Import("TLGMAP1:eNpj8U6tLGZiYmQPSk1RyE6tPME4gZmZxTexKpVZg4FBDowYGOQAuoUHpg==", out var imported);
 
-        Assert.Equal("Keys: 1 category, 1 pins, 0 labels, 1 paths", NoteShareCode.Describe(imported!));
+        AssertThat(NoteShareCode.Describe(imported!)).IsEqual("Keys: 1 category, 1 pins, 0 labels, 1 paths");
     }
 
-    [Theory]
-    [InlineData(NoteCodeStatus.NotACode, "That is not a world map code.")]
-    [InlineData(NoteCodeStatus.Damaged, "This code is damaged or incomplete.")]
-    [InlineData(NoteCodeStatus.TooLarge, "This code is too large to import.")]
+    [TestCase(NoteCodeStatus.NotACode, "That is not a world map code.")]
+    [TestCase(NoteCodeStatus.Damaged, "This code is damaged or incomplete.")]
+    [TestCase(NoteCodeStatus.TooLarge, "This code is too large to import.")]
     public void Problem_UsesTheCurrentClientsWords(NoteCodeStatus status, string message)
     {
-        Assert.Equal(message, NoteShareCode.Problem(status));
+        AssertThat(NoteShareCode.Problem(status)).IsEqual(message);
     }
 
-    [Fact]
+    [TestCase]
     public void ExportMessages_CountTheCharactersAndWarnAboutDiscord()
     {
-        Assert.Equal("Copied 1234 characters to the clipboard.", NoteShareCode.CopiedMessage(1234));
-        Assert.Equal(
-            "Too long for one Discord message; it will still work on the wiki.",
-            NoteShareCode.TooLongForDiscord);
+        AssertThat(NoteShareCode.CopiedMessage(1234)).IsEqual("Copied 1234 characters to the clipboard.");
+        AssertThat(NoteShareCode.TooLongForDiscord)
+            .IsEqual("Too long for one Discord message; it will still work on the wiki.");
     }
 
     private static (NoteSet Set, int Dungeons, int Cavern) DungeonSet()
