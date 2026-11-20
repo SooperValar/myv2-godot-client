@@ -12,7 +12,7 @@ public class BindingActionsTests
 {
     private const string SpellKeys = "12345QWERTASDFGZXCVB";
 
-    private static readonly Dictionary<string, string?> CurrentClientDefaults = new()
+    private static readonly Dictionary<string, string?> ShippedBindings = new()
     {
         ["speed_fast_hotkey"] = "F1",
         ["speed_normal_hotkey"] = "F2",
@@ -23,6 +23,7 @@ public class BindingActionsTests
         ["toggle_names_hotkey"] = "F7",
         ["toggle_health_bars_hotkey"] = "F8",
         ["toggle_options_hotkey"] = "F9",
+        ["toggle_gamma_hotkey"] = "F10",
         ["reset_window_size_hotkey"] = "Shift+F10",
         ["toggle_planner_hotkey"] = "Ctrl+P",
         ["toggle_worldmap_hotkey"] = null,
@@ -50,11 +51,11 @@ public class BindingActionsTests
     public void RestoreTheDefaults() => BindingActions.ResetAll();
 
     [TestCase]
-    public void Defaults_AreTheCurrentClientsForEveryBinding()
+    public void Defaults_MatchTheShippedBindings()
     {
         var expected = SpellKeys
             .Select((key, slot) => (Id: Bindings.SpellId(slot), Keys: $"Ctrl+{key}"))
-            .Concat(CurrentClientDefaults.Select(entry => (Id: entry.Key, Keys: entry.Value ?? "")))
+            .Concat(ShippedBindings.Select(entry => (Id: entry.Key, Keys: entry.Value ?? "")))
             .ToDictionary(entry => entry.Id, entry => entry.Keys);
 
         var defaults = Named(BindingActions.Defaults());
