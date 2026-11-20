@@ -1,56 +1,59 @@
+using GdUnit4;
 using TheLastGate.Chat;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Chat;
 
+[TestSuite]
 public class ChatHistoryTests
 {
-    [Fact]
+    [TestCase]
     public void Older_ShowsTheSentLinesNewestFirst()
     {
         var history = new ChatHistory();
         history.Sent("one");
         history.Sent("two");
 
-        Assert.Equal("two", history.Older("draft"));
-        Assert.Equal("one", history.Older("two"));
+        AssertThat(history.Older("draft")).IsEqual("two");
+        AssertThat(history.Older("two")).IsEqual("one");
     }
 
-    [Fact]
+    [TestCase]
     public void Older_StopsAtTheOldestSentLine()
     {
         var history = new ChatHistory();
         history.Sent("one");
         history.Older("draft");
 
-        Assert.Null(history.Older("one"));
+        AssertThat(history.Older("one")).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Older_ShowsNothingBeforeAnyLineIsSent()
     {
-        Assert.Null(new ChatHistory().Older("draft"));
+        AssertThat(new ChatHistory().Older("draft")).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Newer_ReturnsToTheLineBeingTyped()
     {
         var history = new ChatHistory();
         history.Sent("one");
         history.Older("draft");
 
-        Assert.Equal("draft", history.Newer("one"));
+        AssertThat(history.Newer("one")).IsEqual("draft");
     }
 
-    [Fact]
+    [TestCase]
     public void Newer_ShowsNothingNewerThanTheLineBeingTyped()
     {
         var history = new ChatHistory();
         history.Sent("one");
 
-        Assert.Null(history.Newer("draft"));
+        AssertThat(history.Newer("draft")).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void OlderAndNewer_KeepEditsMadeToSentLines()
     {
         var history = new ChatHistory();
@@ -60,10 +63,10 @@ public class ChatHistoryTests
 
         history.Older("two edited");
 
-        Assert.Equal("two edited", history.Newer("one"));
+        AssertThat(history.Newer("one")).IsEqual("two edited");
     }
 
-    [Fact]
+    [TestCase]
     public void Sent_GoesBackToTheLineBeingTyped()
     {
         var history = new ChatHistory();
@@ -72,10 +75,10 @@ public class ChatHistoryTests
 
         history.Sent("two");
 
-        Assert.Equal("two", history.Older(""));
+        AssertThat(history.Older("")).IsEqual("two");
     }
 
-    [Fact]
+    [TestCase]
     public void Sent_KeepsTheLastNineteenLines()
     {
         var history = new ChatHistory();
@@ -90,11 +93,11 @@ public class ChatHistoryTests
             current = history.Older(current)!;
         }
 
-        Assert.Equal("line 6", current);
-        Assert.Null(history.Older(current));
+        AssertThat(current).IsEqual("line 6");
+        AssertThat(history.Older(current)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Abandon_StartsAgainFromTheNewestSentLine()
     {
         var history = new ChatHistory();
@@ -105,7 +108,7 @@ public class ChatHistoryTests
 
         history.Abandon();
 
-        Assert.Null(history.Newer(""));
-        Assert.Equal("two", history.Older(""));
+        AssertThat(history.Newer("")).IsNull();
+        AssertThat(history.Older("")).IsEqual("two");
     }
 }

@@ -1,29 +1,32 @@
+using GdUnit4;
 using TheLastGate.Chat;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Chat;
 
+[TestSuite]
 public class TabCompletionTests
 {
-    [Fact]
+    [TestCase]
     public void Complete_FinishesTheWordBeforeTheCaretWithAWordFromASentLine()
     {
         var completion = new TabCompletion();
         completion.Learn("hello world");
 
-        Assert.Equal(("say hello ", 10), completion.Complete("say he", 6));
+        AssertThat(completion.Complete("say he", 6)).IsEqual(("say hello ", 10));
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_PrefersTheMostRecentlySentWord()
     {
         var completion = new TabCompletion();
         completion.Learn("help");
         completion.Learn("hello");
 
-        Assert.Equal(("hello ", 6), completion.Complete("he", 2));
+        AssertThat(completion.Complete("he", 2)).IsEqual(("hello ", 6));
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_AgainTriesTheNextMatchingWord()
     {
         var completion = new TabCompletion();
@@ -31,21 +34,21 @@ public class TabCompletionTests
         completion.Learn("hello");
         var first = completion.Complete("he", 2)!.Value;
 
-        Assert.Equal(("help ", 5), completion.Complete(first.Text, first.Caret));
+        AssertThat(completion.Complete(first.Text, first.Caret)).IsEqual(("help ", 5));
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_AfterTheLastMatchGoesBackToWhatWasTyped()
     {
         var completion = new TabCompletion();
         completion.Learn("hello");
         var first = completion.Complete("he", 2)!.Value;
 
-        Assert.Equal(("he", 2), completion.Complete(first.Text, first.Caret));
-        Assert.Equal(("hello ", 6), completion.Complete("he", 2));
+        AssertThat(completion.Complete(first.Text, first.Caret)).IsEqual(("he", 2));
+        AssertThat(completion.Complete("he", 2)).IsEqual(("hello ", 6));
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_StartsOverOnceTheLineHasChanged()
     {
         var completion = new TabCompletion();
@@ -53,64 +56,64 @@ public class TabCompletionTests
         completion.Learn("hello");
         completion.Complete("he", 2);
 
-        Assert.Equal(("say hello ", 10), completion.Complete("say he", 6));
+        AssertThat(completion.Complete("say he", 6)).IsEqual(("say hello ", 10));
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_FindsNothingWithoutAMatchingWord()
     {
         var completion = new TabCompletion();
         completion.Learn("hello");
 
-        Assert.Null(completion.Complete("wo", 2));
+        AssertThat(completion.Complete("wo", 2)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_FindsNothingWithoutAWordBeforeTheCaret()
     {
         var completion = new TabCompletion();
         completion.Learn("hello");
 
-        Assert.Null(completion.Complete("say ", 4));
+        AssertThat(completion.Complete("say ", 4)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_NeedsAWordLongerThanWhatWasTyped()
     {
         var completion = new TabCompletion();
         completion.Learn("he");
 
-        Assert.Null(completion.Complete("he", 2));
+        AssertThat(completion.Complete("he", 2)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Complete_MatchesCase()
     {
         var completion = new TabCompletion();
         completion.Learn("Hello");
 
-        Assert.Null(completion.Complete("he", 2));
+        AssertThat(completion.Complete("he", 2)).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Learn_CountsHashAsPartOfAWord()
     {
         var completion = new TabCompletion();
         completion.Learn("#autodepot on");
 
-        Assert.Equal(("#autodepot ", 11), completion.Complete("#au", 3));
+        AssertThat(completion.Complete("#au", 3)).IsEqual(("#autodepot ", 11));
     }
 
-    [Fact]
+    [TestCase]
     public void Learn_SplitsWordsAtDigitsAndPunctuation()
     {
         var completion = new TabCompletion();
         completion.Learn("give 5gold, now");
 
-        Assert.Equal(("gold ", 5), completion.Complete("go", 2));
+        AssertThat(completion.Complete("go", 2)).IsEqual(("gold ", 5));
     }
 
-    [Fact]
+    [TestCase]
     public void Learn_MovesARepeatedWordToTheFront()
     {
         var completion = new TabCompletion();
@@ -118,6 +121,6 @@ public class TabCompletionTests
         completion.Learn("hello");
         completion.Learn("help");
 
-        Assert.Equal(("help ", 5), completion.Complete("he", 2));
+        AssertThat(completion.Complete("he", 2)).IsEqual(("help ", 5));
     }
 }
