@@ -26,6 +26,8 @@ public sealed class ClientSettings
     private const string WorldSection = "world";
     private const string KeybindsSection = "keybinds";
     private const string GeneralSection = "general";
+    private const string DisplaySwapsSection = "display_swaps";
+    private const string WindowBackgroundsSection = "window_backgrounds";
 
     private readonly ConfigFile file;
 
@@ -69,6 +71,17 @@ public sealed class ClientSettings
             LargestCursorScale);
         ScreenGamma = Gamma.Clamp(file.GetValue(DisplaySection, "screen_gamma", Gamma.Normal).AsSingle());
         WorldGamma = Gamma.Clamp(file.GetValue(DisplaySection, "world_gamma", Gamma.Normal).AsSingle());
+        foreach (var row in DisplaySwaps.Rows.Where(row =>
+            file.GetValue(DisplaySwapsSection, row.SettingKey, false).AsBool()))
+        {
+            SwapsOn.Add(row.Swap);
+        }
+
+        foreach (var row in WindowBackgrounds.Rows)
+        {
+            BackgroundOpacity[row.Window] = WindowBackgrounds.Clamp(
+                file.GetValue(WindowBackgroundsSection, row.SettingKey, WindowBackgrounds.Solid).AsInt32());
+        }
     }
 
     public bool Windowed { get; set; }
@@ -92,6 +105,8 @@ public sealed class ClientSettings
     public float CursorScale { get; set; }
     public float ScreenGamma { get; set; }
     public float WorldGamma { get; set; }
+    public HashSet<DisplaySwap> SwapsOn { get; } = [];
+    public Dictionary<WindowBackground, int> BackgroundOpacity { get; } = [];
 
     public bool this[GeneralOption option]
     {
@@ -170,6 +185,16 @@ public sealed class ClientSettings
         file.SetValue(DisplaySection, "cursor_scale", CursorScale);
         file.SetValue(DisplaySection, "screen_gamma", ScreenGamma);
         file.SetValue(DisplaySection, "world_gamma", WorldGamma);
+        foreach (var row in DisplaySwaps.Rows)
+        {
+            file.SetValue(DisplaySwapsSection, row.SettingKey, SwapsOn.Contains(row.Swap));
+        }
+
+        foreach (var row in WindowBackgrounds.Rows)
+        {
+            file.SetValue(WindowBackgroundsSection, row.SettingKey, BackgroundOpacity[row.Window]);
+        }
+
         file.SetValue(GeneralSection, "escape_closes_windows_first", EscapeClosesWindowsFirst);
         file.SetValue(GeneralSection, "give_more", GiveMore);
         file.SetValue(GeneralSection, "use_queue", UseQueue);

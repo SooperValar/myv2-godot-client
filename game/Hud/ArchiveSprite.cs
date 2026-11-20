@@ -1,5 +1,6 @@
 using Godot;
 using Godot.Collections;
+using TheLastGate.Windows;
 
 namespace TheLastGate.Hud;
 
@@ -31,6 +32,8 @@ public partial class ArchiveSprite : TextureRect
         }
     }
 
+    [Export] public WindowBackground FadesAs { get; set; }
+
     public override void _EnterTree() => LoadSprite();
 
     public override void _ValidateProperty(Dictionary property)
@@ -52,5 +55,16 @@ public partial class ArchiveSprite : TextureRect
         }
 
         Texture = sprites.GetTexture(hud.DarkMode && darkSpriteNumber != 0 ? darkSpriteNumber : spriteNumber);
+        ApplyFade();
+    }
+
+    public void ApplyFade()
+    {
+        if (FadesAs == WindowBackground.None || HudView.Containing(this)?.ClientSettings is not { } settings)
+        {
+            return;
+        }
+
+        SelfModulate = Colors.White with { A = settings.BackgroundOpacity[FadesAs] / (float)WindowBackgrounds.Solid };
     }
 }

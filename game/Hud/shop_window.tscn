@@ -29,6 +29,7 @@ mouse_filter = 2
 script = ExtResource("2_sprite")
 SpriteNumber = 92
 DarkSpriteNumber = 18092
+FadesAs = 1
 
 [node name="Grid" type="GridContainer" parent="." unique_id=931538941]
 layout_mode = 0

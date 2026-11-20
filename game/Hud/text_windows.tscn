@@ -28,6 +28,7 @@ mouse_filter = 2
 script = ExtResource("2_sprite")
 SpriteNumber = 42
 DarkSpriteNumber = 18042
+FadesAs = 6
 
 [node name="Welcome" type="TextureRect" parent="." unique_id=460831133]
 layout_mode = 0
@@ -35,6 +36,7 @@ mouse_filter = 2
 script = ExtResource("2_sprite")
 SpriteNumber = 43
 DarkSpriteNumber = 18043
+FadesAs = 6
 
 [node name="Lines" type="VBoxContainer" parent="." unique_id=592978176]
 layout_mode = 0
@@ -163,6 +165,7 @@ mouse_filter = 2
 script = ExtResource("2_sprite")
 SpriteNumber = 44
 DarkSpriteNumber = 18044
+FadesAs = 6
 
 [node name="Picture" type="TextureRect" parent="Tutorial" unique_id=692077272]
 layout_mode = 0

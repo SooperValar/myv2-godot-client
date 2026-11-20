@@ -41,6 +41,8 @@ public sealed class SpriteLoader : IDisposable
         cache = new SpriteCache<Texture2D>(cacheBudgetBytes, texture => texture.Dispose());
     }
 
+    public IReadOnlyDictionary<int, int> Swaps { get; set; } = new Dictionary<int, int>();
+
     public void Dispose()
     {
         cache.Clear();
@@ -70,8 +72,9 @@ public sealed class SpriteLoader : IDisposable
         return bmpLibrary.Contains(spriteNumber) ? SpriteSource.BmpLibrary : SpriteSource.None;
     }
 
-    public Texture2D? GetTexture(int spriteNumber)
+    public Texture2D? GetTexture(int shownNumber)
     {
+        var spriteNumber = Swaps.GetValueOrDefault(shownNumber, shownNumber);
         if (cache.TryGet(spriteNumber, out var cachedTexture))
         {
             return cachedTexture;
@@ -89,8 +92,9 @@ public sealed class SpriteLoader : IDisposable
     }
 
     // Kept apart from the texture cache, so evicting a texture never costs a colour the explored map asks for often.
-    public uint AverageColour(int spriteNumber)
+    public uint AverageColour(int shownNumber)
     {
+        var spriteNumber = Swaps.GetValueOrDefault(shownNumber, shownNumber);
         if (!averageColours.TryGetValue(spriteNumber, out var colour))
         {
             colour = LoadImage(spriteNumber) is { } image ? SpriteColours.Average(image.GetData()) : 0;

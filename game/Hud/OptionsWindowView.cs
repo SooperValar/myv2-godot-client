@@ -17,6 +17,7 @@ public partial class OptionsWindowView : Panel
 {
     private const int ButtonSprite = 18129;
     private const string OptionRowScenePath = "res://Hud/option_row.tscn";
+    private const string SliderRowScenePath = "res://Hud/slider_row.tscn";
     private const string KeybindSectionScenePath = "res://Hud/keybind_section.tscn";
     private const string KeybindRowScenePath = "res://Hud/keybind_row.tscn";
     private const string WaitingText = "Press key...";
@@ -37,9 +38,9 @@ public partial class OptionsWindowView : Panel
 
     private Node KeybindSections => GetNode("Pages/Keybinds/Rows/Sections");
 
-    private HSlider ScreenGamma => GetNode<HSlider>("Pages/Display/ScreenGammaRow/ScreenGamma");
+    private HSlider ScreenGamma => GetNode<HSlider>("Pages/Display/Rows/ScreenGammaRow/ScreenGamma");
 
-    private HSlider WorldGamma => GetNode<HSlider>("Pages/Display/WorldGammaRow/WorldGamma");
+    private HSlider WorldGamma => GetNode<HSlider>("Pages/Display/Rows/WorldGammaRow/WorldGamma");
 
     private Label TypingWarning => OptionBox(GeneralOption.EnterToTalk).GetParent().GetNode<Label>("Warning");
 
@@ -70,6 +71,10 @@ public partial class OptionsWindowView : Panel
     public event Action<float>? ScreenGammaChanged;
 
     public event Action<float>? WorldGammaChanged;
+
+    public event Action<DisplaySwap, bool>? SwapChanged;
+
+    public event Action<WindowBackground, int>? BackgroundOpacityChanged;
 
     public override void _Ready()
     {
@@ -118,6 +123,20 @@ public partial class OptionsWindowView : Panel
             ShowGammaValue(WorldGamma, (float)gamma);
             WorldGammaChanged?.Invoke((float)gamma);
         };
+        foreach (var row in DisplaySwaps.Rows)
+        {
+            SwapBox(row.Swap).Toggled += isOn => SwapChanged?.Invoke(row.Swap, isOn);
+        }
+
+        foreach (var row in WindowBackgrounds.Rows)
+        {
+            var slider = BackgroundSlider(row.Window);
+            slider.ValueChanged += opacity =>
+            {
+                ShowOpacityValue(slider, (int)opacity);
+                BackgroundOpacityChanged?.Invoke(row.Window, (int)opacity);
+            };
+        }
     }
 
     // Runs before the chat line and the hotkeys see the key, so the key being bound does nothing else.
@@ -175,6 +194,18 @@ public partial class OptionsWindowView : Panel
         ShowGammaValue(ScreenGamma, settings.ScreenGamma);
         WorldGamma.SetValueNoSignal(settings.WorldGamma);
         ShowGammaValue(WorldGamma, settings.WorldGamma);
+        foreach (var row in DisplaySwaps.Rows)
+        {
+            SwapBox(row.Swap).SetPressedNoSignal(settings.SwapsOn.Contains(row.Swap));
+        }
+
+        foreach (var row in WindowBackgrounds.Rows)
+        {
+            var opacity = settings.BackgroundOpacity[row.Window];
+            BackgroundSlider(row.Window).SetValueNoSignal(opacity);
+            ShowOpacityValue(BackgroundSlider(row.Window), opacity);
+        }
+
         var bindings = BindingActions.Current();
         ShowKeybinds(KeybindsTab.Sections(characterSettings), bindings, settings.EnterToTalk, window);
         ShowTypingWarning(BindingRules.TypingHotkeysWarning(bindings, settings.EnterToTalk));
@@ -223,6 +254,23 @@ public partial class OptionsWindowView : Panel
 
             GetNode(row.GodotOnly ? "Pages/General/Rows/GodotOptions" : "Pages/General/Rows/ClientOptions")
                 .AddChild(rowNode);
+        }
+
+        foreach (var row in DisplaySwaps.Rows)
+        {
+            var rowNode = rowScene.Instantiate<Control>();
+            rowNode.Name = row.Swap.ToString();
+            rowNode.GetNode<Label>("Text").Text = row.Label;
+            GetNode("Pages/Display/Rows/SwapOptions").AddChild(rowNode);
+        }
+
+        var sliderScene = GD.Load<PackedScene>(SliderRowScenePath);
+        foreach (var row in WindowBackgrounds.Rows)
+        {
+            var rowNode = sliderScene.Instantiate<Control>();
+            rowNode.Name = row.Window.ToString();
+            rowNode.GetNode<Label>("Text").Text = row.Label;
+            GetNode("Pages/Display/Rows/BackgroundOptions").AddChild(rowNode);
         }
     }
 
@@ -319,6 +367,11 @@ public partial class OptionsWindowView : Panel
         return GetNode<CheckBox>($"Pages/General/Rows/{group}/{option}/Box");
     }
 
+    private CheckBox SwapBox(DisplaySwap swap) => GetNode<CheckBox>($"Pages/Display/Rows/SwapOptions/{swap}/Box");
+
+    private HSlider BackgroundSlider(WindowBackground window) =>
+        GetNode<HSlider>($"Pages/Display/Rows/BackgroundOptions/{window}/Slider");
+
     private Button TabButton(OptionsTab tab) => GetNode<Button>($"Tabs/{tab}Tab");
 
     private void ShowVolume(int volume) =>
@@ -327,6 +380,9 @@ public partial class OptionsWindowView : Panel
     private void ShowCursorScale(float scale) =>
         GetNode<Label>("Pages/General/Rows/CursorRow/CursorScale/Value").Text =
             scale.ToString("0.0", CultureInfo.InvariantCulture) + "x";
+
+    private static void ShowOpacityValue(HSlider slider, int opacity) =>
+        slider.GetNode<Label>("Value").Text = WindowBackgrounds.Text(opacity);
 
     private static void ShowGammaValue(HSlider slider, float gamma) =>
         slider.GetNode<Label>("Value").Text = Gamma.Text(gamma);

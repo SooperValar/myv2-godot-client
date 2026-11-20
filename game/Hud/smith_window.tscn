@@ -21,6 +21,7 @@ mouse_filter = 2
 script = ExtResource("2_sprite")
 SpriteNumber = 18117
 DarkSpriteNumber = 18118
+FadesAs = 3
 
 [node name="TwoMaterialFrame" type="TextureRect" parent="." unique_id=1790210264]
 layout_mode = 0
@@ -28,6 +29,7 @@ mouse_filter = 2
 script = ExtResource("2_sprite")
 SpriteNumber = 18119
 DarkSpriteNumber = 18120
+FadesAs = 3
 
 [node name="WeaponWhetstone" type="TextureRect" parent="." unique_id=1287297248]
 layout_mode = 0

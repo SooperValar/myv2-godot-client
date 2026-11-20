@@ -71,6 +71,7 @@ public partial class HudView : Control
     private readonly byte[] minimapPixels = new byte[MinimapView.Pixels * MinimapView.Pixels * 4];
     private readonly MinimapView minimapView = new();
     private readonly SkillShortcut skillShortcut = new();
+    private ClientSettings? clientSettings;
 
     private bool darkMode;
     private SpriteLoader? editorSprites;
@@ -115,7 +116,16 @@ public partial class HudView : Control
     }
 
     public CharacterSettings Settings { get; set; } = new();
-    public ClientSettings? ClientSettings { get; set; }
+
+    public ClientSettings? ClientSettings
+    {
+        get => clientSettings;
+        set
+        {
+            clientSettings = value;
+            FadeBackgrounds(this);
+        }
+    }
 
     public PlannerChoicesKeeper? PlannerChoices { get; set; }
 
@@ -371,6 +381,19 @@ public partial class HudView : Control
         });
         optionsWindow.ScreenGammaChanged += gamma => ChangeClientSettings(settings => settings.ScreenGamma = gamma);
         optionsWindow.WorldGammaChanged += gamma => ChangeClientSettings(settings => settings.WorldGamma = gamma);
+        optionsWindow.BackgroundOpacityChanged += (window, opacity) =>
+            ChangeClientSettings(settings => settings.BackgroundOpacity[window] = opacity);
+        optionsWindow.SwapChanged += (swap, isOn) => ChangeClientSettings(settings =>
+        {
+            if (isOn)
+            {
+                settings.SwapsOn.Add(swap);
+            }
+            else
+            {
+                settings.SwapsOn.Remove(swap);
+            }
+        });
 
         var textWindows = GetNode<TextWindowView>("%TextWindows");
         foreach (var (buttonName, click) in TextWindowButtons)
@@ -687,6 +710,19 @@ public partial class HudView : Control
             }
 
             Reload(child);
+        }
+    }
+
+    private static void FadeBackgrounds(Node parent)
+    {
+        foreach (var child in parent.GetChildren())
+        {
+            if (child is ArchiveSprite archiveSprite)
+            {
+                archiveSprite.ApplyFade();
+            }
+
+            FadeBackgrounds(child);
         }
     }
 
@@ -1408,6 +1444,7 @@ public partial class HudView : Control
         ClientSettings.Save();
         ShowQuickStatsLayout();
         GetNode<ChatLine>("%ChatLine").EnterToTalk = ClientSettings.EnterToTalk;
+        FadeBackgrounds(this);
         ClientSettingsChanged?.Invoke();
     }
 

@@ -14,6 +14,7 @@ using TheLastGate.Map;
 using TheLastGate.Net;
 using TheLastGate.Planner;
 using TheLastGate.State;
+using TheLastGate.Windows;
 using TheLastGate.World;
 
 namespace TheLastGate.Game;
@@ -21,6 +22,7 @@ namespace TheLastGate.Game;
 public partial class GameScreen : Control
 {
     private const string LauncherScene = "res://Launcher/launcher.tscn";
+    private const string SpriteProbeScene = "res://World/sprite_probe.tscn";
     private const long SpriteCacheBudgetBytes = 256L * 1024 * 1024;
     private const int WorldViewIndex = 1;
     private const int ErrorFont = 0;
@@ -40,6 +42,7 @@ public partial class GameScreen : Control
     private TickProcessor processor = null!;
     private ScreenGammaLayer? screenGamma;
     private GameSession session = null!;
+    private HashSet<DisplaySwap> shownSwaps = [];
     private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
     private UserDataUpload? userDataUpload;
@@ -176,6 +179,20 @@ public partial class GameScreen : Control
             worldView.PickTileDrawnUnderMouse = settings.PickTileDrawnUnderMouse;
             worldView.WorldGamma = settings.WorldGamma;
         }
+
+        ShowSwaps(settings);
+    }
+
+    private void ShowSwaps(ClientSettings settings)
+    {
+        if (sprites == null || shownSwaps.SetEquals(settings.SwapsOn))
+        {
+            return;
+        }
+
+        shownSwaps = [.. settings.SwapsOn];
+        sprites.Swaps = DisplaySwaps.SpritesFor(shownSwaps);
+        worldView?.RedrawSprites();
     }
 
     private static long NowMilliseconds() => Stopwatch.GetTimestamp() * 1000 / Stopwatch.Frequency;
@@ -216,6 +233,7 @@ public partial class GameScreen : Control
         };
         AddChild(worldView);
         MoveChild(worldView, WorldViewIndex);
+        ShowSwaps(clientSettings);
         hudView.DarkMode = clientSettings.DarkMode;
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
@@ -253,6 +271,18 @@ public partial class GameScreen : Control
         screenGamma = new ScreenGammaLayer();
         AddChild(screenGamma);
         screenGamma.ShowGamma(clientSettings.ScreenGamma);
+        if (SpriteProbeView.IsAvailable)
+        {
+            AddSpriteProbe(worldView, fonts);
+        }
+    }
+
+    private void AddSpriteProbe(WorldView world, IFontSet fonts)
+    {
+        var probe = GD.Load<PackedScene>(SpriteProbeScene).Instantiate<SpriteProbeView>();
+        probe.World = world;
+        AddChild(probe);
+        probe.UseFont(fonts.For(TextColour.White));
     }
 
     private DebugFacts ReadDebugFacts() => new(

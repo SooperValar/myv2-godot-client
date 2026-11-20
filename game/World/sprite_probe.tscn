@@ -1,0 +1,29 @@
+[gd_scene format=3 uid="uid://c7spr1teprobe"]
+
+[ext_resource type="Script" uid="uid://d3sk4bmxvkkjw" path="res://World/SpriteProbeView.cs" id="1_view"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_probe"]
+content_margin_left = 6.0
+content_margin_top = 2.0
+content_margin_right = 6.0
+content_margin_bottom = 2.0
+bg_color = Color(0, 0, 0, 0.7)
+
+[node name="SpriteProbe" type="PanelContainer" unique_id=1460319827]
+z_index = 2
+anchors_preset = 7
+anchor_left = 0.5
+anchor_top = 1.0
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_bottom = -4.0
+grow_horizontal = 2
+grow_vertical = 0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_probe")
+script = ExtResource("1_view")
+
+[node name="Readout" type="Label" parent="." unique_id=874530166]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2

@@ -18,6 +18,7 @@ public partial class WorldView : Node2D
     private const int HighlightBit = 1 << 7;
     private const int SelectedBit = 1 << 8;
     private const int UnshownEffect = -1;
+    private const int UnshownSprite = -1;
     private const float HighlightBrightness = 2f;
     private const float ShadowAlpha = 0.5f;
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
@@ -302,6 +303,18 @@ public partial class WorldView : Node2D
         LastRefreshMilliseconds = clock.Elapsed.TotalMilliseconds;
     }
 
+    // A tile only loads its texture when its sprite number changes, so a new sprite swap has every tile loaded again.
+    public void RedrawSprites()
+    {
+        foreach (var layer in (SpriteLayer[])[floors, objects, characters])
+        {
+            Array.Fill(layer.ShownSprites, UnshownSprite);
+        }
+
+        Array.Fill(shownShadows, UnshownSprite);
+        Refresh();
+    }
+
     public void RecordMovement(int ticks, double tickMilliseconds)
     {
         if (!GlideMovement)
@@ -322,6 +335,20 @@ public partial class WorldView : Node2D
         var player = SnappedPoint(State.Map.Tiles[WorldMap.PlayerTile]);
         glide.Record(player, glidePoints, (long)Time.GetTicksMsec(), ticks, tickMilliseconds);
         glideRecorded = true;
+    }
+
+    public TileSprites? SpritesUnder(Vector2 screenPosition)
+    {
+        if (PointUnder(screenPosition) is not var (column, row))
+        {
+            return null;
+        }
+
+        var tileIndex = (int)column + (int)row * WorldMap.Size;
+        return new TileSprites(
+            floors.ShownSprites[tileIndex],
+            objects.ShownSprites[tileIndex],
+            characters.ShownSprites[tileIndex]);
     }
 
     private static Sprite2D AddSpriteNode(Node2D layer, int column, int row)
