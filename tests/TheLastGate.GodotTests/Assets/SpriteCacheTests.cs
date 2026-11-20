@@ -1,21 +1,24 @@
+using GdUnit4;
 using TheLastGate.Assets;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Assets;
 
+[TestSuite]
 public class SpriteCacheTests
 {
-    [Fact]
+    [TestCase]
     public void TryGet_ReturnsAnAddedValue()
     {
         var cache = new SpriteCache<string>(100);
         cache.Add(1, "one", 10);
 
-        Assert.True(cache.TryGet(1, out var value));
-        Assert.Equal("one", value);
-        Assert.False(cache.TryGet(2, out _));
+        AssertThat(cache.TryGet(1, out var value)).IsTrue();
+        AssertThat(value).IsEqual("one");
+        AssertThat(cache.TryGet(2, out _)).IsFalse();
     }
 
-    [Fact]
+    [TestCase]
     public void Add_OverBudget_EvictsTheLeastRecentlyUsed()
     {
         var evicted = new List<string>();
@@ -26,13 +29,13 @@ public class SpriteCacheTests
 
         cache.Add(3, "three", 10);
 
-        Assert.Equal(["two"], evicted);
-        Assert.True(cache.TryGet(1, out _));
-        Assert.False(cache.TryGet(2, out _));
-        Assert.True(cache.TryGet(3, out _));
+        AssertThat(evicted).ContainsExactly("two");
+        AssertThat(cache.TryGet(1, out _)).IsTrue();
+        AssertThat(cache.TryGet(2, out _)).IsFalse();
+        AssertThat(cache.TryGet(3, out _)).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void Add_LargerThanTheBudget_KeepsTheNewestValue()
     {
         var cache = new SpriteCache<string>(20);
@@ -40,20 +43,20 @@ public class SpriteCacheTests
 
         cache.Add(2, "huge", 50);
 
-        Assert.False(cache.TryGet(1, out _));
-        Assert.True(cache.TryGet(2, out _));
+        AssertThat(cache.TryGet(1, out _)).IsFalse();
+        AssertThat(cache.TryGet(2, out _)).IsTrue();
     }
 
-    [Fact]
+    [TestCase]
     public void Add_RejectsASpriteAlreadyCached()
     {
         var cache = new SpriteCache<string>(100);
         cache.Add(1, "one", 10);
 
-        Assert.Throws<ArgumentException>(() => cache.Add(1, "again", 10));
+        AssertThrown(() => cache.Add(1, "again", 10)).IsInstanceOf<ArgumentException>();
     }
 
-    [Fact]
+    [TestCase]
     public void Clear_EvictsEverythingAndFreesTheBudget()
     {
         var evicted = new List<string>();
@@ -65,10 +68,10 @@ public class SpriteCacheTests
         cache.Add(3, "three", 10);
         cache.Add(4, "four", 10);
 
-        Assert.Equal(["one", "two"], evicted.Order());
-        Assert.False(cache.TryGet(1, out _));
-        Assert.False(cache.TryGet(2, out _));
-        Assert.True(cache.TryGet(3, out _));
-        Assert.True(cache.TryGet(4, out _));
+        AssertThat(evicted).ContainsExactlyInAnyOrder("one", "two");
+        AssertThat(cache.TryGet(1, out _)).IsFalse();
+        AssertThat(cache.TryGet(2, out _)).IsFalse();
+        AssertThat(cache.TryGet(3, out _)).IsTrue();
+        AssertThat(cache.TryGet(4, out _)).IsTrue();
     }
 }

@@ -10,7 +10,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="../../src/TheLastGate.Core/TheLastGate.Core.csproj" />
+    <ProjectReference Include="../../src/TheLastGate.Assets/TheLastGate.Assets.csproj" />
   </ItemGroup>
 
   <ItemGroup>

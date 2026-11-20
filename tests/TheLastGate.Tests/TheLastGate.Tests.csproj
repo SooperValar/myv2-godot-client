@@ -18,6 +18,8 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="../../src/TheLastGate.Assets/TheLastGate.Assets.csproj" />
+    <ProjectReference Include="../../src/TheLastGate.Core/TheLastGate.Core.csproj" />
     <ProjectReference Include="../../tools/SpriteCompiler/SpriteCompiler.csproj" />
   </ItemGroup>
 </Project>
