@@ -144,6 +144,8 @@ public partial class HudView : Control
 
     public Action PlayClick { get; set; } = () => { };
 
+    public Action StartAreaUse { get; set; } = () => { };
+
     public Func<DebugFacts>? ReadDebugFacts { get; set; }
 
     public ExploredMap? ExploredMap { get; set; }
@@ -815,6 +817,12 @@ public partial class HudView : Control
         {
             state?.WorldMapWindow.Toggle();
             ShowWorldMap();
+            return true;
+        }
+
+        if (id == "area_use_hotkey")
+        {
+            StartAreaUse();
             return true;
         }
 

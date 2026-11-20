@@ -31,6 +31,8 @@ public partial class WorldView : Node2D
     // Sprite 4001 numbers the first queued use.
     private const int QueuedNumberSprites = 4000;
     private readonly Sprite2D actionMarker = new() { Centered = false, Visible = false };
+    private readonly HashSet<int> areaFloors = [];
+    private readonly HashSet<int> areaGlows = [];
     private readonly Sprite2D attackMarker = new() { Centered = false, Visible = false };
 
     private readonly Vector2I[] characterOffsets = new Vector2I[TileCount];
@@ -44,9 +46,8 @@ public partial class WorldView : Node2D
     private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
-    private readonly Sprite2D[] queuedNumberMarkers = Markers(UseQueue.MostQueued);
-    private readonly int[] queuedTiles = new int[UseQueue.MostQueued];
-    private readonly Sprite2D[] queuedUseMarkers = Markers(UseQueue.MostQueued);
+    private readonly List<Sprite2D> queuedNumberMarkers = [];
+    private readonly List<Sprite2D> queuedUseMarkers = [];
     private readonly Sprite2D[] shadowNodes = new Sprite2D[TileCount];
     private readonly int[] shownShadows = new int[TileCount];
     private readonly TileEffects?[] tileEffects = new TileEffects?[TileCount];
@@ -65,6 +66,9 @@ public partial class WorldView : Node2D
     };
 
     private readonly Sprite2D worldPicture = new() { Centered = false };
+    private bool areaArmed;
+    private (int X, int Y) areaEnd;
+    private (int X, int Y)? areaStart;
     private Node2D floorLayer = null!;
     private MovementGlide glide = new();
     private bool glideMovement;
@@ -74,6 +78,7 @@ public partial class WorldView : Node2D
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
     private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
+    private int[] queuedTiles = [];
     private Shader? tintShader;
     private float worldGamma = Gamma.Normal;
 
@@ -161,13 +166,132 @@ public partial class WorldView : Node2D
         {
             floorLayer.AddChild(marker);
         }
+    }
 
-        for (var position = 0; position < UseQueue.MostQueued; position++)
+    public override void _Input(InputEvent inputEvent)
+    {
+        if (inputEvent is InputEventKey { Pressed: true } key)
         {
-            queuedUseMarkers[position].Material = TintMaterial(SpriteTint.None, false, true);
-            floorLayer.AddChild(queuedUseMarkers[position]);
-            floorLayer.AddChild(queuedNumberMarkers[position]);
+            if (areaArmed && key.Keycode == Key.Escape)
+            {
+                StopArea();
+                GetViewport().SetInputAsHandled();
+            }
+
+            return;
         }
+
+        if (!areaArmed)
+        {
+            return;
+        }
+
+        switch (inputEvent)
+        {
+            case InputEventMouseButton { ButtonIndex: MouseButton.Right, Pressed: true }:
+                StopArea();
+                GetViewport().SetInputAsHandled();
+                break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true } press
+                when GetViewport().GuiGetHoveredControl() == null && WorldTileAt(press.Position) is { } startTile:
+                areaStart = startTile;
+                areaEnd = startTile;
+                ShowArea();
+                GetViewport().SetInputAsHandled();
+                break;
+            case InputEventMouseMotion motion when areaStart != null && WorldTileAt(motion.Position) is { } endTile:
+                if (AreaUse.FitEnd(areaStart.Value, endTile) is var fitted && fitted != areaEnd)
+                {
+                    areaEnd = fitted;
+                    ShowArea();
+                }
+
+                break;
+            case InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: false } when areaStart != null:
+                QueueArea();
+                StopArea();
+                GetViewport().SetInputAsHandled();
+                break;
+        }
+    }
+
+    private (int X, int Y)? WorldTileAt(Vector2 screenPosition)
+    {
+        if (PointUnder(screenPosition) is not var (column, row))
+        {
+            return null;
+        }
+
+        ref readonly var tile = ref State.Map.Tiles[(int)column + (int)row * WorldMap.Size];
+        return (tile.X, tile.Y);
+    }
+
+    private List<int> AreaTiles()
+    {
+        var area = new List<int>();
+        if (areaStart is not { } start)
+        {
+            return area;
+        }
+
+        var (firstX, lastX) = (Math.Min(start.X, areaEnd.X), Math.Max(start.X, areaEnd.X));
+        var (firstY, lastY) = (Math.Min(start.Y, areaEnd.Y), Math.Max(start.Y, areaEnd.Y));
+        for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
+        {
+            ref readonly var tile = ref State.Map.Tiles[tileIndex];
+            if (tile.X >= firstX && tile.X <= lastX && tile.Y >= firstY && tile.Y <= lastY)
+            {
+                area.Add(tileIndex);
+            }
+        }
+
+        return area;
+    }
+
+    private void FindArea()
+    {
+        areaFloors.Clear();
+        areaGlows.Clear();
+        var area = AreaTiles();
+        areaFloors.UnionWith(area);
+        areaGlows.UnionWith(AreaUse.Pick(State.Map, area).Select(target => target.TileIndex));
+    }
+
+    public void StartAreaUse()
+    {
+        areaArmed = true;
+        State.Chat.Add(new LogLine("Drag an area to use everything in it.", (int)TextColour.Green));
+    }
+
+    private void ShowArea()
+    {
+        var before = areaFloors.ToList();
+        FindArea();
+        foreach (var tileIndex in before.Union(areaFloors))
+        {
+            ShowTile(tileIndex);
+        }
+    }
+
+    private void StopArea()
+    {
+        areaArmed = false;
+        areaStart = null;
+        ShowArea();
+    }
+
+    private void QueueArea()
+    {
+        var targets = AreaUse.Pick(State.Map, AreaTiles());
+        State.AutoWalk.Stop();
+        var queued = State.UseQueue.QueueArea(targets, State.Player.Target);
+        if (queued > 0)
+        {
+            PlayClick();
+        }
+
+        State.Chat.Add(new LogLine($"Queued {queued} in the area.", (int)TextColour.Green));
+        Refresh();
     }
 
     public override void _Process(double delta)
@@ -275,7 +399,13 @@ public partial class WorldView : Node2D
         charactersShown.Clear();
         var target = State.Player.Target;
         var markerTiles = new MarkerTiles(NoTile, NoTile, NoTile, NoTile, 0);
+        if (queuedTiles.Length != State.UseQueue.Count)
+        {
+            queuedTiles = new int[State.UseQueue.Count];
+        }
+
         Array.Fill(queuedTiles, NoTile);
+        FindArea();
         for (var tileIndex = 0; tileIndex < TileCount; tileIndex++)
         {
             selectedIsShown |= ShowTile(tileIndex);
@@ -411,12 +541,20 @@ public partial class WorldView : Node2D
             floors,
             tileIndex,
             MapSpriteRules.FloorSprite(tile, State.ClientTick),
-            new SpriteLook(tile.Light, environmentTint, IsHighlighted(tileIndex, MapLayer.Floor), false));
+            new SpriteLook(
+                tile.Light,
+                environmentTint,
+                IsHighlighted(tileIndex, MapLayer.Floor),
+                areaFloors.Contains(tileIndex)));
         Show(
             objects,
             tileIndex,
             MapSpriteRules.ObjectSprite(tile, column, row, State.Player, HideWalls),
-            new SpriteLook(tile.Light, environmentTint, IsHighlighted(tileIndex, MapLayer.Object), false));
+            new SpriteLook(
+                tile.Light,
+                environmentTint,
+                IsHighlighted(tileIndex, MapLayer.Object) || areaGlows.Contains(tileIndex),
+                false));
         var character = MapSpriteRules.CharacterSprite(tile, column, row);
         var selected = character != 0 && SelectedCharacter != 0 && tile.CharacterNumber == SelectedCharacter;
         Show(
@@ -641,9 +779,21 @@ public partial class WorldView : Node2D
 
         // The use in progress shows its own marker. Each number goes in before its green use marker, which then sits
         // between the tile and the number.
-        for (var position = 0; position < UseQueue.MostQueued; position++)
+        while (queuedUseMarkers.Count < queuedTiles.Length)
         {
-            var tileIndex = queuedTiles[position] == found.ActionTile ? NoTile : queuedTiles[position];
+            var useMarker = new Sprite2D { Centered = false, Visible = false };
+            useMarker.Material = TintMaterial(SpriteTint.None, false, true);
+            floorLayer.AddChild(useMarker);
+            queuedUseMarkers.Add(useMarker);
+            var numberMarker = new Sprite2D { Centered = false, Visible = false };
+            floorLayer.AddChild(numberMarker);
+            queuedNumberMarkers.Add(numberMarker);
+        }
+
+        for (var position = 0; position < queuedUseMarkers.Count; position++)
+        {
+            var tileIndex = position >= queuedTiles.Length ? NoTile
+                : queuedTiles[position] == found.ActionTile ? NoTile : queuedTiles[position];
             PlaceOnGround(queuedNumberMarkers[position], QueuedNumberSprites + position + 1, tileIndex, characters);
             PlaceOnGround(queuedUseMarkers[position], QueuedUseSprite, tileIndex, characters);
         }
@@ -666,9 +816,6 @@ public partial class WorldView : Node2D
             queuedTiles[position - 1] = tileIndex;
         }
     }
-
-    private static Sprite2D[] Markers(int count) =>
-        Enumerable.Range(0, count).Select(_ => new Sprite2D { Centered = false, Visible = false }).ToArray();
 
     // Ground markers are drawn right after the tile's node in its layer, at the tile's own position.
     private void PlaceOnGround(Sprite2D marker, int spriteNumber, int tileIndex, SpriteLayer after)

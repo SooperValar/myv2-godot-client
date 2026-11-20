@@ -244,6 +244,7 @@ public partial class GameScreen : Control
         hudView.ClientSettingsChanged += () => ApplyClientSettings(clientSettings);
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
+        hudView.StartAreaUse = worldView.StartAreaUse;
         hudView.ReadDebugFacts = ReadDebugFacts;
         hudView.ExploredMap = exploredMap?.Recorder.Map;
         hudView.NotesSetAsideFile = mapNotes is { WasSetAside: true } ? mapNotes.FileName : null;

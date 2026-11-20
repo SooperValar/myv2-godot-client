@@ -13,17 +13,19 @@ public enum UseQueueAdd
     Queued,
 }
 
-// Uses queued with Ctrl+Shift, done one after another: the first is sent at once when the player is idle, and the
-// next when the server says the use before it has ended. A queued use stays first until the server starts it.
+// Uses queued with Ctrl+Shift, or uses and pickups queued for an area, done one after another: the first is sent at
+// once when the player is idle, and the next when the server says the action before it has ended. A queued action
+// stays first until the server starts it.
 public sealed class UseQueue(TextLog chat)
 {
     public const int MostQueued = 5;
 
     private const string FullMessage = "Your queue is full.";
     private const int Idle = 0;
+    private const int PickingUp = 2;
     private const int Using = 4;
 
-    private readonly List<(int X, int Y)> queued = [];
+    private readonly List<(int X, int Y, ClientCommand Command)> queued = [];
     private bool enabled;
 
     public bool Enabled
@@ -44,27 +46,42 @@ public sealed class UseQueue(TextLog chat)
     public int Count => queued.Count;
 
     // 1 for the next use, 0 when the tile isn't queued.
-    public int PositionOf(int x, int y) => queued.IndexOf((x, y)) + 1;
+    public int PositionOf(int x, int y) => queued.FindIndex(entry => (entry.X, entry.Y) == (x, y)) + 1;
 
     public UseQueueAdd Add(int x, int y, PlayerTarget target)
     {
-        if (target.MiscAction == Using && (target.MiscTarget1, target.MiscTarget2) == (x, y))
-        {
-            return UseQueueAdd.Ignored;
-        }
-
-        if (queued.Count >= MostQueued)
+        if (queued.Count >= MostQueued && !IsInProgress(x, y, target) && PositionOf(x, y) == 0)
         {
             chat.Add(new LogLine(FullMessage, (int)TextColour.Red));
             return UseQueueAdd.Full;
         }
 
-        if (queued.Contains((x, y)))
+        return Enqueue(x, y, ClientCommand.Use, target);
+    }
+
+    public int QueueArea(IEnumerable<AreaTarget> targets, PlayerTarget target)
+    {
+        queued.Clear();
+        var count = 0;
+        foreach (var areaTarget in targets)
+        {
+            if (Enqueue(areaTarget.X, areaTarget.Y, areaTarget.Command, target) == UseQueueAdd.Queued)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+
+    private UseQueueAdd Enqueue(int x, int y, ClientCommand command, PlayerTarget target)
+    {
+        if (IsInProgress(x, y, target) || PositionOf(x, y) > 0)
         {
             return UseQueueAdd.Ignored;
         }
 
-        queued.Add((x, y));
+        queued.Add((x, y, command));
         if (target.MiscAction == Idle && queued.Count == 1)
         {
             SendNext();
@@ -75,15 +92,15 @@ public sealed class UseQueue(TextLog chat)
 
     public void TargetChanged(PlayerTarget previous, PlayerTarget now)
     {
-        if (previous.MiscAction == Using)
+        if (IsBusy(previous))
         {
-            if (now.MiscAction != Using)
+            if (!IsBusy(now))
             {
                 SendNext();
             }
         }
-        else if (now.MiscAction == Using && queued.Count > 0
-            && queued[0] == (now.MiscTarget1, now.MiscTarget2))
+        else if (IsBusy(now) && queued.Count > 0
+            && (queued[0].X, queued[0].Y) == (now.MiscTarget1, now.MiscTarget2))
         {
             queued.RemoveAt(0);
         }
@@ -105,7 +122,12 @@ public sealed class UseQueue(TextLog chat)
     {
         if (queued.Count > 0)
         {
-            Send(MapCommandPackets.ForTile(ClientCommand.Use, queued[0].X, queued[0].Y));
+            Send(MapCommandPackets.ForTile(queued[0].Command, queued[0].X, queued[0].Y));
         }
     }
+
+    private static bool IsInProgress(int x, int y, PlayerTarget target) =>
+        IsBusy(target) && (target.MiscTarget1, target.MiscTarget2) == (x, y);
+
+    private static bool IsBusy(PlayerTarget target) => target.MiscAction is Using or PickingUp;
 }

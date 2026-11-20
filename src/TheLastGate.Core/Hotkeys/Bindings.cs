@@ -51,6 +51,7 @@ public static class Bindings
         new("swap_gear_hotkey", "Swap Gearset", BindingCategory.General),
         new("swap_position_hotkey", "Swap Position", BindingCategory.General),
         new("who_hotkey", "Who's Online", BindingCategory.General),
+        new("area_use_hotkey", "Area Use", BindingCategory.General),
         new("display_debug_information_hotkey", "Display Debug Info", BindingCategory.General),
         new("exit_hotkey", "Exit", BindingCategory.General),
         new("my_buff_hotkey", "Buffs", BindingCategory.General),

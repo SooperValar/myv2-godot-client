@@ -32,6 +32,7 @@ public class BindingActionsTests
         ["swap_gear_hotkey"] = "Insert",
         ["swap_position_hotkey"] = null,
         ["who_hotkey"] = null,
+        ["area_use_hotkey"] = null,
         ["display_debug_information_hotkey"] = "F11",
         ["exit_hotkey"] = "F12",
         ["my_buff_hotkey"] = null,

@@ -8,7 +8,7 @@ public class BindingsTests
     [Fact]
     public void All_HasEveryBindingOfTheCurrentClientOnce()
     {
-        Assert.Equal(50, Bindings.All.Count);
+        Assert.Equal(51, Bindings.All.Count);
         Assert.Equal(Bindings.All.Count, Bindings.All.Select(binding => binding.Id).Distinct().Count());
     }
 
