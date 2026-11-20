@@ -1,6 +1,5 @@
 using TheLastGate.Assets;
 using TheLastGate.Hud;
-using TheLastGate.State;
 
 namespace TheLastGate.Tests;
 
@@ -42,20 +41,5 @@ public class DebugInformationTests
     public void VersionText_SplitsTheVersionIntoItsThreeBytes(uint version, string text)
     {
         Assert.Equal(text, DebugInformation.VersionText(version));
-    }
-
-    [Fact]
-    public void WindowReset_ResetsAWindowedGameToTheVirtualSizeAndSaysSo()
-    {
-        Assert.Equal(
-            new LogLine("Game window reset to default resolution.", (int)TextColour.Green),
-            WindowReset.Line(true));
-        Assert.Equal((1280, 720), WindowReset.Size);
-    }
-
-    [Fact]
-    public void WindowReset_LeavesAFullScreenGameAlone()
-    {
-        Assert.Null(WindowReset.Line(false));
     }
 }

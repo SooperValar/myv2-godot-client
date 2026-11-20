@@ -1,18 +1,21 @@
+using GdUnit4;
 using TheLastGate.Hud;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Hud;
 
+[TestSuite]
 public class LogScrollTests
 {
     private const int LongHistory = 500;
 
-    [Fact]
+    [TestCase]
     public void LinesBack_StartsAtTheNewestLine()
     {
-        Assert.Equal(0, new LogScroll().LinesBack);
+        AssertThat(new LogScroll().LinesBack).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Scroll_MovesBackAndForward()
     {
         var scroll = ScrollWithHistory(LongHistory);
@@ -21,10 +24,10 @@ public class LogScrollTests
         scroll.Scroll(LogScroll.WheelLines);
         scroll.Scroll(-LogScroll.WheelLines);
 
-        Assert.Equal(LogScroll.PageLines, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(LogScroll.PageLines);
     }
 
-    [Fact]
+    [TestCase]
     public void Scroll_StopsAtTheNewestLine()
     {
         var scroll = ScrollWithHistory(LongHistory);
@@ -32,10 +35,10 @@ public class LogScrollTests
 
         scroll.Scroll(-LogScroll.PageLines);
 
-        Assert.Equal(0, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Scroll_GoesBackNoFurtherThanTheCurrentClientAllows()
     {
         var scroll = ScrollWithHistory(LongHistory);
@@ -45,10 +48,10 @@ public class LogScrollTests
             scroll.Scroll(LogScroll.PageLines);
         }
 
-        Assert.Equal(LogScroll.MaxLinesBack, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(LogScroll.MaxLinesBack);
     }
 
-    [Fact]
+    [TestCase]
     public void Scroll_GoesBackNoFurtherThanTheOldestLine()
     {
         var scroll = ScrollWithHistory(20);
@@ -56,23 +59,23 @@ public class LogScrollTests
         scroll.Scroll(LogScroll.PageLines);
         scroll.Scroll(LogScroll.PageLines);
 
-        Assert.Equal(20, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(20);
     }
 
-    [Fact]
+    [TestCase]
     public void Advance_ReturnsToTheNewestLineThirtySecondsAfterTheLastScroll()
     {
         var scroll = ScrollWithHistory(LongHistory);
         scroll.Scroll(LogScroll.PageLines);
 
         scroll.Advance(TimeSpan.FromSeconds(29.9));
-        Assert.Equal(LogScroll.PageLines, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(LogScroll.PageLines);
 
         scroll.Advance(TimeSpan.FromSeconds(0.1));
-        Assert.Equal(0, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void Scroll_StartsTheThirtySecondsAgain()
     {
         var scroll = ScrollWithHistory(LongHistory);
@@ -82,10 +85,10 @@ public class LogScrollTests
         scroll.Scroll(LogScroll.WheelLines);
         scroll.Advance(TimeSpan.FromSeconds(20));
 
-        Assert.Equal(LogScroll.PageLines + LogScroll.WheelLines, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(LogScroll.PageLines + LogScroll.WheelLines);
     }
 
-    [Fact]
+    [TestCase]
     public void LinesChanged_KeepsTheSameLinesInViewWhileScrolledBack()
     {
         var scroll = ScrollWithHistory(LongHistory);
@@ -93,20 +96,20 @@ public class LogScrollTests
 
         scroll.LinesChanged(3, LongHistory + 3);
 
-        Assert.Equal(LogScroll.PageLines + 3, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(LogScroll.PageLines + 3);
     }
 
-    [Fact]
+    [TestCase]
     public void LinesChanged_KeepsTheLatestLinesInViewAtTheNewestLine()
     {
         var scroll = ScrollWithHistory(LongHistory);
 
         scroll.LinesChanged(3, LongHistory + 3);
 
-        Assert.Equal(0, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(0);
     }
 
-    [Fact]
+    [TestCase]
     public void LinesChanged_HoldsStillPastTheScrollLimit()
     {
         var scroll = ScrollWithHistory(LongHistory);
@@ -114,10 +117,10 @@ public class LogScrollTests
 
         scroll.LinesChanged(10, LongHistory + 10);
 
-        Assert.Equal(LogScroll.MaxLinesBack + 10, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(LogScroll.MaxLinesBack + 10);
     }
 
-    [Fact]
+    [TestCase]
     public void LinesChanged_StopsAtTheOldestLineStillKept()
     {
         var scroll = ScrollWithHistory(30);
@@ -125,7 +128,7 @@ public class LogScrollTests
 
         scroll.LinesChanged(10, 28);
 
-        Assert.Equal(28, scroll.LinesBack);
+        AssertThat(scroll.LinesBack).IsEqual(28);
     }
 
     private static LogScroll ScrollWithHistory(int oldestLinesBack)

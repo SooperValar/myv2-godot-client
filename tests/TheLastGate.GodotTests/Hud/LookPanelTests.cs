@@ -1,18 +1,21 @@
+using GdUnit4;
 using TheLastGate.Hud;
 using TheLastGate.State;
 using TheLastGate.World;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Hud;
 
+[TestSuite]
 public class LookPanelTests
 {
-    [Fact]
+    [TestCase]
     public void Shown_IsEmptyBeforeAnyLook()
     {
-        Assert.Null(new LookPanel().Shown);
+        AssertThat(new LookPanel().Shown).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Hide_StopsShowingTheLookAtOnce()
     {
         var panel = new LookPanel();
@@ -20,10 +23,10 @@ public class LookPanelTests
 
         panel.Hide();
 
-        Assert.Null(panel.Shown);
+        AssertThat(panel.Shown).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Show_KeepsTheLookForTenSeconds()
     {
         var panel = new LookPanel();
@@ -31,13 +34,13 @@ public class LookPanelTests
         panel.Show(look);
 
         panel.Advance(TimeSpan.FromSeconds(9.9));
-        Assert.Same(look, panel.Shown);
+        AssertThat(panel.Shown).IsSame(look);
 
         panel.Advance(TimeSpan.FromSeconds(0.1));
-        Assert.Null(panel.Shown);
+        AssertThat(panel.Shown).IsNull();
     }
 
-    [Fact]
+    [TestCase]
     public void Show_StartsTheTenSecondsAgainForTheNextLook()
     {
         var panel = new LookPanel();
@@ -48,17 +51,16 @@ public class LookPanelTests
         panel.Show(next);
         panel.Advance(TimeSpan.FromSeconds(8));
 
-        Assert.Same(next, panel.Shown);
+        AssertThat(panel.Shown).IsSame(next);
     }
 
-    [Theory]
-    [InlineData(LookFlags.None, SpriteTint.None)]
-    [InlineData(LookFlags.Shop, SpriteTint.None)]
-    [InlineData(LookFlags.Shadow, SpriteTint.Grey)]
-    [InlineData(LookFlags.Bloody, SpriteTint.Infrared)]
-    [InlineData(LookFlags.Shadow | LookFlags.Bloody, SpriteTint.Grey | SpriteTint.Infrared)]
+    [TestCase(LookFlags.None, SpriteTint.None)]
+    [TestCase(LookFlags.Shop, SpriteTint.None)]
+    [TestCase(LookFlags.Shadow, SpriteTint.Grey)]
+    [TestCase(LookFlags.Bloody, SpriteTint.Infrared)]
+    [TestCase(LookFlags.Shadow | LookFlags.Bloody, SpriteTint.Grey | SpriteTint.Infrared)]
     public void PortraitTint_GreysShadowsAndReddensTheBloody(LookFlags flags, SpriteTint tint)
     {
-        Assert.Equal(tint, LookPanel.PortraitTint(flags));
+        AssertThat(LookPanel.PortraitTint(flags)).IsEqual(tint);
     }
 }
