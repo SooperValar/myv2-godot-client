@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using TheLastGate.Assets;
 using TheLastGate.Hotkeys;
@@ -92,7 +93,7 @@ public sealed class OptionsWindow
         return change;
     }
 
-    public LogLine? ChooseResetAll()
+    public LogLine? ChooseReset()
     {
         if (!ConfirmingReset)
         {
@@ -101,8 +102,17 @@ public sealed class OptionsWindow
         }
 
         ConfirmingReset = false;
-        return new LogLine("Keybinds have been set to their defaults.", (int)TextColour.Green);
+        return new LogLine($"{ResetName(Tab)} been set to their defaults.", (int)TextColour.Green);
     }
+
+    private static string ResetName(OptionsTab tab) => tab switch
+    {
+        OptionsTab.General => "General options have",
+        OptionsTab.Audio => "Audio settings have",
+        OptionsTab.Keybinds => "Keybinds have",
+        OptionsTab.Display => "Display settings have",
+        _ => throw new UnreachableException(),
+    };
 
     private static bool IsModifier(string key) => key is KeyNames.Shift or KeyNames.Ctrl or KeyNames.Alt;
 

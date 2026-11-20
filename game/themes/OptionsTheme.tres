@@ -21,6 +21,7 @@ bg_color = Color(0.2, 0.2, 0.2, 1)
 [sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_none"]
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button"]
+metadata/sprite = 18129
 texture_margin_left = 3.0
 texture_margin_top = 3.0
 texture_margin_right = 3.0
@@ -28,6 +29,7 @@ texture_margin_bottom = 3.0
 modulate_color = Color(1, 1, 1, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_hover"]
+metadata/sprite = 18129
 texture_margin_left = 3.0
 texture_margin_top = 3.0
 texture_margin_right = 3.0
@@ -35,6 +37,7 @@ texture_margin_bottom = 3.0
 modulate_color = Color(0.701961, 0.701961, 0.701961, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_active"]
+metadata/sprite = 18129
 texture_margin_left = 3.0
 texture_margin_top = 3.0
 texture_margin_right = 3.0
@@ -42,6 +45,7 @@ texture_margin_bottom = 3.0
 modulate_color = Color(0.85098, 0.85098, 0.85098, 1)
 
 [sub_resource type="StyleBoxTexture" id="StyleBoxTexture_button_disabled"]
+metadata/sprite = 18129
 texture_margin_left = 3.0
 texture_margin_top = 3.0
 texture_margin_right = 3.0
@@ -66,55 +70,37 @@ bg_color = Color(0.788235, 0.733333, 0.517647, 0.08)
 border_width_bottom = 1
 border_color = Color(0.180392, 0.152941, 0.0901961, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_table_header_row"]
-content_margin_left = 6.0
-content_margin_right = 6.0
-content_margin_top = 2.0
-content_margin_bottom = 5.0
-bg_color = Color(0, 0, 0, 0)
-border_width_bottom = 2
-border_color = Color(0.443137, 0.4, 0.243137, 1)
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_table_group"]
-bg_color = Color(0, 0, 0, 0)
-border_width_bottom = 1
-border_color = Color(0.396078, 0.360784, 0.235294, 1)
-
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark_frame"]
-content_margin_left = 3.0
-content_margin_top = 3.0
-content_margin_right = 3.0
-content_margin_bottom = 3.0
-bg_color = Color(0.0235294, 0.0352941, 0.0666667, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.396078, 0.360784, 0.235294, 1)
+bg_color = Color(0.027451, 0.0431373, 0.0745098, 1)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark_panel"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dark_panel"]
+metadata/sprite = 18042
 content_margin_left = 10.0
-content_margin_top = 6.0
+content_margin_top = 8.0
 content_margin_right = 10.0
 content_margin_bottom = 8.0
-bg_color = Color(0.0705882, 0.0196078, 0.0196078, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.443137, 0.4, 0.243137, 1)
+texture_margin_left = 6.0
+texture_margin_top = 6.0
+texture_margin_right = 6.0
+texture_margin_bottom = 6.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+region_rect = Rect2(0, 0, 282, 282)
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark_footer"]
+[sub_resource type="StyleBoxTexture" id="StyleBoxTexture_dark_footer"]
+metadata/sprite = 18042
 content_margin_left = 8.0
 content_margin_top = 5.0
 content_margin_right = 8.0
 content_margin_bottom = 5.0
-bg_color = Color(0.0235294, 0.0352941, 0.0666667, 1)
-border_width_left = 1
-border_width_top = 1
-border_width_right = 1
-border_width_bottom = 1
-border_color = Color(0.443137, 0.4, 0.243137, 1)
+texture_margin_left = 3.0
+texture_margin_top = 2.0
+texture_margin_right = 3.0
+texture_margin_bottom = 3.0
+axis_stretch_horizontal = 1
+axis_stretch_vertical = 1
+region_rect = Rect2(0, 282, 282, 35)
+draw_center = false
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_dark_button"]
 content_margin_left = 12.0
@@ -139,6 +125,80 @@ border_width_top = 1
 border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.443137, 0.4, 0.243137, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_options_tab_strip"]
+content_margin_left = 6.0
+content_margin_top = 0.0
+content_margin_right = 6.0
+content_margin_bottom = 0.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0.443137, 0.4, 0.243137, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_options_tab"]
+content_margin_left = 2.0
+content_margin_top = 4.0
+content_margin_right = 2.0
+content_margin_bottom = 5.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_options_tab_on"]
+content_margin_left = 2.0
+content_margin_top = 4.0
+content_margin_right = 2.0
+content_margin_bottom = 5.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0.952941, 0.858824, 0.415686, 1)
+
+[sub_resource type="StyleBoxEmpty" id="StyleBoxEmpty_options_caption"]
+content_margin_left = 6.0
+content_margin_top = 8.0
+content_margin_right = 6.0
+content_margin_bottom = 3.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_options_slider"]
+content_margin_top = 1.0
+content_margin_bottom = 1.0
+bg_color = Color(0.443137, 0.4, 0.243137, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_options_scroll"]
+content_margin_left = 5.5
+content_margin_top = 2.0
+content_margin_right = 5.5
+content_margin_bottom = 2.0
+bg_color = Color(0.0901961, 0, 0.0196078, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_options_scroll_grabber"]
+content_margin_top = 5.5
+content_margin_bottom = 5.5
+bg_color = Color(0, 0.380392, 0, 1)
+border_width_left = 2
+border_width_right = 2
+border_color = Color(0.0901961, 0, 0.0196078, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_options_scroll_grabber_pressed"]
+content_margin_top = 5.5
+content_margin_bottom = 5.5
+bg_color = Color(0, 0.580392, 0, 1)
+border_width_left = 2
+border_width_right = 2
+border_color = Color(0.0901961, 0, 0.0196078, 1)
+anti_aliasing = false
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_table_header_row"]
+content_margin_left = 6.0
+content_margin_right = 6.0
+content_margin_top = 2.0
+content_margin_bottom = 5.0
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 2
+border_color = Color(0.443137, 0.4, 0.243137, 1)
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_table_group"]
+bg_color = Color(0, 0, 0, 0)
+border_width_bottom = 1
+border_color = Color(0.396078, 0.360784, 0.235294, 1)
 
 [resource]
 default_font = ExtResource("1_font")
@@ -183,37 +243,58 @@ DarkButton/styles/hover_pressed = SubResource("StyleBoxFlat_dark_button_hover")
 DarkButton/styles/normal = SubResource("StyleBoxFlat_dark_button")
 DarkButton/styles/pressed = SubResource("StyleBoxFlat_dark_button_hover")
 DarkWindowFooter/base_type = &"PanelContainer"
-DarkWindowFooter/styles/panel = SubResource("StyleBoxFlat_dark_footer")
+DarkWindowFooter/styles/panel = SubResource("StyleBoxTexture_dark_footer")
 DarkWindowFrame/base_type = &"PanelContainer"
 DarkWindowFrame/styles/panel = SubResource("StyleBoxFlat_dark_frame")
 DarkWindowPanel/base_type = &"PanelContainer"
-DarkWindowPanel/styles/panel = SubResource("StyleBoxFlat_dark_panel")
+DarkWindowPanel/styles/panel = SubResource("StyleBoxTexture_dark_panel")
 DataTable/base_type = &"VBoxContainer"
 DataTable/constants/separation = 0
-TableCell/base_type = &"Label"
-TableCell/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
-TableCellDim/base_type = &"Label"
-TableCellDim/colors/font_color = Color(0.564706, 0.603922, 0.603922, 1)
-TableCellNegative/base_type = &"Label"
-TableCellNegative/colors/font_color = Color(1, 0.462745, 0.435294, 1)
-TableCellPositive/base_type = &"Label"
-TableCellPositive/colors/font_color = Color(0.27451, 0.886275, 0.286275, 1)
-TableCellZero/base_type = &"Label"
-TableCellZero/colors/font_color = Color(0.564706, 0.603922, 0.603922, 1)
-TableCells/base_type = &"HBoxContainer"
-TableCells/constants/separation = 12
-TableGroup/base_type = &"PanelContainer"
-TableGroup/styles/panel = SubResource("StyleBoxFlat_table_group")
-TableGroupCaption/base_type = &"Label"
-TableGroupCaption/colors/font_color = Color(0.564706, 0.603922, 0.603922, 1)
-TableHeader/base_type = &"Label"
-TableHeader/colors/font_color = Color(0.286275, 0.737255, 0.886275, 1)
-TableHeaderRow/base_type = &"PanelContainer"
-TableHeaderRow/styles/panel = SubResource("StyleBoxFlat_table_header_row")
-TableRow/base_type = &"PanelContainer"
-TableRow/styles/panel = SubResource("StyleBoxFlat_table_row")
-TableRowHover/base_type = &"PanelContainer"
-TableRowHover/styles/panel = SubResource("StyleBoxFlat_table_row_hover")
+OptionsCaption/base_type = &"Label"
+OptionsCaption/colors/font_color = Color(0.788235, 0.733333, 0.517647, 1)
+OptionsCaption/colors/font_shadow_color = Color(0, 0, 0, 1)
+OptionsCaption/constants/shadow_offset_x = 1
+OptionsCaption/constants/shadow_offset_y = 1
+OptionsCaption/styles/normal = SubResource("StyleBoxEmpty_options_caption")
+OptionsRowText/base_type = &"Label"
+OptionsRowText/colors/font_color = Color(0.878431, 0.878431, 0.878431, 1)
+OptionsRowText/colors/font_shadow_color = Color(0, 0, 0, 1)
+OptionsRowText/constants/shadow_offset_x = 1
+OptionsRowText/constants/shadow_offset_y = 1
+OptionsScrollBar/base_type = &"VScrollBar"
+OptionsScrollBar/styles/grabber = SubResource("StyleBoxFlat_options_scroll_grabber")
+OptionsScrollBar/styles/grabber_highlight = SubResource("StyleBoxFlat_options_scroll_grabber")
+OptionsScrollBar/styles/grabber_pressed = SubResource("StyleBoxFlat_options_scroll_grabber_pressed")
+OptionsScrollBar/styles/scroll = SubResource("StyleBoxFlat_options_scroll")
+OptionsScrollBar/styles/scroll_focus = SubResource("StyleBoxFlat_options_scroll")
+OptionsSlider/base_type = &"HSlider"
+OptionsSlider/icons/grabber = ExtResource("4_grabber")
+OptionsSlider/icons/grabber_highlight = ExtResource("4_grabber")
+OptionsSlider/styles/focus = SubResource("StyleBoxEmpty_none")
+OptionsSlider/styles/grabber_area = SubResource("StyleBoxEmpty_none")
+OptionsSlider/styles/grabber_area_highlight = SubResource("StyleBoxEmpty_none")
+OptionsSlider/styles/slider = SubResource("StyleBoxFlat_options_slider")
+OptionsTab/base_type = &"Button"
+OptionsTab/colors/font_color = Color(0.788235, 0.733333, 0.517647, 1)
+OptionsTab/colors/font_focus_color = Color(0.788235, 0.733333, 0.517647, 1)
+OptionsTab/colors/font_hover_color = Color(0.952941, 0.858824, 0.415686, 1)
+OptionsTab/colors/font_hover_pressed_color = Color(0.247059, 0.741176, 0.886275, 1)
+OptionsTab/colors/font_pressed_color = Color(0.247059, 0.741176, 0.886275, 1)
+OptionsTab/colors/font_shadow_color = Color(0, 0, 0, 1)
+OptionsTab/constants/shadow_offset_x = 1
+OptionsTab/constants/shadow_offset_y = 1
+OptionsTab/styles/focus = SubResource("StyleBoxEmpty_none")
+OptionsTab/styles/hover = SubResource("StyleBoxEmpty_options_tab")
+OptionsTab/styles/hover_pressed = SubResource("StyleBoxFlat_options_tab_on")
+OptionsTab/styles/normal = SubResource("StyleBoxEmpty_options_tab")
+OptionsTab/styles/pressed = SubResource("StyleBoxFlat_options_tab_on")
+OptionsTabStrip/base_type = &"PanelContainer"
+OptionsTabStrip/styles/panel = SubResource("StyleBoxFlat_options_tab_strip")
+OptionsValue/base_type = &"Label"
+OptionsValue/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+OptionsValue/colors/font_shadow_color = Color(0, 0, 0, 1)
+OptionsValue/constants/shadow_offset_x = 1
+OptionsValue/constants/shadow_offset_y = 1
 HeadingLabel/base_type = &"Label"
 HeadingLabel/colors/font_color = Color(0.286275, 0.737255, 0.886275, 1)
 HSlider/icons/grabber = ExtResource("4_grabber")
@@ -236,3 +317,27 @@ TabButton/styles/hover_pressed = SubResource("StyleBoxTexture_button")
 TabButton/styles/normal = SubResource("StyleBoxTexture_button_hover")
 TabButton/styles/pressed = SubResource("StyleBoxTexture_button")
 TabContainer/styles/panel = SubResource("StyleBoxEmpty_none")
+TableCell/base_type = &"Label"
+TableCell/colors/font_color = Color(0.952941, 0.858824, 0.415686, 1)
+TableCellDim/base_type = &"Label"
+TableCellDim/colors/font_color = Color(0.564706, 0.603922, 0.603922, 1)
+TableCellNegative/base_type = &"Label"
+TableCellNegative/colors/font_color = Color(1, 0.462745, 0.435294, 1)
+TableCellPositive/base_type = &"Label"
+TableCellPositive/colors/font_color = Color(0.27451, 0.886275, 0.286275, 1)
+TableCells/base_type = &"HBoxContainer"
+TableCells/constants/separation = 12
+TableCellZero/base_type = &"Label"
+TableCellZero/colors/font_color = Color(0.564706, 0.603922, 0.603922, 1)
+TableGroup/base_type = &"PanelContainer"
+TableGroup/styles/panel = SubResource("StyleBoxFlat_table_group")
+TableGroupCaption/base_type = &"Label"
+TableGroupCaption/colors/font_color = Color(0.564706, 0.603922, 0.603922, 1)
+TableHeader/base_type = &"Label"
+TableHeader/colors/font_color = Color(0.286275, 0.737255, 0.886275, 1)
+TableHeaderRow/base_type = &"PanelContainer"
+TableHeaderRow/styles/panel = SubResource("StyleBoxFlat_table_header_row")
+TableRow/base_type = &"PanelContainer"
+TableRow/styles/panel = SubResource("StyleBoxFlat_table_row")
+TableRowHover/base_type = &"PanelContainer"
+TableRowHover/styles/panel = SubResource("StyleBoxFlat_table_row_hover")

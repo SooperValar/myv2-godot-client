@@ -15,6 +15,7 @@ namespace TheLastGate.Config;
 public sealed class ClientSettings
 {
     private const int MaxSoundVolume = 10;
+    private const float DefaultCursorScale = 1f;
     private const float SmallestCursorScale = 0.5f;
     private const float LargestCursorScale = 8f;
 
@@ -66,7 +67,7 @@ public sealed class ClientSettings
         GlideMovement = file.GetValue(WorldSection, "glide_movement", false).AsBool();
         LoadKeyBindings(file);
         CursorScale = Math.Clamp(
-            file.GetValue(DisplaySection, "cursor_scale", 1f).AsSingle(),
+            file.GetValue(DisplaySection, "cursor_scale", DefaultCursorScale).AsSingle(),
             SmallestCursorScale,
             LargestCursorScale);
         ScreenGamma = Gamma.Clamp(file.GetValue(DisplaySection, "screen_gamma", Gamma.Normal).AsSingle());
@@ -165,6 +166,40 @@ public sealed class ClientSettings
                 default:
                     throw new UnreachableException();
             }
+        }
+    }
+
+    public void Reset(OptionsTab tab)
+    {
+        switch (tab)
+        {
+            case OptionsTab.General:
+                foreach (var row in GeneralOptions.Rows)
+                {
+                    this[row.Option] = row.Default;
+                }
+
+                CursorScale = DefaultCursorScale;
+                break;
+            case OptionsTab.Audio:
+                SoundEnabled = true;
+                SoundVolume = MaxSoundVolume;
+                break;
+            case OptionsTab.Keybinds:
+                BindingActions.ResetAll();
+                break;
+            case OptionsTab.Display:
+                ScreenGamma = Gamma.Normal;
+                WorldGamma = Gamma.Normal;
+                SwapsOn.Clear();
+                foreach (var row in WindowBackgrounds.Rows)
+                {
+                    BackgroundOpacity[row.Window] = WindowBackgrounds.Solid;
+                }
+
+                break;
+            default:
+                throw new UnreachableException();
         }
     }
 

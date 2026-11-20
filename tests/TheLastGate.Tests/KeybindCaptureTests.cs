@@ -179,20 +179,25 @@ public class KeybindCaptureTests
     }
 
     [Fact]
-    public void ChooseResetAll_FirstAsksForConfirmation()
+    public void ChooseReset_FirstAsksForConfirmation()
     {
-        Assert.Null(window.ChooseResetAll());
+        Assert.Null(window.ChooseReset());
         Assert.True(window.ConfirmingReset);
     }
 
-    [Fact]
-    public void ChooseResetAll_Twice_ResetsAndSaysSoInGreen()
+    [Theory]
+    [InlineData(OptionsTab.General, "General options have been set to their defaults.")]
+    [InlineData(OptionsTab.Audio, "Audio settings have been set to their defaults.")]
+    [InlineData(OptionsTab.Keybinds, "Keybinds have been set to their defaults.")]
+    [InlineData(OptionsTab.Display, "Display settings have been set to their defaults.")]
+    public void ChooseReset_Twice_ResetsTheTabAndSaysSoInGreen(OptionsTab tab, string said)
     {
-        window.ChooseResetAll();
+        window.Show(tab);
+        window.ChooseReset();
 
-        var line = window.ChooseResetAll();
+        var line = window.ChooseReset();
 
-        Assert.Equal(new LogLine("Keybinds have been set to their defaults.", (int)TextColour.Green), line);
+        Assert.Equal(new LogLine(said, (int)TextColour.Green), line);
         Assert.False(window.ConfirmingReset);
     }
 
@@ -201,7 +206,7 @@ public class KeybindCaptureTests
     [InlineData(OptionsTab.General)]
     public void ChoosingATab_DropsTheConfirmation(OptionsTab tab)
     {
-        window.ChooseResetAll();
+        window.ChooseReset();
 
         window.Show(tab);
 
@@ -211,7 +216,7 @@ public class KeybindCaptureTests
     [Fact]
     public void TogglingTheWindow_DropsTheConfirmation()
     {
-        window.ChooseResetAll();
+        window.ChooseReset();
 
         window.Toggle();
         window.Toggle();
@@ -222,7 +227,7 @@ public class KeybindCaptureTests
     [Fact]
     public void ClosingTheWindow_DropsTheConfirmation()
     {
-        window.ChooseResetAll();
+        window.ChooseReset();
 
         window.Close();
 

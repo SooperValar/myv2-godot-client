@@ -379,12 +379,12 @@ public partial class HudView : Control
             BindingActions.Apply([new BindingChange(id, BindingActions.Defaults()[id])]);
             return null;
         });
-        optionsWindow.ResetAllChosen += () => ChangeKeyBindings(window =>
+        optionsWindow.ResetChosen += () => ChangeKeyBindings(window =>
         {
-            var line = window.ChooseResetAll();
+            var line = window.ChooseReset();
             if (line != null)
             {
-                BindingActions.ResetAll();
+                ClientSettings?.Reset(window.Tab);
             }
 
             return line;
@@ -710,7 +710,7 @@ public partial class HudView : Control
                     menu.ApplyFont();
                     break;
                 case OptionsWindowView options:
-                    options.ApplyButtonSprite();
+                    options.ApplySprites();
                     break;
                 case PlannerWindowView planner:
                     planner.ApplyFrameSprite();

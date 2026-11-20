@@ -1,21 +1,13 @@
 [gd_scene format=3 uid="uid://kjqwqhuq0usb"]
 
 [node name="KeybindSection" type="VBoxContainer" unique_id=1958204417]
-theme_override_constants/separation = 4
-
-[node name="Separator" type="ColorRect" parent="." unique_id=316085932]
-custom_minimum_size = Vector2(0, 1)
-layout_mode = 2
-mouse_filter = 2
-color = Color(0.43, 0.43, 0.5, 0.5)
+theme_override_constants/separation = 0
 
 [node name="Heading" type="Label" parent="." unique_id=1172630854]
 layout_mode = 2
-theme_type_variation = &"HeadingLabel"
+theme_type_variation = &"OptionsCaption"
 text = "World Hotkeys"
-horizontal_alignment = 1
 
 [node name="Rows" type="VBoxContainer" parent="." unique_id=692548103]
 layout_mode = 2
-size_flags_horizontal = 4
-theme_override_constants/separation = 4
+theme_override_constants/separation = 0

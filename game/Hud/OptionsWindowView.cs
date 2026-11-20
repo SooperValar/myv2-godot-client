@@ -15,34 +15,43 @@ namespace TheLastGate.Hud;
 [Tool]
 public partial class OptionsWindowView : Panel
 {
-    private const int ButtonSprite = 18129;
+    private const int CloseSprite = 18042;
     private const string OptionRowScenePath = "res://Hud/option_row.tscn";
     private const string SliderRowScenePath = "res://Hud/slider_row.tscn";
     private const string KeybindSectionScenePath = "res://Hud/keybind_section.tscn";
     private const string KeybindRowScenePath = "res://Hud/keybind_row.tscn";
     private const string WaitingText = "Press key...";
     private const string WaitingHint = "ESC to cancel. DEL to un-bind.";
-    private const string ResetAllText = "Reset Keybinds to Defaults";
-    private const string ConfirmResetAllText = "Confirm?";
+    private const string KeybindsHint = "Click a key, then press the new one.";
+    private const string ResetText = "Reset {0} to Defaults";
+    private const string ConfirmResetText = "Confirm?";
+    private const string WarningMark = "!";
+    private const string RowVariation = "TableRow";
+    private const string HoveredRowVariation = "TableRowHover";
+    private const string ScrollBarVariation = "OptionsScrollBar";
+
+    private static readonly Rect2 CloseRegion = new(283, 0, 14, 14);
 
     private readonly Dictionary<string, Button> keyButtons = [];
     private readonly Dictionary<string, Label> keyWarnings = [];
     private string? capturing;
     private IReadOnlyList<KeybindRow> shownKeybindRows = [];
 
-    private CheckBox SoundEnabled => GetNode<CheckBox>("Pages/Audio/SoundEnabled");
+    private CheckBox SoundEnabled => GetNode<CheckBox>("%SoundEnabled");
 
-    private HSlider Volume => GetNode<HSlider>("Pages/Audio/VolumeRow/Volume");
+    private HSlider Volume => GetNode<HSlider>("%Volume");
 
-    private HSlider CursorScale => GetNode<HSlider>("Pages/General/Rows/CursorRow/CursorScale");
+    private HSlider CursorScale => GetNode<HSlider>("%CursorScale");
 
-    private Node KeybindSections => GetNode("Pages/Keybinds/Rows/Sections");
+    private Node KeybindSections => GetNode("%Sections");
 
-    private HSlider ScreenGamma => GetNode<HSlider>("Pages/Display/Rows/ScreenGammaRow/ScreenGamma");
+    private HSlider ScreenGamma => GetNode<HSlider>("%ScreenGamma");
 
-    private HSlider WorldGamma => GetNode<HSlider>("Pages/Display/Rows/WorldGammaRow/WorldGamma");
+    private HSlider WorldGamma => GetNode<HSlider>("%WorldGamma");
 
-    private Label TypingWarning => OptionBox(GeneralOption.EnterToTalk).GetParent().GetNode<Label>("Warning");
+    private Button Reset => GetNode<Button>("%Reset");
+
+    private Label TypingWarning => OptionRow(GeneralOption.EnterToTalk).GetNode<Label>("Line/Warning");
 
     public event Action<OptionsTab>? TabChosen;
 
@@ -66,7 +75,7 @@ public partial class OptionsWindowView : Panel
 
     public event Action<string>? BindingResetChosen;
 
-    public event Action? ResetAllChosen;
+    public event Action? ResetChosen;
 
     public event Action<float>? ScreenGammaChanged;
 
@@ -78,7 +87,8 @@ public partial class OptionsWindowView : Panel
 
     public override void _Ready()
     {
-        ApplyButtonSprite();
+        ApplySprites();
+        StyleScrollBars();
         AddOptionRows();
         ShowKeybinds(
             KeybindsTab.Sections(new CharacterSettings()),
@@ -100,11 +110,16 @@ public partial class OptionsWindowView : Panel
             OptionBox(row.Option).Toggled += isOn => OptionChanged?.Invoke(row.Option, isOn);
         }
 
-        GetNode<Button>("CloseButton").Pressed += () => CloseChosen?.Invoke();
+        foreach (var row in GetNode("%Pages").FindChildren("*Row", nameof(PanelContainer), true, false))
+        {
+            ShowHoverBand((Control)row);
+        }
+
+        GetNode<BaseButton>("%CloseButton").Pressed += () => CloseChosen?.Invoke();
         SoundEnabled.Toggled += enabled => SoundEnabledChanged?.Invoke(enabled);
         Volume.ValueChanged += volume =>
         {
-            ShowVolume((int)volume);
+            ShowValue(Volume, ((int)volume).ToString(CultureInfo.InvariantCulture));
             SoundVolumeChanged?.Invoke((int)volume);
         };
         CursorScale.ValueChanged += scale =>
@@ -112,15 +127,15 @@ public partial class OptionsWindowView : Panel
             ShowCursorScale((float)scale);
             CursorScaleChanged?.Invoke((float)scale);
         };
-        GetNode<Button>("Pages/Keybinds/Rows/ResetAll").Pressed += () => ResetAllChosen?.Invoke();
+        Reset.Pressed += () => ResetChosen?.Invoke();
         ScreenGamma.ValueChanged += gamma =>
         {
-            ShowGammaValue(ScreenGamma, (float)gamma);
+            ShowValue(ScreenGamma, Gamma.Text((float)gamma));
             ScreenGammaChanged?.Invoke((float)gamma);
         };
         WorldGamma.ValueChanged += gamma =>
         {
-            ShowGammaValue(WorldGamma, (float)gamma);
+            ShowValue(WorldGamma, Gamma.Text((float)gamma));
             WorldGammaChanged?.Invoke((float)gamma);
         };
         foreach (var row in DisplaySwaps.Rows)
@@ -133,7 +148,7 @@ public partial class OptionsWindowView : Panel
             var slider = BackgroundSlider(row.Window);
             slider.ValueChanged += opacity =>
             {
-                ShowOpacityValue(slider, (int)opacity);
+                ShowValue(slider, WindowBackgrounds.Text((int)opacity));
                 BackgroundOpacityChanged?.Invoke(row.Window, (int)opacity);
             };
         }
@@ -177,23 +192,22 @@ public partial class OptionsWindowView : Panel
         }
 
         TabButton(window.Tab).SetPressedNoSignal(true);
-        GetNode<TabContainer>("Pages").CurrentTab = (int)window.Tab;
+        GetNode<TabContainer>("%Pages").CurrentTab = (int)window.Tab;
         foreach (var row in GeneralOptions.Rows)
         {
-            var box = OptionBox(row.Option);
-            box.SetPressedNoSignal(settings[row.Option]);
-            box.GetParent<Control>().Visible = GeneralOptions.IsShown(row, option => settings[option]);
+            OptionBox(row.Option).SetPressedNoSignal(settings[row.Option]);
+            OptionRow(row.Option).Visible = GeneralOptions.IsShown(row, option => settings[option]);
         }
 
         CursorScale.SetValueNoSignal(settings.CursorScale);
         ShowCursorScale(settings.CursorScale);
         SoundEnabled.SetPressedNoSignal(settings.SoundEnabled);
         Volume.SetValueNoSignal(settings.SoundVolume);
-        ShowVolume(settings.SoundVolume);
+        ShowValue(Volume, settings.SoundVolume.ToString(CultureInfo.InvariantCulture));
         ScreenGamma.SetValueNoSignal(settings.ScreenGamma);
-        ShowGammaValue(ScreenGamma, settings.ScreenGamma);
+        ShowValue(ScreenGamma, Gamma.Text(settings.ScreenGamma));
         WorldGamma.SetValueNoSignal(settings.WorldGamma);
-        ShowGammaValue(WorldGamma, settings.WorldGamma);
+        ShowValue(WorldGamma, Gamma.Text(settings.WorldGamma));
         foreach (var row in DisplaySwaps.Rows)
         {
             SwapBox(row.Swap).SetPressedNoSignal(settings.SwapsOn.Contains(row.Swap));
@@ -203,33 +217,36 @@ public partial class OptionsWindowView : Panel
         {
             var opacity = settings.BackgroundOpacity[row.Window];
             BackgroundSlider(row.Window).SetValueNoSignal(opacity);
-            ShowOpacityValue(BackgroundSlider(row.Window), opacity);
+            ShowValue(BackgroundSlider(row.Window), WindowBackgrounds.Text(opacity));
         }
 
         var bindings = BindingActions.Current();
         ShowKeybinds(KeybindsTab.Sections(characterSettings), bindings, settings.EnterToTalk, window);
         ShowTypingWarning(BindingRules.TypingHotkeysWarning(bindings, settings.EnterToTalk));
+        ShowFooter(window);
     }
 
-    // Buttons draw the game's button sprite, which lives in the sprite archives rather than in the project.
-    // Not in the editor: the theme is a shared file there, and saving would write the sprite into it.
-    public void ApplyButtonSprite()
+    // A ScrollContainer makes its own bars, so they can't be given a theme variation in the scene.
+    private void StyleScrollBars()
     {
-        if (Engine.IsEditorHint() || Theme == null
-            || HudView.Containing(this)?.Sprites?.GetTexture(ButtonSprite) is not { } texture)
+        foreach (var scroll in GetNode("%Pages").FindChildren("*", nameof(ScrollContainer), true, false))
+        {
+            ((ScrollContainer)scroll).GetVScrollBar().ThemeTypeVariation = ScrollBarVariation;
+        }
+    }
+
+    public void ApplySprites()
+    {
+        if (Engine.IsEditorHint() || Theme == null || HudView.Containing(this)?.Sprites is not { } sprites)
         {
             return;
         }
 
-        foreach (var type in Theme.GetStyleboxTypeList())
+        ThemeSprites.Apply(Theme, sprites);
+        if (sprites.GetTexture(CloseSprite) is { } closeSheet)
         {
-            foreach (var name in Theme.GetStyleboxList(type))
-            {
-                if (Theme.GetStylebox(name, type) is StyleBoxTexture box)
-                {
-                    box.Texture = texture;
-                }
-            }
+            GetNode<TextureButton>("%CloseButton").TextureNormal =
+                new AtlasTexture { Atlas = closeSheet, Region = CloseRegion };
         }
     }
 
@@ -239,29 +256,19 @@ public partial class OptionsWindowView : Panel
         var rowScene = GD.Load<PackedScene>(OptionRowScenePath);
         foreach (var row in GeneralOptions.Rows)
         {
-            var rowNode = rowScene.Instantiate<Control>();
-            rowNode.Name = row.Option.ToString();
-            rowNode.GetNode<Label>("Text").Text = row.Label;
-            if (row.Under != null)
-            {
-                Indent(rowNode);
-            }
-
+            var rowNode = CheckRow(rowScene, row.Option.ToString(), row.Label);
+            rowNode.GetNode<Control>("Line/Indent").Visible = row.Under != null;
             if (row.Option == GeneralOption.EnterToTalk)
             {
-                MakeRoomForWarning(rowNode);
+                rowNode.GetNode<Label>("Line/Warning").Visible = true;
             }
 
-            GetNode(row.GodotOnly ? "Pages/General/Rows/GodotOptions" : "Pages/General/Rows/ClientOptions")
-                .AddChild(rowNode);
+            GetNode(row.GodotOnly ? "%GodotOptions" : "%ClientOptions").AddChild(rowNode);
         }
 
         foreach (var row in DisplaySwaps.Rows)
         {
-            var rowNode = rowScene.Instantiate<Control>();
-            rowNode.Name = row.Swap.ToString();
-            rowNode.GetNode<Label>("Text").Text = row.Label;
-            GetNode("Pages/Display/Rows/SwapOptions").AddChild(rowNode);
+            GetNode("%SwapOptions").AddChild(CheckRow(rowScene, row.Swap.ToString(), row.Label));
         }
 
         var sliderScene = GD.Load<PackedScene>(SliderRowScenePath);
@@ -269,9 +276,35 @@ public partial class OptionsWindowView : Panel
         {
             var rowNode = sliderScene.Instantiate<Control>();
             rowNode.Name = row.Window.ToString();
-            rowNode.GetNode<Label>("Text").Text = row.Label;
-            GetNode("Pages/Display/Rows/BackgroundOptions").AddChild(rowNode);
+            rowNode.GetNode<Label>("Line/Text").Text = row.Label;
+            if (!Engine.IsEditorHint())
+            {
+                ShowHoverBand(rowNode);
+            }
+
+            GetNode("%BackgroundOptions").AddChild(rowNode);
         }
+    }
+
+    private static Control CheckRow(PackedScene rowScene, string name, string label)
+    {
+        var rowNode = rowScene.Instantiate<Control>();
+        rowNode.Name = name;
+        rowNode.GetNode<Label>("Line/Text").Text = label;
+        var box = rowNode.GetNode<CheckBox>("Line/Box");
+        rowNode.GuiInput += inputEvent =>
+        {
+            if (inputEvent is InputEventMouseButton { ButtonIndex: MouseButton.Left, Pressed: true })
+            {
+                box.ButtonPressed = !box.ButtonPressed;
+            }
+        };
+        if (!Engine.IsEditorHint())
+        {
+            ShowHoverBand(rowNode);
+        }
+
+        return rowNode;
     }
 
     private void ShowKeybinds(
@@ -297,9 +330,6 @@ public partial class OptionsWindowView : Panel
             keyWarnings[row.Id].Visible = warning != null;
             keyWarnings[row.Id].TooltipText = warning ?? "";
         }
-
-        GetNode<Button>("Pages/Keybinds/Rows/ResetAll").Text =
-            window.ConfirmingReset ? ConfirmResetAllText : ResetAllText;
     }
 
     // Spell rows come and go with the hotbar, so the sections are rebuilt whenever the list of rows changes.
@@ -318,18 +348,22 @@ public partial class OptionsWindowView : Panel
         foreach (var section in sections)
         {
             var sectionNode = sectionScene.Instantiate<Control>();
-            sectionNode.GetNode<CanvasItem>("Separator").Visible = KeybindSections.GetChildCount() > 0;
             sectionNode.GetNode<Label>("Heading").Text = section.Heading;
             foreach (var row in section.Rows)
             {
                 var rowNode = rowScene.Instantiate<Control>();
                 rowNode.Name = row.Id;
-                rowNode.GetNode<Label>("Text").Text = row.Label;
-                var keyButton = rowNode.GetNode<Button>("Key");
+                rowNode.GetNode<Label>("Line/Text").Text = row.Label;
+                var keyButton = rowNode.GetNode<Button>("Line/Key");
                 keyButton.Pressed += () => CaptureChosen?.Invoke(row.Id);
                 keyButtons[row.Id] = keyButton;
-                keyWarnings[row.Id] = rowNode.GetNode<Label>("Warning");
-                rowNode.GetNode<Button>("Reset").Pressed += () => BindingResetChosen?.Invoke(row.Id);
+                keyWarnings[row.Id] = rowNode.GetNode<Label>("Line/Warning");
+                rowNode.GetNode<Button>("Line/Reset").Pressed += () => BindingResetChosen?.Invoke(row.Id);
+                if (!Engine.IsEditorHint())
+                {
+                    ShowHoverBand(rowNode);
+                }
+
                 sectionNode.GetNode("Rows").AddChild(rowNode);
             }
 
@@ -337,53 +371,54 @@ public partial class OptionsWindowView : Panel
         }
     }
 
+    private void ShowFooter(OptionsWindow window)
+    {
+        var onKeybinds = window.Tab == OptionsTab.Keybinds;
+        Reset.Text = window.ConfirmingReset
+            ? ConfirmResetText
+            : string.Format(CultureInfo.InvariantCulture, ResetText, window.Tab);
+        GetNode<Label>("%FooterHint").Text = !onKeybinds ? ""
+            : window.Capturing != null ? WaitingHint
+            : KeybindsHint;
+    }
+
     private void ShowTypingWarning(string? warning)
     {
-        TypingWarning.Visible = warning != null;
+        TypingWarning.Text = warning != null ? WarningMark : "";
         TypingWarning.TooltipText = warning ?? "";
     }
 
-    // The warning's place is kept even while it's hidden, so the text doesn't reflow when it shows.
-    private static void MakeRoomForWarning(Control rowNode)
+    // Moving onto a button inside the row also counts as leaving it, so the band only clears once the pointer is out.
+    private static void ShowHoverBand(Control row)
     {
-        var warning = rowNode.GetNode<Control>("Warning");
-        var text = rowNode.GetNode<Control>("Text");
-        text.CustomMinimumSize -= new Vector2(warning.CustomMinimumSize.X + rowNode.GetThemeConstant("separation"), 0);
+        row.MouseEntered += () => row.ThemeTypeVariation = HoveredRowVariation;
+        row.MouseExited += () =>
+        {
+            if (!row.GetGlobalRect().HasPoint(row.GetGlobalMousePosition()))
+            {
+                row.ThemeTypeVariation = RowVariation;
+            }
+        };
     }
 
-    // The text gives up the indent's width so the row stays inside the page.
-    private static void Indent(Control rowNode)
-    {
-        var indent = rowNode.GetNode<Control>("Indent");
-        indent.Visible = true;
-        var text = rowNode.GetNode<Control>("Text");
-        text.CustomMinimumSize -= new Vector2(indent.CustomMinimumSize.X + rowNode.GetThemeConstant("separation"), 0);
-    }
-
-    private CheckBox OptionBox(GeneralOption option)
+    private Control OptionRow(GeneralOption option)
     {
         var row = GeneralOptions.Rows.First(row => row.Option == option);
-        var group = row.GodotOnly ? "GodotOptions" : "ClientOptions";
-        return GetNode<CheckBox>($"Pages/General/Rows/{group}/{option}/Box");
+        return GetNode(row.GodotOnly ? "%GodotOptions" : "%ClientOptions").GetNode<Control>(option.ToString());
     }
 
-    private CheckBox SwapBox(DisplaySwap swap) => GetNode<CheckBox>($"Pages/Display/Rows/SwapOptions/{swap}/Box");
+    private CheckBox OptionBox(GeneralOption option) => OptionRow(option).GetNode<CheckBox>("Line/Box");
+
+    private CheckBox SwapBox(DisplaySwap swap) => GetNode("%SwapOptions").GetNode<CheckBox>($"{swap}/Line/Box");
 
     private HSlider BackgroundSlider(WindowBackground window) =>
-        GetNode<HSlider>($"Pages/Display/Rows/BackgroundOptions/{window}/Slider");
+        GetNode("%BackgroundOptions").GetNode<HSlider>($"{window}/Line/Slider");
 
-    private Button TabButton(OptionsTab tab) => GetNode<Button>($"Tabs/{tab}Tab");
-
-    private void ShowVolume(int volume) =>
-        GetNode<Label>("Pages/Audio/VolumeRow/Volume/Value").Text = volume.ToString(CultureInfo.InvariantCulture);
+    private Button TabButton(OptionsTab tab) => GetNode("%Tabs").GetNode<Button>($"{tab}Tab");
 
     private void ShowCursorScale(float scale) =>
-        GetNode<Label>("Pages/General/Rows/CursorRow/CursorScale/Value").Text =
-            scale.ToString("0.0", CultureInfo.InvariantCulture) + "x";
+        ShowValue(CursorScale, scale.ToString("0.0", CultureInfo.InvariantCulture) + "x");
 
-    private static void ShowOpacityValue(HSlider slider, int opacity) =>
-        slider.GetNode<Label>("Value").Text = WindowBackgrounds.Text(opacity);
-
-    private static void ShowGammaValue(HSlider slider, float gamma) =>
-        slider.GetNode<Label>("Value").Text = Gamma.Text(gamma);
+    private static void ShowValue(HSlider slider, string text) =>
+        slider.GetParent().GetNode<Label>("Value").Text = text;
 }
