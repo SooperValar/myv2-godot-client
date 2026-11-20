@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace TheLastGate.Characters;
+namespace TheLastGate.Launcher;
 
 public sealed class CharacterHistory
 {

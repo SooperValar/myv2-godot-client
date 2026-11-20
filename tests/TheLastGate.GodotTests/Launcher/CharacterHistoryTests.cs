@@ -1,10 +1,13 @@
-using TheLastGate.Characters;
+using GdUnit4;
+using TheLastGate.Launcher;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Launcher;
 
+[TestSuite]
 public class CharacterHistoryTests
 {
-    [Fact]
+    [TestCase]
     public void Use_PutsTheNewestFileFirst()
     {
         var history = new CharacterHistory();
@@ -12,10 +15,11 @@ public class CharacterHistoryTests
         history.Use("Ishtar", "C:/saves/ishtar.moa");
         history.Use("Bran", "C:/saves/bran.moa");
 
-        Assert.Equal(["C:/saves/bran.moa", "C:/saves/ishtar.moa"], history.Entries.Select(entry => entry.FilePath));
+        AssertThat(history.Entries.Select(entry => entry.FilePath))
+            .ContainsExactly("C:/saves/bran.moa", "C:/saves/ishtar.moa");
     }
 
-    [Fact]
+    [TestCase]
     public void Use_MovesAKnownFileToTheFrontWithItsNewName()
     {
         var history = new CharacterHistory();
@@ -24,15 +28,13 @@ public class CharacterHistoryTests
 
         history.Use("Ishtar the Bold", "C:/Saves/ISHTAR.moa");
 
-        Assert.Equal(
-            [
+        AssertThat(history.Entries)
+            .ContainsExactly(
                 new PreviousCharacter("Ishtar the Bold", "C:/Saves/ISHTAR.moa"),
-                new PreviousCharacter("Bran", "C:/saves/bran.moa"),
-            ],
-            history.Entries);
+                new PreviousCharacter("Bran", "C:/saves/bran.moa"));
     }
 
-    [Fact]
+    [TestCase]
     public void Use_KeepsOnlyTheMostRecentEntries()
     {
         var history = new CharacterHistory();
@@ -42,12 +44,12 @@ public class CharacterHistoryTests
             history.Use($"Character {fileNumber}", $"C:/saves/{fileNumber}.moa");
         }
 
-        Assert.Equal(CharacterHistory.MaxEntries, history.Entries.Count);
-        Assert.Equal("C:/saves/24.moa", history.Entries[0].FilePath);
-        Assert.Equal("C:/saves/5.moa", history.Entries[^1].FilePath);
+        AssertThat(history.Entries.Count).IsEqual(CharacterHistory.MaxEntries);
+        AssertThat(history.Entries[0].FilePath).IsEqual("C:/saves/24.moa");
+        AssertThat(history.Entries[^1].FilePath).IsEqual("C:/saves/5.moa");
     }
 
-    [Fact]
+    [TestCase]
     public void Constructor_KeepsTheSavedOrderWithoutDuplicates()
     {
         PreviousCharacter[] saved =
@@ -59,10 +61,10 @@ public class CharacterHistoryTests
 
         var history = new CharacterHistory(saved);
 
-        Assert.Equal([saved[0], saved[1]], history.Entries);
+        AssertThat(history.Entries).ContainsExactly(saved[0], saved[1]);
     }
 
-    [Fact]
+    [TestCase]
     public void RemoveMissingFiles_DropsFilesThatNoLongerExist()
     {
         using var folder = new TempFolder();
@@ -73,6 +75,6 @@ public class CharacterHistoryTests
 
         history.RemoveMissingFiles();
 
-        Assert.Equal([new PreviousCharacter("Kept", kept)], history.Entries);
+        AssertThat(history.Entries).ContainsExactly(new PreviousCharacter("Kept", kept));
     }
 }

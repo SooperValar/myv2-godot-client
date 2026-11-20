@@ -1,64 +1,65 @@
 using System.Buffers.Binary;
 using System.Text;
-using TheLastGate.Characters;
+using GdUnit4;
+using TheLastGate.Launcher;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Launcher;
 
+[TestSuite]
 public class SdlClientCharacterListTests
 {
     private const int HeaderSize = 8;
     private const int NameLength = 40;
     private const int PathLength = 512;
 
-    [Fact]
+    [TestCase]
     public void Parse_ReadsNamesAndPathsInOrder()
     {
         var fileBytes = ListFile(2, ("Worldofslaying", @"C:\saves\slaying.moa"), ("Élan", @"C:\saves\élan.moa"));
 
         var characters = SdlClientCharacterList.Parse(fileBytes);
 
-        Assert.Equal(
-            [
+        AssertThat(characters)
+            .ContainsExactly(
                 new PreviousCharacter("Worldofslaying", @"C:\saves\slaying.moa"),
-                new PreviousCharacter("Élan", @"C:\saves\élan.moa"),
-            ],
-            characters);
+                new PreviousCharacter("Élan", @"C:\saves\élan.moa"));
     }
 
-    [Fact]
+    [TestCase]
     public void Parse_ReadsOnlyAsManyEntriesAsTheCountSays()
     {
         var fileBytes = ListFile(1, ("First", @"C:\saves\first.moa"), ("Second", @"C:\saves\second.moa"));
 
         var characters = SdlClientCharacterList.Parse(fileBytes);
 
-        Assert.Equal([new PreviousCharacter("First", @"C:\saves\first.moa")], characters);
+        AssertThat(characters).ContainsExactly(new PreviousCharacter("First", @"C:\saves\first.moa"));
     }
 
-    [Fact]
+    [TestCase]
     public void Parse_StopsAtTheEndOfAShortFile()
     {
         var fileBytes = ListFile(3, ("First", @"C:\saves\first.moa"), ("Second", @"C:\saves\second.moa"));
 
         var characters = SdlClientCharacterList.Parse(fileBytes);
 
-        Assert.Equal(2, characters.Count);
+        AssertThat(characters.Count).IsEqual(2);
     }
 
-    [Fact]
+    [TestCase]
     public void Parse_SkipsEntriesWithoutAPath()
     {
         var fileBytes = ListFile(2, ("Nobody", ""), ("Somebody", @"C:\saves\somebody.moa"));
 
         var characters = SdlClientCharacterList.Parse(fileBytes);
 
-        Assert.Equal([new PreviousCharacter("Somebody", @"C:\saves\somebody.moa")], characters);
+        AssertThat(characters).ContainsExactly(new PreviousCharacter("Somebody", @"C:\saves\somebody.moa"));
     }
 
-    [Fact]
+    [TestCase]
     public void Parse_ReturnsNothingForAFileShorterThanItsHeader()
     {
-        Assert.Empty(SdlClientCharacterList.Parse(new byte[HeaderSize - 1]));
+        AssertThat(SdlClientCharacterList.Parse(new byte[HeaderSize - 1])).IsEmpty();
     }
 
     private static byte[] ListFile(uint count, params (string Name, string FilePath)[] entries)

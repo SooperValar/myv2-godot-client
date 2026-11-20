@@ -1,8 +1,9 @@
 using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
+using TheLastGate.Characters;
 
-namespace TheLastGate.Characters;
+namespace TheLastGate.Launcher;
 
 // { uint32 version, uint32 count }, then { char name[40], char path[512] } per character, little-endian.
 public static class SdlClientCharacterList
