@@ -1,57 +1,60 @@
+using GdUnit4;
 using TheLastGate.Assets;
 using TheLastGate.Windows;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Windows;
 
+[TestSuite]
 public class DisplaySwapsTests
 {
-    [Fact]
+    [TestCase]
     public void SpritesFor_NothingSwitchedOn_SwapsNothing()
     {
-        Assert.Empty(DisplaySwaps.SpritesFor([]));
+        AssertThat(DisplaySwaps.SpritesFor([])).IsEmpty();
     }
 
-    [Fact]
+    [TestCase]
     public void SpritesFor_ObviousHoleTraps_DrawsTheHoleInsteadOfTheHiddenTrap()
     {
         var sprites = DisplaySwaps.SpritesFor([DisplaySwap.ObviousHoleTraps]);
 
-        Assert.Equal(new Dictionary<int, int> { [16859] = 34194 }, sprites);
+        AssertThat(sprites).IsEqual(new Dictionary<int, int> { [16859] = 34194 });
     }
 
-    [Fact]
+    [TestCase]
     public void SpritesFor_TheSameSwapTwice_IsLikeOnce()
     {
         var sprites = DisplaySwaps.SpritesFor([DisplaySwap.ObviousHoleTraps, DisplaySwap.ObviousHoleTraps]);
 
-        Assert.Equal(new Dictionary<int, int> { [16859] = 34194 }, sprites);
+        AssertThat(sprites).IsEqual(new Dictionary<int, int> { [16859] = 34194 });
     }
 
-    [Fact]
+    [TestCase]
     public void Rows_HaveOneRowForEverySwap()
     {
-        Assert.Equal(Enum.GetValues<DisplaySwap>(), DisplaySwaps.Rows.Select(row => row.Swap));
+        AssertThat(DisplaySwaps.Rows.Select(row => row.Swap)).ContainsExactly(Enum.GetValues<DisplaySwap>());
     }
 
-    [Fact]
+    [TestCase]
     public void Rows_HaveDistinctSettingKeys()
     {
         var keys = DisplaySwaps.Rows.Select(row => row.SettingKey).ToList();
 
-        Assert.Equal(keys.Count, keys.Distinct().Count());
+        AssertThat(keys.Distinct().Count()).IsEqual(keys.Count);
     }
 
-    [Fact]
+    [TestCase]
     public void Rows_NeverSwapASpriteIntoOneAnotherRowSwapsAgain()
     {
         var sources = DisplaySwaps.Rows.SelectMany(row => row.Sprites.Keys).ToList();
         var targets = DisplaySwaps.Rows.SelectMany(row => row.Sprites.Values);
 
-        Assert.Equal(sources.Count, sources.Distinct().Count());
-        Assert.DoesNotContain(targets, sources.Contains);
+        AssertThat(sources.Distinct().Count()).IsEqual(sources.Count);
+        AssertThat(targets.Where(sources.Contains)).IsEmpty();
     }
 
-    [Fact]
+    [TestCase]
     public void Rows_SwapOnlyToSpritesTheArchivesHold()
     {
         var archives = Path.Combine(RepositoryFolder.Find(), "data", DataLayout.Archives);
@@ -66,6 +69,6 @@ public class DisplaySwapsTests
             .SelectMany(row => row.Sprites.Values)
             .Where(sprite => !bmpLibrary.Contains(sprite) && !pngLibrary.Contains(sprite));
 
-        Assert.Empty(missing);
+        AssertThat(missing).IsEmpty();
     }
 }
