@@ -1,7 +1,6 @@
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Windows;
-using TheLastGate.World;
 
 namespace TheLastGate.Tests;
 
@@ -15,55 +14,22 @@ public class ShopWindowTests
     public ShopWindowTests() => processor = new TickProcessor(state);
 
     [Fact]
-    public void CloseShop_ClosesTheShopAndLeavesThePauseToTheGame()
+    public void CloseShop_ClosesTheShopWithoutSayingTheServerDid()
     {
         OpenShop();
-        var closes = new List<bool>();
-        state.ShopClosed += closes.Add;
+        var serverCloses = 0;
+        state.ShopClosedByServer += () => serverCloses++;
 
         Assert.True(state.CloseShop());
 
         Assert.Null(state.OpenShop);
-        Assert.Equal([true], closes);
-        Assert.False(state.Pause.Active);
+        Assert.Equal(0, serverCloses);
     }
 
     [Fact]
-    public void ShuttingTheShopForTheTree_SaysNoPauseStarts()
+    public void CloseShop_SaysWhenNoShopWasOpen()
     {
-        OpenShop();
-        var closes = new List<bool>();
-        state.ShopClosed += closes.Add;
-
-        state.ToggleSkillTree(MapKeys.None);
-
-        Assert.Null(state.OpenShop);
-        Assert.Equal([false], closes);
-    }
-
-    [Fact]
-    public void CloseShop_DoesNothingWithoutAShop()
-    {
-        var closes = new List<bool>();
-        state.ShopClosed += closes.Add;
-
         Assert.False(state.CloseShop());
-        Assert.Empty(closes);
-    }
-
-    [Fact]
-    public void CloseWindowsByEscape_StartsNoPauseForTextWindowsAlone()
-    {
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
-
-        Assert.True(state.CloseWindowsByEscape());
-        Assert.False(state.Pause.Active);
-    }
-
-    [Fact]
-    public void CloseWindowsByEscape_SaysWhenNothingWasOpen()
-    {
-        Assert.False(state.CloseWindowsByEscape());
     }
 
     [Fact]

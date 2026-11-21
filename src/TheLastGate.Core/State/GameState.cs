@@ -2,7 +2,6 @@ using System;
 using TheLastGate.Buffs;
 using TheLastGate.Items;
 using TheLastGate.Net;
-using TheLastGate.Session;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
 using TheLastGate.World;
@@ -17,9 +16,6 @@ public sealed class GameState
     {
         Tooltips = new ItemTooltips(Chat);
         BuffWatch = new BuffWatch(Player);
-        MessageOfTheDay.LineAdded += MessageOfTheDayLines.Add;
-        TextWindows = new TextWindows(Pause);
-        WaypointWindow = new WaypointWindow(Pause);
         UseQueue = new UseQueue(Chat);
     }
 
@@ -31,21 +27,11 @@ public sealed class GameState
     public CharacterNames Names { get; } = new();
     public ItemTooltips Tooltips { get; }
     public StatPlan StatPlan { get; } = new();
-    public PlannerWindow PlannerWindow { get; } = new();
     public BuffWatch BuffWatch { get; }
-    public MessageOfTheDayLines MessageOfTheDayLines { get; } = new();
-    public WindowPause Pause { get; } = new();
-    public TextWindows TextWindows { get; }
-    public WaypointWindow WaypointWindow { get; }
-    public SkillTreeWindow SkillTreeWindow { get; } = new();
-    public OptionsWindow OptionsWindow { get; } = new();
-    public WorldMapWindow WorldMapWindow { get; } = new();
     public ShopRefresh ShopRefresh { get; } = new();
     public UseQueue UseQueue { get; }
     public GiveMore GiveMore { get; } = new();
     public AutoWalk AutoWalk { get; } = new();
-    public SessionCurrencies SessionCurrencies { get; } = new();
-    public bool SessionStatsOpen { get; set; }
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
@@ -57,7 +43,7 @@ public sealed class GameState
 
     public event Action<CharacterLook>? LookShown;
     public event Action<ShopKind>? ShopOpened;
-    public event Action<bool>? ShopClosed;
+    public event Action? ShopClosedByServer;
     public event Action<SoundRequest>? SoundRequested;
     public event Action<ServerExit>? ExitRequested;
     public event Action<UniqueId>? UniqueIdReceived;
@@ -77,55 +63,20 @@ public sealed class GameState
         }
 
         OpenShop = null;
-        ReportShopClosed(true);
         return true;
     }
 
-    // Opening the tree quietly shuts the other windows: no pause, and the server isn't told the shop went away.
-    public void ToggleSkillTree(MapKeys keys)
+    internal void CloseShopForTheServer()
     {
-        ShutWindowsBesideTheTree();
-        SkillTreeWindow.Toggle(keys, Player.TreePoints, Player.OsirisTree);
-    }
-
-    // Escape closes a shop with the pause, as the close button does, but tells nobody about the text windows.
-    public bool CloseWindowsByEscape()
-    {
-        var closedText = TextWindows.CloseByEscape();
-        var closedWaypoints = WaypointWindow.Close();
-        var closedTree = SkillTreeWindow.Close();
-        var closedOptions = OptionsWindow.Close();
-        var closedWorldMap = WorldMapWindow.CloseByEscape();
-        var closedPlanner = PlannerWindow.Close();
-        var closedShop = CloseShop();
-        var closedSessionStats = SessionStatsOpen;
-        SessionStatsOpen = false;
-        return closedText || closedWaypoints || closedTree || closedOptions || closedWorldMap || closedPlanner
-            || closedShop || closedSessionStats;
-    }
-
-    public void ShutWindows()
-    {
-        ShutWindowsBesideTheTree();
-        SkillTreeWindow.Close();
+        if (CloseShop())
+        {
+            ShopClosedByServer?.Invoke();
+        }
     }
 
     internal void ReportLookShown(CharacterLook look) => LookShown?.Invoke(look);
 
-    private void ShutWindowsBesideTheTree()
-    {
-        TextWindows.CloseAll();
-        WaypointWindow.Close();
-        if (OpenShop != null)
-        {
-            OpenShop = null;
-            ReportShopClosed(false);
-        }
-    }
-
     internal void ReportShopOpened(ShopKind kind) => ShopOpened?.Invoke(kind);
-
-    internal void ReportShopClosed(bool startsPause) => ShopClosed?.Invoke(startsPause);
 
     internal void ReportSoundRequested(SoundRequest sound) => SoundRequested?.Invoke(sound);
 

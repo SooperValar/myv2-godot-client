@@ -23,16 +23,18 @@ public class GameSessionTests
     private const int Bread = 2600;
     private const int Plain = 0;
     private const int Enchanted = 9;
+    private const int MessageChunkLength = 15;
 
     private TickProcessor processor = null!;
     private List<byte[]> sent = [];
+    private GameSession session = null!;
     private GameState state = new();
 
     [BeforeTest]
     public void StartASession()
     {
         state = new GameState();
-        _ = new GameSession(state);
+        session = new GameSession(state);
         processor = new TickProcessor(state);
         sent = [];
         state.AutoWalk.Send = sent.Add;
@@ -105,7 +107,7 @@ public class GameSessionTests
     public void ThePause_KeepsShopsAndTextWindowsShutUntilItEnds(int ticksAfterClosing, bool staysOpen)
     {
         Process(ShopCommands());
-        state.CloseShop();
+        session.CloseShop();
         for (var tick = 0; tick < ticksAfterClosing; tick++)
         {
             Process();
@@ -114,7 +116,7 @@ public class GameSessionTests
         Process([.. ShopCommands(), TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0)]);
 
         AssertThat(state.OpenShop != null).IsEqual(staysOpen);
-        AssertThat(state.TextWindows.MessageOfTheDayOpen).IsEqual(staysOpen);
+        AssertThat(session.TextWindows.MessageOfTheDayOpen).IsEqual(staysOpen);
     }
 
     [TestCase]
@@ -125,33 +127,33 @@ public class GameSessionTests
                 .UInt32(0)
                 .UInt16(TwoTreePointsOneSpent)
                 .UInt16(NoTreePoints));
-        state.ToggleSkillTree(MapKeys.None);
-        state.Pause.Start();
+        session.ToggleSkillTree(MapKeys.None);
+        session.Pause.Start();
 
         Process();
 
-        AssertThat(state.SkillTreeWindow.Open).IsNull();
+        AssertThat(session.SkillTreeWindow.Open).IsNull();
     }
 
     [TestCase]
     public void ThePause_KeepsTheWaypointWindowShut()
     {
-        state.Pause.Start();
+        session.Pause.Start();
 
         Process(TestCommand.Of(ServerCommand.Waypoints));
 
-        AssertThat(state.WaypointWindow.IsOpen).IsFalse();
+        AssertThat(session.WaypointWindow.IsOpen).IsFalse();
     }
 
     [TestCase]
     public void EachTick_CountsDownThePauseAfterClosingAWindow()
     {
         Process(TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0));
-        state.TextWindows.Close();
+        session.TextWindows.Close();
 
         Process(TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0));
 
-        AssertThat(state.TextWindows.MessageOfTheDayOpen).IsFalse();
+        AssertThat(session.TextWindows.MessageOfTheDayOpen).IsFalse();
     }
 
     [TestCase]
@@ -242,22 +244,22 @@ public class GameSessionTests
     [TestCase]
     public void ThePause_LeavesTheOptionsOpen()
     {
-        state.OptionsWindow.Toggle();
-        state.Pause.Start();
+        session.OptionsWindow.Toggle();
+        session.Pause.Start();
 
         Process();
 
-        AssertThat(state.OptionsWindow.IsOpen).IsTrue();
+        AssertThat(session.OptionsWindow.IsOpen).IsTrue();
     }
 
     [TestCase]
     public void OpeningAShop_ClosesTheTextWindows()
     {
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
+        session.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
 
         Process(ShopCommands());
 
-        AssertThat(state.TextWindows.AnyOpen).IsFalse();
+        AssertThat(session.TextWindows.AnyOpen).IsFalse();
     }
 
     [TestCase]
@@ -268,22 +270,22 @@ public class GameSessionTests
                 .UInt32(0)
                 .UInt16(TwoTreePointsOneSpent)
                 .UInt16(NoTreePoints));
-        state.ToggleSkillTree(MapKeys.None);
+        session.ToggleSkillTree(MapKeys.None);
 
         Process(ShopCommands());
 
-        AssertThat(state.SkillTreeWindow.Open).IsNull();
+        AssertThat(session.SkillTreeWindow.Open).IsNull();
     }
 
     [TestCase]
     public void OpeningAShop_ClosesTheWaypointWindow()
     {
-        state.WaypointWindow.Open();
+        session.WaypointWindow.Open();
 
         Process(ShopCommands());
 
         AssertThat(state.OpenShop).IsNotNull();
-        AssertThat(state.WaypointWindow.IsOpen).IsFalse();
+        AssertThat(session.WaypointWindow.IsOpen).IsFalse();
     }
 
     [TestCase]
@@ -291,9 +293,9 @@ public class GameSessionTests
     {
         Process(ShopCommands());
 
-        AssertThat(state.CloseShop()).IsTrue();
+        AssertThat(session.CloseShop()).IsTrue();
 
-        AssertThat(state.Pause.Active).IsTrue();
+        AssertThat(session.Pause.Active).IsTrue();
     }
 
     [TestCase]
@@ -304,20 +306,20 @@ public class GameSessionTests
         Process(TestCommand.Of(ServerCommand.CloseShop));
 
         AssertThat(state.OpenShop).IsNull();
-        AssertThat(state.Pause.Active).IsTrue();
+        AssertThat(session.Pause.Active).IsTrue();
     }
 
     [TestCase]
     public void Escape_ClosesTheShopWithAPauseAndTheTextWindowsWithout()
     {
         Process(ShopCommands());
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
+        session.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
 
-        AssertThat(state.CloseWindowsByEscape()).IsTrue();
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
 
         AssertThat(state.OpenShop).IsNull();
-        AssertThat(state.TextWindows.AnyOpen).IsFalse();
-        AssertThat(state.Pause.Active).IsTrue();
+        AssertThat(session.TextWindows.AnyOpen).IsFalse();
+        AssertThat(session.Pause.Active).IsTrue();
     }
 
     [TestCase]
@@ -329,16 +331,122 @@ public class GameSessionTests
                 .UInt16(TwoTreePointsOneSpent)
                 .UInt16(NoTreePoints));
         Process(ShopCommands());
-        state.WaypointWindow.Open();
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
+        session.WaypointWindow.Open();
+        session.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
 
-        state.ToggleSkillTree(MapKeys.None);
+        session.ToggleSkillTree(MapKeys.None);
 
-        AssertThat(state.SkillTreeWindow.Open).IsEqual(SkillTree.Class);
+        AssertThat(session.SkillTreeWindow.Open).IsEqual(SkillTree.Class);
         AssertThat(state.OpenShop).IsNull();
-        AssertThat(state.WaypointWindow.IsOpen).IsFalse();
-        AssertThat(state.TextWindows.AnyOpen).IsFalse();
-        AssertThat(state.Pause.Active).IsFalse();
+        AssertThat(session.WaypointWindow.IsOpen).IsFalse();
+        AssertThat(session.TextWindows.AnyOpen).IsFalse();
+        AssertThat(session.Pause.Active).IsFalse();
+    }
+
+    [TestCase]
+    public void ToggleSkillTree_UsesTheContractTreeWithAModifier()
+    {
+        Process(
+            TestCommand.Of(ServerCommand.SetCharacterTokens)
+                .UInt32(0)
+                .UInt16(TwoTreePointsOneSpent)
+                .UInt16(TwoTreePointsOneSpent));
+
+        session.ToggleSkillTree(MapKeys.Ctrl);
+
+        AssertThat(session.SkillTreeWindow.Open).IsEqual(SkillTree.Contract);
+    }
+
+    [TestCase]
+    public void CloseShop_SaysWhenNoShopWasOpen()
+    {
+        AssertThat(session.CloseShop()).IsFalse();
+        AssertThat(session.Pause.Active).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesTextWindowsAloneWithoutAPause()
+    {
+        session.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.TextWindows.AnyOpen).IsFalse();
+        AssertThat(session.Pause.Active).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_SaysWhenNothingWasOpen()
+    {
+        AssertThat(session.CloseWindowsByEscape()).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesTheTreeWithoutAPause()
+    {
+        Process(
+            TestCommand.Of(ServerCommand.SetCharacterTokens)
+                .UInt32(0)
+                .UInt16(TwoTreePointsOneSpent)
+                .UInt16(NoTreePoints));
+        session.ToggleSkillTree(MapKeys.None);
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.SkillTreeWindow.Open).IsNull();
+        AssertThat(session.Pause.Active).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesTheWaypointWindowWithoutAPause()
+    {
+        session.WaypointWindow.Open();
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.WaypointWindow.IsOpen).IsFalse();
+        AssertThat(session.Pause.Active).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesTheOptionsWithoutAPause()
+    {
+        session.OptionsWindow.Toggle();
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.OptionsWindow.IsOpen).IsFalse();
+        AssertThat(session.Pause.Active).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesThePlanner()
+    {
+        session.PlannerWindow.Toggle();
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.PlannerWindow.IsOpen).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesTheWorldMap()
+    {
+        session.WorldMapWindow.OpenAtPlayer();
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.WorldMapWindow.IsOpen).IsFalse();
+    }
+
+    [TestCase]
+    public void Escape_ClosesTheSessionStats()
+    {
+        session.SessionStatsOpen = true;
+
+        AssertThat(session.CloseWindowsByEscape()).IsTrue();
+
+        AssertThat(session.SessionStatsOpen).IsFalse();
     }
 
     [TestCase]
@@ -346,7 +454,7 @@ public class GameSessionTests
     {
         Process(TestCommand.Of(ServerCommand.Waypoints));
 
-        AssertThat(state.WaypointWindow.IsOpen).IsTrue();
+        AssertThat(session.WaypointWindow.IsOpen).IsTrue();
     }
 
     [TestCase(0, true, false, null)]
@@ -356,9 +464,20 @@ public class GameSessionTests
     {
         Process(TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte((byte)window));
 
-        AssertThat(state.TextWindows.MessageOfTheDayOpen).IsEqual(messageOfTheDay);
-        AssertThat(state.TextWindows.WelcomeOpen).IsEqual(welcome);
-        AssertThat(state.TextWindows.Tutorial ?? NoTutorial).IsEqual(tutorial ?? NoTutorial);
+        AssertThat(session.TextWindows.MessageOfTheDayOpen).IsEqual(messageOfTheDay);
+        AssertThat(session.TextWindows.WelcomeOpen).IsEqual(welcome);
+        AssertThat(session.TextWindows.Tutorial ?? NoTutorial).IsEqual(tutorial ?? NoTutorial);
+    }
+
+    [TestCase]
+    public void MessageOfTheDayText_FillsTheWindowsLines()
+    {
+        Process(
+            TestCommand.Of(ServerCommand.MessageOfTheDay2).Text("Welcome back!\n", MessageChunkLength),
+            TestCommand.Of(ServerCommand.MessageOfTheDay0).Text("Patch notes\n", MessageChunkLength));
+
+        AssertThat(session.MessageOfTheDayLines.Lines[0]).IsEqual(new LogLine("Welcome back!", 2));
+        AssertThat(session.MessageOfTheDayLines.Lines[1]).IsEqual(new LogLine("Patch notes", 0));
     }
 
     private void GiveMore()

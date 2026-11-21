@@ -69,7 +69,7 @@ internal static class LookCommands
                 ReadSmith(state, ref reader);
                 break;
             case ServerCommand.CloseShop:
-                state.CloseShop();
+                state.CloseShopForTheServer();
                 break;
             default:
                 throw new UnreachableException();

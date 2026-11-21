@@ -18,8 +18,9 @@ public partial class WaypointWindowView : Control
     private static readonly Rect2 WheelArea = new(0, 1, 266, 279);
     private int? hoveredRow;
 
-    private GameState? state;
+    private PlayerState player = new();
     private bool wasOpen;
+    private WaypointWindow? window;
 
     public LineEdit Search => GetNode<LineEdit>("Search");
 
@@ -50,10 +51,10 @@ public partial class WaypointWindowView : Control
         Search.GuiInput += SearchKey;
     }
 
-    public void ShowWaypoints(GameState shownState)
+    public void ShowWaypoints(WaypointWindow shownWindow, PlayerState shownPlayer)
     {
-        state = shownState;
-        var window = state.WaypointWindow;
+        window = shownWindow;
+        player = shownPlayer;
         Visible = window.IsOpen;
         FollowOpening(window.IsOpen);
         if (!Visible)
@@ -71,7 +72,7 @@ public partial class WaypointWindowView : Control
             }
 
             var waypoint = window.At(row);
-            var found = Waypoints.Found(state.Player.Waypoints, waypoint.Number);
+            var found = Waypoints.Found(player.Waypoints, waypoint.Number);
             var picture = rowNode.GetNode<ArchiveSprite>("Picture");
             picture.SpriteNumber = (found ? FoundPicture : UnknownPicture) + waypoint.Number;
             var bright = window.IsSelected(row) || hoveredRow == row;
@@ -95,9 +96,9 @@ public partial class WaypointWindowView : Control
 
     private void Redraw()
     {
-        if (state != null)
+        if (window != null)
         {
-            ShowWaypoints(state);
+            ShowWaypoints(window, player);
         }
     }
 
@@ -118,7 +119,7 @@ public partial class WaypointWindowView : Control
         if (isOpen)
         {
             Search.Clear();
-            state?.WaypointWindow.ClearSearch(state.Player.Waypoints);
+            window?.ClearSearch(player.Waypoints);
             Search.GrabFocus();
             Search.Edit();
         }
@@ -130,14 +131,14 @@ public partial class WaypointWindowView : Control
 
     private void SearchFor(string search)
     {
-        state?.WaypointWindow.SetSearch(search, state.Player.Waypoints);
+        window?.SetSearch(search, player.Waypoints);
         Redraw();
     }
 
     private void ClearAndType()
     {
         Search.Clear();
-        state?.WaypointWindow.ClearSearch(state.Player.Waypoints);
+        window?.ClearSearch(player.Waypoints);
         TypeInSearch();
         Redraw();
     }
@@ -150,7 +151,7 @@ public partial class WaypointWindowView : Control
 
     private void MoveSelection(int rows)
     {
-        state?.WaypointWindow.MoveSelection(rows);
+        window?.MoveSelection(rows);
         Redraw();
     }
 
@@ -199,7 +200,7 @@ public partial class WaypointWindowView : Control
         {
             MoveSelection(1);
         }
-        else if (inputEvent.IsAction("ui_up") && state?.WaypointWindow.Selected == 0)
+        else if (inputEvent.IsAction("ui_up") && window?.Selected == 0)
         {
             TypeInSearch();
         }

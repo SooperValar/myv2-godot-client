@@ -28,6 +28,7 @@ public partial class GameScreen : Control
     private const int ErrorFont = 0;
     private const int StatusFont = 1;
 
+    private readonly GameSession gameSession;
     private readonly GameState gameState = new();
     private readonly NavigationKeys navigationKeys = new();
     private readonly TickPacer pacer = new();
@@ -35,7 +36,6 @@ public partial class GameScreen : Control
     private readonly Stopwatch sessionClock = Stopwatch.StartNew();
     private ServerConnection connection = null!;
     private ExploredMapKeeper? exploredMap;
-    private GameSession gameSession = null!;
     private HudView hudView = null!;
     private ConnectionState lastConnectionState;
     private LoginHandoff login = null!;
@@ -49,6 +49,8 @@ public partial class GameScreen : Control
     private SpriteLoader? sprites;
     private UserDataUpload? userDataUpload;
     private WorldView? worldView;
+
+    public GameScreen() => gameSession = new GameSession(gameState);
 
     public override void _Ready()
     {
@@ -71,7 +73,6 @@ public partial class GameScreen : Control
         AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
-        gameSession = new GameSession(gameState);
 
         userDataUpload = UserDataUpload.For(login.Record, gameState.Chat);
         gameState.Player.NameReceived += SaveCharacterName;
@@ -109,7 +110,7 @@ public partial class GameScreen : Control
                 payload =>
                 {
                     processor.Process(payload);
-                    gameState.SessionCurrencies.Observe(gameState.Player, sessionClock.Elapsed);
+                    gameSession.SessionCurrencies.Observe(gameState.Player, sessionClock.Elapsed);
                     ticksPlayed++;
                     SendUserData();
                 },
@@ -252,7 +253,7 @@ public partial class GameScreen : Control
         hudView.NotesSetAsideFile = mapNotes is { WasSetAside: true } ? mapNotes.FileName : null;
         hudView.MapNotes = mapNotes?.Notes;
         hudView.SaveMapNotes = mapNotes == null ? null : mapNotes.Save;
-        hudView.Show(gameState, fonts, SendAction);
+        hudView.Show(gameState, gameSession, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
         gameState.Tooltips.SendLook = connection.SendCommand;
@@ -314,7 +315,7 @@ public partial class GameScreen : Control
         // Using or looking at something lets the next window the server opens stay open.
         if ((ClientCommand)packet[0] is ClientCommand.Use or ClientCommand.Look)
         {
-            gameState.Pause.Cancel();
+            gameSession.Pause.Cancel();
         }
 
         connection.SendCommand(packet);

@@ -77,6 +77,7 @@ public partial class HudView : Control
     private bool darkMode;
     private SpriteLoader? editorSprites;
     private IFontSet? fonts;
+    private GameSession? gameSession;
     private int? hoveredShopCell;
     private bool itemTooltipsShown = true;
     private NoteSet? mapNotes;
@@ -185,9 +186,10 @@ public partial class HudView : Control
         return null;
     }
 
-    public void Show(GameState shownState, IFontSet fontSet, Action<byte[]> sendToServer)
+    public void Show(GameState shownState, GameSession shownSession, IFontSet fontSet, Action<byte[]> sendToServer)
     {
         state = shownState;
+        gameSession = shownSession;
         statPlan = shownState.StatPlan;
         sendCommand = sendToServer;
         for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
@@ -345,7 +347,7 @@ public partial class HudView : Control
         plannerAdvanced.ChoiceChanged += ChangePlannerChoices;
         sessionStatsWindow = GD.Load<PackedScene>(SessionStatsScenePath).Instantiate<SessionStatsWindowView>();
         AddChild(sessionStatsWindow);
-        sessionStatsWindow.ResetPressed += () => state?.SessionCurrencies.Reset(state.Player);
+        sessionStatsWindow.ResetPressed += ResetSessionStats;
         sessionStatsWindow.ClosePressed += () => ShowSessionStats(false);
         ShowSessionStats(false);
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
@@ -419,7 +421,7 @@ public partial class HudView : Control
     public void Refresh(int selected)
     {
         selectedCharacter = selected;
-        if (state == null)
+        if (state == null || gameSession == null)
         {
             return;
         }
@@ -433,7 +435,8 @@ public partial class HudView : Control
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
         SetText("Location", player.Location);
-        if (state.TextWindows.AnyOpen || state.WaypointWindow.IsOpen || state.SkillTreeWindow.Open != null
+        if (gameSession.TextWindows.AnyOpen || gameSession.WaypointWindow.IsOpen
+            || gameSession.SkillTreeWindow.Open != null
             || state.OpenShop != null)
         {
             lookPanel.Hide();
@@ -445,7 +448,8 @@ public partial class HudView : Control
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
         GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
         ShowWaypoints();
-        GetNode<SkillTreeWindowView>("%SkillTreeWindow").ShowTree(state);
+        GetNode<SkillTreeWindowView>("%SkillTreeWindow")
+            .ShowTree(gameSession.SkillTreeWindow, state.Player, state.Terminology);
         ShowOptions();
         if (lookPanel.Shown is { } look)
         {
@@ -810,13 +814,13 @@ public partial class HudView : Control
 
         if (id == "toggle_session_stats_hotkey")
         {
-            ShowSessionStats(state is { SessionStatsOpen: false });
+            ShowSessionStats(gameSession is { SessionStatsOpen: false });
             return true;
         }
 
         if (id == "toggle_worldmap_hotkey")
         {
-            state?.WorldMapWindow.Toggle();
+            gameSession?.WorldMapWindow.Toggle();
             ShowWorldMap();
             return true;
         }
@@ -1085,7 +1089,7 @@ public partial class HudView : Control
                 minimapView.ZoomOut(toTheEnd);
                 break;
             case MinimapButton.Map:
-                state?.WorldMapWindow.OpenAtPlayer();
+                gameSession?.WorldMapWindow.OpenAtPlayer();
                 ShowWorldMap();
                 return;
             default:
@@ -1138,17 +1142,17 @@ public partial class HudView : Control
     // The current client shows the set-aside notice the first time the world map opens.
     private void ShowWorldMap()
     {
-        if (state == null || worldMapWindow == null)
+        if (state == null || gameSession == null || worldMapWindow == null)
         {
             return;
         }
 
         var player = state.Map.Tiles[WorldMap.PlayerTile];
-        worldMapWindow.ShowWindow(state.WorldMapWindow, ExploredMap, mapNotes, (player.X, player.Y));
-        if (state.WorldMapWindow.IsOpen && !notesNoticeShown && NotesSetAsideFile is { } fileName)
+        worldMapWindow.ShowWindow(gameSession.WorldMapWindow, ExploredMap, mapNotes, (player.X, player.Y));
+        if (gameSession.WorldMapWindow.IsOpen && !notesNoticeShown && NotesSetAsideFile is { } fileName)
         {
             notesNoticeShown = true;
-            state.WorldMapWindow.ShowSetAsideNotice(fileName, Time.GetTicksMsec() / 1000.0);
+            gameSession.WorldMapWindow.ShowSetAsideNotice(fileName, Time.GetTicksMsec() / 1000.0);
         }
     }
 
@@ -1317,15 +1321,15 @@ public partial class HudView : Control
 
     private void ShowWaypoints()
     {
-        if (state != null)
+        if (state != null && gameSession != null)
         {
-            GetNode<WaypointWindowView>("%WaypointWindow").ShowWaypoints(state);
+            GetNode<WaypointWindowView>("%WaypointWindow").ShowWaypoints(gameSession.WaypointWindow, state.Player);
         }
     }
 
     private void ChooseSelectedWaypoint()
     {
-        if (state?.WaypointWindow.ChooseSelected(state.Player.Waypoints) is { } packet)
+        if (state != null && gameSession?.WaypointWindow.ChooseSelected(state.Player.Waypoints) is { } packet)
         {
             sendCommand(packet);
             ShowWaypoints();
@@ -1334,7 +1338,7 @@ public partial class HudView : Control
 
     private void ClickWaypoint(int row, MapButton button)
     {
-        if (state?.WaypointWindow.Choose(row, button, state.Player.Waypoints) is { } packet)
+        if (state != null && gameSession?.WaypointWindow.Choose(row, button, state.Player.Waypoints) is { } packet)
         {
             sendCommand(packet);
             ShowWaypoints();
@@ -1343,29 +1347,29 @@ public partial class HudView : Control
 
     private void DragWaypoints(double row)
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            state.WaypointWindow.ScrollTo((int)row);
+            gameSession.WaypointWindow.ScrollTo((int)row);
             ShowWaypoints();
         }
     }
 
     private void ScrollWaypoints(InputEvent inputEvent)
     {
-        if (inputEvent is not InputEventMouseButton { Pressed: true } wheel || state == null
+        if (inputEvent is not InputEventMouseButton { Pressed: true } wheel || gameSession == null
             || wheel.ButtonIndex is not (MouseButton.WheelUp or MouseButton.WheelDown)
             || !WaypointWindowView.InWheelArea(wheel.Position))
         {
             return;
         }
 
-        state.WaypointWindow.ScrollBy(wheel.ButtonIndex == MouseButton.WheelDown ? 1 : -1);
+        gameSession.WaypointWindow.ScrollBy(wheel.ButtonIndex == MouseButton.WheelDown ? 1 : -1);
         ShowWaypoints();
     }
 
     private void ClickCloseWaypoints(MapButton button)
     {
-        if (button == MapButton.Left && state?.WaypointWindow.Close() == true)
+        if (button == MapButton.Left && gameSession?.WaypointWindow.Close() == true)
         {
             Refresh(selectedCharacter);
         }
@@ -1374,7 +1378,7 @@ public partial class HudView : Control
     // The button answers clicks even while it isn't drawn, so a character with only contract points can open that tree.
     private void ShowTreeButton()
     {
-        if (state == null)
+        if (state == null || gameSession == null)
         {
             return;
         }
@@ -1384,23 +1388,23 @@ public partial class HudView : Control
         button.GetNode<CanvasItem>("Picture").Visible = SkillTreeWindow.ButtonShows(player.TreePoints);
         var glow = button.GetNode<CanvasItem>("Glow");
         glow.Visible = SkillTreeWindow.ButtonShows(player.TreePoints)
-            && state.SkillTreeWindow.ButtonGlows(player.TreePoints, player.OsirisTree);
+            && gameSession.SkillTreeWindow.ButtonGlows(player.TreePoints, player.OsirisTree);
         var brightness = SpriteLighting.Brightness(SkillTreeWindow.GlowLight((long)Time.GetTicksMsec()));
         glow.Modulate = new Color(brightness, brightness, brightness);
     }
 
     private void ClickTreeButton(MapButton button)
     {
-        if (button == MapButton.Left && state != null)
+        if (button == MapButton.Left && gameSession != null)
         {
-            state.ToggleSkillTree(HeldKeys.Current());
+            gameSession.ToggleSkillTree(HeldKeys.Current());
             Refresh(selectedCharacter);
         }
     }
 
     private void ClickSkillTreeNode(int node, MapButton button)
     {
-        if (state?.SkillTreeWindow.Click(node, button, HeldKeys.Current()) is { } packet)
+        if (gameSession?.SkillTreeWindow.Click(node, button, HeldKeys.Current()) is { } packet)
         {
             sendCommand(packet);
         }
@@ -1408,7 +1412,7 @@ public partial class HudView : Control
 
     private void ClickCloseSkillTree(MapButton button)
     {
-        if (button == MapButton.Left && state?.SkillTreeWindow.Close() == true)
+        if (button == MapButton.Left && gameSession?.SkillTreeWindow.Close() == true)
         {
             Refresh(selectedCharacter);
         }
@@ -1416,17 +1420,18 @@ public partial class HudView : Control
 
     private void ShowOptions()
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            GetNode<OptionsWindowView>("%OptionsWindow").ShowOptions(state.OptionsWindow, ClientSettings, Settings);
+            GetNode<OptionsWindowView>("%OptionsWindow")
+                .ShowOptions(gameSession.OptionsWindow, ClientSettings, Settings);
         }
     }
 
     private void ChangeOptionsWindow(Action<OptionsWindow> change)
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            change(state.OptionsWindow);
+            change(gameSession.OptionsWindow);
             ShowOptions();
         }
     }
@@ -1434,13 +1439,13 @@ public partial class HudView : Control
     // The hotbar's key labels are refreshed with the window, since they show the bindings too.
     private void ChangeKeyBindings(Func<OptionsWindow, LogLine?> change)
     {
-        if (state == null)
+        if (state == null || gameSession == null)
         {
             return;
         }
 
         LogLine? line = null;
-        ChangeClientSettings(_ => line = change(state.OptionsWindow));
+        ChangeClientSettings(_ => line = change(gameSession.OptionsWindow));
         if (line is { } shown)
         {
             state.Chat.Add(shown);
@@ -1451,19 +1456,19 @@ public partial class HudView : Control
 
     private void ToggleOptions()
     {
-        state?.OptionsWindow.Toggle();
+        gameSession?.OptionsWindow.Toggle();
         ShowOptions();
     }
 
     private void ChooseOptionsTab(OptionsTab tab)
     {
-        state?.OptionsWindow.Show(tab);
+        gameSession?.OptionsWindow.Show(tab);
         ShowOptions();
     }
 
     private void CloseOptions()
     {
-        state?.OptionsWindow.Close();
+        gameSession?.OptionsWindow.Close();
         ShowOptions();
     }
 
@@ -1499,7 +1504,7 @@ public partial class HudView : Control
 
     private void ClickCloseShop(MapButton button)
     {
-        if (button == MapButton.Left && state?.CloseShop() == true)
+        if (button == MapButton.Left && gameSession?.CloseShop() == true)
         {
             Refresh(selectedCharacter);
         }
@@ -1508,7 +1513,7 @@ public partial class HudView : Control
     // With a window open, Escape only closes it; otherwise it stops what the character is doing.
     private void PressEscape()
     {
-        var closedAWindow = state?.CloseWindowsByEscape() == true;
+        var closedAWindow = gameSession?.CloseWindowsByEscape() == true;
         if (closedAWindow)
         {
             Refresh(selectedCharacter);
@@ -1522,12 +1527,12 @@ public partial class HudView : Control
 
     private void ClickTextWindow(MapButton button, Func<TextWindows, TextWindowAction> click)
     {
-        if (button != MapButton.Left || state == null)
+        if (button != MapButton.Left || gameSession == null)
         {
             return;
         }
 
-        var action = click(state.TextWindows);
+        var action = click(gameSession.TextWindows);
         foreach (var packet in action.Packets)
         {
             sendCommand(packet);
@@ -1543,9 +1548,9 @@ public partial class HudView : Control
 
     private void ShowTextWindows()
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            GetNode<TextWindowView>("%TextWindows").Show(state.TextWindows, state.MessageOfTheDayLines);
+            GetNode<TextWindowView>("%TextWindows").Show(gameSession.TextWindows, gameSession.MessageOfTheDayLines);
         }
     }
 
@@ -1821,24 +1826,24 @@ public partial class HudView : Control
     // The planner's own Commit also drops the focus, as the numbers it worked on are about to change.
     private void CommitPlannerPlan()
     {
-        state?.PlannerWindow.ClearFocus();
+        gameSession?.PlannerWindow.ClearFocus();
         CommitPlan();
     }
 
     private void ToggleFocus(PlannerFocus focus)
     {
-        state?.PlannerWindow.ToggleFocus(focus);
+        gameSession?.PlannerWindow.ToggleFocus(focus);
         ShowPlanner();
     }
 
     private void PlanFocus()
     {
-        if (state == null || PlannerSheet() is not { } sheet)
+        if (state == null || gameSession == null || PlannerSheet() is not { } sheet)
         {
             return;
         }
 
-        var panel = FocusPanel.For(sheet, state.PlannerWindow.Focus, focusCache);
+        var panel = FocusPanel.For(sheet, gameSession.PlannerWindow.Focus, focusCache);
         var player = state.Player;
         if (panel.Affordable
             && statPlan.RaiseAll(
@@ -1873,12 +1878,12 @@ public partial class HudView : Control
     // The button and its hotkey do nothing while the option is off.
     private void TogglePlanner()
     {
-        if (state == null || !PlannerEnabled)
+        if (gameSession == null || !PlannerEnabled)
         {
             return;
         }
 
-        if (state.PlannerWindow.Toggle())
+        if (gameSession.PlannerWindow.Toggle())
         {
             AskForMetaText();
         }
@@ -1888,34 +1893,42 @@ public partial class HudView : Control
 
     private void ShowSessionStats(bool open)
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            state.SessionStatsOpen = open;
+            gameSession.SessionStatsOpen = open;
         }
 
         RefreshSessionStats();
     }
 
+    private void ResetSessionStats()
+    {
+        if (state != null && gameSession != null)
+        {
+            gameSession.SessionCurrencies.Reset(state.Player);
+        }
+    }
+
     private void RefreshSessionStats()
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            var session = state.SessionCurrencies;
-            sessionStatsWindow?.ShowWindow(state.SessionStatsOpen, session.Tallies, session.Elapsed);
+            var currencies = gameSession.SessionCurrencies;
+            sessionStatsWindow?.ShowWindow(gameSession.SessionStatsOpen, currencies.Tallies, currencies.Elapsed);
         }
     }
 
     private void ClosePlanner()
     {
-        state?.PlannerWindow.Close();
+        gameSession?.PlannerWindow.Close();
         ShowPlanner();
     }
 
     private void OpenPlannerAdvanced()
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            state.PlannerWindow.AdvancedOpen = true;
+            gameSession.PlannerWindow.AdvancedOpen = true;
         }
 
         ShowPlanner();
@@ -1923,9 +1936,9 @@ public partial class HudView : Control
 
     private void ClosePlannerAdvanced()
     {
-        if (state != null)
+        if (gameSession != null)
         {
-            state.PlannerWindow.AdvancedOpen = false;
+            gameSession.PlannerWindow.AdvancedOpen = false;
         }
 
         ShowPlanner();
@@ -1941,12 +1954,12 @@ public partial class HudView : Control
         }
 
         GetNode<PlannerButtonBox>("%PlannerBox").DarkMode = DarkMode;
-        if (state == null || plannerWindow == null)
+        if (state == null || gameSession == null || plannerWindow == null)
         {
             return;
         }
 
-        var shown = enabled && state.PlannerWindow.IsOpen;
+        var shown = enabled && gameSession.PlannerWindow.IsOpen;
         var sheet = shown ? PlannerSheet() : null;
         plannerWindow.ShowWindow(
             shown,
@@ -1965,18 +1978,18 @@ public partial class HudView : Control
         }
 
         plannerAdvanced?.ShowWindow(
-            state.PlannerWindow.AdvancedOpen,
+            gameSession.PlannerWindow.AdvancedOpen,
             DarkMode,
             PlannerChoices.Choices,
             AdvancedSheet.For(sheet));
 
-        var panel = FocusPanel.For(sheet, state.PlannerWindow.Focus, focusCache);
+        var panel = FocusPanel.For(sheet, gameSession.PlannerWindow.Focus, focusCache);
         if (panel.LostFocus)
         {
-            state.PlannerWindow.ClearFocus();
+            gameSession.PlannerWindow.ClearFocus();
         }
 
-        plannerWindow.ShowFocus(state.PlannerWindow.Focus, panel);
+        plannerWindow.ShowFocus(gameSession.PlannerWindow.Focus, panel);
     }
 
     private void ChangePlannerChoices(Action<PlannerChoices> change)

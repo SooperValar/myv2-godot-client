@@ -231,4 +231,18 @@ public class StatPlanTests
 
         Assert.Equal(0, plan.PointsUsed);
     }
+
+    [Fact]
+    public void Reset_ForgetsThePlan()
+    {
+        var plan = new StatPlan();
+        int[] values = [10, 0, 100, 1, 0, 0];
+        plan.Raise(0, values, 100000, 3);
+
+        plan.Reset();
+
+        Assert.Equal(0, plan.Raised(0));
+        Assert.Equal(0, plan.PointsUsed);
+        Assert.Empty(plan.Commit());
+    }
 }

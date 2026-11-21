@@ -12,7 +12,9 @@ public partial class SkillTreeWindowView : Control
     private const float HighlightBrightness = 2f;
 
     private int? hoveredNode;
-    private GameState? shownState;
+    private PlayerState player = new();
+    private Terminology terminology = new();
+    private SkillTreeWindow? window;
 
     public SkillTreeNodeArea Node(int node) => GetNode<SkillTreeNodeArea>($"Node{node}");
 
@@ -26,19 +28,20 @@ public partial class SkillTreeWindowView : Control
         }
     }
 
-    public void ShowTree(GameState state)
+    public void ShowTree(SkillTreeWindow shownWindow, PlayerState shownPlayer, Terminology shownTerminology)
     {
-        shownState = state;
-        var tree = state.SkillTreeWindow.Open;
+        window = shownWindow;
+        player = shownPlayer;
+        terminology = shownTerminology;
+        var tree = window.Open;
         Visible = tree != null;
         if (tree is not { } openTree)
         {
             return;
         }
 
-        var player = state.Player;
         var treeValue = openTree == SkillTree.Class ? player.TreePoints : player.OsirisTree;
-        var nodes = state.Terminology.Trees[(int)openTree];
+        var nodes = terminology.Trees[(int)openTree];
         for (var node = 0; node < SkillTrees.Nodes; node++)
         {
             var area = Node(node);
@@ -70,9 +73,9 @@ public partial class SkillTreeWindowView : Control
         var highlight = new Color(brightness, brightness, brightness);
         Node(node).GetNode<CanvasItem>("Icon").Modulate = highlight;
         Node(node).GetNode<CanvasItem>("Corruption").Modulate = highlight;
-        if (shownState != null)
+        if (window != null)
         {
-            ShowTree(shownState);
+            ShowTree(window, player, terminology);
         }
     }
 }

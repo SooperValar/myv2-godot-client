@@ -24,6 +24,7 @@ public class HudKeyboardTests
     private readonly List<string> sentLines = [];
     private readonly List<byte[]> sentPackets = [];
     private HudView hud = null!;
+    private GameSession session = null!;
     private SpriteLoader sprites = null!;
     private GameState state = null!;
 
@@ -39,12 +40,13 @@ public class HudKeyboardTests
         var dataFolder = Path.GetFullPath(Path.Combine(ProjectSettings.GlobalizePath("res://"), "..", "..", "data"));
         sprites = new SpriteLoader(dataFolder, SpriteCacheBytes);
         state = new GameState();
+        session = new GameSession(state);
         navigationKeys.TurnOff();
         sentPackets.Clear();
         sentLines.Clear();
         hud = GD.Load<PackedScene>("res://Hud/hud_view.tscn").Instantiate<HudView>();
         Tree.Root.AddChild(hud);
-        hud.Show(state, new ClassicFonts(sprites), sentPackets.Add);
+        hud.Show(state, session, new ClassicFonts(sprites), sentPackets.Add);
         Line.LineSent += sentLines.Add;
         await Frames(2);
     }
@@ -67,7 +69,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.F9);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsTrue();
+        AssertThat(session.OptionsWindow.IsOpen).IsTrue();
         AssertThat(Line.Text).IsEqual("hello");
     }
 
@@ -81,7 +83,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.A, true);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsTrue();
+        AssertThat(session.OptionsWindow.IsOpen).IsTrue();
     }
 
     [TestCase]
@@ -93,7 +95,7 @@ public class HudKeyboardTests
         Keyboard.Type("q");
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsFalse();
+        AssertThat(session.OptionsWindow.IsOpen).IsFalse();
         AssertThat(Line.Text).IsEqual("q");
     }
 
@@ -105,7 +107,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.F9);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsTrue();
+        AssertThat(session.OptionsWindow.IsOpen).IsTrue();
     }
 
     [TestCase]
@@ -117,7 +119,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.F9);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsFalse();
+        AssertThat(session.OptionsWindow.IsOpen).IsFalse();
         AssertThat(Line.TakesTyping).IsTrue();
     }
 
@@ -140,7 +142,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.F9, shift: true);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsFalse();
+        AssertThat(session.OptionsWindow.IsOpen).IsFalse();
     }
 
     [TestCase]
@@ -393,7 +395,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.Escape);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsFalse();
+        AssertThat(session.OptionsWindow.IsOpen).IsFalse();
         AssertThat(Line.Text).IsEqual("hi");
         AssertThat(ResetSent).IsFalse();
     }
@@ -528,7 +530,7 @@ public class HudKeyboardTests
         Keyboard.Press(Key.F9);
         await Frames(1);
 
-        AssertThat(state.OptionsWindow.IsOpen).IsFalse();
+        AssertThat(session.OptionsWindow.IsOpen).IsFalse();
     }
 
     [TestCase]
