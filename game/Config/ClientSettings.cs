@@ -28,9 +28,7 @@ public sealed class ClientSettings
     private const string KeybindsSection = "keybinds";
     private const string GeneralSection = "general";
     private const string WindowBackgroundsSection = "window_backgrounds";
-
-    // Its name from before these were accessibility options, kept so saved choices still load.
-    private const string AccessibilitySection = "display_swaps";
+    private const string AccessibilitySection = "accessibility";
 
     private readonly ConfigFile file;
 
