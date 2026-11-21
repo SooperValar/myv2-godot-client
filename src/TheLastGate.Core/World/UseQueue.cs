@@ -21,9 +21,6 @@ public sealed class UseQueue(TextLog chat)
     public const int MostQueued = 5;
 
     private const string FullMessage = "Your queue is full.";
-    private const int Idle = 0;
-    private const int PickingUp = 2;
-    private const int Using = 4;
 
     private readonly List<(int X, int Y, ClientCommand Command)> queued = [];
     private bool enabled;
@@ -82,7 +79,7 @@ public sealed class UseQueue(TextLog chat)
         }
 
         queued.Add((x, y, command));
-        if (target.MiscAction == Idle && queued.Count == 1)
+        if (target.MiscAction == MiscActions.Idle && queued.Count == 1)
         {
             SendNext();
         }
@@ -129,5 +126,5 @@ public sealed class UseQueue(TextLog chat)
     private static bool IsInProgress(int x, int y, PlayerTarget target) =>
         IsBusy(target) && (target.MiscTarget1, target.MiscTarget2) == (x, y);
 
-    private static bool IsBusy(PlayerTarget target) => target.MiscAction is Using or PickingUp;
+    private static bool IsBusy(PlayerTarget target) => target.MiscAction is MiscActions.Use or MiscActions.PickUp;
 }

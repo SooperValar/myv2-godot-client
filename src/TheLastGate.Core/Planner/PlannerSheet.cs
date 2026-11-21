@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TheLastGate.Items;
 using TheLastGate.State;
 using TheLastGate.Stats;
 

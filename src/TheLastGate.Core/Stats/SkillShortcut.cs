@@ -1,6 +1,5 @@
 using TheLastGate.Assets;
 using TheLastGate.Hotbar;
-using TheLastGate.Items;
 using TheLastGate.State;
 using TheLastGate.World;
 

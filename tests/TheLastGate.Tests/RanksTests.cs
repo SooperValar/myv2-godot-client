@@ -1,32 +1,37 @@
-using TheLastGate.Hud;
+using TheLastGate.State;
 
 namespace TheLastGate.Tests;
 
 public class RanksTests
 {
     [Theory]
-    [InlineData(0, "Private", 10)]
-    [InlineData(249, "Private", 10)]
-    [InlineData(250, "Private First Class", 11)]
-    [InlineData(1750, "Lance Corporal", 12)]
-    [InlineData(750749, "Sergeant Major", 18)]
-    [InlineData(750750, "Second Lieutenant", 19)]
-    [InlineData(44274999, "Field Marshal", 29)]
-    [InlineData(44275000, "Knight", 30)]
-    [InlineData(57557500, "Baron", 6)]
-    [InlineData(74002500, "Earl", 7)]
-    [InlineData(118754999, "Marquess", 8)]
-    [InlineData(118755000, "Warlord", 9)]
-    [InlineData(int.MaxValue, "Warlord", 9)]
-    public void For_FindsTheRankForTheTotalPoints(int points, string name, int badgeSprite)
+    [InlineData(0, "Private")]
+    [InlineData(249, "Private")]
+    [InlineData(250, "Private First Class")]
+    [InlineData(1750, "Lance Corporal")]
+    [InlineData(750749, "Sergeant Major")]
+    [InlineData(750750, "Second Lieutenant")]
+    [InlineData(44274999, "Field Marshal")]
+    [InlineData(44275000, "Knight")]
+    [InlineData(118754999, "Marquess")]
+    [InlineData(118755000, "Warlord")]
+    [InlineData(int.MaxValue, "Warlord")]
+    [InlineData(-1, "Private")]
+    public void Name_IsTheRankForTheTotalPoints(int points, string name)
     {
-        Assert.Equal(new Rank(name, badgeSprite), Ranks.For(points));
+        Assert.Equal(name, Ranks.Name(points));
     }
 
-    [Fact]
-    public void For_TreatsNegativePointsAsTheLowestRank()
+    [Theory]
+    [InlineData(-1, 0)]
+    [InlineData(0, 0)]
+    [InlineData(250, 1)]
+    [InlineData(118754999, 23)]
+    [InlineData(118755000, 24)]
+    [InlineData(int.MaxValue, 24)]
+    public void Number_CountsTheRanksPassed(int points, int number)
     {
-        Assert.Equal(new Rank("Private", 10), Ranks.For(-1));
+        Assert.Equal(number, Ranks.Number(points));
     }
 
     [Theory]

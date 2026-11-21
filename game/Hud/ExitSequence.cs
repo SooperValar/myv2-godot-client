@@ -8,9 +8,6 @@ public sealed class ExitSequence
 {
     public const string TavernCommand = "/tavern";
 
-    private const int EnteredTavernCode = 10;
-    private const int UserRequestCode = 12;
-
     public static readonly TimeSpan LeaveAfter = TimeSpan.FromSeconds(5);
 
     private bool exitRequested;
@@ -27,8 +24,6 @@ public sealed class ExitSequence
 
     public static IReadOnlyList<string> RequestLines { get; } =
         [" ", "(F12) Exit request acknowledged. Please wait a moment..."];
-
-    public static byte[] ExitPacket => ClientPackets.OneValue(ClientCommand.Exit, 0);
 
     public ExitStep Click()
     {
@@ -55,7 +50,7 @@ public sealed class ExitSequence
     public bool ServerEnded(int reasonCode)
     {
         serverEnded = true;
-        return exitRequested || reasonCode is EnteredTavernCode or UserRequestCode;
+        return exitRequested || reasonCode is ExitReasons.EnteredTavern or ExitReasons.UserRequest;
     }
 
     public void Advance(TimeSpan elapsed)

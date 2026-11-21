@@ -1,6 +1,6 @@
 using System.Numerics;
 
-namespace TheLastGate.Windows;
+namespace TheLastGate.State;
 
 public enum SkillTree
 {

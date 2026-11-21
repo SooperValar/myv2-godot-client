@@ -43,9 +43,9 @@ public class DepotTests
         page.Turn(-1);
         Assert.Equal(0, page.Current);
 
-        page.Show(DepotPage.Pages - 1);
+        page.Show(DepotPackets.Pages - 1);
         page.Turn(1);
-        Assert.Equal(DepotPage.Pages - 1, page.Current);
+        Assert.Equal(DepotPackets.Pages - 1, page.Current);
     }
 
     [Theory]

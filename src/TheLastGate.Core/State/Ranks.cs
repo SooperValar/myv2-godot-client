@@ -1,6 +1,6 @@
 using System;
 
-namespace TheLastGate.Hud;
+namespace TheLastGate.State;
 
 public static class Ranks
 {
@@ -18,20 +18,17 @@ public static class Ranks
         "General", "Field Marshal", "Knight", "Baron", "Earl", "Marquess", "Warlord",
     ];
 
-    private static readonly int[] BadgeSprites =
-    [
-        10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30, 6, 7, 8, 9,
-    ];
-
-    public static Rank For(int points)
+    public static int Number(int points)
     {
-        var rank = RankNumber(points);
-        return new Rank(Names[rank], BadgeSprites[rank]);
+        var rank = Array.FindIndex(PointsNeeded, needed => points < needed);
+        return rank < 0 ? PointsNeeded.Length : rank;
     }
+
+    public static string Name(int points) => Names[Number(points)];
 
     public static double Progress(int points)
     {
-        var rank = RankNumber(points);
+        var rank = Number(points);
         if (rank == PointsNeeded.Length)
         {
             return 1;
@@ -39,11 +36,5 @@ public static class Ranks
 
         var start = rank == 0 ? 0 : PointsNeeded[rank - 1];
         return Math.Max(0, (double)(points - start) / (PointsNeeded[rank] - start));
-    }
-
-    private static int RankNumber(int points)
-    {
-        var rank = Array.FindIndex(PointsNeeded, needed => points < needed);
-        return rank < 0 ? PointsNeeded.Length : rank;
     }
 }

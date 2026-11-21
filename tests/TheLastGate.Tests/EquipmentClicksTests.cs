@@ -1,6 +1,7 @@
 using TheLastGate.Cursors;
 using TheLastGate.Items;
 using TheLastGate.Net;
+using TheLastGate.State;
 using TheLastGate.World;
 
 namespace TheLastGate.Tests;

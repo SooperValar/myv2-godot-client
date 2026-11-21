@@ -1,4 +1,3 @@
-using TheLastGate.Net;
 using TheLastGate.Planner;
 
 namespace TheLastGate.Windows;
@@ -39,6 +38,4 @@ public sealed class PlannerWindow
     }
 
     public static string Header(int pointsLeft, int planned) => $"Exp left {pointsLeft}    Planned {planned}";
-
-    public static byte[] MetaRequest() => ClientPackets.ShortAndInt(ClientCommand.Meta, 0, 0);
 }

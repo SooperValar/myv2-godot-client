@@ -277,7 +277,7 @@ public partial class HudView : Control
             depotCell.Released += button => ClickDepot(cell, button);
         }
 
-        for (var page = 0; page < DepotPage.Pages; page++)
+        for (var page = 0; page < DepotPackets.Pages; page++)
         {
             var shownPage = page;
             var pageButton = depotWindow.GetNode<ClickArea>($"Blocker/PageButton{page}");
@@ -979,7 +979,7 @@ public partial class HudView : Control
                 AddWarnings(ExitSequence.WarningLines);
                 break;
             case ExitStep.RequestExit:
-                sendCommand(ExitSequence.ExitPacket);
+                sendCommand(ExitPackets.Exit());
                 AddWarnings(ExitSequence.RequestLines);
                 break;
             case ExitStep.Leave:
@@ -1230,7 +1230,7 @@ public partial class HudView : Control
     {
         if (state?.Terminology.AskForMetaText() == true)
         {
-            sendCommand(PlannerWindow.MetaRequest());
+            sendCommand(MetaPackets.Request());
         }
     }
 
@@ -1727,7 +1727,7 @@ public partial class HudView : Control
         var learnt = player.Skills[number][0] != 0;
         if (button == MapButton.Left)
         {
-            sendCommand(SkillClicks.Use(number, selectedCharacter, text.Attributes[0]));
+            sendCommand(SkillPackets.Use(number, selectedCharacter));
         }
         else if (button == MapButton.Right && SkillClicks.IsKnown(number, learnt, player.Kindred))
         {
@@ -2056,10 +2056,9 @@ public partial class HudView : Control
 
     private void ShowCharacter(string name, int points, int sprite, SpriteTint tint)
     {
-        var rank = Ranks.For(points);
         SetText("PortraitName", name);
-        SetText("RankName", rank.Name);
-        SetSprite("RankBadge", rank.BadgeSprite);
+        SetText("RankName", Ranks.Name(points));
+        SetSprite("RankBadge", RankBadges.Sprite(points));
         SetSprite("Portrait", sprite);
         var material = (ShaderMaterial)GetNode<CanvasItem>("%Portrait").Material;
         material.SetShaderParameter("grey", tint.HasFlag(SpriteTint.Grey));

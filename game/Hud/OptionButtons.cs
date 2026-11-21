@@ -1,16 +1,13 @@
 using TheLastGate.Characters;
 using TheLastGate.Net;
+using TheLastGate.State;
 
 namespace TheLastGate.Hud;
 
 public static class OptionButtons
 {
-    private const int FastMode = 2;
-    private const int NormalMode = 1;
-    private const int SlowMode = 0;
-
     public static byte[]? Packet(OptionButton button) =>
-        ModeOf(button) is { } mode ? ClientPackets.ShortAndInt(ClientCommand.Mode, mode, 0) : null;
+        ModeOf(button) is { } mode ? ModePackets.For(mode) : null;
 
     public static bool Toggle(OptionButton button, CharacterSettings settings)
     {
@@ -44,7 +41,7 @@ public static class OptionButtons
             OptionButton.HideWalls => settings.HideWalls,
             OptionButton.Names => settings.ShowNames,
             OptionButton.HealthBars => settings.ShowHealthBars,
-            _ => ModeOf(button) == mode,
+            _ => ModeOf(button) == (SpeedMode)mode,
         };
 
     public static string? Help(OptionButton button) =>
@@ -68,12 +65,12 @@ public static class OptionButtons
             _ => null,
         };
 
-    private static int? ModeOf(OptionButton button) =>
+    private static SpeedMode? ModeOf(OptionButton button) =>
         button switch
         {
-            OptionButton.Fast => FastMode,
-            OptionButton.Normal => NormalMode,
-            OptionButton.Slow => SlowMode,
+            OptionButton.Fast => SpeedMode.Fast,
+            OptionButton.Normal => SpeedMode.Normal,
+            OptionButton.Slow => SpeedMode.Slow,
             _ => null,
         };
 }

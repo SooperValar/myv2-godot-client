@@ -1,6 +1,6 @@
 using System;
 
-namespace TheLastGate.World;
+namespace TheLastGate.State;
 
 // The server's own map flags, which it sends only to builders.
 [Flags]

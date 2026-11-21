@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TheLastGate.Net;
+using TheLastGate.State;
 using TheLastGate.World;
 
 namespace TheLastGate.Windows;
@@ -9,8 +10,6 @@ namespace TheLastGate.Windows;
 public sealed class WaypointWindow
 {
     public const int VisibleRows = 8;
-
-    private const int DescribeOffset = 32;
 
     private IReadOnlyList<Waypoint> shown = Waypoints.All;
 
@@ -114,9 +113,9 @@ public sealed class WaypointWindow
                     Pause.Start();
                 }
 
-                return ClientPackets.OneValue(ClientCommand.Waypoints, number);
+                return WaypointPackets.Travel(number);
             case MapButton.Right:
-                return ClientPackets.OneValue(ClientCommand.Waypoints, number + DescribeOffset);
+                return WaypointPackets.Describe(number);
             default:
                 return null;
         }

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace TheLastGate.Windows;
+namespace TheLastGate.State;
 
 public readonly record struct Waypoint(int Number, string Name, string Description);
 

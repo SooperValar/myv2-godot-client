@@ -1,8 +1,11 @@
+using GdUnit4;
 using TheLastGate.Assets;
 using TheLastGate.Hud;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Hud;
 
+[TestSuite]
 public class DebugInformationTests
 {
     private static readonly DebugFacts Facts = new(
@@ -16,11 +19,13 @@ public class DebugInformationTests
         3,
         16.66);
 
-    [Fact]
+    [TestCase]
     public void Lines_ShowTheClientVersionThenWhatTheGodotClientShowedInGreenAfterABlankLine()
     {
-        Assert.Equal(
-            [
+        var lines = DebugInformation.Lines(Facts);
+
+        AssertThat(lines.Select(line => line.Text))
+            .ContainsExactly(
                 " ",
                 "Client Version 1.4.2",
                 "Networking Version 0.15.00",
@@ -28,18 +33,7 @@ public class DebugInformationTests
                 "Godot Version 4.7.2-stable (official)",
                 "Renderer: NVIDIA GeForce RTX 4090 (NVIDIA)",
                 "Graphics API Version: 3.3.0 NVIDIA 610.88",
-                "Tick queue 5, target 3, period 16.7 ms",
-            ],
-            DebugInformation.Lines(Facts).Select(line => line.Text));
-        Assert.All(DebugInformation.Lines(Facts), line => Assert.Equal((int)TextColour.Green, line.Font));
-    }
-
-    [Theory]
-    [InlineData(0x000F00u, "0.15.00")]
-    [InlineData(0x0A0B0Cu, "10.11.12")]
-    [InlineData(0u, "0.00.00")]
-    public void VersionText_SplitsTheVersionIntoItsThreeBytes(uint version, string text)
-    {
-        Assert.Equal(text, DebugInformation.VersionText(version));
+                "Tick queue 5, target 3, period 16.7 ms");
+        AssertThat(lines.Select(line => line.Font).Distinct()).ContainsExactly((int)TextColour.Green);
     }
 }

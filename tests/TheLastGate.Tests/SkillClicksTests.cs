@@ -1,5 +1,4 @@
 using TheLastGate.Assets;
-using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Stats;
 
@@ -7,12 +6,6 @@ namespace TheLastGate.Tests;
 
 public class SkillClicksTests
 {
-    [Fact]
-    public void Use_SendsTheSkillNumberTheSelectedCharacterAndTheFirstAttribute()
-    {
-        Assert.Equal(ClientPackets.ThreeValues(ClientCommand.Skill, 12, 345, 2), SkillClicks.Use(12, 345, 2));
-    }
-
     [Theory]
     [InlineData(3, true, 0u, true)]
     [InlineData(3, false, 0u, false)]

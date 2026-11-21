@@ -1,7 +1,7 @@
 using System;
 using TheLastGate.Characters;
-using TheLastGate.Items;
 using TheLastGate.Net;
+using TheLastGate.State;
 
 namespace TheLastGate.Hotbar;
 
@@ -11,7 +11,6 @@ public static class HotbarButtons
     public const int FirstEquipmentAction = 200;
 
     private const int SkillLimit = 60;
-    private const int UsedFromHotbar = 1;
 
     private static readonly string[] GearNames =
     [
@@ -38,8 +37,7 @@ public static class HotbarButtons
             InventoryPackets.For(InventoryAction.UseGear, action - FirstEquipmentAction, selectedCharacter),
         >= FirstInventoryAction =>
             InventoryPackets.For(InventoryAction.UseItem, action - FirstInventoryAction, selectedCharacter),
-        >= 0 and < SkillLimit =>
-            ClientPackets.ThreeValues(ClientCommand.Skill, action, selectedCharacter, UsedFromHotbar),
+        >= 0 and < SkillLimit => SkillPackets.Use(action, selectedCharacter),
         _ => null,
     };
 

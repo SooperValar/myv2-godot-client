@@ -1,6 +1,6 @@
 using System;
 
-namespace TheLastGate.World;
+namespace TheLastGate.State;
 
 [Flags]
 public enum MapFlags : uint

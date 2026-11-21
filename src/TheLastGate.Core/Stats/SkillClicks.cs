@@ -1,6 +1,5 @@
 using System.Collections.Generic;
 using TheLastGate.Assets;
-using TheLastGate.Net;
 using TheLastGate.State;
 
 namespace TheLastGate.Stats;
@@ -23,9 +22,6 @@ public static class SkillClicks
         "Strength improves most combat skills. It also improves your movement speed and the damage dealt by your "
         + "attacks.",
     ];
-
-    public static byte[] Use(int skillNumber, int selectedCharacter, int firstAttribute) =>
-        ClientPackets.ThreeValues(ClientCommand.Skill, skillNumber, selectedCharacter, firstAttribute);
 
     public static bool IsKnown(int skillNumber, bool learnt, uint kindred) => learnt || skillNumber switch
     {

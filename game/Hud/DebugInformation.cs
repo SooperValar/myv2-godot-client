@@ -26,8 +26,8 @@ public static class DebugInformation
         [
             " ",
             ClientVersion.Text(facts.ClientVersion),
-            $"Networking Version {VersionText(Protocol.NetworkingVersion)}",
-            $"Server Version {VersionText(facts.ServerVersion)}",
+            $"Networking Version {Protocol.VersionText(Protocol.NetworkingVersion)}",
+            $"Server Version {Protocol.VersionText(facts.ServerVersion)}",
             $"Godot Version {facts.GodotVersion}",
             $"Renderer: {facts.AdapterName} ({facts.AdapterVendor})",
             $"Graphics API Version: {facts.ApiVersion}",
@@ -37,8 +37,4 @@ public static class DebugInformation
         ];
         return lines.Select(line => new LogLine(line, (int)TextColour.Green)).ToList();
     }
-
-    // Versions pack major, minor and patch into the low three bytes.
-    public static string VersionText(uint version) =>
-        $"{version >> 16}.{(version >> 8) & 255:00}.{version & 255:00}";
 }

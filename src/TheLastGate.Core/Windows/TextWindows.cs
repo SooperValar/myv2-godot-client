@@ -11,7 +11,6 @@ public readonly record struct TextWindowAction(IReadOnlyList<byte[]> Packets, bo
 public sealed class TextWindows
 {
     private const int FirstPage = 1;
-    private const int SkipTutorials = 16;
 
     private static readonly TextWindowAction Nothing = new([], false);
 
@@ -51,12 +50,12 @@ public sealed class TextWindows
         var packets = new List<byte[]>();
         if (WelcomeOpen)
         {
-            packets.Add(Seen(SkipTutorials));
+            packets.Add(TutorialPackets.SkipTutorials());
         }
 
         if (Tutorial is { } tutorial)
         {
-            packets.Add(Seen(tutorial));
+            packets.Add(TutorialPackets.Seen(tutorial));
         }
 
         CloseAll();
@@ -101,7 +100,7 @@ public sealed class TextWindows
         {
             WelcomeOpen = false;
             Pause.Start();
-            return new TextWindowAction([Seen(SkipTutorials)], false);
+            return new TextWindowAction([TutorialPackets.SkipTutorials()], false);
         }
 
         if (Tutorial == null)
@@ -126,8 +125,6 @@ public sealed class TextWindows
         CloseAll();
         return anyOpen;
     }
-
-    private static byte[] Seen(int value) => ClientPackets.OneValue(ClientCommand.MessageOfTheDay, value);
 
     private void OpenTutorial(int tutorial)
     {

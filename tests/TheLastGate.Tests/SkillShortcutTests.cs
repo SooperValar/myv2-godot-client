@@ -1,5 +1,4 @@
 using TheLastGate.Assets;
-using TheLastGate.Items;
 using TheLastGate.State;
 using TheLastGate.Stats;
 using TheLastGate.World;

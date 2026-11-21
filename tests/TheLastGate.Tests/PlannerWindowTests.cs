@@ -1,4 +1,3 @@
-using TheLastGate.Net;
 using TheLastGate.Planner;
 using TheLastGate.State;
 using TheLastGate.Stats;
@@ -111,15 +110,5 @@ public class PlannerWindowTests
         Assert.Equal(0, plan.Raised(0));
         Assert.Equal(0, plan.PointsUsed);
         Assert.Empty(plan.Commit());
-    }
-
-    [Fact]
-    public void TheMetaRequest_IsTheMetaCommandWithNoValue()
-    {
-        var packet = PlannerWindow.MetaRequest();
-
-        Assert.Equal(Protocol.PacketSize, packet.Length);
-        Assert.Equal((byte)ClientCommand.Meta, packet[0]);
-        Assert.All(packet.Skip(1), value => Assert.Equal(0, value));
     }
 }

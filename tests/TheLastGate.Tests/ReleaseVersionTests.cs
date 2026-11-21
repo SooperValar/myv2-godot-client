@@ -1,6 +1,6 @@
 using System.Reflection;
 using System.Text.Json;
-using TheLastGate.Hud;
+using TheLastGate.Net;
 
 namespace TheLastGate.Tests;
 
@@ -13,7 +13,7 @@ public class ReleaseVersionTests
     public void BuiltClientVersion_MatchesTheReleasePleaseManifest()
     {
         var manifestVersion = ReadJson(".release-please-manifest.json").GetProperty(".").GetString();
-        var builtVersion = typeof(ClientVersion).Assembly
+        var builtVersion = typeof(Protocol).Assembly
             .GetCustomAttribute<AssemblyInformationalVersionAttribute>()
             ?.InformationalVersion.Split('+')[0];
 

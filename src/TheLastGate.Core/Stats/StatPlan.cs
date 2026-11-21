@@ -9,15 +9,13 @@ public sealed class StatPlan
 {
     public const int HitPointsSlot = 5;
     public const int ManaSlot = 7;
-    public const int FirstSkillSlot = 8;
+    public const int FirstSkillSlot = StatPackets.FirstSkillSlot;
     public const string UpdateHelp = "Make the changes permanent";
 
     private const int SlotCount = FirstSkillSlot + PlayerState.SkillSlots;
     private const int BaseValue = 0;
     private const int Limit = 2;
     private const int Difficulty = 3;
-    private const int MostSkillPointsPerCommand = 135;
-    private const int MostPointsPerCommand = 900;
     private const int ShiftClickTimes = 10;
     private const int CtrlClickTimes = 90;
 
@@ -101,11 +99,7 @@ public sealed class StatPlan
         var packets = new List<byte[]>();
         for (var slot = 0; slot < SlotCount; slot++)
         {
-            var mostPerCommand = slot >= FirstSkillSlot ? MostSkillPointsPerCommand : MostPointsPerCommand;
-            for (var left = raised[slot]; left > 0; left -= mostPerCommand)
-            {
-                packets.Add(ClientPackets.ShortAndInt(ClientCommand.Stat, slot, Math.Min(left, mostPerCommand)));
-            }
+            packets.AddRange(StatPackets.Raise(slot, raised[slot]));
         }
 
         Reset();

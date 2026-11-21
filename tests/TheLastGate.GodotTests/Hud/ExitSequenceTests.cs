@@ -1,8 +1,10 @@
+using GdUnit4;
 using TheLastGate.Hud;
-using TheLastGate.Net;
+using static GdUnit4.Assertions;
 
-namespace TheLastGate.Tests;
+namespace TheLastGate.GodotTests.Hud;
 
+[TestSuite]
 public class ExitSequenceTests
 {
     private const int IdleCode = 2;
@@ -11,17 +13,17 @@ public class ExitSequenceTests
     private const int UserRequestCode = 12;
     private const int BannedCode = 14;
 
-    [Fact]
+    [TestCase]
     public void Click_WarnsThenRequestsTheExitThenWaits()
     {
         var exit = new ExitSequence();
 
-        Assert.Equal(ExitStep.Warn, exit.Click());
-        Assert.Equal(ExitStep.RequestExit, exit.Click());
-        Assert.Equal(ExitStep.Wait, exit.Click());
+        AssertThat(exit.Click()).IsEqual(ExitStep.Warn);
+        AssertThat(exit.Click()).IsEqual(ExitStep.RequestExit);
+        AssertThat(exit.Click()).IsEqual(ExitStep.Wait);
     }
 
-    [Fact]
+    [TestCase]
     public void Click_LeavesFiveSecondsAfterTheRequest()
     {
         var exit = new ExitSequence();
@@ -29,71 +31,61 @@ public class ExitSequenceTests
         exit.Click();
 
         exit.Advance(TimeSpan.FromSeconds(4.9));
-        Assert.Equal(ExitStep.Wait, exit.Click());
+        AssertThat(exit.Click()).IsEqual(ExitStep.Wait);
 
         exit.Advance(TimeSpan.FromSeconds(0.1));
-        Assert.Equal(ExitStep.Leave, exit.Click());
+        AssertThat(exit.Click()).IsEqual(ExitStep.Leave);
     }
 
-    [Fact]
+    [TestCase]
     public void Advance_DoesNotCountBeforeTheRequest()
     {
         var exit = new ExitSequence();
         exit.Advance(TimeSpan.FromMinutes(1));
 
-        Assert.Equal(ExitStep.Warn, exit.Click());
-        Assert.Equal(ExitStep.RequestExit, exit.Click());
-        Assert.Equal(ExitStep.Wait, exit.Click());
+        AssertThat(exit.Click()).IsEqual(ExitStep.Warn);
+        AssertThat(exit.Click()).IsEqual(ExitStep.RequestExit);
+        AssertThat(exit.Click()).IsEqual(ExitStep.Wait);
     }
 
-    [Theory]
-    [InlineData(TavernCode)]
-    [InlineData(IdleCode)]
+    [TestCase(TavernCode)]
+    [TestCase(IdleCode)]
     public void ServerEnded_LeavesStraightAwayAfterAnExitRequest(int reasonCode)
     {
         var exit = new ExitSequence();
         exit.Click();
         exit.Click();
 
-        Assert.True(exit.ServerEnded(reasonCode));
+        AssertThat(exit.ServerEnded(reasonCode)).IsTrue();
     }
 
-    [Theory]
-    [InlineData(TavernCode)]
-    [InlineData(UserRequestCode)]
+    [TestCase(TavernCode)]
+    [TestCase(UserRequestCode)]
     public void ServerEnded_LeavesStraightAwayForACleanLogout(int reasonCode)
     {
-        Assert.True(new ExitSequence().ServerEnded(reasonCode));
+        AssertThat(new ExitSequence().ServerEnded(reasonCode)).IsTrue();
     }
 
-    [Theory]
-    [InlineData(IdleCode)]
-    [InlineData(ShutdownCode)]
-    [InlineData(BannedCode)]
+    [TestCase(IdleCode)]
+    [TestCase(ShutdownCode)]
+    [TestCase(BannedCode)]
     public void ServerEnded_StaysUntilTheNextClickForAProblem(int reasonCode)
     {
         var exit = new ExitSequence();
 
-        Assert.False(exit.ServerEnded(reasonCode));
-        Assert.Equal(ExitStep.Leave, exit.Click());
+        AssertThat(exit.ServerEnded(reasonCode)).IsFalse();
+        AssertThat(exit.Click()).IsEqual(ExitStep.Leave);
     }
 
-    [Fact]
+    [TestCase]
     public void WarningAndRequestLines_AreTheCurrentClientsMessages()
     {
-        Assert.Equal(
-            [
+        AssertThat(ExitSequence.WarningLines)
+            .ContainsExactly(
                 " ",
                 "(F12) Leaving the game without entering a tavern will cause you to take damage, and possibly lose your life. Click again if you need to leave immediately.",
-                "A tavern will be located near where you entered the game.",
-            ],
-            ExitSequence.WarningLines);
-        Assert.Equal([" ", "(F12) Exit request acknowledged. Please wait a moment..."], ExitSequence.RequestLines);
-    }
-
-    [Fact]
-    public void ExitPacket_AsksTheServerToEndTheSession()
-    {
-        Assert.Equal(ClientPackets.OneValue(ClientCommand.Exit, 0), ExitSequence.ExitPacket);
+                "A tavern will be located near where you entered the game.");
+        AssertThat(ExitSequence.RequestLines)
+            .ContainsExactly(" ", "(F12) Exit request acknowledged. Please wait a moment...");
     }
 }

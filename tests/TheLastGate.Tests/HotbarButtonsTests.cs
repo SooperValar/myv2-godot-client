@@ -1,7 +1,7 @@
 using TheLastGate.Characters;
 using TheLastGate.Hotbar;
-using TheLastGate.Items;
 using TheLastGate.Net;
+using TheLastGate.State;
 
 namespace TheLastGate.Tests;
 
@@ -71,7 +71,7 @@ public class HotbarButtonsTests
     [Fact]
     public void UsePacket_UsesASkillOnTheSelectedCharacter()
     {
-        Assert.Equal(ClientPackets.ThreeValues(ClientCommand.Skill, 50, 345, 1), HotbarButtons.UsePacket(50, 345));
+        Assert.Equal(SkillPackets.Use(50, 345), HotbarButtons.UsePacket(50, 345));
     }
 
     [Fact]

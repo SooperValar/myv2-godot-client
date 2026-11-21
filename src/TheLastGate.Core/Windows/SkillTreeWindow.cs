@@ -1,14 +1,12 @@
 using System;
 using TheLastGate.Net;
+using TheLastGate.State;
 using TheLastGate.World;
 
 namespace TheLastGate.Windows;
 
 public sealed class SkillTreeWindow
 {
-    private const int UnlearnOffset = 24;
-    private const int DescribeOffset = 12;
-    private const int ContractOffset = 36;
     private const int GlowPeriodMilliseconds = 16;
     private const int GlowBrightestAt = 8;
 
@@ -55,13 +53,12 @@ public sealed class SkillTreeWindow
             return null;
         }
 
-        var value = button switch
+        return button switch
         {
-            MapButton.Left => keys == MapKeys.None ? node : node + UnlearnOffset,
-            MapButton.Right => node + DescribeOffset,
-            _ => (int?)null,
+            MapButton.Left when keys == MapKeys.None => SkillTreePackets.Learn(tree, node),
+            MapButton.Left => SkillTreePackets.Unlearn(tree, node),
+            MapButton.Right => SkillTreePackets.Describe(tree, node),
+            _ => null,
         };
-        var treeOffset = tree == SkillTree.Contract ? ContractOffset : 0;
-        return value is { } nodeValue ? ClientPackets.OneValue(ClientCommand.Tree, treeOffset + nodeValue) : null;
     }
 }

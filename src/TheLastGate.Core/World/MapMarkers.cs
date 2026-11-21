@@ -8,10 +8,6 @@ public static class MapMarkers
     public const int AttackTarget = 34;
     public const int GiveTarget = 45;
 
-    private const int Drop = 1;
-    private const int PickUp = 2;
-    private const int Give = 3;
-    private const int Use = 4;
     private const int DropMarker = 32;
     private const int PickUpMarker = 33;
     private const int UseMarker = 45;
@@ -23,7 +19,7 @@ public static class MapMarkers
         target.AttackCharacter != 0 && target.AttackCharacter == tile.CharacterNumber;
 
     public static bool IsGiveTarget(in MapTile tile, PlayerTarget target) =>
-        target.MiscAction == Give && target.MiscTarget1 == tile.CharacterId;
+        target.MiscAction == MiscActions.Give && target.MiscTarget1 == tile.CharacterId;
 
     public static int ActionMarker(in MapTile tile, PlayerTarget target)
     {
@@ -34,9 +30,9 @@ public static class MapMarkers
 
         return target.MiscAction switch
         {
-            Drop => DropMarker,
-            PickUp => PickUpMarker,
-            Use => UseMarker,
+            MiscActions.Drop => DropMarker,
+            MiscActions.PickUp => PickUpMarker,
+            MiscActions.Use => UseMarker,
             _ => 0,
         };
     }

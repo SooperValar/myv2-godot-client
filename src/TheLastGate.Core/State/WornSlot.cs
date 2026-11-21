@@ -1,4 +1,4 @@
-namespace TheLastGate.Items;
+namespace TheLastGate.State;
 
 public enum WornSlot
 {

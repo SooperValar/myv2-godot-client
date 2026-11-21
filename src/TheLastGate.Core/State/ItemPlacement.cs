@@ -1,6 +1,6 @@
 using System;
 
-namespace TheLastGate.Items;
+namespace TheLastGate.State;
 
 [Flags]
 public enum ItemPlacement

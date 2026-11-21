@@ -2,7 +2,6 @@ using GdUnit4;
 using TheLastGate.Game;
 using TheLastGate.Net;
 using TheLastGate.State;
-using TheLastGate.Windows;
 using TheLastGate.World;
 using static GdUnit4.Assertions;
 

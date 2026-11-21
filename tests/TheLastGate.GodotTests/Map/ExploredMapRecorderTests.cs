@@ -1,7 +1,6 @@
 using GdUnit4;
 using TheLastGate.Map;
 using TheLastGate.State;
-using TheLastGate.World;
 using static GdUnit4.Assertions;
 
 namespace TheLastGate.GodotTests.Map;
