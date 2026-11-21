@@ -6,40 +6,48 @@ using static GdUnit4.Assertions;
 namespace TheLastGate.GodotTests.Windows;
 
 [TestSuite]
-public class DisplaySwapsTests
+public class AccessibilityOptionsTests
 {
     [TestCase]
     public void SpritesFor_NothingSwitchedOn_SwapsNothing()
     {
-        AssertThat(DisplaySwaps.SpritesFor([])).IsEmpty();
+        AssertThat(AccessibilityOptions.SpritesFor([])).IsEmpty();
     }
 
     [TestCase]
     public void SpritesFor_ObviousHoleTraps_DrawsTheHoleInsteadOfTheHiddenTrap()
     {
-        var sprites = DisplaySwaps.SpritesFor([DisplaySwap.ObviousHoleTraps]);
+        var sprites = AccessibilityOptions.SpritesFor([AccessibilityOption.ObviousHoleTraps]);
 
         AssertThat(sprites).IsEqual(new Dictionary<int, int> { [16859] = 34194 });
     }
 
     [TestCase]
-    public void SpritesFor_TheSameSwapTwice_IsLikeOnce()
+    public void SpritesFor_PlainInfravision_SwapsNoSprites()
     {
-        var sprites = DisplaySwaps.SpritesFor([DisplaySwap.ObviousHoleTraps, DisplaySwap.ObviousHoleTraps]);
+        AssertThat(AccessibilityOptions.SpritesFor([AccessibilityOption.PlainInfravision])).IsEmpty();
+    }
+
+    [TestCase]
+    public void SpritesFor_TheSameOptionTwice_IsLikeOnce()
+    {
+        var sprites = AccessibilityOptions.SpritesFor(
+            [AccessibilityOption.ObviousHoleTraps, AccessibilityOption.ObviousHoleTraps]);
 
         AssertThat(sprites).IsEqual(new Dictionary<int, int> { [16859] = 34194 });
     }
 
     [TestCase]
-    public void Rows_HaveOneRowForEverySwap()
+    public void Rows_HaveOneRowForEveryOption()
     {
-        AssertThat(DisplaySwaps.Rows.Select(row => row.Swap)).ContainsExactly(Enum.GetValues<DisplaySwap>());
+        AssertThat(AccessibilityOptions.Rows.Select(row => row.Option))
+            .ContainsExactly(Enum.GetValues<AccessibilityOption>());
     }
 
     [TestCase]
     public void Rows_HaveDistinctSettingKeys()
     {
-        var keys = DisplaySwaps.Rows.Select(row => row.SettingKey).ToList();
+        var keys = AccessibilityOptions.Rows.Select(row => row.SettingKey).ToList();
 
         AssertThat(keys.Distinct().Count()).IsEqual(keys.Count);
     }
@@ -47,8 +55,8 @@ public class DisplaySwapsTests
     [TestCase]
     public void Rows_NeverSwapASpriteIntoOneAnotherRowSwapsAgain()
     {
-        var sources = DisplaySwaps.Rows.SelectMany(row => row.Sprites.Keys).ToList();
-        var targets = DisplaySwaps.Rows.SelectMany(row => row.Sprites.Values);
+        var sources = AccessibilityOptions.Rows.SelectMany(row => row.Sprites.Keys).ToList();
+        var targets = AccessibilityOptions.Rows.SelectMany(row => row.Sprites.Values);
 
         AssertThat(sources.Distinct().Count()).IsEqual(sources.Count);
         AssertThat(targets.Where(sources.Contains)).IsEmpty();
@@ -65,7 +73,7 @@ public class DisplaySwapsTests
             Path.Combine(archives, DataLayout.PngIndexFile),
             Path.Combine(archives, DataLayout.PngDataFile));
 
-        var missing = DisplaySwaps.Rows
+        var missing = AccessibilityOptions.Rows
             .SelectMany(row => row.Sprites.Values)
             .Where(sprite => !bmpLibrary.Contains(sprite) && !pngLibrary.Contains(sprite));
 

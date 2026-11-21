@@ -44,7 +44,7 @@ public partial class GameScreen : Control
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
     private ScreenGammaLayer? screenGamma;
-    private HashSet<DisplaySwap> shownSwaps = [];
+    private HashSet<AccessibilityOption> shownAccessibility = [];
     private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
     private UserDataUpload? userDataUpload;
@@ -183,7 +183,7 @@ public partial class GameScreen : Control
             worldView.GlideMovement = settings.GlideMovement;
             worldView.PickTileDrawnUnderMouse = settings.PickTileDrawnUnderMouse;
             worldView.WorldGamma = settings.WorldGamma;
-            worldView.PlainInfravision = settings.PlainInfravision;
+            worldView.PlainInfravision = settings.AccessibilityOn.Contains(AccessibilityOption.PlainInfravision);
         }
 
         ShowSwaps(settings);
@@ -191,13 +191,13 @@ public partial class GameScreen : Control
 
     private void ShowSwaps(ClientSettings settings)
     {
-        if (sprites == null || shownSwaps.SetEquals(settings.SwapsOn))
+        if (sprites == null || shownAccessibility.SetEquals(settings.AccessibilityOn))
         {
             return;
         }
 
-        shownSwaps = [.. settings.SwapsOn];
-        sprites.Swaps = DisplaySwaps.SpritesFor(shownSwaps);
+        shownAccessibility = [.. settings.AccessibilityOn];
+        sprites.Swaps = AccessibilityOptions.SpritesFor(shownAccessibility);
         worldView?.RedrawSprites();
     }
 
@@ -232,7 +232,7 @@ public partial class GameScreen : Control
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             GlideMovement = clientSettings.GlideMovement,
             WorldGamma = clientSettings.WorldGamma,
-            PlainInfravision = clientSettings.PlainInfravision,
+            PlainInfravision = clientSettings.AccessibilityOn.Contains(AccessibilityOption.PlainInfravision),
             ShowShadows = clientSettings.Shadows,
             ShowNames = characterSettings.ShowNames,
             ShowHealthPercent = characterSettings.ShowHealthPercent,

@@ -29,7 +29,7 @@ public static class WindowBackgrounds
         new(WindowBackground.Smith, "Smith", "smith"),
         new(WindowBackground.SkillTree, "Skill Tree", "skill_tree"),
         new(WindowBackground.Waypoints, "Waypoints", "waypoints"),
-        new(WindowBackground.Text, "Text Windows", "text"),
+        new(WindowBackground.Text, "Tutorial / MOTD", "text"),
     ];
 
     public static int Clamp(int opacity) => Math.Clamp(opacity, Clear, Solid);

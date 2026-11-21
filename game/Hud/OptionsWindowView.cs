@@ -27,8 +27,6 @@ public partial class OptionsWindowView : Panel, IHudContextUser
     private const string ResetText = "Reset {0} to Defaults";
     private const string ConfirmResetText = "Confirm?";
     private const string WarningMark = "!";
-    private const string PlainInfravisionRow = "PlainInfravision";
-    private const string PlainInfravisionLabel = "Draw infravision in normal colours instead of red.";
     private const string RowVariation = "TableRow";
     private const string HoveredRowVariation = "TableRowHover";
     private const string ScrollBarVariation = "OptionsScrollBar";
@@ -59,9 +57,6 @@ public partial class OptionsWindowView : Panel, IHudContextUser
     private Button Reset => GetNode<Button>("%Reset");
 
     private Label TypingWarning => OptionRow(GeneralOption.EnterToTalk).GetNode<Label>("Line/Warning");
-
-    private CheckBox PlainInfravisionBox =>
-        GetNode("%SwapOptions").GetNode<CheckBox>($"{PlainInfravisionRow}/Line/Box");
 
     public void ShowContext(HudContext context)
     {
@@ -97,9 +92,7 @@ public partial class OptionsWindowView : Panel, IHudContextUser
 
     public event Action<float>? WorldGammaChanged;
 
-    public event Action<DisplaySwap, bool>? SwapChanged;
-
-    public event Action<bool>? PlainInfravisionChanged;
+    public event Action<AccessibilityOption, bool>? AccessibilityChanged;
 
     public event Action<WindowBackground, int>? BackgroundOpacityChanged;
 
@@ -156,12 +149,10 @@ public partial class OptionsWindowView : Panel, IHudContextUser
             ShowValue(WorldGamma, Gamma.Text((float)gamma));
             WorldGammaChanged?.Invoke((float)gamma);
         };
-        foreach (var row in DisplaySwaps.Rows)
+        foreach (var row in AccessibilityOptions.Rows)
         {
-            SwapBox(row.Swap).Toggled += isOn => SwapChanged?.Invoke(row.Swap, isOn);
+            AccessibilityBox(row.Option).Toggled += isOn => AccessibilityChanged?.Invoke(row.Option, isOn);
         }
-
-        PlainInfravisionBox.Toggled += isOn => PlainInfravisionChanged?.Invoke(isOn);
 
         foreach (var row in WindowBackgrounds.Rows)
         {
@@ -228,12 +219,10 @@ public partial class OptionsWindowView : Panel, IHudContextUser
         ShowValue(ScreenGamma, Gamma.Text(settings.ScreenGamma));
         WorldGamma.SetValueNoSignal(settings.WorldGamma);
         ShowValue(WorldGamma, Gamma.Text(settings.WorldGamma));
-        foreach (var row in DisplaySwaps.Rows)
+        foreach (var row in AccessibilityOptions.Rows)
         {
-            SwapBox(row.Swap).SetPressedNoSignal(settings.SwapsOn.Contains(row.Swap));
+            AccessibilityBox(row.Option).SetPressedNoSignal(settings.AccessibilityOn.Contains(row.Option));
         }
-
-        PlainInfravisionBox.SetPressedNoSignal(settings.PlainInfravision);
 
         foreach (var row in WindowBackgrounds.Rows)
         {
@@ -288,12 +277,10 @@ public partial class OptionsWindowView : Panel, IHudContextUser
             GetNode(row.GodotOnly ? "%GodotOptions" : "%ClientOptions").AddChild(rowNode);
         }
 
-        foreach (var row in DisplaySwaps.Rows)
+        foreach (var row in AccessibilityOptions.Rows)
         {
-            GetNode("%SwapOptions").AddChild(CheckRow(rowScene, row.Swap.ToString(), row.Label));
+            GetNode("%AccessibilityOptions").AddChild(CheckRow(rowScene, row.Option.ToString(), row.Label));
         }
-
-        GetNode("%SwapOptions").AddChild(CheckRow(rowScene, PlainInfravisionRow, PlainInfravisionLabel));
 
         var sliderScene = GD.Load<PackedScene>(SliderRowScenePath);
         foreach (var row in WindowBackgrounds.Rows)
@@ -433,7 +420,8 @@ public partial class OptionsWindowView : Panel, IHudContextUser
 
     private CheckBox OptionBox(GeneralOption option) => OptionRow(option).GetNode<CheckBox>("Line/Box");
 
-    private CheckBox SwapBox(DisplaySwap swap) => GetNode("%SwapOptions").GetNode<CheckBox>($"{swap}/Line/Box");
+    private CheckBox AccessibilityBox(AccessibilityOption option) =>
+        GetNode("%AccessibilityOptions").GetNode<CheckBox>($"{option}/Line/Box");
 
     private HSlider BackgroundSlider(WindowBackground window) =>
         GetNode("%BackgroundOptions").GetNode<HSlider>($"{window}/Line/Slider");

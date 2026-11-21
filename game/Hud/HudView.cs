@@ -426,17 +426,15 @@ public partial class HudView : Control
         optionsWindow.WorldGammaChanged += gamma => ChangeClientSettings(settings => settings.WorldGamma = gamma);
         optionsWindow.BackgroundOpacityChanged += (window, opacity) =>
             ChangeClientSettings(settings => settings.BackgroundOpacity[window] = opacity);
-        optionsWindow.PlainInfravisionChanged += isOn =>
-            ChangeClientSettings(settings => settings.PlainInfravision = isOn);
-        optionsWindow.SwapChanged += (swap, isOn) => ChangeClientSettings(settings =>
+        optionsWindow.AccessibilityChanged += (option, isOn) => ChangeClientSettings(settings =>
         {
             if (isOn)
             {
-                settings.SwapsOn.Add(swap);
+                settings.AccessibilityOn.Add(option);
             }
             else
             {
-                settings.SwapsOn.Remove(swap);
+                settings.AccessibilityOn.Remove(option);
             }
         });
 

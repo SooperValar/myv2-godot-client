@@ -27,8 +27,10 @@ public sealed class ClientSettings
     private const string WorldSection = "world";
     private const string KeybindsSection = "keybinds";
     private const string GeneralSection = "general";
-    private const string DisplaySwapsSection = "display_swaps";
     private const string WindowBackgroundsSection = "window_backgrounds";
+
+    // Its name from before these were accessibility options, kept so saved choices still load.
+    private const string AccessibilitySection = "display_swaps";
 
     private readonly ConfigFile file;
 
@@ -72,11 +74,10 @@ public sealed class ClientSettings
             LargestCursorScale);
         ScreenGamma = Gamma.Clamp(file.GetValue(DisplaySection, "screen_gamma", Gamma.Normal).AsSingle());
         WorldGamma = Gamma.Clamp(file.GetValue(DisplaySection, "world_gamma", Gamma.Normal).AsSingle());
-        PlainInfravision = file.GetValue(DisplaySection, "plain_infravision", false).AsBool();
-        foreach (var row in DisplaySwaps.Rows.Where(row =>
-            file.GetValue(DisplaySwapsSection, row.SettingKey, false).AsBool()))
+        foreach (var row in AccessibilityOptions.Rows.Where(row =>
+            file.GetValue(AccessibilitySection, row.SettingKey, false).AsBool()))
         {
-            SwapsOn.Add(row.Swap);
+            AccessibilityOn.Add(row.Option);
         }
 
         foreach (var row in WindowBackgrounds.Rows)
@@ -107,8 +108,7 @@ public sealed class ClientSettings
     public float CursorScale { get; set; }
     public float ScreenGamma { get; set; }
     public float WorldGamma { get; set; }
-    public HashSet<DisplaySwap> SwapsOn { get; } = [];
-    public bool PlainInfravision { get; set; }
+    public HashSet<AccessibilityOption> AccessibilityOn { get; } = [];
     public Dictionary<WindowBackground, int> BackgroundOpacity { get; } = [];
 
     public bool this[GeneralOption option]
@@ -193,8 +193,7 @@ public sealed class ClientSettings
             case OptionsTab.Display:
                 ScreenGamma = Gamma.Normal;
                 WorldGamma = Gamma.Normal;
-                SwapsOn.Clear();
-                PlainInfravision = false;
+                AccessibilityOn.Clear();
                 foreach (var row in WindowBackgrounds.Rows)
                 {
                     BackgroundOpacity[row.Window] = WindowBackgrounds.Solid;
@@ -223,10 +222,9 @@ public sealed class ClientSettings
         file.SetValue(DisplaySection, "cursor_scale", CursorScale);
         file.SetValue(DisplaySection, "screen_gamma", ScreenGamma);
         file.SetValue(DisplaySection, "world_gamma", WorldGamma);
-        file.SetValue(DisplaySection, "plain_infravision", PlainInfravision);
-        foreach (var row in DisplaySwaps.Rows)
+        foreach (var row in AccessibilityOptions.Rows)
         {
-            file.SetValue(DisplaySwapsSection, row.SettingKey, SwapsOn.Contains(row.Swap));
+            file.SetValue(AccessibilitySection, row.SettingKey, AccessibilityOn.Contains(row.Option));
         }
 
         foreach (var row in WindowBackgrounds.Rows)

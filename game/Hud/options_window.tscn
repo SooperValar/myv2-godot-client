@@ -315,12 +315,12 @@ theme_type_variation = &"OptionsValue"
 text = "1.00"
 horizontal_alignment = 2
 
-[node name="SwapsHeading" type="Label" parent="Window/Frame/Layout/Body/Content/Pages/Display/Rows" unique_id=1388205174]
+[node name="AccessibilityHeading" type="Label" parent="Window/Frame/Layout/Body/Content/Pages/Display/Rows" unique_id=1388205174]
 layout_mode = 2
 theme_type_variation = &"OptionsCaption"
-text = "Display Toggles"
+text = "Accessibility"
 
-[node name="SwapOptions" type="VBoxContainer" parent="Window/Frame/Layout/Body/Content/Pages/Display/Rows" unique_id=297461832]
+[node name="AccessibilityOptions" type="VBoxContainer" parent="Window/Frame/Layout/Body/Content/Pages/Display/Rows" unique_id=297461832]
 unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 0

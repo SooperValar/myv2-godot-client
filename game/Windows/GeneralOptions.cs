@@ -61,7 +61,7 @@ public static class GeneralOptions
             false) { Under = GeneralOption.ItemTooltips },
         new(
             GeneralOption.GlideMovement,
-            "Glide characters and the map smoothly between server updates instead of stepping.",
+            "Interpolate character/map movement for smoothness",
             false,
             true),
         new(
