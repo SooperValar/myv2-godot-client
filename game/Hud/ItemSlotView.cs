@@ -1,18 +1,27 @@
 using System;
 using System.Collections.Generic;
 using Godot;
+using TheLastGate.Assets;
+using TheLastGate.Hotkeys;
 using TheLastGate.Items;
 using TheLastGate.State;
 
 namespace TheLastGate.Hud;
 
 [Tool]
-public partial class ItemSlotView : ClickArea
+public partial class ItemSlotView : ClickArea, IHudContextUser
 {
     private const float HighlightBrightness = 2f;
     private const string TooltipScenePath = "res://Hud/item_tooltip.tscn";
 
+    // Godot wraps a custom tooltip in a TooltipPanel under the control that owns it, so the slot's theme styles that
+    // panel. The tooltip draws its own background and border.
+    private static readonly Theme TooltipTheme = MakeTooltipTheme();
+    private IFontSet? fonts;
+
     private int previewSprite;
+
+    public ItemSlotView() => AddToGroup(HudContext.Group);
 
     [Export]
     public int PreviewSprite
@@ -27,11 +36,13 @@ public partial class ItemSlotView : ClickArea
 
     public Func<ItemTooltipRequest?>? TooltipRequest { get; set; }
 
+    public void ShowContext(HudContext context) => fonts = context.Fonts;
+
     public override string _GetTooltip(Vector2 atPosition) => TooltipRequest?.Invoke() != null ? "item" : "";
 
     public override GodotObject? _MakeCustomTooltip(string forText)
     {
-        if (TooltipRequest == null || HudView.Containing(this)?.Fonts is not { } fonts)
+        if (TooltipRequest == null || this.fonts is not { } fonts)
         {
             return null;
         }
@@ -43,6 +54,7 @@ public partial class ItemSlotView : ClickArea
 
     public override void _Ready()
     {
+        Theme ??= TooltipTheme;
         MouseEntered += () => SetHighlighted(true);
         MouseExited += () => SetHighlighted(false);
         ShowPreview();
@@ -77,8 +89,15 @@ public partial class ItemSlotView : ClickArea
         hotbarKey.Visible = button != null;
         if (button is { } slot)
         {
-            hotbarKey.Text = HudView.HotbarKeyName(slot);
+            hotbarKey.Text = BindingRules.HotbarKeyName(slot);
         }
+    }
+
+    private static Theme MakeTooltipTheme()
+    {
+        var theme = new Theme();
+        theme.SetStylebox("panel", "TooltipPanel", new StyleBoxEmpty());
+        return theme;
     }
 
     public void SetHighlighted(bool highlighted)

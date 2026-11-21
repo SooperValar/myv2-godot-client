@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using Godot;
+using TheLastGate.Assets;
 using TheLastGate.Characters;
 using TheLastGate.Config;
 using TheLastGate.Hotkeys;
@@ -13,7 +14,7 @@ namespace TheLastGate.Hud;
 
 // The current client's Options window: a Dear ImGui window with game-sprite buttons, rebuilt as themed controls.
 [Tool]
-public partial class OptionsWindowView : Panel
+public partial class OptionsWindowView : Panel, IHudContextUser
 {
     private const int CloseSprite = 18042;
     private const string OptionRowScenePath = "res://Hud/option_row.tscn";
@@ -34,8 +35,12 @@ public partial class OptionsWindowView : Panel
 
     private readonly Dictionary<string, Button> keyButtons = [];
     private readonly Dictionary<string, Label> keyWarnings = [];
+    private readonly Dictionary<HSlider, Label> valueLabels = [];
     private string? capturing;
     private IReadOnlyList<KeybindRow> shownKeybindRows = [];
+    private SpriteLoader? sprites;
+
+    public OptionsWindowView() => AddToGroup(HudContext.Group);
 
     private CheckBox SoundEnabled => GetNode<CheckBox>("%SoundEnabled");
 
@@ -52,6 +57,12 @@ public partial class OptionsWindowView : Panel
     private Button Reset => GetNode<Button>("%Reset");
 
     private Label TypingWarning => OptionRow(GeneralOption.EnterToTalk).GetNode<Label>("Line/Warning");
+
+    public void ShowContext(HudContext context)
+    {
+        sprites = context.Sprites;
+        ApplySprites();
+    }
 
     public event Action<OptionsTab>? TabChosen;
 
@@ -235,9 +246,9 @@ public partial class OptionsWindowView : Panel
         }
     }
 
-    public void ApplySprites()
+    private void ApplySprites()
     {
-        if (Engine.IsEditorHint() || Theme == null || HudView.Containing(this)?.Sprites is not { } sprites)
+        if (Engine.IsEditorHint() || Theme == null || sprites == null)
         {
             return;
         }
@@ -419,6 +430,18 @@ public partial class OptionsWindowView : Panel
     private void ShowCursorScale(float scale) =>
         ShowValue(CursorScale, scale.ToString("0.0", CultureInfo.InvariantCulture) + "x");
 
-    private static void ShowValue(HSlider slider, string text) =>
-        slider.GetParent().GetNode<Label>("Value").Text = text;
+    private void ShowValue(HSlider slider, string text) => ValueLabel(slider).Text = text;
+
+    // Each slider shares a line with the label that shows its value.
+    private Label ValueLabel(HSlider slider)
+    {
+        if (!valueLabels.TryGetValue(slider, out var label))
+        {
+            var line = FindChildren("Line", "", true, false).First(line => line.IsAncestorOf(slider));
+            label = line.GetNode<Label>("Value");
+            valueLabels[slider] = label;
+        }
+
+        return label;
+    }
 }

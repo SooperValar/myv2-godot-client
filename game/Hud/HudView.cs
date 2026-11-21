@@ -79,6 +79,7 @@ public partial class HudView : Control
     private IFontSet? fonts;
     private GameSession? gameSession;
     private int? hoveredShopCell;
+    private (ClickArea Area, Func<MouseCursor> Cursor)? hoveredSlot;
     private bool itemTooltipsShown = true;
     private NoteSet? mapNotes;
     private int mapNotesStamp;
@@ -104,7 +105,7 @@ public partial class HudView : Control
         set
         {
             darkMode = value;
-            Reload(this);
+            ShowContext();
         }
     }
 
@@ -114,7 +115,7 @@ public partial class HudView : Control
         set
         {
             sprites = value;
-            Reload(this);
+            ShowContext();
         }
     }
 
@@ -126,7 +127,7 @@ public partial class HudView : Control
         set
         {
             clientSettings = value;
-            FadeBackgrounds(this);
+            ShowContext();
         }
     }
 
@@ -139,7 +140,7 @@ public partial class HudView : Control
         {
             fonts = value;
             ApplyWindowFonts(this);
-            Reload(this);
+            ShowContext();
         }
     }
 
@@ -167,24 +168,36 @@ public partial class HudView : Control
 
     private bool PlannerEnabled => ClientSettings?.SkillPlanner == true;
 
+    private PlayerState Player => state!.Player;
+
+    private bool HoldingItem => Player.HeldItem.Sprite != 0;
+
+    private HudContext Context => new(fonts, sprites, clientSettings, darkMode);
+
+    // Each slot says it is hovered through its own mouse signals, so the HUD never works it out from the tree.
+    private void WatchCursor(ClickArea area, Func<MouseCursor> cursor)
+    {
+        area.MouseEntered += () => hoveredSlot = (area, cursor);
+        area.MouseExited += () =>
+        {
+            if (hoveredSlot?.Area == area)
+            {
+                hoveredSlot = null;
+            }
+        };
+    }
+
+    private MouseCursor ShopCursor(int slot)
+    {
+        var items = state!.Shop.ShopItems;
+        return ShopClicks.Cursor(slot < items.Length && items[slot].Sprite != 0, HoldingItem);
+    }
+
     public event Action? SettingsChanged;
 
     public event Action? LeaveRequested;
 
     public event Action? ClientSettingsChanged;
-
-    public static HudView? Containing(Node node)
-    {
-        for (var parent = node.GetParent(); parent != null; parent = parent.GetParent())
-        {
-            if (parent is HudView hud)
-            {
-                return hud;
-            }
-        }
-
-        return null;
-    }
 
     public void Show(GameState shownState, GameSession shownSession, IFontSet fontSet, Action<byte[]> sendToServer)
     {
@@ -200,10 +213,18 @@ public partial class HudView : Control
             wornView.TooltipRequest = () => WornTooltip(clickedSlot);
             wornView.MouseEntered += () => state?.ItemLooks.Prefer(ItemSlotKind.Worn, (int)clickedSlot);
             wornView.MouseExited += () => state?.ItemLooks.ClearPreference();
+            WatchCursor(
+                wornView,
+                () => EquipmentClicks.Cursor(
+                    Player.Worn[(int)clickedSlot].Sprite != 0,
+                    HoldingItem,
+                    HeldKeys.Current()));
         }
 
         GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
-        GetNode<ClickArea>("%" + TrashCanName).Released += ClickTrashCan;
+        var trashCan = GetNode<ClickArea>("%" + TrashCanName);
+        trashCan.Released += ClickTrashCan;
+        WatchCursor(trashCan, () => TrashCan.Cursor(HoldingItem));
         foreach (var node in GetNode("%OptionButtons").GetChildren())
         {
             var optionButton = (OptionButtonView)node;
@@ -250,6 +271,12 @@ public partial class HudView : Control
             cellView.MouseExited += () => state?.ItemLooks.ClearPreference();
             cellView.Released +=
                 button => ClickInventory(inventory.SlotShownIn(clickedCell), button);
+            WatchCursor(
+                cellView,
+                () => InventoryClicks.Cursor(
+                    Player.Inventory[inventory.SlotShownIn(clickedCell)],
+                    HoldingItem,
+                    HeldKeys.Current()));
         }
 
         state.LookShown += ShowLook;
@@ -267,6 +294,7 @@ public partial class HudView : Control
             shopCell.Released += button => ClickShop(cell, button);
             shopCell.MouseEntered += () => hoveredShopCell = cell;
             shopCell.MouseExited += () => hoveredShopCell = null;
+            WatchCursor(shopCell, () => ShopCursor(ShopClicks.SlotFor(cell)));
         }
 
         var depotWindow = GetNode<DepotWindowView>("%DepotWindow");
@@ -277,6 +305,9 @@ public partial class HudView : Control
             var depotCell = (ItemSlotView)node;
             var cell = depotCell.GetIndex();
             depotCell.Released += button => ClickDepot(cell, button);
+            WatchCursor(
+                depotCell,
+                () => ShopClicks.Cursor(state.Shop.Depot[depotPage.Current][cell].Sprite != 0, HoldingItem));
         }
 
         for (var page = 0; page < DepotPackets.Pages; page++)
@@ -567,8 +598,6 @@ public partial class HudView : Control
         _ => null,
     };
 
-    public static string HotbarKeyName(int slot) => BindingRules.ShortName(BindingActions.For(Bindings.SpellId(slot)));
-
     public override void _Process(double delta)
     {
         if (state == null)
@@ -589,44 +618,14 @@ public partial class HudView : Control
         ShowTreeButton();
         var buyingTen = Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
         GetNode<ShopWindowView>("%ShopWindow").ShowText(state, hoveredShopCell, buyingTen);
-        if (GetViewport().GuiGetHoveredControl() is not ClickArea hovered)
+        if (hoveredSlot is not { } hover)
         {
             return;
         }
 
-        var player = state.Player;
-        var holdingItem = player.HeldItem.Sprite != 0;
-        MouseCursor cursor;
-        if (hovered.Name == TrashCanName)
-        {
-            cursor = TrashCan.Cursor(holdingItem);
-        }
-        else if (hovered.GetParent() is InventoryGrid inventory)
-        {
-            var item = player.Inventory[inventory.SlotShownIn(hovered.GetIndex())];
-            cursor = InventoryClicks.Cursor(item, holdingItem, HeldKeys.Current());
-        }
-        else if (hovered.Owner is DepotWindowView)
-        {
-            var item = state.Shop.Depot[depotPage.Current][hovered.GetIndex()];
-            cursor = ShopClicks.Cursor(item.Sprite != 0, holdingItem);
-        }
-        else if (hovered.Owner is ShopWindowView)
-        {
-            var slot = ShopClicks.SlotFor(hovered.GetIndex());
-            var items = state.Shop.ShopItems;
-            cursor = ShopClicks.Cursor(slot < items.Length && items[slot].Sprite != 0, holdingItem);
-        }
-        else if (Enum.TryParse<WornSlot>(hovered.Name, out var slot))
-        {
-            cursor = EquipmentClicks.Cursor(player.Worn[(int)slot].Sprite != 0, holdingItem, HeldKeys.Current());
-        }
-        else
-        {
-            return;
-        }
+        var (hovered, cursorFor) = hover;
 
-        var shape = (CursorShape)CursorShapes.For(cursor);
+        var shape = (CursorShape)CursorShapes.For(cursorFor());
         if (hovered.MouseDefaultCursorShape != shape)
         {
             hovered.MouseDefaultCursorShape = shape;
@@ -636,6 +635,7 @@ public partial class HudView : Control
 
     public override void _EnterTree()
     {
+        GetTree().NodeAdded += ShowContextToNewNode;
         if (!Engine.IsEditorHint())
         {
             ChildEnteredTree += ApplyWindowFonts;
@@ -657,6 +657,7 @@ public partial class HudView : Control
 
     public override void _ExitTree()
     {
+        GetTree().NodeAdded -= ShowContextToNewNode;
         ChildEnteredTree -= ApplyWindowFonts;
         if (editorSprites == null)
         {
@@ -689,58 +690,28 @@ public partial class HudView : Control
         WindowFonts.Apply(node, font.Font, font.Size);
     }
 
-    private static void Reload(Node parent)
+    private void ShowContext()
     {
-        foreach (var child in parent.GetChildren())
+        if (!IsInsideTree())
         {
-            switch (child)
-            {
-                case ArchiveSprite archiveSprite:
-                    archiveSprite.LoadSprite();
-                    break;
-                case ChatLine chatLine:
-                    chatLine.ApplyFont();
-                    break;
-                case HudLabel label:
-                    label.ApplyFont();
-                    break;
-                case UiPicture picture:
-                    picture.LoadPicture();
-                    break;
-                case DarkModeShift shift:
-                    shift.ApplyDarkMode();
-                    break;
-                case HotbarMenu menu:
-                    menu.ApplyFont();
-                    break;
-                case OptionsWindowView options:
-                    options.ApplySprites();
-                    break;
-                case PlannerWindowView planner:
-                    planner.ApplyFrameSprite();
-                    break;
-                case PlannerAdvancedWindowView advanced:
-                    advanced.ApplyFrameSprite();
-                    break;
-                case SessionStatsWindowView sessionStats:
-                    sessionStats.ApplyCloseSprite();
-                    break;
-            }
+            return;
+        }
 
-            Reload(child);
+        var context = Context;
+        foreach (var node in GetTree().GetNodesInGroup(HudContext.Group))
+        {
+            if (node is IHudContextUser user && IsAncestorOf(node))
+            {
+                user.ShowContext(context);
+            }
         }
     }
 
-    private static void FadeBackgrounds(Node parent)
+    private void ShowContextToNewNode(Node node)
     {
-        foreach (var child in parent.GetChildren())
+        if (node is IHudContextUser user && node.IsInGroup(HudContext.Group) && IsAncestorOf(node))
         {
-            if (child is ArchiveSprite archiveSprite)
-            {
-                archiveSprite.ApplyFade();
-            }
-
-            FadeBackgrounds(child);
+            user.ShowContext(Context);
         }
     }
 
@@ -1484,7 +1455,7 @@ public partial class HudView : Control
         ClientSettings.Save();
         ShowQuickStatsLayout();
         GetNode<ChatLine>("%ChatLine").EnterToTalk = ClientSettings.EnterToTalk;
-        FadeBackgrounds(this);
+        ShowContext();
         ClientSettingsChanged?.Invoke();
     }
 
@@ -1676,7 +1647,7 @@ public partial class HudView : Control
         var name = action < HotbarButtons.FirstInventoryAction
             ? state!.Terminology.Skills[action].Name
             : HotbarButtons.ItemName(action);
-        var keyName = HotbarKeyName(slot);
+        var keyName = BindingRules.HotbarKeyName(slot);
         state!.Chat.Add(HotbarAssignments.Assign(Settings, slot, action, name, keyName));
         HotbarChanged();
     }
