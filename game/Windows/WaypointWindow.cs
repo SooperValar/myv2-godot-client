@@ -62,7 +62,7 @@ public sealed class WaypointWindow
     public void ClearSearch(int foundMask)
     {
         SetSearch("", foundMask);
-        Selected = null;
+        ClearSelection();
     }
 
     // With nothing selected the first move picks the top row in view, so the list's place is kept.
@@ -83,6 +83,8 @@ public sealed class WaypointWindow
             Scroll = Selected.Value - VisibleRows + 1;
         }
     }
+
+    public void ClearSelection() => Selected = null;
 
     public void ScrollBy(int rows) => ScrollTo(Scroll + rows);
 

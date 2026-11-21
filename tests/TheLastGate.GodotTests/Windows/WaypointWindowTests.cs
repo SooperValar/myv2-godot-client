@@ -193,6 +193,19 @@ public class WaypointWindowTests
     }
 
     [TestCase]
+    public void ClearSelection_KeepsTheSearchAndItsScroll()
+    {
+        window.SetSearch("pent", AllFound);
+        window.MoveSelection(3);
+
+        window.ClearSelection();
+
+        AssertThat(window.Selected ?? NoSelection).IsEqual(NoSelection);
+        AssertThat(window.Search).IsEqual("pent");
+        AssertThat(window.ShownCount).IsEqual(7);
+    }
+
+    [TestCase]
     public void ClearSearch_ShowsEveryWaypointWithNothingSelected()
     {
         window.SetSearch("pent", AllFound);

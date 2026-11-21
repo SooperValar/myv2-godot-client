@@ -26,8 +26,6 @@ public partial class WaypointWindowView : Control
 
     public ScrollBar ScrollBar => GetNode<ScrollBar>("ScrollBackground/ScrollBar");
 
-    private Control List => GetNode<Control>("Blocker");
-
     public event Action? SelectedChosen;
 
     public event Action? CloseAsked;
@@ -45,7 +43,6 @@ public partial class WaypointWindowView : Control
             Row(row).MouseExited += () => Hover(null);
         }
 
-        List.GuiInput += ListKey;
         Search.TextChanged += SearchFor;
         Search.TextSubmitted += _ => SelectedChosen?.Invoke();
         Search.GuiInput += SearchKey;
@@ -123,7 +120,7 @@ public partial class WaypointWindowView : Control
             Search.GrabFocus();
             Search.Edit();
         }
-        else if (Search.HasFocus() || List.HasFocus())
+        else if (Search.HasFocus())
         {
             GetViewport().GuiReleaseFocus();
         }
@@ -155,7 +152,14 @@ public partial class WaypointWindowView : Control
         Redraw();
     }
 
-    // Escape clears a search first, and closes the window once the field is empty.
+    private void ClearSelection()
+    {
+        window?.ClearSelection();
+        Redraw();
+    }
+
+    // Keycodes, not ui_up and ui_down: NavigationKeys takes those off on the game screen. Escape clears a search
+    // first, and closes the window once the field is empty.
     private void SearchKey(InputEvent inputEvent)
     {
         if (inputEvent is not InputEventKey { Pressed: true } key)
@@ -163,14 +167,17 @@ public partial class WaypointWindowView : Control
             return;
         }
 
-        if (inputEvent.IsAction("ui_down"))
+        if (key.Keycode == Key.Down)
         {
             MoveSelection(1);
-            List.GrabFocus();
         }
-        else if (inputEvent.IsAction("ui_focus_next"))
+        else if (key.Keycode == Key.Up && window?.Selected == 0)
         {
-            ClearAndType();
+            ClearSelection();
+        }
+        else if (key.Keycode == Key.Up && window?.Selected != null)
+        {
+            MoveSelection(-1);
         }
         else if (key.Keycode == Key.Escape && Search.Text.Length > 0)
         {
@@ -179,52 +186,6 @@ public partial class WaypointWindowView : Control
         else if (key.Keycode == Key.Escape)
         {
             CloseAsked?.Invoke();
-        }
-        else
-        {
-            return;
-        }
-
-        AcceptEvent();
-    }
-
-    // A letter typed in the list goes to the search, so typing never reaches the hotkeys.
-    private void ListKey(InputEvent inputEvent)
-    {
-        if (inputEvent is not InputEventKey { Pressed: true } key)
-        {
-            return;
-        }
-
-        if (inputEvent.IsAction("ui_down"))
-        {
-            MoveSelection(1);
-        }
-        else if (inputEvent.IsAction("ui_up") && window?.Selected == 0)
-        {
-            TypeInSearch();
-        }
-        else if (inputEvent.IsAction("ui_up"))
-        {
-            MoveSelection(-1);
-        }
-        else if (inputEvent.IsAction("ui_text_submit"))
-        {
-            SelectedChosen?.Invoke();
-        }
-        else if (inputEvent.IsAction("ui_focus_next"))
-        {
-            ClearAndType();
-        }
-        else if (key.Keycode == Key.Escape)
-        {
-            CloseAsked?.Invoke();
-        }
-        else if (key.Unicode >= ' ' && !key.CtrlPressed && !key.AltPressed && !key.MetaPressed)
-        {
-            TypeInSearch();
-            Search.InsertTextAtCaret(char.ConvertFromUtf32((int)key.Unicode));
-            SearchFor(Search.Text);
         }
         else
         {

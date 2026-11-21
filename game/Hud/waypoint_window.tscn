@@ -61,10 +61,6 @@ offset_left = 1.0
 offset_top = 1.0
 offset_right = 281.0
 offset_bottom = 316.0
-focus_neighbor_left = NodePath(".")
-focus_neighbor_right = NodePath(".")
-focus_previous = NodePath(".")
-focus_mode = 2
 
 [node name="Rows" type="VBoxContainer" parent="Blocker" unique_id=852111210]
 layout_mode = 0
