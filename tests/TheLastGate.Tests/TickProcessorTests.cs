@@ -34,6 +34,63 @@ public class TickProcessorTests
         Assert.Null(exception);
     }
 
+    [Fact]
+    public void Process_SaysTheTickHasEndedOnceItsCommandsAreApplied()
+    {
+        var state = new GameState();
+        var processor = new TickProcessor(state);
+        var tickAtTheEnd = new List<int>();
+        state.TickEnded += () => tickAtTheEnd.Add(state.ServerTick);
+
+        processor.Process(TestCommand.Payload(TestCommand.Of(ServerCommand.Tick).Byte(42)));
+
+        Assert.Equal([42], tickAtTheEnd);
+    }
+
+    [Fact]
+    public void Process_SaysWhenTheServerChangesTheTarget()
+    {
+        var state = new GameState();
+        var changes = new List<(PlayerTarget Previous, PlayerTarget Now)>();
+        state.TargetChanged += (previous, now) => changes.Add((previous, now));
+        var setTarget = TestCommand.Of(ServerCommand.SetTarget)
+            .UInt16(0)
+            .UInt16(0)
+            .UInt16(0)
+            .UInt16(4)
+            .UInt16(10)
+            .UInt16(20);
+
+        new TickProcessor(state).Process(TestCommand.Payload(setTarget));
+
+        Assert.Equal([(default, new PlayerTarget(0, 0, 0, 4, 10, 20))], changes);
+    }
+
+    [Fact]
+    public void Process_SaysWhenTheServerChangesTheHeldItem()
+    {
+        var state = new GameState();
+        var heldSprites = new List<int>();
+        state.HeldItemChanged += () => heldSprites.Add(state.Player.HeldItem.Sprite);
+        var setHeldItem = TestCommand.Of(ServerCommand.SetCharacterHeldItem).UInt16(2500).UInt16(0).Byte(1);
+
+        new TickProcessor(state).Process(TestCommand.Payload(setHeldItem));
+
+        Assert.Equal([2500], heldSprites);
+    }
+
+    [Fact]
+    public void Process_SaysWhenTheServerOffersTheWaypoints()
+    {
+        var state = new GameState();
+        var offers = 0;
+        state.WaypointsOffered += () => offers++;
+
+        new TickProcessor(state).Process(TestCommand.Payload(TestCommand.Of(ServerCommand.Waypoints)));
+
+        Assert.Equal(1, offers);
+    }
+
     private static bool TryBuildCommand(ServerCommand commandId, out byte[] command)
     {
         var bytes = new byte[LongestCommand];

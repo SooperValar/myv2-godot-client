@@ -1,4 +1,3 @@
-using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Windows;
 
@@ -72,16 +71,5 @@ public class OptionsWindowTests
 
         Assert.False(state.OptionsWindow.IsOpen);
         Assert.False(state.Pause.Active);
-    }
-
-    [Fact]
-    public void ThePause_LeavesTheOptionsOpen()
-    {
-        state.OptionsWindow.Toggle();
-        state.Pause.Start();
-
-        new TickProcessor(state).Process(TestCommand.Payload());
-
-        Assert.True(state.OptionsWindow.IsOpen);
     }
 }

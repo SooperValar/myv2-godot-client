@@ -52,7 +52,7 @@ public sealed class TickProcessor(GameState state)
                 case ServerCommand.SetTarget:
                     var previousTarget = state.Player.Target;
                     PlayerCommands.Apply(state.Player, command);
-                    state.UseQueue.TargetChanged(previousTarget, state.Player.Target);
+                    state.ReportTargetChanged(previousTarget, state.Player.Target);
                     break;
                 case ServerCommand.SetCharacterItem
                     or ServerCommand.SetCharacterWorn
@@ -61,7 +61,7 @@ public sealed class TickProcessor(GameState state)
                     break;
                 case ServerCommand.SetCharacterHeldItem:
                     ItemCommands.Apply(state.Player, state.Tooltips, state.BuffWatch, command);
-                    state.GiveMore.HeldItemChanged(state.Player);
+                    state.ReportHeldItemChanged();
                     break;
                 case ServerCommand.SetMap3
                     or ServerCommand.SetMap4
@@ -133,14 +133,9 @@ public sealed class TickProcessor(GameState state)
 
         state.Tooltips.EndOfTick();
         state.BuffWatch.EndOfTick();
-        if (state.Pause.Active)
-        {
-            state.ShutWindows();
-        }
-
-        state.Pause.EndOfTick();
+        // Before the shop refresh: the end of a paused tick can close the shop, and a closed shop isn't refreshed.
+        state.ReportTickEnded();
         state.ShopRefresh.EndOfTick(state.OpenShop, state.Shop.Number);
-        state.AutoWalk.EndOfTick(state.Map);
         state.ClientTick++;
         var tiles = state.Map.Tiles;
         for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)

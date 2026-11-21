@@ -57,13 +57,17 @@ public sealed class GameState
 
     public event Action<CharacterLook>? LookShown;
     public event Action<ShopKind>? ShopOpened;
-    public event Action? ShopClosed;
+    public event Action<bool>? ShopClosed;
     public event Action<SoundRequest>? SoundRequested;
     public event Action<ServerExit>? ExitRequested;
     public event Action<UniqueId>? UniqueIdReceived;
     public event Action<WindowRequest>? WindowRequested;
     public event Action<MinimapBox>? MinimapBoxCleared;
     public event Action<string>? UnusualDataSeen;
+    public event Action? TickEnded;
+    public event Action<PlayerTarget, PlayerTarget>? TargetChanged;
+    public event Action? HeldItemChanged;
+    public event Action? WaypointsOffered;
 
     public bool CloseShop()
     {
@@ -73,8 +77,7 @@ public sealed class GameState
         }
 
         OpenShop = null;
-        Pause.Start();
-        ReportShopClosed();
+        ReportShopClosed(true);
         return true;
     }
 
@@ -101,7 +104,7 @@ public sealed class GameState
             || closedShop || closedSessionStats;
     }
 
-    internal void ShutWindows()
+    public void ShutWindows()
     {
         ShutWindowsBesideTheTree();
         SkillTreeWindow.Close();
@@ -116,13 +119,13 @@ public sealed class GameState
         if (OpenShop != null)
         {
             OpenShop = null;
-            ReportShopClosed();
+            ReportShopClosed(false);
         }
     }
 
     internal void ReportShopOpened(ShopKind kind) => ShopOpened?.Invoke(kind);
 
-    internal void ReportShopClosed() => ShopClosed?.Invoke();
+    internal void ReportShopClosed(bool startsPause) => ShopClosed?.Invoke(startsPause);
 
     internal void ReportSoundRequested(SoundRequest sound) => SoundRequested?.Invoke(sound);
 
@@ -135,4 +138,12 @@ public sealed class GameState
     internal void ReportMinimapBoxCleared(MinimapBox box) => MinimapBoxCleared?.Invoke(box);
 
     internal void ReportUnusualData(string description) => UnusualDataSeen?.Invoke(description);
+
+    internal void ReportTickEnded() => TickEnded?.Invoke();
+
+    internal void ReportTargetChanged(PlayerTarget previous, PlayerTarget now) => TargetChanged?.Invoke(previous, now);
+
+    internal void ReportHeldItemChanged() => HeldItemChanged?.Invoke();
+
+    internal void ReportWaypointsOffered() => WaypointsOffered?.Invoke();
 }

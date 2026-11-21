@@ -54,7 +54,7 @@ public partial class LauncherScreen : Control
     private CheckBox shadowsCheck = null!;
     private bool showingCharacter;
     private CheckBox soundCheck = null!;
-    private GameSession? startingSession;
+    private LoginHandoff? startingSession;
     private UpdateWindowView updateWindow = null!;
     private HSlider volumeSlider = null!;
     private Label volumeValue = null!;
@@ -389,7 +389,7 @@ public partial class LauncherScreen : Control
             uniqueId.Low,
             uniqueId.High);
         var connection = new ServerConnection();
-        startingSession = new GameSession(record, handshake, settings.Server, connection);
+        startingSession = new LoginHandoff(record, handshake, settings.Server, connection);
         connection.Start(settings.Server, handshake);
         ShowMessage("Connection", "STATUS: Connecting...");
         LetMessageClose(false);
@@ -414,7 +414,7 @@ public partial class LauncherScreen : Control
         if (state == ConnectionState.Connected)
         {
             EndStarting();
-            GameSession.Begin(session);
+            LoginHandoff.Begin(session);
             GetTree().ChangeSceneToFile("res://Game/game.tscn");
         }
         else if (state is ConnectionState.Failed or ConnectionState.Closed)

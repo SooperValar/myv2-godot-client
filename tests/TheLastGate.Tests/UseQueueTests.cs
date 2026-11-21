@@ -151,32 +151,7 @@ public class UseQueueTests
         Assert.Equal(0, queue.Count);
     }
 
-    [Fact]
-    public void TheServersSetTarget_ReachesTheQueue()
-    {
-        var state = new GameState();
-        state.UseQueue.Enabled = true;
-        state.UseQueue.Send = sent.Add;
-        state.UseQueue.Add(10, 20, Target(Using, 1, 1));
-        state.UseQueue.Add(11, 20, Target(Using, 1, 1));
-        var processor = new TickProcessor(state);
-
-        processor.Process(TestCommand.Payload(SetTarget(Using, 1, 1)));
-        processor.Process(TestCommand.Payload(SetTarget(Idle, 0, 0)));
-
-        Assert.Equal([Use(10, 20)], sent);
-    }
-
     private static PlayerTarget Target(int action, int x = 0, int y = 0) => new(0, 0, 0, action, x, y);
 
     private static byte[] Use(int x, int y) => MapCommandPackets.ForTile(ClientCommand.Use, x, y);
-
-    private static TestCommand SetTarget(int action, int x, int y) =>
-        TestCommand.Of(ServerCommand.SetTarget)
-            .UInt16(0)
-            .UInt16(0)
-            .UInt16(0)
-            .UInt16((ushort)action)
-            .UInt16((ushort)x)
-            .UInt16((ushort)y);
 }

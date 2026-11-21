@@ -124,25 +124,6 @@ public class WaypointWindowTests
     }
 
     [Fact]
-    public void TheServer_OpensTheWindow()
-    {
-        Process(TestCommand.Of(ServerCommand.Waypoints));
-
-        Assert.True(state.WaypointWindow.IsOpen);
-    }
-
-    [Fact]
-    public void OpeningAShop_ClosesTheWindow()
-    {
-        state.WaypointWindow.Open();
-
-        OpenShop();
-
-        Assert.NotNull(state.OpenShop);
-        Assert.False(state.WaypointWindow.IsOpen);
-    }
-
-    [Fact]
     public void Escape_ClosesTheWindowWithoutAPause()
     {
         state.WaypointWindow.Open();
@@ -152,35 +133,6 @@ public class WaypointWindowTests
         Assert.False(state.WaypointWindow.IsOpen);
         Assert.False(state.Pause.Active);
     }
-
-    [Fact]
-    public void ThePause_KeepsTheWindowShut()
-    {
-        state.Pause.Start();
-
-        Process(TestCommand.Of(ServerCommand.Waypoints));
-
-        Assert.False(state.WaypointWindow.IsOpen);
-    }
-
-    private void OpenShop() => Process(ShopCommands());
-
-    private static TestCommand[] ShopCommands() =>
-    [
-        TestCommand.Of(ServerCommand.Look1),
-        TestCommand.Of(ServerCommand.Look2),
-        TestCommand.Of(ServerCommand.Look3).UInt16(0).UInt16(0).UInt16(0).UInt16(1201).UInt16(7),
-        TestCommand.Of(ServerCommand.Look4).UInt16(0).UInt16(0).Byte((byte)LookFlags.Shop).UInt32(250),
-        TestCommand.Of(ServerCommand.Look5).Text("Merchant", 15),
-        .. Enumerable.Range(0, CharacterLook.ShopSlots / 2)
-            .Select(pair => TestCommand.Of(ServerCommand.Look6)
-                .Byte((byte)(pair * 2))
-                .UInt16(1000)
-                .UInt32(10)
-                .UInt16(1001)
-                .UInt32(20)
-                .Bytes(0, 0)),
-    ];
 
     [Fact]
     public void SetSearch_ShowsOnlyFoundWaypointsWhoseNameMatches()

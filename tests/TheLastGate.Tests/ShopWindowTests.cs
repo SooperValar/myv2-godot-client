@@ -1,6 +1,7 @@
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Windows;
+using TheLastGate.World;
 
 namespace TheLastGate.Tests;
 
@@ -14,37 +15,40 @@ public class ShopWindowTests
     public ShopWindowTests() => processor = new TickProcessor(state);
 
     [Fact]
-    public void CloseShop_ClosesTheShopAndStartsThePause()
+    public void CloseShop_ClosesTheShopAndLeavesThePauseToTheGame()
     {
         OpenShop();
-        var closed = 0;
-        state.ShopClosed += () => closed++;
+        var closes = new List<bool>();
+        state.ShopClosed += closes.Add;
 
         Assert.True(state.CloseShop());
 
         Assert.Null(state.OpenShop);
-        Assert.Equal(1, closed);
-        Assert.True(state.Pause.Active);
+        Assert.Equal([true], closes);
+        Assert.False(state.Pause.Active);
+    }
+
+    [Fact]
+    public void ShuttingTheShopForTheTree_SaysNoPauseStarts()
+    {
+        OpenShop();
+        var closes = new List<bool>();
+        state.ShopClosed += closes.Add;
+
+        state.ToggleSkillTree(MapKeys.None);
+
+        Assert.Null(state.OpenShop);
+        Assert.Equal([false], closes);
     }
 
     [Fact]
     public void CloseShop_DoesNothingWithoutAShop()
     {
+        var closes = new List<bool>();
+        state.ShopClosed += closes.Add;
+
         Assert.False(state.CloseShop());
-        Assert.False(state.Pause.Active);
-    }
-
-    [Fact]
-    public void CloseWindowsByEscape_ClosesTheShopWithAPauseAndTheTextWindowsWithout()
-    {
-        OpenShop();
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
-
-        Assert.True(state.CloseWindowsByEscape());
-
-        Assert.Null(state.OpenShop);
-        Assert.False(state.TextWindows.AnyOpen);
-        Assert.True(state.Pause.Active);
+        Assert.Empty(closes);
     }
 
     [Fact]
@@ -60,45 +64,6 @@ public class ShopWindowTests
     public void CloseWindowsByEscape_SaysWhenNothingWasOpen()
     {
         Assert.False(state.CloseWindowsByEscape());
-    }
-
-    [Fact]
-    public void OpeningAShop_ClosesTheTextWindows()
-    {
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
-
-        OpenShop();
-
-        Assert.False(state.TextWindows.AnyOpen);
-    }
-
-    [Fact]
-    public void TheServerClosingTheShop_StartsThePause()
-    {
-        OpenShop();
-
-        Process(TestCommand.Of(ServerCommand.CloseShop));
-
-        Assert.Null(state.OpenShop);
-        Assert.True(state.Pause.Active);
-    }
-
-    [Theory]
-    [InlineData(23, false)]
-    [InlineData(24, true)]
-    public void ThePause_KeepsShopsAndTextWindowsShutUntilItEnds(int ticksAfterClosing, bool staysOpen)
-    {
-        OpenShop();
-        state.CloseShop();
-        for (var tick = 0; tick < ticksAfterClosing; tick++)
-        {
-            Process();
-        }
-
-        Process([.. ShopCommands(), TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0)]);
-
-        Assert.Equal(staysOpen, state.OpenShop != null);
-        Assert.Equal(staysOpen, state.TextWindows.MessageOfTheDayOpen);
     }
 
     [Fact]

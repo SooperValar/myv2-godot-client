@@ -35,14 +35,15 @@ public partial class GameScreen : Control
     private readonly Stopwatch sessionClock = Stopwatch.StartNew();
     private ServerConnection connection = null!;
     private ExploredMapKeeper? exploredMap;
+    private GameSession gameSession = null!;
     private HudView hudView = null!;
     private ConnectionState lastConnectionState;
+    private LoginHandoff login = null!;
     private MapNotesKeeper? mapNotes;
     private bool newCharacterSaved;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
     private ScreenGammaLayer? screenGamma;
-    private GameSession session = null!;
     private HashSet<DisplaySwap> shownSwaps = [];
     private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
@@ -56,22 +57,23 @@ public partial class GameScreen : Control
         soundEffects = GetNode<SoundEffects>("%SoundEffects");
         hudView.LeaveRequested += ReturnToLauncher;
 
-        if (GameSession.Take() is not { } startedSession)
+        if (LoginHandoff.Take() is not { } startedLogin)
         {
             SetProcess(false);
             ReturnToLauncher();
             return;
         }
 
-        session = startedSession;
-        connection = startedSession.Connection;
+        login = startedLogin;
+        connection = startedLogin.Connection;
         CursorShapes.Register(ClientSettings.Load().CursorScale);
         OpenExploredMap();
         AddWorldView();
         playback = new TickPlayback(pacer);
         processor = new TickProcessor(gameState);
+        gameSession = new GameSession(gameState);
 
-        userDataUpload = UserDataUpload.For(session.Record, gameState.Chat);
+        userDataUpload = UserDataUpload.For(login.Record, gameState.Chat);
         gameState.Player.NameReceived += SaveCharacterName;
         gameState.UniqueIdReceived += UniqueIdStore.Save;
         gameState.ExitRequested += LeaveOnServerExit;
@@ -89,7 +91,7 @@ public partial class GameScreen : Control
         exploredMap?.Advance(TimeSpan.FromSeconds(delta));
 
         if (!newCharacterSaved && connection.State == ConnectionState.Connected
-            && session.Handshake.CreatedKey is { } createdKey)
+            && login.Handshake.CreatedKey is { } createdKey)
         {
             SaveNewCharacter(createdKey);
         }
@@ -143,12 +145,12 @@ public partial class GameScreen : Control
 
     private void OpenExploredMap()
     {
-        var keeper = new ExploredMapKeeper(session.Server);
+        var keeper = new ExploredMapKeeper(login.Server);
         gameState.MinimapBoxCleared += keeper.Recorder.ClearBox;
         gameState.Chat.LineAdded += line =>
             keeper.Recorder.NoteLogLine(line.Text, ExploredMapKeeper.ViewCentreCharacter(gameState.Map));
         exploredMap = keeper;
-        mapNotes = new MapNotesKeeper(session.Server);
+        mapNotes = new MapNotesKeeper(login.Server);
     }
 
     // The current client saves its maps when the connection fails, in case the game is closed straight after.
@@ -215,7 +217,7 @@ public partial class GameScreen : Control
         }
 
         var fonts = new ClassicFonts(sprites);
-        var characterSettings = session.Record.Settings();
+        var characterSettings = login.Record.Settings();
         var clientSettings = ClientSettings.Load();
         worldView = new WorldView
         {
@@ -240,7 +242,7 @@ public partial class GameScreen : Control
         hudView.Sprites = sprites;
         hudView.Settings = characterSettings;
         hudView.ClientSettings = clientSettings;
-        hudView.PlannerChoices = new PlannerChoicesKeeper(() => session.Record.Key.UserNumber);
+        hudView.PlannerChoices = new PlannerChoicesKeeper(() => login.Record.Key.UserNumber);
         hudView.ClientSettingsChanged += () => ApplyClientSettings(clientSettings);
         hudView.SettingsChanged += () => ApplyCharacterSettings(characterSettings);
         hudView.PlayClick = soundEffects.PlayClick;
@@ -291,7 +293,7 @@ public partial class GameScreen : Control
     private DebugFacts ReadDebugFacts() => new(
         typeof(GameScreen).Assembly.GetCustomAttribute<AssemblyInformationalVersionAttribute>()?.InformationalVersion
         ?? "",
-        session.Handshake.ServerVersion,
+        login.Handshake.ServerVersion,
         Engine.GetVersionInfo()["string"].AsString(),
         RenderingServer.GetVideoAdapterName(),
         RenderingServer.GetVideoAdapterVendor(),
@@ -330,15 +332,15 @@ public partial class GameScreen : Control
         if (userDataUpload.Done)
         {
             userDataUpload = null;
-            session.Record.Changed = false;
-            CharacterStore.Save(session.Record);
+            login.Record.Changed = false;
+            CharacterStore.Save(login.Record);
         }
     }
 
     private void SaveNewCharacter(LoginKey createdKey)
     {
         newCharacterSaved = true;
-        var record = session.Record;
+        var record = login.Record;
         record.Key = createdKey;
         var settings = record.Settings();
         settings.SetStartingHotbar(CharacterRace.FromNumber(createdKey.Race).Class);
@@ -357,13 +359,13 @@ public partial class GameScreen : Control
             worldView.Refresh();
         }
 
-        session.Record.Store(settings);
-        CharacterStore.Save(session.Record);
+        login.Record.Store(settings);
+        CharacterStore.Save(login.Record);
     }
 
     private void SaveCharacterName()
     {
-        var record = session.Record;
+        var record = login.Record;
         record.Key = record.Key with { Name = gameState.Player.Name, Race = gameState.Player.Race };
         CharacterStore.Save(record);
     }

@@ -157,14 +157,14 @@ public class ShopCommandsTests
     public void CloseShop_ClosesTheOpenShop()
     {
         var state = new GameState();
-        var closed = 0;
-        state.ShopClosed += () => closed++;
+        var closes = new List<bool>();
+        state.ShopClosed += closes.Add;
         Process(state, SmithCommand(4, 0, 0, 0));
 
         Process(state, TestCommand.Of(ServerCommand.CloseShop));
 
         Assert.Null(state.OpenShop);
-        Assert.Equal(1, closed);
+        Assert.Equal([true], closes);
     }
 
     private static TestCommand[] ShopLookCommands() =>

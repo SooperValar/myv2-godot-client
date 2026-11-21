@@ -1,22 +1,46 @@
-using TheLastGate.Characters;
-using TheLastGate.Net;
+using TheLastGate.State;
 
 namespace TheLastGate.Game;
 
-public sealed record GameSession(
-    CharacterRecord Record,
-    LoginHandshake Handshake,
-    ServerAddress Server,
-    ServerConnection Connection)
+public sealed class GameSession
 {
-    private static GameSession? pending;
+    private readonly GameState state;
 
-    public static void Begin(GameSession session) => pending = session;
-
-    public static GameSession? Take()
+    public GameSession(GameState state)
     {
-        var session = pending;
-        pending = null;
-        return session;
+        this.state = state;
+        state.TickEnded += EndTheTick;
+        state.TargetChanged += state.UseQueue.TargetChanged;
+        state.HeldItemChanged += () => state.GiveMore.HeldItemChanged(state.Player);
+        state.ShopOpened += _ => CloseTheWindowsAShopReplaces();
+        state.ShopClosed += StartThePauseWhenAsked;
+        state.WaypointsOffered += state.WaypointWindow.Open;
+        state.WindowRequested += state.TextWindows.Show;
+    }
+
+    private void CloseTheWindowsAShopReplaces()
+    {
+        state.TextWindows.CloseAll();
+        state.WaypointWindow.Close();
+        state.SkillTreeWindow.Close();
+    }
+
+    private void StartThePauseWhenAsked(bool startsPause)
+    {
+        if (startsPause)
+        {
+            state.Pause.Start();
+        }
+    }
+
+    private void EndTheTick()
+    {
+        if (state.Pause.Active)
+        {
+            state.ShutWindows();
+        }
+
+        state.Pause.EndOfTick();
+        state.AutoWalk.EndOfTick(state.Map);
     }
 }

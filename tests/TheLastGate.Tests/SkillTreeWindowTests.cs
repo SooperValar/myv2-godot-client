@@ -181,23 +181,6 @@ public class SkillTreeWindowTests
     }
 
     [Fact]
-    public void ToggleSkillTree_ShutsOtherWindowsWithoutAPause()
-    {
-        SetTreePoints(TwoPointsOneSpent, NoPoints);
-        state.WaypointWindow.Open();
-        state.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
-        OpenShop();
-
-        state.ToggleSkillTree(MapKeys.None);
-
-        Assert.Equal(SkillTree.Class, state.SkillTreeWindow.Open);
-        Assert.Null(state.OpenShop);
-        Assert.False(state.WaypointWindow.IsOpen);
-        Assert.False(state.TextWindows.AnyOpen);
-        Assert.False(state.Pause.Active);
-    }
-
-    [Fact]
     public void ToggleSkillTree_UsesTheContractTreeWithAModifier()
     {
         SetTreePoints(TwoPointsOneSpent, AllSpent);
@@ -219,54 +202,12 @@ public class SkillTreeWindowTests
         Assert.False(state.Pause.Active);
     }
 
-    [Fact]
-    public void OpeningAShop_ClosesTheTree()
-    {
-        SetTreePoints(TwoPointsOneSpent, NoPoints);
-        state.ToggleSkillTree(MapKeys.None);
-
-        OpenShop();
-
-        Assert.Null(state.SkillTreeWindow.Open);
-    }
-
-    [Fact]
-    public void ThePause_ClosesTheTree()
-    {
-        SetTreePoints(TwoPointsOneSpent, NoPoints);
-        state.ToggleSkillTree(MapKeys.None);
-        state.Pause.Start();
-
-        Process();
-
-        Assert.Null(state.SkillTreeWindow.Open);
-    }
-
     private void SetTreePoints(int classPoints, int contractPoints) =>
         Process(
             TestCommand.Of(ServerCommand.SetCharacterTokens)
                 .UInt32(0)
                 .UInt16((ushort)classPoints)
                 .UInt16((ushort)contractPoints));
-
-    private void OpenShop() => Process(ShopCommands());
-
-    private static TestCommand[] ShopCommands() =>
-    [
-        TestCommand.Of(ServerCommand.Look1),
-        TestCommand.Of(ServerCommand.Look2),
-        TestCommand.Of(ServerCommand.Look3).UInt16(0).UInt16(0).UInt16(0).UInt16(1201).UInt16(7),
-        TestCommand.Of(ServerCommand.Look4).UInt16(0).UInt16(0).Byte((byte)LookFlags.Shop).UInt32(250),
-        TestCommand.Of(ServerCommand.Look5).Text("Merchant", 15),
-        .. Enumerable.Range(0, CharacterLook.ShopSlots / 2)
-            .Select(pair => TestCommand.Of(ServerCommand.Look6)
-                .Byte((byte)(pair * 2))
-                .UInt16(1000)
-                .UInt32(10)
-                .UInt16(1001)
-                .UInt32(20)
-                .Bytes(0, 0)),
-    ];
 
     private void Process(params TestCommand[] commands) =>
         new TickProcessor(state).Process(TestCommand.Payload(commands));
