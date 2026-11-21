@@ -2,7 +2,6 @@ using System;
 using System.Diagnostics;
 using TheLastGate.Net.Handlers;
 using TheLastGate.State;
-using TheLastGate.World;
 
 namespace TheLastGate.Net;
 
@@ -138,12 +137,10 @@ public sealed class TickProcessor(GameState state)
         // Before the shop refresh: the end of a paused tick can close the shop, and a closed shop isn't refreshed.
         state.ReportTickEnded();
         state.ShopRefresh.EndOfTick(state.OpenShop, state.Shop.Number);
-        state.ClientTick++;
         var tiles = state.Map.Tiles;
         for (var tileIndex = 0; tileIndex < tiles.Length; tileIndex++)
         {
-            ItemAnimation.Advance(ref tiles[tileIndex], state.ServerTick, state.ClientTick, reportUnusualData);
-            CharacterAnimation.Advance(ref tiles[tileIndex], state.ServerTick, reportUnusualData);
+            CharacterStatuses.Advance(ref tiles[tileIndex], state.ServerTick, reportUnusualData);
         }
     }
 }
