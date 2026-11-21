@@ -43,7 +43,6 @@ public partial class WorldView : Node2D
     private readonly Sprite2D giveMarker = new() { Centered = false, Visible = false };
     private readonly Dictionary<int, GlidePoint> glidePoints = [];
     private readonly Dictionary<MagicGlow, ShaderMaterial> glowMaterials = [];
-    private readonly NameRequests nameRequests = new();
     private readonly Dictionary<int, Nameplate> nameplatesByCharacter = [];
     private readonly SpriteLayer objects = new();
     private readonly List<Sprite2D> queuedNumberMarkers = [];
@@ -83,6 +82,7 @@ public partial class WorldView : Node2D
     private float worldGamma = Gamma.Normal;
 
     public GameState State { get; set; } = null!;
+    public GameSession Session { get; set; } = null!;
     public SpriteLoader Sprites { get; set; } = null!;
     public IFontSet Fonts { get; set; } = null!;
     public bool HideWalls { get; set; } = true;
@@ -283,8 +283,8 @@ public partial class WorldView : Node2D
     private void QueueArea()
     {
         var targets = AreaUse.Pick(State.Map, AreaTiles());
-        State.AutoWalk.Stop();
-        var queued = State.UseQueue.QueueArea(targets, State.Player.Target);
+        Session.AutoWalk.Stop();
+        var queued = Session.UseQueue.QueueArea(targets, State.Player.Target);
         if (queued > 0)
         {
             PlayClick();
@@ -305,6 +305,7 @@ public partial class WorldView : Node2D
             ? MapAction.Nothing
             : MapActions.Decide(
                 State,
+                Session,
                 PointUnder(GetViewport().GetMousePosition()),
                 HeldKeys.Current(),
                 MapButton.None,
@@ -349,7 +350,7 @@ public partial class WorldView : Node2D
         if (button == MapButton.Left
             && AutoWalk.ButtonAt((int)click.Position.X, (int)click.Position.Y) is { } walkDirection)
         {
-            State.AutoWalk.Start(walkDirection);
+            Session.AutoWalk.Start(walkDirection);
             GetViewport().SetInputAsHandled();
             return;
         }
@@ -357,15 +358,15 @@ public partial class WorldView : Node2D
         var keys = (click.ShiftPressed ? MapKeys.Shift : MapKeys.None)
             | (click.CtrlPressed ? MapKeys.Ctrl : MapKeys.None)
             | (click.AltPressed ? MapKeys.Alt : MapKeys.None);
-        var action = MapActions.Decide(State, PointUnder(click.Position), keys, button, SelectedCharacter);
+        var action = MapActions.Decide(State, Session, PointUnder(click.Position), keys, button, SelectedCharacter);
         if (action.Command != null || action.NewSelection != null)
         {
-            State.AutoWalk.Stop();
+            Session.AutoWalk.Stop();
         }
 
         if (action.GivesMore)
         {
-            State.GiveMore.Gave(State.Player.HeldItem);
+            Session.GiveMore.Gave(State.Player.HeldItem);
         }
 
         if (action.Command is { } command)
@@ -376,7 +377,7 @@ public partial class WorldView : Node2D
 
         if (action.QueuedUse is { } queuedUse)
         {
-            if (State.UseQueue.Add(queuedUse.X, queuedUse.Y, State.Player.Target) == UseQueueAdd.Queued)
+            if (Session.UseQueue.Add(queuedUse.X, queuedUse.Y, State.Player.Target) == UseQueueAdd.Queued)
             {
                 PlayClick();
             }
@@ -399,9 +400,9 @@ public partial class WorldView : Node2D
         charactersShown.Clear();
         var target = State.Player.Target;
         var markerTiles = new MarkerTiles(NoTile, NoTile, NoTile, NoTile, 0);
-        if (queuedTiles.Length != State.UseQueue.Count)
+        if (queuedTiles.Length != Session.UseQueue.Count)
         {
-            queuedTiles = new int[State.UseQueue.Count];
+            queuedTiles = new int[Session.UseQueue.Count];
         }
 
         Array.Fill(queuedTiles, NoTile);
@@ -419,11 +420,6 @@ public partial class WorldView : Node2D
 
         ReleaseUnusedNameplates();
         PlaceMarkers(markerTiles);
-        if (nameRequests.Tick(State.Names) is { } request)
-        {
-            SendCommand(request);
-        }
-
         if (!selectedIsShown)
         {
             SelectedCharacter = 0;
@@ -603,11 +599,6 @@ public partial class WorldView : Node2D
         }
 
         var name = State.Names.NameOf(tile.CharacterNumber, tile.CharacterId);
-        if (showText && name.Length == 0)
-        {
-            nameRequests.NoteUnknown(tile.CharacterNumber, tile.CharacterId);
-        }
-
         if (!nameplatesByCharacter.TryGetValue(tile.CharacterNumber, out var nameplate))
         {
             nameplate = freeNameplates.Count > 0 ? freeNameplates.Pop() : nameplateScene.Instantiate<Nameplate>();
@@ -801,13 +792,13 @@ public partial class WorldView : Node2D
 
     private void FindQueuedUse(int tileIndex)
     {
-        if (State.UseQueue.Count == 0)
+        if (Session.UseQueue.Count == 0)
         {
             return;
         }
 
         ref readonly var tile = ref State.Map.Tiles[tileIndex];
-        var position = State.UseQueue.PositionOf(tile.X, tile.Y);
+        var position = Session.UseQueue.PositionOf(tile.X, tile.Y);
         if (position > 0 && !MapSpriteRules.HidesObjectsAndCharacters(
             tile,
             tileIndex % WorldMap.Size,

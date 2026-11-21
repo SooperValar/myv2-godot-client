@@ -37,7 +37,7 @@ public class GameSessionTests
         session = new GameSession(state);
         processor = new TickProcessor(state);
         sent = [];
-        state.AutoWalk.Send = sent.Add;
+        session.AutoWalk.Send = sent.Add;
         Process(TestCommand.Of(ServerCommand.SetOrigin).UInt16(OriginX).UInt16(OriginY));
         sent.Clear();
     }
@@ -48,7 +48,7 @@ public class GameSessionTests
     [TestCase(WalkDirection.East, 27, 34)]
     public void Walking_MovesToTheTileSevenAwayOnTheNextTick(WalkDirection direction, int column, int row)
     {
-        state.AutoWalk.Start(direction);
+        session.AutoWalk.Start(direction);
 
         Process();
 
@@ -59,7 +59,7 @@ public class GameSessionTests
     [TestCase]
     public void Walking_StepsAgainEveryFourTicks()
     {
-        state.AutoWalk.Start(WalkDirection.North);
+        session.AutoWalk.Start(WalkDirection.North);
 
         for (var tick = 0; tick < StepTicks; tick++)
         {
@@ -75,7 +75,7 @@ public class GameSessionTests
     public void Walking_StopsByItselfAfterAThousandSteps()
     {
         const int stepsBeforeStopping = 1002;
-        state.AutoWalk.Start(WalkDirection.North);
+        session.AutoWalk.Start(WalkDirection.North);
 
         for (var tick = 0; tick < (stepsBeforeStopping + 10) * StepTicks; tick++)
         {
@@ -83,23 +83,23 @@ public class GameSessionTests
         }
 
         AssertThat(sent).HasSize(stepsBeforeStopping);
-        AssertThat(state.AutoWalk.Walking).IsFalse();
+        AssertThat(session.AutoWalk.Walking).IsFalse();
     }
 
     [TestCase]
     public void Stopping_SendsNoMoreSteps()
     {
-        state.AutoWalk.Start(WalkDirection.North);
+        session.AutoWalk.Start(WalkDirection.North);
         Process();
 
-        state.AutoWalk.Stop();
+        session.AutoWalk.Stop();
         for (var tick = 0; tick < StepTicks * 2; tick++)
         {
             Process();
         }
 
         AssertThat(sent).HasSize(1);
-        AssertThat(state.AutoWalk.Walking).IsFalse();
+        AssertThat(session.AutoWalk.Walking).IsFalse();
     }
 
     [TestCase(23, false)]
@@ -159,10 +159,10 @@ public class GameSessionTests
     [TestCase]
     public void TheServersSetTarget_ReachesTheUseQueue()
     {
-        state.UseQueue.Enabled = true;
-        state.UseQueue.Send = sent.Add;
-        state.UseQueue.Add(10, 20, new PlayerTarget(0, 0, 0, Using, 1, 1));
-        state.UseQueue.Add(11, 20, new PlayerTarget(0, 0, 0, Using, 1, 1));
+        session.UseQueue.Enabled = true;
+        session.UseQueue.Send = sent.Add;
+        session.UseQueue.Add(10, 20, new PlayerTarget(0, 0, 0, Using, 1, 1));
+        session.UseQueue.Add(11, 20, new PlayerTarget(0, 0, 0, Using, 1, 1));
 
         Process(SetTarget(Using, 1, 1));
         Process(SetTarget(Idle, 0, 0));
@@ -177,7 +177,7 @@ public class GameSessionTests
         GiveMore();
         Process(InventoryItem(4, Bread, Plain), InventoryItem(7, Potion, Enchanted), InventoryItem(9, Potion, Plain));
         Hold(Potion, Plain);
-        state.GiveMore.Gave(state.Player.HeldItem);
+        session.GiveMore.Gave(state.Player.HeldItem);
 
         Hold(0, 0);
 
@@ -191,7 +191,7 @@ public class GameSessionTests
         GiveMore();
         Process(InventoryItem(9, Potion, Plain));
         Hold(Potion, Plain);
-        state.GiveMore.Gave(state.Player.HeldItem);
+        session.GiveMore.Gave(state.Player.HeldItem);
         Hold(0, 0);
         Hold(Bread, Plain);
 
@@ -206,7 +206,7 @@ public class GameSessionTests
         GiveMore();
         Process(InventoryItem(4, Bread, Plain));
         Hold(Potion, Plain);
-        state.GiveMore.Gave(state.Player.HeldItem);
+        session.GiveMore.Gave(state.Player.HeldItem);
 
         Hold(0, 0);
 
@@ -219,7 +219,7 @@ public class GameSessionTests
         GiveMore();
         Process(InventoryItem(9, Potion, Plain));
         Hold(Potion, Plain);
-        state.GiveMore.Gave(state.Player.HeldItem);
+        session.GiveMore.Gave(state.Player.HeldItem);
 
         Hold(Bread, Plain);
 
@@ -232,10 +232,10 @@ public class GameSessionTests
         GiveMore();
         Process(InventoryItem(9, Potion, Plain));
         Hold(Potion, Plain);
-        state.GiveMore.Gave(state.Player.HeldItem);
+        session.GiveMore.Gave(state.Player.HeldItem);
 
-        state.GiveMore.Enabled = false;
-        state.GiveMore.Enabled = true;
+        session.GiveMore.Enabled = false;
+        session.GiveMore.Enabled = true;
         Hold(0, 0);
 
         AssertThat(sent).IsEmpty();
@@ -482,8 +482,8 @@ public class GameSessionTests
 
     private void GiveMore()
     {
-        state.GiveMore.Enabled = true;
-        state.GiveMore.Send = sent.Add;
+        session.GiveMore.Enabled = true;
+        session.GiveMore.Send = sent.Add;
     }
 
     private void Hold(int sprite, int properties) =>

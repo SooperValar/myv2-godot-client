@@ -3,8 +3,6 @@ using TheLastGate.Buffs;
 using TheLastGate.Items;
 using TheLastGate.Net;
 using TheLastGate.Stats;
-using TheLastGate.Windows;
-using TheLastGate.World;
 
 namespace TheLastGate.State;
 
@@ -12,11 +10,13 @@ public sealed class GameState
 {
     public const int ServerTickCycle = 200;
 
+    private readonly SpectateWatch spectateWatch = new();
+
     public GameState()
     {
-        Tooltips = new ItemTooltips(Chat);
+        ItemLooks = new ItemLooks(Chat);
         BuffWatch = new BuffWatch(Player);
-        UseQueue = new UseQueue(Chat);
+        Chat.LineAdded += line => WatchSpectating(() => spectateWatch.LogLine(line.Text, ViewCentreCharacter));
     }
 
     public PlayerState Player { get; } = new();
@@ -25,13 +25,11 @@ public sealed class GameState
     public TextLog MessageOfTheDay { get; } = new();
     public Terminology Terminology { get; } = new();
     public CharacterNames Names { get; } = new();
-    public ItemTooltips Tooltips { get; }
+    public ItemLooks ItemLooks { get; }
     public StatPlan StatPlan { get; } = new();
     public BuffWatch BuffWatch { get; }
     public ShopRefresh ShopRefresh { get; } = new();
-    public UseQueue UseQueue { get; }
-    public GiveMore GiveMore { get; } = new();
-    public AutoWalk AutoWalk { get; } = new();
+    public NameRequests NameRequests { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
@@ -40,6 +38,10 @@ public sealed class GameState
     public int ServerLoad { get; internal set; }
 
     internal CharacterLook PendingLook { get; } = new();
+
+    public bool Spectating => spectateWatch.Active;
+
+    private int ViewCentreCharacter => Map.Tiles[WorldMap.PlayerTile].CharacterNumber;
 
     public event Action<CharacterLook>? LookShown;
     public event Action<ShopKind>? ShopOpened;
@@ -54,6 +56,8 @@ public sealed class GameState
     public event Action<PlayerTarget, PlayerTarget>? TargetChanged;
     public event Action? HeldItemChanged;
     public event Action? WaypointsOffered;
+    public event Action? SpectatingStarted;
+    public event Action? SpectatingStopped;
 
     public bool CloseShop()
     {
@@ -97,4 +101,16 @@ public sealed class GameState
     internal void ReportHeldItemChanged() => HeldItemChanged?.Invoke();
 
     internal void ReportWaypointsOffered() => WaypointsOffered?.Invoke();
+
+    internal void WatchViewCentre() => WatchSpectating(() => spectateWatch.ViewCentre(ViewCentreCharacter));
+
+    private void WatchSpectating(Action note)
+    {
+        var wasSpectating = Spectating;
+        note();
+        if (Spectating != wasSpectating)
+        {
+            (Spectating ? SpectatingStarted : SpectatingStopped)?.Invoke();
+        }
+    }
 }

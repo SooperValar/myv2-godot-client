@@ -148,8 +148,8 @@ public partial class GameScreen : Control
     {
         var keeper = new ExploredMapKeeper(login.Server);
         gameState.MinimapBoxCleared += keeper.Recorder.ClearBox;
-        gameState.Chat.LineAdded += line =>
-            keeper.Recorder.NoteLogLine(line.Text, ExploredMapKeeper.ViewCentreCharacter(gameState.Map));
+        gameState.SpectatingStarted += () => keeper.Recorder.Paused = true;
+        gameState.SpectatingStopped += () => keeper.Recorder.Paused = false;
         exploredMap = keeper;
         mapNotes = new MapNotesKeeper(login.Server);
     }
@@ -173,9 +173,9 @@ public partial class GameScreen : Control
         soundEffects.Enabled = settings.SoundEnabled;
         soundEffects.Volume = settings.SoundVolume;
         CursorShapes.Register(settings.CursorScale);
-        gameState.Tooltips.Enabled = settings.ItemTooltips;
-        gameState.UseQueue.Enabled = settings.UseQueue;
-        gameState.GiveMore.Enabled = settings.GiveMore;
+        gameState.ItemLooks.Enabled = settings.ItemTooltips;
+        gameSession.UseQueue.Enabled = settings.UseQueue;
+        gameSession.GiveMore.Enabled = settings.GiveMore;
         pacer.Adaptive = settings.AdaptivePacing;
         screenGamma?.ShowGamma(settings.ScreenGamma);
         if (worldView != null)
@@ -223,6 +223,7 @@ public partial class GameScreen : Control
         worldView = new WorldView
         {
             State = gameState,
+            Session = gameSession,
             Sprites = sprites,
             Fonts = fonts,
             SendCommand = SendAction,
@@ -256,17 +257,18 @@ public partial class GameScreen : Control
         hudView.Show(gameState, gameSession, fonts, SendAction);
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
-        gameState.Tooltips.SendLook = connection.SendCommand;
-        gameState.Tooltips.Enabled = clientSettings.ItemTooltips;
-        gameState.UseQueue.Enabled = clientSettings.UseQueue;
+        gameState.ItemLooks.SendLook = connection.SendCommand;
+        gameState.ItemLooks.Enabled = clientSettings.ItemTooltips;
+        gameSession.UseQueue.Enabled = clientSettings.UseQueue;
 
         // A queued use has already clicked when it was queued.
-        gameState.UseQueue.Send = connection.SendCommand;
-        gameState.GiveMore.Enabled = clientSettings.GiveMore;
+        gameSession.UseQueue.Send = connection.SendCommand;
+        gameSession.GiveMore.Enabled = clientSettings.GiveMore;
         pacer.Adaptive = clientSettings.AdaptivePacing;
-        gameState.GiveMore.Send = SendAction;
+        gameSession.GiveMore.Send = SendAction;
         gameState.ShopRefresh.Send = connection.SendCommand;
-        gameState.AutoWalk.Send = connection.SendCommand;
+        gameState.NameRequests.Send = connection.SendCommand;
+        gameSession.AutoWalk.Send = connection.SendCommand;
         gameState.BuffWatch.Say = text =>
         {
             foreach (var packet in ChatPackets.Say(text))
@@ -306,10 +308,10 @@ public partial class GameScreen : Control
     private void SendAction(byte[] packet)
     {
         soundEffects.PlayClickFor(packet);
-        gameState.UseQueue.Sent(packet);
-        if (ItemTooltips.IsManualLook(packet))
+        gameSession.UseQueue.Sent(packet);
+        if (ItemLooks.IsManualLook(packet))
         {
-            gameState.Tooltips.ManualLookSent();
+            gameState.ItemLooks.ManualLookSent();
         }
 
         // Using or looking at something lets the next window the server opens stay open.
