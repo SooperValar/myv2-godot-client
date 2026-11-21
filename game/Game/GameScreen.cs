@@ -183,6 +183,7 @@ public partial class GameScreen : Control
             worldView.GlideMovement = settings.GlideMovement;
             worldView.PickTileDrawnUnderMouse = settings.PickTileDrawnUnderMouse;
             worldView.WorldGamma = settings.WorldGamma;
+            worldView.PlainInfravision = settings.PlainInfravision;
         }
 
         ShowSwaps(settings);
@@ -231,6 +232,7 @@ public partial class GameScreen : Control
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             GlideMovement = clientSettings.GlideMovement,
             WorldGamma = clientSettings.WorldGamma,
+            PlainInfravision = clientSettings.PlainInfravision,
             ShowShadows = clientSettings.Shadows,
             ShowNames = characterSettings.ShowNames,
             ShowHealthPercent = characterSettings.ShowHealthPercent,

@@ -45,7 +45,16 @@ public class MapSpriteRulesTests
     {
         var (tile, _) = Tile(BehindThePlayer, flags: flags);
 
-        AssertThat(MapSpriteRules.EnvironmentTint(tile)).IsEqual(tint);
+        AssertThat(MapSpriteRules.EnvironmentTint(tile, false)).IsEqual(tint);
+    }
+
+    [TestCase(MapFlags.Infrared, SpriteTint.None)]
+    [TestCase(MapFlags.Infrared | MapFlags.Underwater, SpriteTint.Underwater)]
+    public void EnvironmentTint_WithPlainInfravisionLeavesInfraredTilesUntinted(MapFlags flags, SpriteTint tint)
+    {
+        var (tile, _) = Tile(BehindThePlayer, flags: flags);
+
+        AssertThat(MapSpriteRules.EnvironmentTint(tile, true)).IsEqual(tint);
     }
 
     [TestCase(MapFlags.None, SpriteTint.None)]
@@ -58,7 +67,17 @@ public class MapSpriteRulesTests
     {
         var (tile, _) = Tile(BehindThePlayer, flags: flags, character: 3021);
 
-        AssertThat(MapSpriteRules.CharacterTint(tile)).IsEqual(tint);
+        AssertThat(MapSpriteRules.CharacterTint(tile, false)).IsEqual(tint);
+    }
+
+    [TestCase(MapFlags.Infrared, SpriteTint.None)]
+    [TestCase(MapFlags.Bloody, SpriteTint.Infrared)]
+    [TestCase(MapFlags.Infrared | MapFlags.Bloody, SpriteTint.Infrared)]
+    public void CharacterTint_WithPlainInfravisionStillReddensBloodyCharacters(MapFlags flags, SpriteTint tint)
+    {
+        var (tile, _) = Tile(BehindThePlayer, flags: flags, character: 3021);
+
+        AssertThat(MapSpriteRules.CharacterTint(tile, true)).IsEqual(tint);
     }
 
     [TestCase]

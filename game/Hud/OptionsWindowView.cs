@@ -27,6 +27,8 @@ public partial class OptionsWindowView : Panel, IHudContextUser
     private const string ResetText = "Reset {0} to Defaults";
     private const string ConfirmResetText = "Confirm?";
     private const string WarningMark = "!";
+    private const string PlainInfravisionRow = "PlainInfravision";
+    private const string PlainInfravisionLabel = "Draw infravision in normal colours instead of red.";
     private const string RowVariation = "TableRow";
     private const string HoveredRowVariation = "TableRowHover";
     private const string ScrollBarVariation = "OptionsScrollBar";
@@ -57,6 +59,9 @@ public partial class OptionsWindowView : Panel, IHudContextUser
     private Button Reset => GetNode<Button>("%Reset");
 
     private Label TypingWarning => OptionRow(GeneralOption.EnterToTalk).GetNode<Label>("Line/Warning");
+
+    private CheckBox PlainInfravisionBox =>
+        GetNode("%SwapOptions").GetNode<CheckBox>($"{PlainInfravisionRow}/Line/Box");
 
     public void ShowContext(HudContext context)
     {
@@ -93,6 +98,8 @@ public partial class OptionsWindowView : Panel, IHudContextUser
     public event Action<float>? WorldGammaChanged;
 
     public event Action<DisplaySwap, bool>? SwapChanged;
+
+    public event Action<bool>? PlainInfravisionChanged;
 
     public event Action<WindowBackground, int>? BackgroundOpacityChanged;
 
@@ -153,6 +160,8 @@ public partial class OptionsWindowView : Panel, IHudContextUser
         {
             SwapBox(row.Swap).Toggled += isOn => SwapChanged?.Invoke(row.Swap, isOn);
         }
+
+        PlainInfravisionBox.Toggled += isOn => PlainInfravisionChanged?.Invoke(isOn);
 
         foreach (var row in WindowBackgrounds.Rows)
         {
@@ -224,6 +233,8 @@ public partial class OptionsWindowView : Panel, IHudContextUser
             SwapBox(row.Swap).SetPressedNoSignal(settings.SwapsOn.Contains(row.Swap));
         }
 
+        PlainInfravisionBox.SetPressedNoSignal(settings.PlainInfravision);
+
         foreach (var row in WindowBackgrounds.Rows)
         {
             var opacity = settings.BackgroundOpacity[row.Window];
@@ -281,6 +292,8 @@ public partial class OptionsWindowView : Panel, IHudContextUser
         {
             GetNode("%SwapOptions").AddChild(CheckRow(rowScene, row.Swap.ToString(), row.Label));
         }
+
+        GetNode("%SwapOptions").AddChild(CheckRow(rowScene, PlainInfravisionRow, PlainInfravisionLabel));
 
         var sliderScene = GD.Load<PackedScene>(SliderRowScenePath);
         foreach (var row in WindowBackgrounds.Rows)

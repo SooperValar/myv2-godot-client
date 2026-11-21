@@ -72,17 +72,17 @@ public static class MapSpriteRules
     public static int CharacterSprite(in MapTile tile, int characterSprite, int column, int row) =>
         HidesObjectsAndCharacters(tile, column, row) ? 0 : characterSprite;
 
-    public static SpriteTint EnvironmentTint(in MapTile tile)
+    public static SpriteTint EnvironmentTint(in MapTile tile, bool plainInfravision)
     {
         var flags = (MapFlags)tile.Flags;
-        return (flags.HasFlag(MapFlags.Infrared) ? SpriteTint.Infrared : SpriteTint.None)
+        return (flags.HasFlag(MapFlags.Infrared) && !plainInfravision ? SpriteTint.Infrared : SpriteTint.None)
             | (flags.HasFlag(MapFlags.Underwater) ? SpriteTint.Underwater : SpriteTint.None);
     }
 
-    public static SpriteTint CharacterTint(in MapTile tile)
+    public static SpriteTint CharacterTint(in MapTile tile, bool plainInfravision)
     {
         var flags = (MapFlags)tile.Flags;
-        return EnvironmentTint(tile)
+        return EnvironmentTint(tile, plainInfravision)
             | (flags.HasFlag(MapFlags.Stoned) ? SpriteTint.Grey : SpriteTint.None)
             | (flags.HasFlag(MapFlags.Bloody) ? SpriteTint.Infrared : SpriteTint.None);
     }

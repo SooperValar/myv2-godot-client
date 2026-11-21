@@ -78,6 +78,7 @@ public partial class WorldView : Node2D
     private Vector2I mapShift = new(IsometricProjection.BaseMapShiftX, 0);
     private PackedScene nameplateScene = null!;
     private Node2D objectLayer = null!;
+    private bool plainInfravision;
     private int[] queuedTiles = [];
     private Shader? tintShader;
     private float worldGamma = Gamma.Normal;
@@ -95,6 +96,24 @@ public partial class WorldView : Node2D
     public int SelectedCharacter { get; private set; }
 
     public bool PickTileDrawnUnderMouse { get; set; }
+
+    public bool PlainInfravision
+    {
+        get => plainInfravision;
+        set
+        {
+            if (value == plainInfravision)
+            {
+                return;
+            }
+
+            plainInfravision = value;
+            if (IsInsideTree())
+            {
+                Refresh();
+            }
+        }
+    }
 
     // A sprite's brightness is only set again when its light changes, so a new gamma has every lit sprite redone on the
     // next refresh.
@@ -536,7 +555,7 @@ public partial class WorldView : Node2D
     {
         var (column, row) = (tileIndex % WorldMap.Size, tileIndex / WorldMap.Size);
         ref readonly var tile = ref State.Map.Tiles[tileIndex];
-        var environmentTint = MapSpriteRules.EnvironmentTint(tile);
+        var environmentTint = MapSpriteRules.EnvironmentTint(tile, PlainInfravision);
         Show(
             floors,
             tileIndex,
@@ -569,7 +588,7 @@ public partial class WorldView : Node2D
             character,
             new SpriteLook(
                 tile.Light,
-                MapSpriteRules.CharacterTint(tile),
+                MapSpriteRules.CharacterTint(tile, PlainInfravision),
                 IsHighlighted(tileIndex, MapLayer.Character),
                 selected));
         ShowShadow(tileIndex, character);

@@ -426,6 +426,8 @@ public partial class HudView : Control
         optionsWindow.WorldGammaChanged += gamma => ChangeClientSettings(settings => settings.WorldGamma = gamma);
         optionsWindow.BackgroundOpacityChanged += (window, opacity) =>
             ChangeClientSettings(settings => settings.BackgroundOpacity[window] = opacity);
+        optionsWindow.PlainInfravisionChanged += isOn =>
+            ChangeClientSettings(settings => settings.PlainInfravision = isOn);
         optionsWindow.SwapChanged += (swap, isOn) => ChangeClientSettings(settings =>
         {
             if (isOn)
