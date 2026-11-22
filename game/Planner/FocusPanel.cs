@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using TheLastGate.Buffs;
+using TheLastGate.Profiling;
 using TheLastGate.Rules;
 using TheLastGate.State;
 
@@ -40,6 +41,7 @@ public sealed class FocusPanel
 
     public static FocusPanel For(PlannerSheet sheet, PlannerFocus? focus, FocusCache cache)
     {
+        using var timing = Timings.Measure("planner.focus");
         if (focus?.Stat is { } stat)
         {
             return FocusInputs.Combat(sheet, stat) is { } input

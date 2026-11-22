@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using TheLastGate.Net;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 
 namespace TheLastGate.Items;
@@ -183,6 +184,7 @@ public sealed class ItemLooks
 
     public void EndOfTick()
     {
+        using var timing = Timings.Measure("tick.itemlooks");
         capture.EndOfTick();
         tick++;
         if (flight != null && tick - flight.SentTick > TimeoutTicks)

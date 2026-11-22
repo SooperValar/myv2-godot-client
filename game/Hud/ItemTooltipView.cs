@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Items;
+using TheLastGate.Profiling;
 
 namespace TheLastGate.Hud;
 
@@ -108,6 +109,7 @@ public partial class ItemTooltipView : PanelContainer
 
     private void Update()
     {
+        using var timing = Timings.Measure("tooltip.update");
         if (source == null || fonts == null)
         {
             return;

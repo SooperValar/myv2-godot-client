@@ -1,4 +1,5 @@
 using System;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 
 namespace TheLastGate.Buffs;
@@ -127,6 +128,7 @@ public sealed class BuffWatch
     // The reply comes in one go, so a capture never runs on into the next tick.
     public void EndOfTick()
     {
+        using var timing = Timings.Measure("tick.buffwatch");
         tickNow++;
         if (capturing)
         {

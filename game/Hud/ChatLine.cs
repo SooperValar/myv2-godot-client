@@ -3,6 +3,7 @@ using Godot;
 using Godot.Collections;
 using TheLastGate.Assets;
 using TheLastGate.Chat;
+using TheLastGate.Profiling;
 
 namespace TheLastGate.Hud;
 
@@ -153,6 +154,7 @@ public partial class ChatLine : LineEdit, IHudContextUser
 
     public override void _Draw()
     {
+        using var timing = Timings.Measure("chat.draw");
         if (font is not { } shownFont)
         {
             return;

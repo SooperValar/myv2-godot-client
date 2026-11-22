@@ -1,10 +1,10 @@
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Game;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 using GlidePoint = System.Numerics.Vector2;
 
@@ -92,7 +92,6 @@ public partial class WorldView : Node2D
     public bool ShowHealthPercent { get; set; } = true;
     public bool ShowHealthBars { get; set; }
     public bool ShowShadows { get; set; } = true;
-    public double LastRefreshMilliseconds { get; private set; }
     public int SelectedCharacter { get; private set; }
 
     public bool PickTileDrawnUnderMouse { get; set; }
@@ -418,7 +417,7 @@ public partial class WorldView : Node2D
 
     public void Refresh()
     {
-        var clock = Stopwatch.StartNew();
+        using var timing = Timings.Measure("world.refresh");
         var selectedIsShown = false;
         charactersShown.Clear();
         var target = State.Player.Target;
@@ -449,7 +448,6 @@ public partial class WorldView : Node2D
         }
 
         ShiftMapUnderPlayer();
-        LastRefreshMilliseconds = clock.Elapsed.TotalMilliseconds;
     }
 
     // A tile only loads its texture when its sprite number changes, so a new sprite swap has every tile loaded again.

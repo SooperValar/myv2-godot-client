@@ -13,6 +13,7 @@ using TheLastGate.Items;
 using TheLastGate.Map;
 using TheLastGate.Net;
 using TheLastGate.Planner;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 using TheLastGate.Windows;
 using TheLastGate.World;
@@ -41,9 +42,11 @@ public partial class GameScreen : Control
     private LoginHandoff login = null!;
     private MapNotesKeeper? mapNotes;
     private bool newCharacterSaved;
+    private PacketCounter? packetCounter;
     private TickPlayback playback = null!;
     private TickProcessor processor = null!;
     private ScreenGammaLayer? screenGamma;
+    private Action<byte[]> sendUserData = null!;
     private HashSet<AccessibilityOption> shownAccessibility = [];
     private SoundEffects soundEffects = null!;
     private SpriteLoader? sprites;
@@ -106,15 +109,21 @@ public partial class GameScreen : Control
         try
         {
             var ticksPlayed = 0;
-            playback.PlayDueTicks(
-                NowMilliseconds(),
-                payload =>
-                {
-                    processor.Process(payload);
-                    gameSession.SessionCurrencies.Observe(gameState.Player, sessionClock.Elapsed);
-                    ticksPlayed++;
-                    SendUserData();
-                });
+            using (Timings.Measure("tick.playback"))
+            {
+                playback.PlayDueTicks(
+                    NowMilliseconds(),
+                    payload =>
+                    {
+                        Timings.Recorder?.BeginTick();
+                        processor.Process(payload);
+                        Timings.Recorder?.EndTick();
+                        gameSession.SessionCurrencies.Observe(gameState.Player, sessionClock.Elapsed);
+                        ticksPlayed++;
+                        SendUserData();
+                    });
+            }
+
             if (ticksPlayed > 0)
             {
                 if (sprites != null)
@@ -136,6 +145,7 @@ public partial class GameScreen : Control
 
     public override void _ExitTree()
     {
+        Timings.Recorder = null;
         navigationKeys.TurnOn();
         exploredMap?.Save();
         mapNotes?.Save();
@@ -208,6 +218,14 @@ public partial class GameScreen : Control
 
     private void AddWorldView()
     {
+        if (OS.IsDebugBuild())
+        {
+            Timings.Recorder = new TimingRecorder();
+            packetCounter = new PacketCounter();
+        }
+
+        sendUserData = Counted("UserData", connection.SendCommand);
+
         try
         {
             sprites = new SpriteLoader(DataPaths.Root(), SpriteCacheBudgetBytes);
@@ -227,7 +245,7 @@ public partial class GameScreen : Control
             Session = gameSession,
             Sprites = sprites,
             Fonts = fonts,
-            SendCommand = SendAction,
+            SendCommand = Counted("Player", SendAction),
             PlayClick = soundEffects.PlayClick,
             PickTileDrawnUnderMouse = clientSettings.PickTileDrawnUnderMouse,
             GlideMovement = clientSettings.GlideMovement,
@@ -256,27 +274,33 @@ public partial class GameScreen : Control
         hudView.NotesSetAsideFile = mapNotes is { WasSetAside: true } ? mapNotes.FileName : null;
         hudView.MapNotes = mapNotes?.Notes;
         hudView.SaveMapNotes = mapNotes == null ? null : mapNotes.Save;
-        hudView.Show(gameState, gameSession, fonts, SendAction);
+        hudView.Show(gameState, gameSession, fonts, Counted("Player", SendAction));
+        if (Timings.Recorder != null && packetCounter != null)
+        {
+            hudView.ShowTimings(Timings.Recorder, packetCounter);
+        }
+
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
-        gameState.ItemLooks.SendLook = connection.SendCommand;
+        gameState.ItemLooks.SendLook = Counted("ItemLooks", connection.SendCommand);
         gameState.ItemLooks.Enabled = clientSettings.ItemTooltips;
         gameSession.UseQueue.Enabled = clientSettings.UseQueue;
 
         // A queued use has already clicked when it was queued.
-        gameSession.UseQueue.Send = connection.SendCommand;
+        gameSession.UseQueue.Send = Counted("UseQueue", connection.SendCommand);
         gameSession.GiveMore.Enabled = clientSettings.GiveMore;
         pacer.Adaptive = clientSettings.AdaptivePacing;
-        gameSession.GiveMore.Send = SendAction;
-        gameState.ShopRefresh.Send = connection.SendCommand;
-        gameState.TickReports.Send = connection.SendCommand;
-        gameState.NameRequests.Send = connection.SendCommand;
-        gameSession.AutoWalk.Send = connection.SendCommand;
+        gameSession.GiveMore.Send = Counted("GiveMore", SendAction);
+        gameState.ShopRefresh.Send = Counted("ShopRefresh", connection.SendCommand);
+        gameState.TickReports.Send = Counted("TickReports", connection.SendCommand);
+        gameState.NameRequests.Send = Counted("NameRequests", connection.SendCommand);
+        gameSession.AutoWalk.Send = Counted("AutoWalk", connection.SendCommand);
+        var sendBuffWatch = Counted("BuffWatch", connection.SendCommand);
         gameState.BuffWatch.Say = text =>
         {
             foreach (var packet in ChatPackets.Say(text))
             {
-                connection.SendCommand(packet);
+                sendBuffWatch(packet);
             }
         };
         screenGamma = new ScreenGammaLayer();
@@ -308,6 +332,8 @@ public partial class GameScreen : Control
         pacer.BufferTarget,
         pacer.MeasuredPeriodMilliseconds);
 
+    private Action<byte[]> Counted(string sender, Action<byte[]> send) => CountedSend.For(packetCounter, sender, send);
+
     private void SendAction(byte[] packet)
     {
         soundEffects.PlayClickFor(packet);
@@ -334,7 +360,7 @@ public partial class GameScreen : Control
             return;
         }
 
-        connection.SendCommand(packet);
+        sendUserData(packet);
         if (userDataUpload.Done)
         {
             userDataUpload = null;

@@ -18,6 +18,7 @@ using TheLastGate.Map;
 using TheLastGate.Net;
 using TheLastGate.Notes;
 using TheLastGate.Planner;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 using TheLastGate.Stats;
 using TheLastGate.Windows;
@@ -41,6 +42,7 @@ public partial class HudView : Control
     private const string PlannerWindowScenePath = "res://Planner/planner_window.tscn";
     private const string SessionStatsScenePath = "res://Hud/session_stats_window.tscn";
     private const string PlannerAdvancedScenePath = "res://Planner/planner_advanced_window.tscn";
+    private const string TimingsScenePath = "res://Profiling/timings_view.tscn";
     private const int HintFont = 1;
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
@@ -96,6 +98,7 @@ public partial class HudView : Control
     private SpriteLoader? sprites;
     private StatPlan statPlan = new();
     private GameState? state;
+    private TimingsView? timingsView;
     private WorldMapWindowView? worldMapWindow;
 
     [Export]
@@ -451,6 +454,7 @@ public partial class HudView : Control
 
     public void Refresh(int selected)
     {
+        using var timing = Timings.Measure("hud.refresh");
         selectedCharacter = selected;
         if (state == null || gameSession == null)
         {
@@ -600,6 +604,7 @@ public partial class HudView : Control
 
     public override void _Process(double delta)
     {
+        using var timing = Timings.Measure("hud.process");
         if (state == null)
         {
             return;
@@ -866,8 +871,22 @@ public partial class HudView : Control
         state?.Chat.Add(line);
     }
 
+    public void ShowTimings(TimingRecorder recorder, PacketCounter packets)
+    {
+        var view = GD.Load<PackedScene>(TimingsScenePath).Instantiate<TimingsView>();
+        AddChild(view);
+        view.Watch(recorder, packets, () => ReadDebugFacts?.Invoke(), fonts!);
+        timingsView = view;
+    }
+
     private void ShowDebugInformation()
     {
+        if (timingsView != null)
+        {
+            timingsView.Toggle();
+            return;
+        }
+
         if (ReadDebugFacts?.Invoke() is not { } facts)
         {
             return;
@@ -1809,6 +1828,7 @@ public partial class HudView : Control
 
     private void PlanFocus()
     {
+        using var timing = Timings.Measure("planner.planfocus");
         if (state == null || gameSession == null || PlannerSheet() is not { } sheet)
         {
             return;
@@ -1917,6 +1937,7 @@ public partial class HudView : Control
 
     private void ShowPlanner()
     {
+        using var timing = Timings.Measure("planner.refresh");
         var enabled = PlannerEnabled;
         var buttonShown = enabled && !GetNode<SkillList>("%SkillRows").Panel.ShowsMetaStats;
         foreach (var name in (string[])["%PlannerBox", "%PlannerLabel", "%PlannerButton"])

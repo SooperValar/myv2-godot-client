@@ -1,0 +1,42 @@
+[gd_scene format=3 uid="uid://cmhstdl8qykar"]
+
+[ext_resource type="Script" uid="uid://dx3v4g7y0hl0n" path="res://Profiling/TimingsView.cs" id="1_view"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+content_margin_left = 6.0
+content_margin_top = 4.0
+content_margin_right = 6.0
+content_margin_bottom = 4.0
+bg_color = Color(0, 0, 0, 0.75)
+
+[node name="TimingsView" type="PanelContainer" unique_id=1904417263]
+visible = false
+offset_left = 8.0
+offset_top = 8.0
+mouse_filter = 2
+process_priority = 2147483647
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+script = ExtResource("1_view")
+
+[node name="Rows" type="VBoxContainer" parent="." unique_id=388190125]
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Facts" type="VBoxContainer" parent="Rows" unique_id=1185320561]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+
+[node name="Sections" type="GridContainer" parent="Rows" unique_id=742906131]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 12
+columns = 6
+
+[node name="Packets" type="GridContainer" parent="Rows" unique_id=1630284471]
+unique_name_in_owner = true
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/h_separation = 12
+columns = 4

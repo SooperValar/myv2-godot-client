@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 
 namespace TheLastGate.Items;
@@ -44,6 +45,7 @@ public sealed class LookCapture
 
     public bool Offer(LogLine line)
     {
+        using var timing = Timings.Measure("tick.lookcapture");
         if (ItemDetailsParser.IsReplyStart(line.Text, line.Font))
         {
             CloseCapture();

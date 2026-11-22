@@ -1,6 +1,7 @@
 using System;
 using System.Diagnostics;
 using TheLastGate.Net.Handlers;
+using TheLastGate.Profiling;
 using TheLastGate.State;
 
 namespace TheLastGate.Net;
@@ -13,6 +14,7 @@ public sealed class TickProcessor(GameState state)
 
     public void Process(ReadOnlySpan<byte> payload)
     {
+        using var timing = Timings.Measure("tick.process");
         state.ServerTick = (state.ServerTick + 1) % GameState.ServerTickCycle;
         state.Map.LastUpdatedTile = -1;
         var reader = new TickCommandReader(payload);

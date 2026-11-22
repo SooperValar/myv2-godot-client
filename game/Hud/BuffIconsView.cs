@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using TheLastGate.Profiling;
 
 namespace TheLastGate.Hud;
 
@@ -26,6 +27,7 @@ public partial class BuffIconsView : VFlowContainer
 
     public void Show(IReadOnlyList<BuffIcon> icons)
     {
+        using var timing = Timings.Measure("bufficons.show");
         while (GetChildCount() < icons.Count)
         {
             var cell = new Control
