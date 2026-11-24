@@ -17,6 +17,11 @@ public sealed class CharacterRecord
     private const int DescriptionLength = 160;
     private const int ChangedOffset = 320;
 
+    // The MyV2 client's settings block is shorter, but starts with the same name, reference, description and changed
+    // fields; the rest is laid out differently.
+    private const int MyV2SettingsSize = 480;
+    private const int SharedSettingsLength = ChangedOffset + 1;
+
     private readonly byte[] bytes = new byte[Size];
 
     private CharacterRecord()
@@ -58,7 +63,8 @@ public sealed class CharacterRecord
         return record;
     }
 
-    // A file that isn't exactly one record long keeps only its key, and its settings count as unread.
+    // A file that isn't exactly one record long keeps only its key (and a MyV2 file its shared settings fields), and
+    // its settings count as unread.
     public static CharacterRecord Read(string filePath)
     {
         var fileBytes = File.ReadAllBytes(filePath);
@@ -72,6 +78,10 @@ public sealed class CharacterRecord
         {
             fileBytes.CopyTo(record.bytes, 0);
             record.SettingsRead = true;
+        }
+        else if (fileBytes.Length == LoginKey.Size + MyV2SettingsSize)
+        {
+            fileBytes.AsSpan(0, LoginKey.Size + SharedSettingsLength).CopyTo(record.bytes);
         }
         else
         {

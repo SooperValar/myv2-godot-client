@@ -54,6 +54,28 @@ public class CharacterRecordTests
     }
 
     [Fact]
+    public void Read_KeepsTheSharedFieldsOfAMyV2File()
+    {
+        using var folder = new TempFolder();
+        const int myV2SettingsSize = 480;
+        const int descriptionOffset = 160;
+        var fileBytes = new byte[LoginKey.Size + myV2SettingsSize];
+        new LoginKey(77, 1, 2, "Iluvatar", 4).Write(fileBytes);
+        "Iluvatar"u8.CopyTo(fileBytes.AsSpan(LoginKey.Size));
+        "A tall figure in white."u8.CopyTo(fileBytes.AsSpan(LoginKey.Size + descriptionOffset));
+        fileBytes[^1] = 0x55;
+        var path = folder.Write("iluvatar.moa", fileBytes);
+
+        var record = CharacterRecord.Read(path);
+
+        Assert.Equal(77u, record.Key.UserNumber);
+        Assert.Equal("Iluvatar", record.CharacterName);
+        Assert.Equal("A tall figure in white.", record.Description);
+        Assert.False(record.SettingsRead);
+        Assert.Equal(0, record.SettingsBlock[^1]);
+    }
+
+    [Fact]
     public void Read_RejectsAFileShorterThanTheKey()
     {
         using var folder = new TempFolder();
