@@ -7,7 +7,7 @@ namespace TheLastGate.Assets;
 // the second pixel row, for the characters from space to 127. Grey and Dim have no sheet, so they are the white sheet tinted.
 public sealed class ClassicFonts(SpriteLoader sprites) : IFontSet
 {
-    private const int FirstFontSprite = 18100;
+    private const int FirstFontSprite = SpriteNumbers.ClientArtBase + 18100;
     private const int GlyphWidth = 6;
     private const int GlyphHeight = 9;
     private const int GlyphTop = 1;

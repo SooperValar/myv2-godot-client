@@ -27,8 +27,8 @@ script = ExtResource("1_view")
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18093
-DarkSpriteNumber = 18094
+SpriteNumber = 118093
+DarkSpriteNumber = 118094
 FadesAs = 2
 
 [node name="Blocker" type="Control" parent="." unique_id=326155977]

@@ -7,7 +7,7 @@ namespace TheLastGate.Planner;
 // The planner's windows are framed by the game's window sprite.
 public static class PlannerLook
 {
-    private const int FrameSprite = 18128;
+    private const int FrameSprite = SpriteNumbers.ClientArtBase + 18128;
 
     private static readonly Color LightBackground = Color.Color8(42, 15, 10, 240);
     private static readonly Color DarkBackground = Color.Color8(23, 0, 5);

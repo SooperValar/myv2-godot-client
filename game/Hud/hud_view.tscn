@@ -99,7 +99,7 @@ layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
 SpriteNumber = 1
-DarkSpriteNumber = 18001
+DarkSpriteNumber = 118001
 
 [node name="SkillPanel" type="TextureRect" parent="." unique_id=925108062]
 unique_name_in_owner = true
@@ -110,8 +110,8 @@ offset_right = 134.0
 offset_bottom = 3.0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
-SpriteNumber = 99
-DarkSpriteNumber = 18099
+SpriteNumber = 100099
+DarkSpriteNumber = 118099
 
 [node name="MetaPanel" type="TextureRect" parent="." unique_id=1389347476]
 unique_name_in_owner = true
@@ -123,8 +123,8 @@ offset_right = 134.0
 offset_bottom = 3.0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
-SpriteNumber = 18097
-DarkSpriteNumber = 18098
+SpriteNumber = 118097
+DarkSpriteNumber = 118098
 
 [node name="StatRows" type="VBoxContainer" parent="." unique_id=1128480661]
 unique_name_in_owner = true
@@ -613,15 +613,15 @@ offset_left = -4.0
 offset_top = -2.0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
-SpriteNumber = 18008
+SpriteNumber = 118008
 
 [node name="Picture" type="TextureRect" parent="TreeButton" unique_id=1074817622]
 layout_mode = 0
 offset_left = -2.0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
-SpriteNumber = 18002
-DarkSpriteNumber = 18004
+SpriteNumber = 118002
+DarkSpriteNumber = 118004
 
 [node name="SwapSetButton" type="Control" parent="." unique_id=1530283471]
 unique_name_in_owner = true
@@ -643,7 +643,7 @@ offset_bottom = 15.0
 mouse_filter = 2
 script = ExtResource("2_6ebvl")
 SpriteNumber = 3
-DarkSpriteNumber = 18003
+DarkSpriteNumber = 118003
 
 [node name="Head" parent="." unique_id=1907131032 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Godot;
+using TheLastGate.Assets;
 using TheLastGate.Session;
 
 namespace TheLastGate.Hud;
@@ -12,7 +13,7 @@ public partial class SessionStatsWindowView : CenterContainer, IHudContextUser
 {
     private const string SessionGroup = "This session";
     private const string HourGroup = "Per hour";
-    private const int CloseSprite = 18042;
+    private const int CloseSprite = SpriteNumbers.ClientArtBase + 18042;
     private const float NameWidth = 1.3f;
 
     private static readonly Rect2 CloseRegion = new(283, 0, 14, 14);

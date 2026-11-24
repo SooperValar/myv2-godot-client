@@ -19,31 +19,31 @@ script = ExtResource("1_view")
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18117
-DarkSpriteNumber = 18118
+SpriteNumber = 118117
+DarkSpriteNumber = 118118
 FadesAs = 3
 
 [node name="TwoMaterialFrame" type="TextureRect" parent="." unique_id=1790210264]
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18119
-DarkSpriteNumber = 18120
+SpriteNumber = 118119
+DarkSpriteNumber = 118120
 FadesAs = 3
 
 [node name="WeaponWhetstone" type="TextureRect" parent="." unique_id=1287297248]
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18121
-DarkSpriteNumber = 18122
+SpriteNumber = 118121
+DarkSpriteNumber = 118122
 
 [node name="ArmourWhetstone" type="TextureRect" parent="." unique_id=1971346365]
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18123
-DarkSpriteNumber = 18124
+SpriteNumber = 118123
+DarkSpriteNumber = 118124
 
 [node name="Blocker" type="Control" parent="." unique_id=1202315026]
 layout_mode = 0

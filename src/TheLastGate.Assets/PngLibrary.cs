@@ -8,6 +8,7 @@ namespace TheLastGate.Assets;
 // pnglib.idx is an int32 offset into pnglib.dat per sprite number, where 0 means the sprite is
 // absent. pnglib.dat is "SCAR" followed by PNG files stored back to back with no length prefix,
 // so each PNG runs from its offset to the next stored PNG's offset, or to the end of the file.
+// An index shorter than MaxSprite entries, like the MyV2 client's, leaves the sprites past its end absent.
 public sealed class PngLibrary : IDisposable
 {
     private const int MagicSize = 4;
@@ -19,16 +20,16 @@ public sealed class PngLibrary : IDisposable
     public PngLibrary(string indexPath, string dataPath)
     {
         var indexBytes = File.ReadAllBytes(indexPath);
-        if (indexBytes.Length < offsets.Length * sizeof(int))
+        if (LfsPointer.IsPointer(indexBytes))
         {
-            throw new InvalidDataException(
-                $"pnglib.idx is {indexBytes.Length} bytes, not {offsets.Length * sizeof(int)}. If it's a Git LFS pointer, run git lfs pull.");
+            throw new InvalidDataException(LfsPointer.PulledMessage(Path.GetFileName(indexPath)));
         }
 
+        var indexedSlots = Math.Min(offsets.Length, indexBytes.Length / sizeof(int));
         data = new ArchiveFile(dataPath);
         try
         {
-            for (var slot = 0; slot < offsets.Length; slot++)
+            for (var slot = 0; slot < indexedSlots; slot++)
             {
                 offsets[slot] = BinaryPrimitives.ReadInt32LittleEndian(indexBytes.AsSpan(slot * sizeof(int)));
             }

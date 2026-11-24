@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Godot;
 using TheLastGate.Assets;
+using TheLastGate.Config;
 using TheLastGate.Net;
 using TheLastGate.State;
 
@@ -17,8 +18,10 @@ public partial class SoundEffects : Node
     private const float MaxVolume = 10;
     private const int PannerEffect = 0;
 
+    private const string MyV2SoundFolder = "sfx";
+
     private readonly Dictionary<string, AudioStreamWav?> loaded = [];
-    private string soundFolder = "";
+    private string[] soundFolders = [];
 
     public bool Enabled { get; set; }
 
@@ -26,7 +29,7 @@ public partial class SoundEffects : Node
 
     public void Start(string dataPath, bool enabled, int volume)
     {
-        soundFolder = Path.Combine(dataPath, DataLayout.Sounds);
+        soundFolders = [Path.Combine(DataPaths.MyV2Client(), MyV2SoundFolder), Path.Combine(dataPath, DataLayout.Sounds)];
         Enabled = enabled;
         Volume = volume;
     }
@@ -72,11 +75,11 @@ public partial class SoundEffects : Node
             return known;
         }
 
-        var path = Path.Combine(soundFolder, name + ".wav");
-        var sound = File.Exists(path) ? AudioStreamWav.LoadFromFile(path) : null;
+        var path = soundFolders.Select(folder => Path.Combine(folder, name + ".wav")).FirstOrDefault(File.Exists);
+        var sound = path == null ? null : AudioStreamWav.LoadFromFile(path);
         if (sound == null)
         {
-            GD.PushWarning($"Sound {name} couldn't be loaded from {path}");
+            GD.PushWarning($"Sound {name} couldn't be loaded from {string.Join(" or ", soundFolders)}");
         }
 
         loaded[name] = sound;

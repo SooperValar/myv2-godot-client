@@ -20,8 +20,8 @@ script = ExtResource("1_view")
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18006
-DarkSpriteNumber = 18007
+SpriteNumber = 118006
+DarkSpriteNumber = 118007
 FadesAs = 4
 
 [node name="Blocker" type="Control" parent="." unique_id=1458740342]
@@ -46,7 +46,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18112
+SpriteNumber = 118112
 
 [node name="Icon" type="TextureRect" parent="Node0" unique_id=1706958509]
 layout_mode = 0
@@ -80,7 +80,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18114
+SpriteNumber = 118114
 
 [node name="Icon" type="TextureRect" parent="Node1" unique_id=104186510]
 layout_mode = 0
@@ -114,7 +114,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18116
+SpriteNumber = 118116
 
 [node name="Icon" type="TextureRect" parent="Node2" unique_id=1898916471]
 layout_mode = 0
@@ -148,7 +148,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18111
+SpriteNumber = 118111
 
 [node name="Icon" type="TextureRect" parent="Node3" unique_id=1149006215]
 layout_mode = 0
@@ -182,7 +182,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18112
+SpriteNumber = 118112
 
 [node name="Icon" type="TextureRect" parent="Node4" unique_id=246828766]
 layout_mode = 0
@@ -216,7 +216,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18113
+SpriteNumber = 118113
 
 [node name="Icon" type="TextureRect" parent="Node5" unique_id=308079871]
 layout_mode = 0
@@ -250,7 +250,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18113
+SpriteNumber = 118113
 
 [node name="Icon" type="TextureRect" parent="Node6" unique_id=691326475]
 layout_mode = 0
@@ -284,7 +284,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18114
+SpriteNumber = 118114
 
 [node name="Icon" type="TextureRect" parent="Node7" unique_id=1617973486]
 layout_mode = 0
@@ -318,7 +318,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18115
+SpriteNumber = 118115
 
 [node name="Icon" type="TextureRect" parent="Node8" unique_id=618703894]
 layout_mode = 0
@@ -352,7 +352,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18115
+SpriteNumber = 118115
 
 [node name="Icon" type="TextureRect" parent="Node9" unique_id=1416372647]
 layout_mode = 0
@@ -386,7 +386,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18116
+SpriteNumber = 118116
 
 [node name="Icon" type="TextureRect" parent="Node10" unique_id=315079545]
 layout_mode = 0
@@ -420,7 +420,7 @@ offset_left = -17.0
 offset_top = -17.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18111
+SpriteNumber = 118111
 
 [node name="Icon" type="TextureRect" parent="Node11" unique_id=1075836209]
 layout_mode = 0

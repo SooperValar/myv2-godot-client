@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using TheLastGate.Assets;
 
 namespace TheLastGate.Windows;
 
@@ -9,7 +10,7 @@ public static class TutorialPages
     public const int Pages = 3;
     public const int LinesPerPage = 12;
 
-    private const int FirstPicture = 18010;
+    private const int FirstPicture = SpriteNumbers.ClientArtBase + 18010;
 
     private static readonly string[][][] Texts =
     [

@@ -2,6 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Linq;
 using Godot;
+using TheLastGate.Assets;
 using TheLastGate.Hud;
 using TheLastGate.Notes;
 using TheLastGate.Windows;
@@ -15,7 +16,7 @@ namespace TheLastGate.Map;
 [Tool]
 public partial class WorldMapWindowView : Panel, IHudContextUser
 {
-    private const int FrameSprite = 18128;
+    private const int FrameSprite = SpriteNumbers.ClientArtBase + 18128;
     private const float TitleBottom = 30;
     private const int SwatchSize = 20;
     private const int CategoryColourItem = NotePalette.Size;

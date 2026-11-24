@@ -26,16 +26,16 @@ offset_bottom = 316.0
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 42
-DarkSpriteNumber = 18042
+SpriteNumber = 100042
+DarkSpriteNumber = 118042
 FadesAs = 6
 
 [node name="Welcome" type="TextureRect" parent="." unique_id=460831133]
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 43
-DarkSpriteNumber = 18043
+SpriteNumber = 100043
+DarkSpriteNumber = 118043
 FadesAs = 6
 
 [node name="Lines" type="VBoxContainer" parent="." unique_id=592978176]
@@ -163,8 +163,8 @@ mouse_filter = 2
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 44
-DarkSpriteNumber = 18044
+SpriteNumber = 100044
+DarkSpriteNumber = 118044
 FadesAs = 6
 
 [node name="Picture" type="TextureRect" parent="Tutorial" unique_id=692077272]
@@ -175,7 +175,7 @@ offset_right = 6.0
 offset_bottom = 145.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 18010
+SpriteNumber = 118010
 
 [node name="Lines" type="VBoxContainer" parent="Tutorial" unique_id=1484579987]
 layout_mode = 0

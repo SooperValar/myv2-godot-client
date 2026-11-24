@@ -16,7 +16,7 @@ namespace TheLastGate.Hud;
 [Tool]
 public partial class OptionsWindowView : Panel, IHudContextUser
 {
-    private const int CloseSprite = 18042;
+    private const int CloseSprite = SpriteNumbers.ClientArtBase + 18042;
     private const string OptionRowScenePath = "res://Hud/option_row.tscn";
     private const string SliderRowScenePath = "res://Hud/slider_row.tscn";
     private const string KeybindSectionScenePath = "res://Hud/keybind_section.tscn";
