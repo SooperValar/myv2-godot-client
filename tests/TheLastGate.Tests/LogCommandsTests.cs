@@ -29,9 +29,9 @@ public class LogCommandsTests
     [Fact]
     public void Log_TakesTheFontOfTheChunkThatEndsTheLine()
     {
-        var state = Process(Chunk(ServerCommand.Log0, "abcdefghijklmno"), Chunk(ServerCommand.Log5, "pq\n"));
+        var state = Process(Chunk(ServerCommand.Log0, "abcdefghijklmno"), Chunk(ServerCommand.Log3, "pq\n"));
 
-        Assert.Equal([new LogLine("abcdefghijklmnopq", 5)], state.Chat.Lines);
+        Assert.Equal([new LogLine("abcdefghijklmnopq", 3)], state.Chat.Lines);
     }
 
     [Fact]
@@ -86,34 +86,22 @@ public class LogCommandsTests
         var added = new List<LogLine>();
         state.Chat.LineAdded += added.Add;
 
-        new TickProcessor(state).Process(TestCommand.Payload(Chunk(ServerCommand.Log4, "Ding\n")));
+        new TickProcessor(state).Process(TestCommand.Payload(Chunk(ServerCommand.Log3, "Ding\n")));
 
-        Assert.Equal([new LogLine("Ding", 4)], added);
+        Assert.Equal([new LogLine("Ding", 3)], added);
     }
 
     [Fact]
-    public void MessageOfTheDay_BuildsItsOwnLinesApartFromTheChat()
-    {
-        var state = Process(
-            Chunk(ServerCommand.Log0, "chat that is lo"),
-            Chunk(ServerCommand.MessageOfTheDay2, "Welcome!\n"),
-            Chunk(ServerCommand.Log0, "ng\n"));
-
-        Assert.Equal([new LogLine("Welcome!", 2)], state.MessageOfTheDay.Lines);
-        Assert.Equal([new LogLine("chat that is long", 0)], state.Chat.Lines);
-    }
-
-    [Fact]
-    public void ServerTick_CountsUpEachTickAndWrapsAtTwoHundred()
+    public void ServerTick_CountsUpEachTickAndWrapsAtTwenty()
     {
         var state = new GameState();
         var processor = new TickProcessor(state);
 
-        processor.Process(TestCommand.Payload(TestCommand.Of(ServerCommand.Tick).Byte(198)));
-        Assert.Equal(198, state.ServerTick);
+        processor.Process(TestCommand.Payload(TestCommand.Of(ServerCommand.Tick).Byte(18)));
+        Assert.Equal(18, state.ServerTick);
 
         processor.Process([]);
-        Assert.Equal(199, state.ServerTick);
+        Assert.Equal(19, state.ServerTick);
 
         processor.Process([]);
         Assert.Equal(0, state.ServerTick);

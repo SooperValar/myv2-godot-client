@@ -7,7 +7,7 @@ public class TickProcessorTests
 {
     private const int FirstSetMapId = 0x80;
     private const byte EmptyIgnoreLength = 5;
-    private const int LongestCommand = 64;
+    private const int LongestCommand = 126;
 
     public static TheoryData<ServerCommand> TickCommands()
     {
@@ -72,23 +72,11 @@ public class TickProcessorTests
         var state = new GameState();
         var heldSprites = new List<int>();
         state.HeldItemChanged += () => heldSprites.Add(state.Player.HeldItem.Sprite);
-        var setHeldItem = TestCommand.Of(ServerCommand.SetCharacterHeldItem).UInt16(2500).UInt16(0).Byte(1);
+        var setHeldItem = TestCommand.Of(ServerCommand.SetCharacterHeldItem).UInt16(2500).UInt16(0);
 
         new TickProcessor(state).Process(TestCommand.Payload(setHeldItem));
 
         Assert.Equal([2500], heldSprites);
-    }
-
-    [Fact]
-    public void Process_SaysWhenTheServerOffersTheWaypoints()
-    {
-        var state = new GameState();
-        var offers = 0;
-        state.WaypointsOffered += () => offers++;
-
-        new TickProcessor(state).Process(TestCommand.Payload(TestCommand.Of(ServerCommand.Waypoints)));
-
-        Assert.Equal(1, offers);
     }
 
     private static bool TryBuildCommand(ServerCommand commandId, out byte[] command)

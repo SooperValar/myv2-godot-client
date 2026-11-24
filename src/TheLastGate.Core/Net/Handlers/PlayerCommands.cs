@@ -8,7 +8,6 @@ internal static class PlayerCommands
 {
     private const int NamePartLength = 15;
     private const int LastNamePartLength = 10;
-    private const int LocationPartLength = 10;
     private const int SkillsKeptFromServer = 50;
 
     public static void Apply(PlayerState player, ReadOnlySpan<byte> command)
@@ -62,35 +61,10 @@ internal static class PlayerCommands
                 player.PointsTotal = (int)reader.ReadUInt32();
                 player.Kindred = reader.ReadUInt32();
                 break;
-            case ServerCommand.SetCharacterWaypoints:
-                player.Waypoints = (int)reader.ReadUInt32();
-                player.BlackStrongholdPoints = (int)reader.ReadUInt32();
-                player.OsirisPoints = (int)reader.ReadUInt32();
-                break;
-            case ServerCommand.SetCharacterTokens:
-                player.Tokens = (int)reader.ReadUInt32();
-                player.TreePoints = reader.ReadUInt16();
-                player.OsirisTree = reader.ReadUInt16();
-                break;
-            case ServerCommand.SetCharacterTree:
-                var node = reader.ReadByte();
-                var nodeValue = reader.ReadByte();
-                if (node < PlayerState.TreeNodeCount)
-                {
-                    player.TreeNodes[node] = nodeValue;
-                }
-
-                break;
             case ServerCommand.SetCharacterGold:
                 player.Gold = (int)reader.ReadUInt32();
                 player.Armor = (int)reader.ReadUInt32();
                 player.Weapon = (int)reader.ReadUInt32();
-                break;
-            case ServerCommand.SetCharacterLocation1:
-                reader.ReadBytes(LocationPartLength).CopyTo(player.LocationField);
-                break;
-            case ServerCommand.SetCharacterLocation2:
-                reader.ReadBytes(LocationPartLength).CopyTo(player.LocationField.AsSpan(LocationPartLength));
                 break;
             case ServerCommand.SetTarget:
                 player.Target = new PlayerTarget(

@@ -100,7 +100,7 @@ public class NameRequestsTests
             .Bytes(0, 0)
             .UInt16((ushort)number)
             .UInt16(Id)
-            .UInt16(100);
+            .Byte(10);
 
     private void LearnName(int number, string name) =>
         Process(

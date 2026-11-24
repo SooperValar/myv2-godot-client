@@ -41,16 +41,6 @@ public class SessionCurrenciesTests
     }
 
     [TestCase]
-    public void Observe_TreatsACurrencyNeverSentAsZero()
-    {
-        Tick(TimeSpan.Zero, Name());
-        Tick(TimeSpan.FromMinutes(1), Tokens(3));
-
-        AssertThat(Row(Currency.Tokens).Start).IsEqual(0);
-        AssertThat(Row(Currency.Tokens).Earned).IsEqual(3);
-    }
-
-    [TestCase]
     public void Observe_AddsRisesToEarnedAndFallsToSpent()
     {
         Tick(TimeSpan.Zero, Name(), Gold(500));
@@ -126,7 +116,4 @@ public class SessionCurrenciesTests
 
     private static TestCommand Points(uint unspent, uint total) =>
         TestCommand.Of(ServerCommand.SetCharacterPoints).UInt32(unspent).UInt32(total).UInt32(0);
-
-    private static TestCommand Tokens(uint tokens) =>
-        TestCommand.Of(ServerCommand.SetCharacterTokens).UInt32(tokens).UInt16(0).UInt16(0);
 }

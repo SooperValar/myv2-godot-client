@@ -11,8 +11,6 @@ internal static class LookCommands
     private const uint SoulstoneBit = 1u << 30;
     private const uint EnchantedBit = 1u << 31;
     private const uint PriceMask = SoulstoneBit - 1;
-    private const byte WeaponSmithSlot = 4;
-    private const byte ArmourSmithSlot = 5;
 
     public static void Apply(GameState state, ReadOnlySpan<byte> command)
     {
@@ -62,15 +60,6 @@ internal static class LookCommands
             case ServerCommand.Look6:
                 ReadShopItems(state, ref reader);
                 break;
-            case ServerCommand.Look7:
-                ReadDepotItem(state, ref reader);
-                break;
-            case ServerCommand.Look8:
-                ReadSmith(state, ref reader);
-                break;
-            case ServerCommand.CloseShop:
-                state.CloseShopForTheServer();
-                break;
             default:
                 throw new UnreachableException();
         }
@@ -119,45 +108,6 @@ internal static class LookCommands
         if (firstSlot is >= CharacterLook.ShopSlots - ShopItemsPerCommand and <= CharacterLook.ShopSlots)
         {
             OpenShop(state, ShopKindOf(catalysts[0]), look.Copy());
-        }
-    }
-
-    private static void ReadDepotItem(GameState state, ref PacketReader reader)
-    {
-        var page = reader.ReadByte();
-        var slot = reader.ReadByte();
-        var item = new DepotItem(reader.ReadUInt16(), reader.ReadByte(), reader.ReadByte(), reader.ReadByte());
-        if (page >= CharacterLook.DepotPages || slot >= CharacterLook.DepotSlotsPerPage)
-        {
-            return;
-        }
-
-        state.PendingLook.Depot[page][slot] = item;
-        if (page == CharacterLook.DepotPages - 1 && slot == CharacterLook.DepotSlotsPerPage - 1)
-        {
-            OpenShop(state, ShopKind.Depot, state.PendingLook.Copy());
-        }
-    }
-
-    private static void ReadSmith(GameState state, ref PacketReader reader)
-    {
-        var slot = reader.ReadByte();
-        state.Shop.Number = reader.ReadUInt16();
-        switch (slot)
-        {
-            case WeaponSmithSlot:
-                OpenShop(state, ShopKind.WeaponSmith, state.Shop);
-                break;
-            case ArmourSmithSlot:
-                OpenShop(state, ShopKind.ArmourSmith, state.Shop);
-                break;
-            case < PlayerState.SmithSlots:
-                state.Player.SmithItems[slot] = new ItemSlot(
-                    reader.ReadUInt16(),
-                    0,
-                    reader.ReadByte(),
-                    reader.ReadByte());
-                break;
         }
     }
 

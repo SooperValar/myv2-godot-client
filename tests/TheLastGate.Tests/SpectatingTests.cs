@@ -87,7 +87,7 @@ public class SpectatingTests
             .Bytes(0, 0)
             .UInt16((ushort)characterNumber)
             .UInt16(1)
-            .UInt16(100);
+            .Byte(10);
 
     // Each line goes to the client in pieces of fifteen letters, the last ending the line.
     private static TestCommand[] Lines(params string[] lines) =>

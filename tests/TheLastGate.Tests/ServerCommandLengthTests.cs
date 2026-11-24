@@ -16,20 +16,15 @@ public class ServerCommandLengthTests
     [InlineData(ServerCommand.SetCharacterActiveMana, 3)]
     [InlineData(ServerCommand.SetCharacterDirection, 2)]
     [InlineData(ServerCommand.SetCharacterPoints, 13)]
-    [InlineData(ServerCommand.SetCharacterWaypoints, 13)]
-    [InlineData(ServerCommand.SetCharacterTokens, 9)]
-    [InlineData(ServerCommand.SetCharacterTree, 3)]
     [InlineData(ServerCommand.SetCharacterGold, 13)]
-    [InlineData(ServerCommand.SetCharacterItem, 11)]
-    [InlineData(ServerCommand.SetCharacterWorn, 10)]
+    [InlineData(ServerCommand.SetCharacterItem, 9)]
+    [InlineData(ServerCommand.SetCharacterWorn, 9)]
     [InlineData(ServerCommand.SetCharacterSpell, 9)]
-    [InlineData(ServerCommand.SetCharacterHeldItem, 6)]
-    [InlineData(ServerCommand.SetCharacterLocation1, 11)]
-    [InlineData(ServerCommand.SetCharacterLocation2, 11)]
+    [InlineData(ServerCommand.SetCharacterHeldItem, 5)]
     [InlineData(ServerCommand.SetMap3, 16)]
-    [InlineData(ServerCommand.SetMap4, 6)]
-    [InlineData(ServerCommand.SetMap5, 7)]
-    [InlineData(ServerCommand.SetMap6, 9)]
+    [InlineData(ServerCommand.SetMap4, 3)]
+    [InlineData(ServerCommand.SetMap5, 4)]
+    [InlineData(ServerCommand.SetMap6, 6)]
     [InlineData(ServerCommand.SetOrigin, 5)]
     [InlineData(ServerCommand.Tick, 2)]
     [InlineData(ServerCommand.ScrollRight, 1)]
@@ -40,16 +35,16 @@ public class ServerCommandLengthTests
     [InlineData(ServerCommand.ScrollRightDown, 1)]
     [InlineData(ServerCommand.ScrollLeftUp, 1)]
     [InlineData(ServerCommand.ScrollLeftDown, 1)]
-    [InlineData(ServerCommand.Look7, 8)]
-    [InlineData(ServerCommand.Look8, 8)]
-    [InlineData(ServerCommand.CloseShop, 1)]
     [InlineData(ServerCommand.SetTarget, 13)]
     [InlineData(ServerCommand.PlaySound, 13)]
     [InlineData(ServerCommand.Load, 5)]
     [InlineData(ServerCommand.Unique, 9)]
-    [InlineData(ServerCommand.Waypoints, 1)]
-    [InlineData(ServerCommand.ShowMessageOfTheDay, 2)]
-    [InlineData(ServerCommand.ClearBox, 9)]
+    [InlineData(ServerCommand.SpellTime, 20)]
+    [InlineData(ServerCommand.ItemInfo, 64)]
+    [InlineData(ServerCommand.TileGlow, 4)]
+    [InlineData(ServerCommand.Tiers, 64)]
+    [InlineData(ServerCommand.ItemMarks, 126)]
+    [InlineData(ServerCommand.WaypointRow, 80)]
     public void Of_GivesEachFixedLengthCommandItsLength(ServerCommand commandId, int expectedLength)
     {
         Assert.Equal(expectedLength, ServerCommandLength.Of(Command(commandId)));
@@ -60,9 +55,7 @@ public class ServerCommandLengthTests
     [InlineData(ServerCommand.SetCharacterName2)]
     [InlineData(ServerCommand.SetCharacterName3)]
     [InlineData(ServerCommand.Log0)]
-    [InlineData(ServerCommand.Log9)]
-    [InlineData(ServerCommand.MessageOfTheDay0)]
-    [InlineData(ServerCommand.MessageOfTheDay3)]
+    [InlineData(ServerCommand.Log3)]
     [InlineData(ServerCommand.Look1)]
     [InlineData(ServerCommand.Look6)]
     [InlineData(ServerCommand.Exit)]
@@ -78,9 +71,9 @@ public class ServerCommandLengthTests
     [InlineData(0b0000_1000, 2)]
     [InlineData(0b0001_0000, 1)]
     [InlineData(0b0010_0000, 4)]
-    [InlineData(0b0100_0000, 6)]
-    [InlineData(0b1000_0000, 8)]
-    [InlineData(0b1111_1111, 31)]
+    [InlineData(0b0100_0000, 5)]
+    [InlineData(0b1000_0000, 1)]
+    [InlineData(0b1111_1111, 23)]
     public void Of_AddsTheFieldsASetMapFlagsToItsHeader(byte flags, int fieldBytes)
     {
         const byte relativeSetMap = 0x80 | 3;
@@ -94,23 +87,6 @@ public class ServerCommandLengthTests
     public void Of_RejectsASetMapWithNoFlags()
     {
         Assert.Throws<ProtocolDesyncException>(() => ServerCommandLength.Of(Command(0x80 | 3, 0)));
-    }
-
-    [Theory]
-    [InlineData(ServerCommand.TermSkillTree, 0, 5)]
-    [InlineData(ServerCommand.TermSkillTree, 1, 13)]
-    [InlineData(ServerCommand.TermContractTree, 13, 13)]
-    [InlineData(ServerCommand.TermSkillTree, 14, 16)]
-    [InlineData(ServerCommand.TermSkills, 14, 8)]
-    [InlineData(ServerCommand.TermSkills, 15, 13)]
-    [InlineData(ServerCommand.TermSkills, 37, 13)]
-    [InlineData(ServerCommand.TermSkills, 0, 16)]
-    [InlineData(ServerCommand.TermMeta, 38, 13)]
-    [InlineData(ServerCommand.TermMeta, 60, 13)]
-    [InlineData(ServerCommand.TermMeta, 61, 16)]
-    public void Of_ReadsATerminologyCommandsLengthFromItsKind(ServerCommand commandId, byte kind, int expectedLength)
-    {
-        Assert.Equal(expectedLength, ServerCommandLength.Of(Command((byte)commandId, kind)));
     }
 
     [Fact]

@@ -85,10 +85,10 @@ public class MapIntentsTests
             .Bytes(0, 0)
             .UInt16(0)
             .UInt16(1)
-            .UInt16(100);
+            .Byte(10);
 
     private static TestCommand HeldItem(int sprite) =>
-        TestCommand.Of(ServerCommand.SetCharacterHeldItem).UInt16((ushort)sprite).UInt16(0).Byte(1);
+        TestCommand.Of(ServerCommand.SetCharacterHeldItem).UInt16((ushort)sprite).UInt16(0);
 
     private static GameState State(params TestCommand[] commands)
     {

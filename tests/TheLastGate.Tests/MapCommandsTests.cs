@@ -24,30 +24,30 @@ public class MapCommandsTests
                 .Bytes(3, 4)
                 .UInt16(77)
                 .UInt16(88)
-                .UInt16(0xFFFD)
-                .Byte(95)
-                .UInt16(10)
-                .UInt16(0xFFF6)
-                .UInt16(30)
-                .Byte(2));
+                .Byte(12)
+                .Byte(95));
 
         var tile = map.Tiles[1000];
-        Assert.Equal(-1, tile.BackgroundSprite);
+        Assert.Equal(65535, tile.BackgroundSprite);
         Assert.Equal(0x80000001u, tile.Flags);
         Assert.Equal(0x12345678u, tile.Flags2);
-        Assert.Equal(-2, tile.ItemSprite);
+        Assert.Equal(65534, tile.ItemSprite);
         Assert.Equal(9, tile.ItemStatus);
         Assert.Equal(5000, tile.CharacterSprite);
         Assert.Equal(3, tile.CharacterStatus);
         Assert.Equal(4, tile.CharacterStatusOffset);
         Assert.Equal(77, tile.CharacterNumber);
         Assert.Equal(88, tile.CharacterId);
-        Assert.Equal(-3, tile.CharacterSpeed);
+        Assert.Equal(12, tile.CharacterSpeed);
         Assert.Equal(95, tile.CharacterHealthPercent);
-        Assert.Equal(10, tile.CharacterCastSpeed);
-        Assert.Equal(-10, tile.CharacterAttackSpeed);
-        Assert.Equal(30, tile.CharacterMoveSpeed);
-        Assert.Equal(2, tile.CharacterTextColour);
+    }
+
+    [Fact]
+    public void TileGlow_SetsTheTilesGlow()
+    {
+        var map = Process(TestCommand.Of(ServerCommand.TileGlow).UInt16(300).Byte(12));
+
+        Assert.Equal(12, map.Tiles[300].Glow);
     }
 
     [Fact]
@@ -98,7 +98,7 @@ public class MapCommandsTests
     [Fact]
     public void SetMapLight_SetsATilesLightThenPacksTwoTilesPerByte()
     {
-        var map = Process(TestCommand.Of(ServerCommand.SetMap6).UInt32(10).Byte(7).Bytes(0x12, 0x34, 0x56));
+        var map = Process(TestCommand.Of(ServerCommand.SetMap6).UInt16(10 | (7 << 12)).Bytes(0x12, 0x34, 0x56));
 
         Assert.Equal(7, map.Tiles[10].Light);
         Assert.Equal(1, map.Tiles[11].Light);
@@ -114,8 +114,8 @@ public class MapCommandsTests
     public void SetMapLight_SkipsPairsPastTheEndOfTheMap()
     {
         var map = Process(
-            TestCommand.Of(ServerCommand.SetMap5).UInt32(WorldMap.TileCount - 1).Byte(7).Byte(0x99),
-            TestCommand.Of(ServerCommand.SetMap4).UInt32(0).Byte(3));
+            TestCommand.Of(ServerCommand.SetMap5).UInt16((WorldMap.TileCount - 1) | (7 << 12)).Byte(0x99),
+            TestCommand.Of(ServerCommand.SetMap4).UInt16(3 << 12));
 
         Assert.Equal(7, map.Tiles[WorldMap.TileCount - 1].Light);
         Assert.Equal(3, map.Tiles[0].Light);
@@ -125,7 +125,7 @@ public class MapCommandsTests
     public void SetMapLight_RejectsATileOutsideTheMap()
     {
         Assert.Throws<ProtocolDesyncException>(() =>
-            Process(TestCommand.Of(ServerCommand.SetMap4).UInt32(WorldMap.TileCount).Byte(1)));
+            Process(TestCommand.Of(ServerCommand.SetMap4).UInt16(WorldMap.TileCount)));
     }
 
     [Fact]

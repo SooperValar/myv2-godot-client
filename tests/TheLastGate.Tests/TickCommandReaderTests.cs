@@ -50,7 +50,7 @@ public class TickCommandReaderTests
     [Fact]
     public void TryReadNext_NamesTheCommandAndOffsetOfAnUnknownCommand()
     {
-        byte[] payload = [(byte)ServerCommand.Tick, 7, (byte)ServerCommand.CloseShop, 26];
+        byte[] payload = [(byte)ServerCommand.Tick, 7, (byte)ServerCommand.ScrollRight, 26];
 
         var exception = Assert.Throws<ProtocolDesyncException>(() =>
         {

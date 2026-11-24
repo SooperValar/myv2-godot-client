@@ -42,12 +42,7 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetCharacterActiveMana
                     or ServerCommand.SetCharacterDirection
                     or ServerCommand.SetCharacterPoints
-                    or ServerCommand.SetCharacterWaypoints
-                    or ServerCommand.SetCharacterTokens
-                    or ServerCommand.SetCharacterTree
-                    or ServerCommand.SetCharacterGold
-                    or ServerCommand.SetCharacterLocation1
-                    or ServerCommand.SetCharacterLocation2:
+                    or ServerCommand.SetCharacterGold:
                     PlayerCommands.Apply(state.Player, command);
                     break;
                 case ServerCommand.SetTarget:
@@ -69,6 +64,7 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.SetMap5
                     or ServerCommand.SetMap6
                     or ServerCommand.SetOrigin
+                    or ServerCommand.TileGlow
                     or ServerCommand.ScrollRight
                     or ServerCommand.ScrollLeft
                     or ServerCommand.ScrollDown
@@ -79,45 +75,34 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.ScrollRightDown:
                     MapCommands.Apply(state.Map, command);
                     break;
-                case >= ServerCommand.Log0 and <= ServerCommand.Log9:
+                case >= ServerCommand.Log0 and <= ServerCommand.Log3:
                     LogCommands.Apply(
                         state.Chat,
                         command,
                         command[0] - (byte)ServerCommand.Log0,
                         line => state.BuffWatch.Capture(line) || state.ItemLooks.Offer(line));
                     break;
-                case >= ServerCommand.MessageOfTheDay0 and <= ServerCommand.MessageOfTheDay3:
-                    LogCommands.Apply(
-                        state.MessageOfTheDay,
-                        command,
-                        command[0] - (byte)ServerCommand.MessageOfTheDay0);
-                    break;
-                case ServerCommand.TermSkillTree
-                    or ServerCommand.TermContractTree
-                    or ServerCommand.TermSkills
-                    or ServerCommand.TermMeta:
-                    TerminologyCommands.Apply(state.Terminology, command);
-                    break;
                 case ServerCommand.Look1
                     or ServerCommand.Look2
                     or ServerCommand.Look3
                     or ServerCommand.Look4
                     or ServerCommand.Look5
-                    or ServerCommand.Look6
-                    or ServerCommand.Look7
-                    or ServerCommand.Look8
-                    or ServerCommand.CloseShop:
+                    or ServerCommand.Look6:
                     LookCommands.Apply(state, command);
                     break;
                 case ServerCommand.PlaySound
                     or ServerCommand.Exit
                     or ServerCommand.Load
                     or ServerCommand.Unique
-                    or ServerCommand.Ignore
-                    or ServerCommand.Waypoints
-                    or ServerCommand.ShowMessageOfTheDay
-                    or ServerCommand.ClearBox:
+                    or ServerCommand.Ignore:
                     RequestCommands.Apply(state, command);
+                    break;
+                case ServerCommand.SpellTime
+                    or ServerCommand.ItemInfo
+                    or ServerCommand.Tiers
+                    or ServerCommand.ItemMarks
+                    or ServerCommand.WaypointRow:
+                    ServerInfoCommands.Apply(state, command);
                     break;
                 case ServerCommand.Tick:
                     var tickReader = new PacketReader(command);

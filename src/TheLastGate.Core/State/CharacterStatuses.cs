@@ -63,20 +63,14 @@ public static class CharacterStatuses
                 MoveOn(
                     ref tile,
                     block,
-                    StatusSpeed.MoveSteps(tile.CharacterSpeed, tile.CharacterMoveSpeed, serverTick),
+                    StatusSpeed.StepsThisTick(tile.CharacterSpeed, serverTick),
                     reportUnusualData);
                 return;
             case CharacterStatusKind.Action:
                 MoveOn(
                     ref tile,
                     block,
-                    StatusSpeed.ActionSteps(
-                        tile.CharacterStatusOffset,
-                        tile.CharacterSpeed,
-                        tile.CharacterAttackSpeed,
-                        tile.CharacterCastSpeed,
-                        tile.CharacterTextColour,
-                        serverTick),
+                    StatusSpeed.StepsThisTick(tile.CharacterSpeed, serverTick),
                     reportUnusualData);
                 return;
             case CharacterStatusKind.Unknown:

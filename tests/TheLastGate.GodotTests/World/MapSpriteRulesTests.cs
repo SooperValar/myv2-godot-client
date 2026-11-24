@@ -152,49 +152,6 @@ public class MapSpriteRulesTests
         AssertThat(ObjectAt(BehindThePlayer, 16350, MapFlags.IsItem, false)).IsEqual(16350);
     }
 
-    [TestCase(0, 1002)]
-    [TestCase(31, 549)]
-    public void ObjectSprite_LightsAWaypointTheCharacterHasFound(int waypointBit, int floor)
-    {
-        var (tile, player) = Tile(BehindThePlayer, floor, Waypoint, MapFlags.IsItem, waypoints: 1u << waypointBit);
-
-        AssertThat(
-                MapSpriteRules.ObjectSprite(
-                    tile,
-                    tile.ItemSprite,
-                    BehindThePlayer.Column,
-                    BehindThePlayer.Row,
-                    player,
-                    true))
-            .IsEqual(LitWaypoint);
-    }
-
-    [TestCase]
-    public void ObjectSprite_LeavesAWaypointDarkUntilItsFound()
-    {
-        var (unfound, player) = Tile(BehindThePlayer, 1002, Waypoint, MapFlags.IsItem, waypoints: 1u << 1);
-        var (otherFloor, playerWithIt) = Tile(BehindThePlayer, 1008, Waypoint, MapFlags.IsItem, waypoints: 1u << 0);
-
-        AssertThat(
-                MapSpriteRules.ObjectSprite(
-                    unfound,
-                    unfound.ItemSprite,
-                    BehindThePlayer.Column,
-                    BehindThePlayer.Row,
-                    player,
-                    true))
-            .IsEqual(Waypoint);
-        AssertThat(
-                MapSpriteRules.ObjectSprite(
-                    otherFloor,
-                    otherFloor.ItemSprite,
-                    BehindThePlayer.Column,
-                    BehindThePlayer.Row,
-                    playerWithIt,
-                    true))
-            .IsEqual(Waypoint);
-    }
-
     [TestCase]
     public void CharacterSprite_ShowsTheCharacter()
     {
@@ -244,8 +201,7 @@ public class MapSpriteRulesTests
         int objectSprite = 0,
         MapFlags flags = MapFlags.None,
         int character = 0,
-        int direction = 0,
-        uint waypoints = 0)
+        int direction = 0)
     {
         var tileIndex = position.Column + position.Row * WorldMap.Size;
         var state = new GameState();
@@ -259,8 +215,7 @@ public class MapSpriteRulesTests
                     .UInt16((ushort)objectSprite)
                     .UInt16((ushort)character)
                     .Bytes(0, 0),
-                TestCommand.Of(ServerCommand.SetCharacterDirection).Byte((byte)direction),
-                TestCommand.Of(ServerCommand.SetCharacterWaypoints).UInt32(waypoints)));
+                TestCommand.Of(ServerCommand.SetCharacterDirection).Byte((byte)direction)));
         return (state.Map.Tiles[tileIndex], state.Player);
     }
 }

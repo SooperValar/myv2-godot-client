@@ -7,7 +7,7 @@ namespace TheLastGate.State;
 
 public sealed class GameState
 {
-    public const int ServerTickCycle = 200;
+    public const int ServerTickCycle = StatusSpeed.CycleLength;
 
     private readonly SpectateWatch spectateWatch = new();
 
@@ -29,6 +29,14 @@ public sealed class GameState
     public ShopRefresh ShopRefresh { get; } = new();
     public NameRequests NameRequests { get; } = new();
     public TickReports TickReports { get; } = new();
+
+    public BuffTimers BuffTimers { get; } = new();
+
+    public ItemTiers ItemTiers { get; } = new();
+
+    public ItemInfoReply ItemInfo { get; } = new();
+
+    public WaypointList WaypointList { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }
@@ -54,6 +62,10 @@ public sealed class GameState
     public event Action<PlayerTarget, PlayerTarget>? TargetChanged;
     public event Action? HeldItemChanged;
     public event Action? WaypointsOffered;
+
+    public event Action<ItemInfoReply>? ItemInfoReceived;
+
+    public event Action? WaypointListChanged;
     public event Action? SpectatingStarted;
     public event Action? SpectatingStopped;
 
@@ -99,6 +111,10 @@ public sealed class GameState
     internal void ReportHeldItemChanged() => HeldItemChanged?.Invoke();
 
     internal void ReportWaypointsOffered() => WaypointsOffered?.Invoke();
+
+    internal void ReportItemInfoReceived(ItemInfoReply reply) => ItemInfoReceived?.Invoke(reply);
+
+    internal void ReportWaypointListChanged() => WaypointListChanged?.Invoke();
 
     internal void WatchViewCentre() => WatchSpectating(() => spectateWatch.ViewCentre(ViewCentreCharacter));
 

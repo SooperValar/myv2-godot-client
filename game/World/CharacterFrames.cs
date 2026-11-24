@@ -38,7 +38,7 @@ public static class CharacterFrames
         tile.CharacterSprite != 0
         && CharacterStatuses.BlockOf(tile.CharacterStatus).Kind == CharacterStatusKind.Idle
         && (tile.CharacterStatus == IdleUp
-            || (StatusSpeed.MoveSteps(tile.CharacterSpeed, tile.CharacterMoveSpeed, serverTick) != 0
+            || (StatusSpeed.StepsThisTick(tile.CharacterSpeed, serverTick) != 0
                 && IsAdvancing(tile)));
 
     public static int NextIdleFrame(int idleFrame) => (idleFrame + 1) % IdleFrames;
@@ -77,7 +77,6 @@ public static class CharacterFrames
             stepsDone,
             block.Length,
             tile.CharacterSpeed,
-            tile.CharacterMoveSpeed,
             IsAdvancing(tile),
             serverTick);
         return new CharacterFrame(

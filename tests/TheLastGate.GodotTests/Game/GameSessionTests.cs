@@ -102,60 +102,6 @@ public class GameSessionTests
         AssertThat(session.AutoWalk.Walking).IsFalse();
     }
 
-    [TestCase(23, false)]
-    [TestCase(24, true)]
-    public void ThePause_KeepsShopsAndTextWindowsShutUntilItEnds(int ticksAfterClosing, bool staysOpen)
-    {
-        Process(ShopCommands());
-        session.CloseShop();
-        for (var tick = 0; tick < ticksAfterClosing; tick++)
-        {
-            Process();
-        }
-
-        Process([.. ShopCommands(), TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0)]);
-
-        AssertThat(state.OpenShop != null).IsEqual(staysOpen);
-        AssertThat(session.TextWindows.MessageOfTheDayOpen).IsEqual(staysOpen);
-    }
-
-    [TestCase]
-    public void ThePause_ClosesTheTree()
-    {
-        Process(
-            TestCommand.Of(ServerCommand.SetCharacterTokens)
-                .UInt32(0)
-                .UInt16(TwoTreePointsOneSpent)
-                .UInt16(NoTreePoints));
-        session.ToggleSkillTree(MapKeys.None);
-        session.Pause.Start();
-
-        Process();
-
-        AssertThat(session.SkillTreeWindow.Open).IsNull();
-    }
-
-    [TestCase]
-    public void ThePause_KeepsTheWaypointWindowShut()
-    {
-        session.Pause.Start();
-
-        Process(TestCommand.Of(ServerCommand.Waypoints));
-
-        AssertThat(session.WaypointWindow.IsOpen).IsFalse();
-    }
-
-    [TestCase]
-    public void EachTick_CountsDownThePauseAfterClosingAWindow()
-    {
-        Process(TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0));
-        session.TextWindows.Close();
-
-        Process(TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(0));
-
-        AssertThat(session.TextWindows.MessageOfTheDayOpen).IsFalse();
-    }
-
     [TestCase]
     public void TheServersSetTarget_ReachesTheUseQueue()
     {
@@ -263,21 +209,6 @@ public class GameSessionTests
     }
 
     [TestCase]
-    public void OpeningAShop_ClosesTheTree()
-    {
-        Process(
-            TestCommand.Of(ServerCommand.SetCharacterTokens)
-                .UInt32(0)
-                .UInt16(TwoTreePointsOneSpent)
-                .UInt16(NoTreePoints));
-        session.ToggleSkillTree(MapKeys.None);
-
-        Process(ShopCommands());
-
-        AssertThat(session.SkillTreeWindow.Open).IsNull();
-    }
-
-    [TestCase]
     public void OpeningAShop_ClosesTheWaypointWindow()
     {
         session.WaypointWindow.Open();
@@ -299,17 +230,6 @@ public class GameSessionTests
     }
 
     [TestCase]
-    public void TheServerClosingTheShop_StartsThePause()
-    {
-        Process(ShopCommands());
-
-        Process(TestCommand.Of(ServerCommand.CloseShop));
-
-        AssertThat(state.OpenShop).IsNull();
-        AssertThat(session.Pause.Active).IsTrue();
-    }
-
-    [TestCase]
     public void Escape_ClosesTheShopWithAPauseAndTheTextWindowsWithout()
     {
         Process(ShopCommands());
@@ -320,41 +240,6 @@ public class GameSessionTests
         AssertThat(state.OpenShop).IsNull();
         AssertThat(session.TextWindows.AnyOpen).IsFalse();
         AssertThat(session.Pause.Active).IsTrue();
-    }
-
-    [TestCase]
-    public void ToggleSkillTree_ShutsOtherWindowsWithoutAPause()
-    {
-        Process(
-            TestCommand.Of(ServerCommand.SetCharacterTokens)
-                .UInt32(0)
-                .UInt16(TwoTreePointsOneSpent)
-                .UInt16(NoTreePoints));
-        Process(ShopCommands());
-        session.WaypointWindow.Open();
-        session.TextWindows.Show(new WindowRequest(WindowKind.MessageOfTheDay, 0));
-
-        session.ToggleSkillTree(MapKeys.None);
-
-        AssertThat(session.SkillTreeWindow.Open).IsEqual(SkillTree.Class);
-        AssertThat(state.OpenShop).IsNull();
-        AssertThat(session.WaypointWindow.IsOpen).IsFalse();
-        AssertThat(session.TextWindows.AnyOpen).IsFalse();
-        AssertThat(session.Pause.Active).IsFalse();
-    }
-
-    [TestCase]
-    public void ToggleSkillTree_UsesTheContractTreeWithAModifier()
-    {
-        Process(
-            TestCommand.Of(ServerCommand.SetCharacterTokens)
-                .UInt32(0)
-                .UInt16(TwoTreePointsOneSpent)
-                .UInt16(TwoTreePointsOneSpent));
-
-        session.ToggleSkillTree(MapKeys.Ctrl);
-
-        AssertThat(session.SkillTreeWindow.Open).IsEqual(SkillTree.Contract);
     }
 
     [TestCase]
@@ -379,22 +264,6 @@ public class GameSessionTests
     public void Escape_SaysWhenNothingWasOpen()
     {
         AssertThat(session.CloseWindowsByEscape()).IsFalse();
-    }
-
-    [TestCase]
-    public void Escape_ClosesTheTreeWithoutAPause()
-    {
-        Process(
-            TestCommand.Of(ServerCommand.SetCharacterTokens)
-                .UInt32(0)
-                .UInt16(TwoTreePointsOneSpent)
-                .UInt16(NoTreePoints));
-        session.ToggleSkillTree(MapKeys.None);
-
-        AssertThat(session.CloseWindowsByEscape()).IsTrue();
-
-        AssertThat(session.SkillTreeWindow.Open).IsNull();
-        AssertThat(session.Pause.Active).IsFalse();
     }
 
     [TestCase]
@@ -447,37 +316,6 @@ public class GameSessionTests
         AssertThat(session.CloseWindowsByEscape()).IsTrue();
 
         AssertThat(session.SessionStatsOpen).IsFalse();
-    }
-
-    [TestCase]
-    public void TheServer_OpensTheWaypointWindow()
-    {
-        Process(TestCommand.Of(ServerCommand.Waypoints));
-
-        AssertThat(session.WaypointWindow.IsOpen).IsTrue();
-    }
-
-    [TestCase(0, true, false, null)]
-    [TestCase(99, false, true, null)]
-    [TestCase(104, false, false, 4)]
-    public void TheShowCommand_OpensTheTextWindowItNames(int window, bool messageOfTheDay, bool welcome, int? tutorial)
-    {
-        Process(TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte((byte)window));
-
-        AssertThat(session.TextWindows.MessageOfTheDayOpen).IsEqual(messageOfTheDay);
-        AssertThat(session.TextWindows.WelcomeOpen).IsEqual(welcome);
-        AssertThat(session.TextWindows.Tutorial ?? NoTutorial).IsEqual(tutorial ?? NoTutorial);
-    }
-
-    [TestCase]
-    public void MessageOfTheDayText_FillsTheWindowsLines()
-    {
-        Process(
-            TestCommand.Of(ServerCommand.MessageOfTheDay2).Text("Welcome back!\n", MessageChunkLength),
-            TestCommand.Of(ServerCommand.MessageOfTheDay0).Text("Patch notes\n", MessageChunkLength));
-
-        AssertThat(session.MessageOfTheDayLines.Lines[0]).IsEqual(new LogLine("Welcome back!", 2));
-        AssertThat(session.MessageOfTheDayLines.Lines[1]).IsEqual(new LogLine("Patch notes", 0));
     }
 
     private void GiveMore()

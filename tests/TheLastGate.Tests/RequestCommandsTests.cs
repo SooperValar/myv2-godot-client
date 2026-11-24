@@ -67,34 +67,6 @@ public class RequestCommandsTests
         Assert.Equal(2, state.Player.Mode);
     }
 
-    [Theory]
-    [InlineData(0, WindowKind.MessageOfTheDay, 0)]
-    [InlineData(99, WindowKind.NewPlayerWelcome, 0)]
-    [InlineData(7, WindowKind.Book, 7)]
-    [InlineData(103, WindowKind.Tutorial, 3)]
-    public void ShowMessageOfTheDay_RequestsTheWindowItNames(byte window, WindowKind kind, int number)
-    {
-        var state = new GameState();
-        var requests = new List<WindowRequest>();
-        state.WindowRequested += requests.Add;
-
-        Process(state, TestCommand.Of(ServerCommand.ShowMessageOfTheDay).Byte(window));
-
-        Assert.Equal([new WindowRequest(kind, number)], requests);
-    }
-
-    [Fact]
-    public void ClearBox_ClearsABoxOfTheMinimap()
-    {
-        var state = new GameState();
-        var boxes = new List<MinimapBox>();
-        state.MinimapBoxCleared += boxes.Add;
-
-        Process(state, TestCommand.Of(ServerCommand.ClearBox).UInt16(100).UInt16(200).UInt16(30).UInt16(40));
-
-        Assert.Equal([new MinimapBox(100, 200, 30, 40)], boxes);
-    }
-
     private static void Process(GameState state, params TestCommand[] commands) =>
         new TickProcessor(state).Process(TestCommand.Payload(commands));
 }

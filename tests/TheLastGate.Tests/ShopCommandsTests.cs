@@ -6,7 +6,6 @@ namespace TheLastGate.Tests;
 public class ShopCommandsTests
 {
     private const int ShopNumber = 1201;
-    private const int SmithNumber = 1302;
     private const uint SoulstoneBit = 1u << 30;
     private const uint EnchantedBit = 1u << 31;
 
@@ -82,91 +81,6 @@ public class ShopCommandsTests
         Assert.Equal(1000, state.Shop.ShopItems[0].Sprite);
     }
 
-    [Fact]
-    public void Depot_FillsASlotAndOpensAfterTheLastOne()
-    {
-        var state = new GameState();
-        var opened = new List<ShopKind>();
-        state.ShopOpened += opened.Add;
-
-        Process(
-            state,
-            TestCommand.Of(ServerCommand.Look7).Bytes(2, 5).UInt16(777).Bytes(3, 1, 4),
-            TestCommand.Of(ServerCommand.Look7).Bytes(7, 63).UInt16(888).Bytes(1, 0, 0));
-
-        Assert.Equal([ShopKind.Depot], opened);
-        Assert.Equal(ShopKind.Depot, state.OpenShop);
-        Assert.Equal(new DepotItem(777, 3, 1, 4), state.Shop.Depot[2][5]);
-        Assert.Equal(new DepotItem(888, 1, 0, 0), state.Shop.Depot[7][63]);
-    }
-
-    [Fact]
-    public void Depot_IgnoresASlotOutsideTheDepot()
-    {
-        var state = new GameState();
-
-        Process(
-            state,
-            TestCommand.Of(ServerCommand.Look7).Bytes(8, 0).UInt16(777).Bytes(3, 1, 4),
-            TestCommand.Of(ServerCommand.Look7).Bytes(0, 64).UInt16(777).Bytes(3, 1, 4),
-            TestCommand.Of(ServerCommand.Look7).Bytes(7, 63).UInt16(888).Bytes(1, 0, 0));
-
-        Assert.Equal(ShopKind.Depot, state.OpenShop);
-        Assert.Single(state.Shop.Depot.SelectMany(page => page), item => item.Sprite != 0);
-    }
-
-    [Theory]
-    [InlineData(4, ShopKind.WeaponSmith)]
-    [InlineData(5, ShopKind.ArmourSmith)]
-    public void Smith_OpensTheWeaponOrArmourSmith(byte slot, ShopKind kind)
-    {
-        var state = new GameState();
-        var opened = new List<ShopKind>();
-        state.ShopOpened += opened.Add;
-
-        Process(state, SmithCommand(slot, 0, 0, 0));
-
-        Assert.Equal([kind], opened);
-        Assert.Equal(kind, state.OpenShop);
-        Assert.Equal(SmithNumber, state.Shop.Number);
-    }
-
-    [Fact]
-    public void Smith_SetsAnItemSlotWithoutOpening()
-    {
-        var state = new GameState();
-
-        Process(state, SmithCommand(2, 4321, 3, 1));
-
-        Assert.Equal(new ItemSlot(4321, 0, 3, 1), state.Player.SmithItems[2]);
-        Assert.Null(state.OpenShop);
-    }
-
-    [Fact]
-    public void Smith_IgnoresASlotPastTheArmourSmith()
-    {
-        var state = new GameState();
-
-        Process(state, SmithCommand(6, 4321, 3, 1));
-
-        Assert.Null(state.OpenShop);
-        Assert.All(state.Player.SmithItems, item => Assert.Equal(default, item));
-    }
-
-    [Fact]
-    public void CloseShop_ClosesTheOpenShop()
-    {
-        var state = new GameState();
-        var closes = 0;
-        state.ShopClosedByServer += () => closes++;
-        Process(state, SmithCommand(4, 0, 0, 0));
-
-        Process(state, TestCommand.Of(ServerCommand.CloseShop));
-
-        Assert.Null(state.OpenShop);
-        Assert.Equal(1, closes);
-    }
-
     private static TestCommand[] ShopLookCommands() =>
     [
         TestCommand.Of(ServerCommand.Look1),
@@ -187,9 +101,6 @@ public class ShopCommandsTests
                 .UInt32((uint)(first + 1) * 10)
                 .Bytes(first == 60 ? kindByte : (byte)(first % 5), (byte)((first + 1) % 5)))
             .ToArray();
-
-    private static TestCommand SmithCommand(byte slot, ushort sprite, byte stack, byte flags) =>
-        TestCommand.Of(ServerCommand.Look8).Byte(slot).UInt16(SmithNumber).UInt16(sprite).Bytes(stack, flags);
 
     private static void Process(GameState state, params TestCommand[] commands) =>
         new TickProcessor(state).Process(TestCommand.Payload(commands));

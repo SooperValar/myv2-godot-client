@@ -17,10 +17,9 @@ public struct MapTile
     public int CharacterNumber { get; internal set; }
     public int CharacterId { get; internal set; }
     public int CharacterHealthPercent { get; internal set; }
-    public int CharacterCastSpeed { get; internal set; }
-    public int CharacterAttackSpeed { get; internal set; }
-    public int CharacterMoveSpeed { get; internal set; }
-    public int CharacterTextColour { get; internal set; }
+
+    // The item's tier (1-4), 5 for a grave holding items; plus 8 when a body holds items.
+    public int Glow { get; internal set; }
 
     public int ItemSprite { get; internal set; }
     public int ItemStatus { get; internal set; }

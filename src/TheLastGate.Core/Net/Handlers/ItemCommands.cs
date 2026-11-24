@@ -16,7 +16,7 @@ internal static class ItemCommands
             case ServerCommand.SetCharacterItem:
             {
                 var slot = reader.ReadUInt32();
-                var item = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), reader.ReadByte());
+                var item = new ItemSlot(reader.ReadUInt16(), reader.ReadInt16(), 0, 0);
                 if (Store(player.Inventory, slot, item))
                 {
                     itemLooks.SlotChanged(ItemSlotKind.Inventory, (int)slot, item.Sprite);
@@ -27,7 +27,7 @@ internal static class ItemCommands
             case ServerCommand.SetCharacterWorn:
             {
                 var slot = reader.ReadUInt32();
-                var item = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), 0);
+                var item = new ItemSlot(reader.ReadUInt16(), reader.ReadInt16(), 0, 0);
                 if (Store(player.Worn, slot, item))
                 {
                     itemLooks.SlotChanged(ItemSlotKind.Worn, (int)slot, item.Sprite);
@@ -38,7 +38,7 @@ internal static class ItemCommands
             case ServerCommand.SetCharacterSpell:
             {
                 var slot = reader.ReadUInt32();
-                var sprite = reader.ReadInt16();
+                var sprite = reader.ReadUInt16();
                 // The current client keeps this in a signed char, so only the low byte counts.
                 var active = (sbyte)reader.ReadInt16();
                 var updated = new BuffSlot(sprite, active);
@@ -52,7 +52,7 @@ internal static class ItemCommands
                 break;
             }
             case ServerCommand.SetCharacterHeldItem:
-                player.HeldItem = new ItemSlot(reader.ReadInt16(), reader.ReadInt16(), reader.ReadByte(), 0);
+                player.HeldItem = new ItemSlot(reader.ReadUInt16(), reader.ReadInt16(), 0, 0);
                 itemLooks.HeldItemChanged(player.HeldItem.Sprite);
                 break;
             default:

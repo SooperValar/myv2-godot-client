@@ -2,7 +2,7 @@ namespace TheLastGate.State;
 
 public sealed class WorldMap
 {
-    public const int Size = 54;
+    public const int Size = 44;
     public const int TileCount = Size * Size;
     public const int PlayerTile = Size / 2 * Size + Size / 2;
 

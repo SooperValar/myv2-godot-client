@@ -116,37 +116,6 @@ public class PlayerCommandsTests
     }
 
     [Fact]
-    public void SetCharacterWaypoints_ReadsWaypointsAndPointBalances()
-    {
-        var state = Process(TestCommand.Of(ServerCommand.SetCharacterWaypoints).UInt32(0x3FF).UInt32(12).UInt32(34));
-
-        Assert.Equal(0x3FF, state.Player.Waypoints);
-        Assert.Equal(12, state.Player.BlackStrongholdPoints);
-        Assert.Equal(34, state.Player.OsirisPoints);
-    }
-
-    [Fact]
-    public void SetCharacterTokens_ReadsTokensAndBothTrees()
-    {
-        var state = Process(TestCommand.Of(ServerCommand.SetCharacterTokens).UInt32(77).UInt16(0x1234).UInt16(0x5678));
-
-        Assert.Equal(77, state.Player.Tokens);
-        Assert.Equal(0x1234, state.Player.TreePoints);
-        Assert.Equal(0x5678, state.Player.OsirisTree);
-    }
-
-    [Fact]
-    public void SetCharacterTree_SetsOneNodeAndIgnoresNodesPastTheTwelfth()
-    {
-        var state = Process(
-            TestCommand.Of(ServerCommand.SetCharacterTree).Bytes(11, 3),
-            TestCommand.Of(ServerCommand.SetCharacterTree).Bytes(12, 9));
-
-        Assert.Equal(3, state.Player.TreeNodes[11]);
-        Assert.Equal(PlayerState.TreeNodeCount, state.Player.TreeNodes.Length);
-    }
-
-    [Fact]
     public void SetCharacterGold_ReadsGoldArmorAndWeapon()
     {
         var state = Process(TestCommand.Of(ServerCommand.SetCharacterGold).UInt32(123456).UInt32(80).UInt32(95));
@@ -154,16 +123,6 @@ public class PlayerCommandsTests
         Assert.Equal(123456, state.Player.Gold);
         Assert.Equal(80, state.Player.Armor);
         Assert.Equal(95, state.Player.Weapon);
-    }
-
-    [Fact]
-    public void SetCharacterLocation_JoinsTheTwoParts()
-    {
-        var state = Process(
-            TestCommand.Of(ServerCommand.SetCharacterLocation1).Text("Aston Temp", 10),
-            TestCommand.Of(ServerCommand.SetCharacterLocation2).Text("le", 10));
-
-        Assert.Equal("Aston Temple", state.Player.Location);
     }
 
     [Fact]

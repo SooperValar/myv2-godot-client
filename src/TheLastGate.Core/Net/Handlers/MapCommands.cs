@@ -10,6 +10,8 @@ internal static class MapCommands
     private const int SetMapTileOffsetMask = 0x7F;
     private const int LowLightMask = 0x0F;
     private const int HighLightShift = 4;
+    private const int LightTileMask = 2047;
+    private const int TileLightShift = 12;
 
     public static void Apply(WorldMap map, ReadOnlySpan<byte> command)
     {
@@ -22,16 +24,19 @@ internal static class MapCommands
         switch ((ServerCommand)command[0])
         {
             case ServerCommand.SetMap3:
-                SetLight(map, command, 20);
+                SetLight(map, command, LightPairs.SetMap3);
                 break;
             case ServerCommand.SetMap4:
-                SetLight(map, command, 0);
+                SetLight(map, command, LightPairs.SetMap4);
                 break;
             case ServerCommand.SetMap5:
-                SetLight(map, command, 2);
+                SetLight(map, command, LightPairs.SetMap5);
                 break;
             case ServerCommand.SetMap6:
-                SetLight(map, command, 6);
+                SetLight(map, command, LightPairs.SetMap6);
+                break;
+            case ServerCommand.TileGlow:
+                SetGlow(map, command);
                 break;
             case ServerCommand.SetOrigin:
                 SetOrigin(map, command);
@@ -77,7 +82,7 @@ internal static class MapCommands
         ref var tile = ref map.Tiles[tileIndex];
         if (fields.HasFlag(SetMapFields.Background))
         {
-            tile.BackgroundSprite = reader.ReadInt16();
+            tile.BackgroundSprite = reader.ReadUInt16();
         }
 
         if (fields.HasFlag(SetMapFields.Flags))
@@ -92,7 +97,7 @@ internal static class MapCommands
 
         if (fields.HasFlag(SetMapFields.ItemSprite))
         {
-            tile.ItemSprite = reader.ReadInt16();
+            tile.ItemSprite = reader.ReadUInt16();
         }
 
         if (fields.HasFlag(SetMapFields.ItemStatus))
@@ -111,16 +116,12 @@ internal static class MapCommands
         {
             tile.CharacterNumber = reader.ReadUInt16();
             tile.CharacterId = reader.ReadUInt16();
-            tile.CharacterSpeed = reader.ReadInt16();
+            tile.CharacterSpeed = reader.ReadByte();
         }
 
-        if (fields.HasFlag(SetMapFields.CharacterDetails))
+        if (fields.HasFlag(SetMapFields.CharacterHealth))
         {
             tile.CharacterHealthPercent = reader.ReadByte();
-            tile.CharacterCastSpeed = reader.ReadInt16();
-            tile.CharacterAttackSpeed = reader.ReadInt16();
-            tile.CharacterMoveSpeed = reader.ReadInt16();
-            tile.CharacterTextColour = reader.ReadByte();
         }
     }
 
@@ -128,9 +129,10 @@ internal static class MapCommands
     {
         var reader = new PacketReader(command);
         reader.Skip(1);
-        var tileIndex = reader.ReadUInt32();
+        var packedTile = reader.ReadUInt16();
+        var tileIndex = packedTile & LightTileMask;
         RequireTile(tileIndex, "SetMap light");
-        map.Tiles[tileIndex].Light = reader.ReadByte();
+        map.Tiles[tileIndex].Light = packedTile >> TileLightShift;
 
         for (var pairEnd = tileIndex + 2; pairEnd < tileIndex + pairedTiles + 2; pairEnd += 2)
         {
@@ -140,6 +142,18 @@ internal static class MapCommands
                 map.Tiles[pairEnd].Light = packed & LowLightMask;
                 map.Tiles[pairEnd - 1].Light = packed >> HighLightShift;
             }
+        }
+    }
+
+    private static void SetGlow(WorldMap map, ReadOnlySpan<byte> command)
+    {
+        var reader = new PacketReader(command);
+        reader.Skip(1);
+        var tileIndex = reader.ReadUInt16();
+        var glow = reader.ReadByte();
+        if (tileIndex < WorldMap.TileCount)
+        {
+            map.Tiles[tileIndex].Glow = glow;
         }
     }
 
@@ -192,6 +206,6 @@ internal static class MapCommands
         ItemStatus = 1 << 4,
         CharacterLook = 1 << 5,
         CharacterIdentity = 1 << 6,
-        CharacterDetails = 1 << 7,
+        CharacterHealth = 1 << 7,
     }
 }

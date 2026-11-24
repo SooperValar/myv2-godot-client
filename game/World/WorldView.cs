@@ -17,6 +17,7 @@ public partial class WorldView : Node2D
     private const int TintShift = 4;
     private const int HighlightBit = 1 << 7;
     private const int SelectedBit = 1 << 8;
+    private const int DefaultTextColour = 0;
     private const int UnshownEffect = -1;
     private const int UnshownSprite = -1;
     private const float HighlightBrightness = 2f;
@@ -639,7 +640,7 @@ public partial class WorldView : Node2D
         nameplate.ZIndex = tileIndex == WorldMap.PlayerTile ? PlayerNameplateLayer : 0;
         nameplate.Display(
             NameplateText.For(name, tile.CharacterId, tile.CharacterHealthPercent, ShowNames, ShowHealthPercent),
-            NameplateFontFor(tile.CharacterTextColour),
+            NameplateFontFor(DefaultTextColour),
             tile.CharacterHealthPercent,
             tileIndex == WorldMap.PlayerTile ? State.Player.HitPoints[ReservedValue] : 0,
             showText,

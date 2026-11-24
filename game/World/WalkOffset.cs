@@ -10,7 +10,6 @@ public static class WalkOffset
         int framesDone,
         int framesInStep,
         int speed,
-        int moveSpeed,
         bool advancing,
         int serverTick)
     {
@@ -19,14 +18,13 @@ public static class WalkOffset
             return IsometricProjection.TileSize * framesDone / framesInStep;
         }
 
-        var effectiveSpeed = StatusSpeed.MoveSpeed(speed, moveSpeed);
         var tick = serverTick;
         var ticksDone = 0;
         for (var framesLeft = framesDone; framesLeft > 0;)
         {
             tick = Previous(tick);
             ticksDone++;
-            if (StatusSpeed.StepsThisTick(effectiveSpeed, tick) != 0)
+            if (StatusSpeed.StepsThisTick(speed, tick) != 0)
             {
                 framesLeft--;
             }
@@ -35,7 +33,7 @@ public static class WalkOffset
         while (true)
         {
             tick = Previous(tick);
-            if (StatusSpeed.StepsThisTick(effectiveSpeed, tick) != 0)
+            if (StatusSpeed.StepsThisTick(speed, tick) != 0)
             {
                 break;
             }
@@ -48,7 +46,7 @@ public static class WalkOffset
         var framesToGo = framesInStep - framesDone;
         while (true)
         {
-            if (StatusSpeed.StepsThisTick(effectiveSpeed, tick) != 0)
+            if (StatusSpeed.StepsThisTick(speed, tick) != 0)
             {
                 framesToGo--;
             }

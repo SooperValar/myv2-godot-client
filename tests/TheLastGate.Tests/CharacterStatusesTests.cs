@@ -9,10 +9,10 @@ public class CharacterStatusesTests
     private const byte FlagsAndCharacter = 0b1110_0010;
     private const int TileIndex = 1000;
     private const int Sprite = 2000;
-    private const int OneStepEveryTick = 100;
+    private const int OneStepEveryTick = 0;
+    private const int SlowestSpeed = 19;
+    private const int SlowestSpeedsOnlyTick = 9;
     private const int Attack = 0;
-    private const int Cast = 9;
-    private const int PlayerTextColour = 5;
 
     [Theory]
     [InlineData(1, CharacterStatusKind.Idle, 0, 8, 1)]
@@ -69,18 +69,8 @@ public class CharacterStatusesTests
     [Fact]
     public void Action_StepsAtTheActionsSpeed()
     {
-        Assert.Equal(164, Run(Character(163, speed: 250, attackSpeed: 150), 50).Status);
-    }
-
-    [Fact]
-    public void Action_CanSpillIntoTheNextDirectionAndIsReported()
-    {
-        var (status, reports) = Run(
-            Character(167, action: Cast, speed: 50, castSpeed: 50, textColour: PlayerTextColour),
-            1);
-
-        Assert.Equal(169, status);
-        Assert.Single(reports);
+        Assert.Equal(164, Run(Character(163, speed: SlowestSpeed), SlowestSpeedsOnlyTick).Status);
+        Assert.Equal(163, Run(Character(163, speed: SlowestSpeed), SlowestSpeedsOnlyTick + 1).Status);
     }
 
     [Fact]
@@ -102,10 +92,7 @@ public class CharacterStatusesTests
         int status,
         MapFlags flags = MapFlags.None,
         int action = Attack,
-        int speed = OneStepEveryTick,
-        int attackSpeed = 0,
-        int castSpeed = 0,
-        int textColour = 0) =>
+        int speed = OneStepEveryTick) =>
         TestCommand.Of(AbsoluteSetMap)
             .Byte(FlagsAndCharacter)
             .UInt16(TileIndex)
@@ -114,12 +101,8 @@ public class CharacterStatusesTests
             .Bytes((byte)status, (byte)action)
             .UInt16(77)
             .UInt16(88)
-            .UInt16((ushort)speed)
-            .Byte(100)
-            .UInt16((ushort)castSpeed)
-            .UInt16((ushort)attackSpeed)
-            .UInt16(0)
-            .Byte((byte)textColour);
+            .Byte((byte)speed)
+            .Byte(100);
 
     private static (int Status, List<string> Reports) Run(TestCommand character, int serverTick, int moreTicks = 0)
     {

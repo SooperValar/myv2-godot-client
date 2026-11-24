@@ -282,7 +282,7 @@ public partial class GameScreen : Control
 
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
-        gameState.ItemLooks.SendLook = Counted("ItemLooks", connection.SendCommand);
+        // MyV2 answers item looks in chat and has no #buffs command; its own SV_ITEMINFO and SV_SPELLTIME replace both.
         gameState.ItemLooks.Enabled = clientSettings.ItemTooltips;
         gameSession.UseQueue.Enabled = clientSettings.UseQueue;
 
@@ -295,14 +295,6 @@ public partial class GameScreen : Control
         gameState.TickReports.Send = Counted("TickReports", connection.SendCommand);
         gameState.NameRequests.Send = Counted("NameRequests", connection.SendCommand);
         gameSession.AutoWalk.Send = Counted("AutoWalk", connection.SendCommand);
-        var sendBuffWatch = Counted("BuffWatch", connection.SendCommand);
-        gameState.BuffWatch.Say = text =>
-        {
-            foreach (var packet in ChatPackets.Say(text))
-            {
-                sendBuffWatch(packet);
-            }
-        };
         screenGamma = new ScreenGammaLayer();
         AddChild(screenGamma);
         screenGamma.ShowGamma(clientSettings.ScreenGamma);
