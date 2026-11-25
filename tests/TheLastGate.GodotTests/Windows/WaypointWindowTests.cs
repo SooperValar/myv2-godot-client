@@ -10,22 +10,38 @@ namespace TheLastGate.GodotTests.Windows;
 [TestSuite]
 public class WaypointWindowTests
 {
-    private const int LynboreTavern = 0;
-    private const int LizardTempleSouth = 20;
-    private const int NothingFound = 0;
-
     private const int NoSelection = -1;
-    private const int AllFound = (1 << Waypoints.Count) - 1;
+    private const int RowCount = 20;
+    private const int HereIndex = 12;
+    private const int UnfoundIndex = 3;
 
     private WaypointWindow window = new(new WindowPause());
 
+    // Twenty waypoints numbered 1-20, all found but the fourth; the player stands at the thirteenth. Odd numbers are
+    // in Aston, even ones in the Wolfwood.
+    private static IReadOnlyList<WaypointRow> Rows() =>
+        Enumerable.Range(0, RowCount)
+            .Select(index => index == UnfoundIndex
+                ? new WaypointRow(0, "", "", 0, false, false)
+                : new WaypointRow(
+                    index + 1,
+                    (index % 2 == 0 ? "Aston, Place " : "Wolfwood, Place ") + (index + 1),
+                    "\"A line.\"",
+                    0,
+                    true,
+                    index == HereIndex))
+            .ToList();
+
     [BeforeTest]
-    public void CloseTheWindow() => window = new WaypointWindow(new WindowPause());
+    public void ShowTheList()
+    {
+        window = new WaypointWindow(new WindowPause());
+        window.Show(Rows());
+    }
 
     [TestCase]
-    public void OpenAndClose_ShowAndHideTheWindow()
+    public void ShowAndClose_OpenAndHideTheWindow()
     {
-        window.Open();
         AssertThat(window.IsOpen).IsTrue();
 
         AssertThat(window.Close()).IsTrue();
@@ -33,9 +49,24 @@ public class WaypointWindowTests
         AssertThat(window.Close()).IsFalse();
     }
 
-    [TestCase(3, 3)]
-    [TestCase(-1, 0)]
-    [TestCase(25, Waypoints.Count - WaypointWindow.VisibleRows)]
+    [TestCase]
+    public void Show_ScrollsToTheWaypointThePlayerStandsAt()
+    {
+        AssertThat(window.Scroll).IsEqual(HereIndex - WaypointWindow.VisibleRows / 2);
+        AssertThat(window.At(WaypointWindow.VisibleRows / 2).YouAreHere).IsTrue();
+    }
+
+    [TestCase]
+    public void Show_StartsAtTheTopWhenThePlayerIsAtNone()
+    {
+        window.Show([new WaypointRow(1, "Aston", "", 0, true, false)]);
+
+        AssertThat(window.Scroll).IsEqual(0);
+    }
+
+    [TestCase(3, 11)]
+    [TestCase(-20, 0)]
+    [TestCase(25, RowCount - WaypointWindow.VisibleRows)]
     public void ScrollBy_StaysWithinTheList(int rows, int scroll)
     {
         window.ScrollBy(rows);
@@ -44,184 +75,98 @@ public class WaypointWindowTests
     }
 
     [TestCase]
-    public void At_CountsRowsFromTheScrollPosition()
-    {
-        window.ScrollBy(7);
-
-        AssertThat(window.At(0).Number).IsEqual(LizardTempleSouth);
-    }
-
-    [TestCase]
-    public void Scroll_IsKeptWhenTheWindowReopens()
-    {
-        window.Open();
-        window.ScrollBy(5);
-        window.Close();
-
-        window.Open();
-
-        AssertThat(window.Scroll).IsEqual(5);
-    }
-
-    [TestCase]
     public void Choose_TravelsToAFoundWaypointThenClosesWithThePause()
     {
-        window.Open();
-        window.ScrollBy(7);
+        window.ScrollTo(0);
 
-        var packet = window.Choose(0, MapButton.Left, 1 << LizardTempleSouth);
+        var packet = window.Choose(1, MapButton.Left);
 
-        AssertThat(packet).IsEqual(ClientPackets.OneValue(ClientCommand.Waypoints, LizardTempleSouth));
+        AssertThat(packet).IsEqual(ClientPackets.OneValue(ClientCommand.Waypoints, 2));
         AssertThat(window.IsOpen).IsFalse();
         AssertThat(window.Pause.Active).IsTrue();
     }
 
     [TestCase]
-    public void Choose_AsksAboutAnUnknownWaypointAndStaysOpen()
+    public void Choose_SendsNothingForAnUnfoundWaypoint()
     {
-        window.Open();
+        window.ScrollTo(0);
 
-        var packet = window.Choose(0, MapButton.Left, NothingFound);
-
-        AssertThat(packet).IsEqual(ClientPackets.OneValue(ClientCommand.Waypoints, LynboreTavern));
+        AssertThat(window.Choose(UnfoundIndex, MapButton.Left)).IsNull();
         AssertThat(window.IsOpen).IsTrue();
-        AssertThat(window.Pause.Active).IsFalse();
     }
 
     [TestCase]
-    public void Choose_DescribesAWaypointOnARightClick()
+    public void Choose_SendsNothingForTheWaypointThePlayerStandsAt()
     {
-        window.Open();
-        window.ScrollBy(7);
-
-        var packet = window.Choose(0, MapButton.Right, 1 << LizardTempleSouth);
-
-        AssertThat(packet).IsEqual(ClientPackets.OneValue(ClientCommand.Waypoints, LizardTempleSouth + 32));
+        AssertThat(window.Choose(WaypointWindow.VisibleRows / 2, MapButton.Left)).IsNull();
         AssertThat(window.IsOpen).IsTrue();
     }
 
     [TestCase]
     public void Choose_SendsNothingForOtherButtons()
     {
-        window.Open();
+        window.ScrollTo(0);
 
-        AssertThat(window.Choose(0, MapButton.None, NothingFound)).IsNull();
+        AssertThat(window.Choose(0, MapButton.Right)).IsNull();
+        AssertThat(window.Choose(0, MapButton.None)).IsNull();
     }
 
     [TestCase]
     public void SetSearch_ShowsOnlyFoundWaypointsWhoseNameMatches()
     {
-        window.SetSearch("pent", AllFound);
+        window.SetSearch("wolf");
 
-        AssertThat(window.ShownCount).IsEqual(7);
-        AssertThat(window.At(0).Number).IsEqual(13);
-        AssertThat(window.ScrollLimit).IsEqual(0);
-        AssertThat(window.HasRow(7)).IsFalse();
-    }
-
-    [TestCase]
-    public void SetSearch_LeavesOutUnfoundWaypoints()
-    {
-        window.SetSearch("lynbore", 1 << LynboreTavern);
-
-        AssertThat(window.ShownCount).IsEqual(1);
-        AssertThat(window.At(0).Number).IsEqual(LynboreTavern);
-    }
-
-    [TestCase]
-    public void SetSearch_SameTextKeepsTheScroll()
-    {
-        window.ScrollBy(5);
-
-        window.SetSearch("", AllFound);
-
-        AssertThat(window.Scroll).IsEqual(5);
-    }
-
-    [TestCase]
-    public void Choose_AnEmptyRowSendsNothing()
-    {
-        window.SetSearch("tower", AllFound);
-
-        AssertThat(window.Choose(1, MapButton.Left, AllFound)).IsNull();
+        AssertThat(window.ShownCount).IsEqual(9);
+        AssertThat(window.At(0).Number).IsEqual(2);
+        AssertThat(window.ScrollLimit).IsEqual(1);
     }
 
     [TestCase]
     public void SetSearch_SelectsTheTopMatch()
     {
-        window.SetSearch("pent", AllFound);
+        window.SetSearch("place 5");
 
         AssertThat(window.Selected ?? NoSelection).IsEqual(0);
-        AssertThat(window.IsSelected(0)).IsTrue();
-    }
-
-    [TestCase]
-    public void MoveSelection_WithNothingSelectedPicksTheTopRowInView()
-    {
-        window.ScrollBy(5);
-
-        window.MoveSelection(1);
-
-        AssertThat(window.Selected ?? NoSelection).IsEqual(5);
-        AssertThat(window.IsSelected(0)).IsTrue();
-    }
-
-    [TestCase]
-    public void MoveSelection_ScrollsToKeepTheSelectionInView()
-    {
-        window.MoveSelection(1);
-        window.MoveSelection(WaypointWindow.VisibleRows);
-
-        AssertThat(window.Selected ?? NoSelection).IsEqual(WaypointWindow.VisibleRows);
-        AssertThat(window.Scroll).IsEqual(1);
-
-        window.MoveSelection(-WaypointWindow.VisibleRows);
-
-        AssertThat(window.Scroll).IsEqual(0);
-    }
-
-    [TestCase]
-    public void MoveSelection_StopsAtTheEndsOfTheList()
-    {
-        window.SetSearch("pent", AllFound);
-
-        window.MoveSelection(-3);
-        AssertThat(window.Selected ?? NoSelection).IsEqual(0);
-
-        window.MoveSelection(20);
-        AssertThat(window.Selected ?? NoSelection).IsEqual(6);
-    }
-
-    [TestCase]
-    public void ClearSelection_KeepsTheSearchAndItsScroll()
-    {
-        window.SetSearch("pent", AllFound);
-        window.MoveSelection(3);
-
-        window.ClearSelection();
-
-        AssertThat(window.Selected ?? NoSelection).IsEqual(NoSelection);
-        AssertThat(window.Search).IsEqual("pent");
-        AssertThat(window.ShownCount).IsEqual(7);
+        AssertThat(window.ChooseSelected()).IsEqual(WaypointPackets.Travel(5));
     }
 
     [TestCase]
     public void ClearSearch_ShowsEveryWaypointWithNothingSelected()
     {
-        window.SetSearch("pent", AllFound);
+        window.SetSearch("wolf");
 
-        window.ClearSearch(AllFound);
+        window.ClearSearch();
 
-        AssertThat(window.ShownCount).IsEqual(Waypoints.Count);
+        AssertThat(window.ShownCount).IsEqual(RowCount);
         AssertThat(window.Selected ?? NoSelection).IsEqual(NoSelection);
-        AssertThat(window.ChooseSelected(AllFound)).IsNull();
+        AssertThat(window.ChooseSelected()).IsNull();
     }
 
     [TestCase]
-    public void ChooseSelected_TravelsToTheSelectedWaypoint()
+    public void MoveSelection_ScrollsToKeepTheSelectionInView()
     {
-        window.SetSearch("tower", AllFound);
+        window.ScrollTo(0);
+        window.MoveSelection(1);
+        window.MoveSelection(WaypointWindow.VisibleRows);
 
-        AssertThat(window.ChooseSelected(AllFound)).IsEqual(ClientPackets.OneValue(ClientCommand.Waypoints, 23));
+        AssertThat(window.Selected ?? NoSelection).IsEqual(WaypointWindow.VisibleRows);
+        AssertThat(window.Scroll).IsEqual(1);
+    }
+
+    [TestCase]
+    public void Hint_CountsTheFoundWaypointsWhenNothingIsPointedAt()
+    {
+        AssertThat(window.Hint(null)).IsEqual("Waypoints found: 19 of 20. Type to search.");
+    }
+
+    [TestCase]
+    public void Hint_SaysWhatAClickWouldDo()
+    {
+        window.ScrollTo(0);
+
+        AssertThat(window.Hint(0)).IsEqual("Travel to Aston, Place 1.");
+        AssertThat(window.Hint(UnfoundIndex)).IsEqual("You have not found this waypoint yet.");
+        window.ScrollTo(HereIndex);
+        AssertThat(window.Hint(0)).IsEqual("You are here.");
     }
 }

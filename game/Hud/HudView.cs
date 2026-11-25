@@ -1317,13 +1317,13 @@ public partial class HudView : Control
     {
         if (state != null && gameSession != null)
         {
-            GetNode<WaypointWindowView>("%WaypointWindow").ShowWaypoints(gameSession.WaypointWindow, state.Player);
+            GetNode<WaypointWindowView>("%WaypointWindow").ShowWaypoints(gameSession.WaypointWindow);
         }
     }
 
     private void ChooseSelectedWaypoint()
     {
-        if (state != null && gameSession?.WaypointWindow.ChooseSelected(state.Player.Waypoints) is { } packet)
+        if (state != null && gameSession?.WaypointWindow.ChooseSelected() is { } packet)
         {
             sendCommand(packet);
             ShowWaypoints();
@@ -1332,7 +1332,7 @@ public partial class HudView : Control
 
     private void ClickWaypoint(int row, MapButton button)
     {
-        if (state != null && gameSession?.WaypointWindow.Choose(row, button, state.Player.Waypoints) is { } packet)
+        if (state != null && gameSession?.WaypointWindow.Choose(row, button) is { } packet)
         {
             sendCommand(packet);
             ShowWaypoints();

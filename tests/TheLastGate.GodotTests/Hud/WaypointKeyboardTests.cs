@@ -38,7 +38,12 @@ public class WaypointKeyboardTests
         hud = GD.Load<PackedScene>("res://Hud/hud_view.tscn").Instantiate<HudView>();
         Tree.Root.AddChild(hud);
         hud.Show(state, session, new ClassicFonts(sprites), sentPackets.Add);
-        session.WaypointWindow.Open();
+        session.WaypointWindow.Show(
+        [
+            new WaypointRow(1, "Aston, Market", "", 0, true, false),
+            new WaypointRow(2, "Aston, Temple Street", "", 0, true, false),
+            new WaypointRow(3, "Wolfwood", "", 0, true, false),
+        ]);
         hud.Refresh(0);
         await Frames(2);
     }
@@ -110,7 +115,7 @@ public class WaypointKeyboardTests
         Keyboard.Press(Key.Enter);
         await Frames(1);
 
-        AssertThat(sentPackets.Any(packet => packet.SequenceEqual(WaypointPackets.Travel(1)))).IsTrue();
+        AssertThat(sentPackets.Any(packet => packet.SequenceEqual(WaypointPackets.Travel(2)))).IsTrue();
     }
 
     [TestCase]

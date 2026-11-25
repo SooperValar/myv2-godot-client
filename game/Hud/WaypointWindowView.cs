@@ -1,24 +1,27 @@
 using System;
 using Godot;
-using TheLastGate.State;
+using TheLastGate.Assets;
 using TheLastGate.Windows;
 
 namespace TheLastGate.Hud;
 
-// Eight of the 27 waypoints at a time; one not found yet shows its dark picture and no name.
+// Eight waypoints at a time; one not found yet shows the dark picture and no name. The search field's placeholder says
+// what a click would do, because the window's art has no room for another line.
 public partial class WaypointWindowView : Control
 {
-    private const int FoundPicture = 4500;
-    private const int UnknownPicture = 4533;
+    private const int UnknownPicture = 18340;
+    private const int StockPicture = 18341;
     private const float HighlightBrightness = 2f;
     private const string UnknownName = "Unknown Location";
     private const string UnknownDescription = "\"???\"";
+
+    // The caret sits at the start of an empty field, on top of the placeholder's first letter.
+    private const string HintIndent = "  ";
 
     // The current client's wheel area, relative to the blocker: the rows, not the scrollbar.
     private static readonly Rect2 WheelArea = new(0, 1, 266, 279);
     private int? hoveredRow;
 
-    private PlayerState player = new();
     private bool wasOpen;
     private WaypointWindow? window;
 
@@ -48,10 +51,9 @@ public partial class WaypointWindowView : Control
         Search.GuiInput += SearchKey;
     }
 
-    public void ShowWaypoints(WaypointWindow shownWindow, PlayerState shownPlayer)
+    public void ShowWaypoints(WaypointWindow shownWindow)
     {
         window = shownWindow;
-        player = shownPlayer;
         Visible = window.IsOpen;
         FollowOpening(window.IsOpen);
         if (!Visible)
@@ -69,17 +71,27 @@ public partial class WaypointWindowView : Control
             }
 
             var waypoint = window.At(row);
-            var found = Waypoints.Found(player.Waypoints, waypoint.Number);
             var picture = rowNode.GetNode<ArchiveSprite>("Picture");
-            picture.SpriteNumber = (found ? FoundPicture : UnknownPicture) + waypoint.Number;
-            var bright = window.IsSelected(row) || hoveredRow == row;
+            picture.SpriteNumber = !waypoint.Found ? UnknownPicture
+                : waypoint.Picture != 0 ? waypoint.Picture
+                : StockPicture;
+            var bright = waypoint.Found && !waypoint.YouAreHere && (window.IsSelected(row) || hoveredRow == row);
             picture.Modulate = bright
                 ? new Color(HighlightBrightness, HighlightBrightness, HighlightBrightness)
                 : Colors.White;
-            rowNode.GetNode<Label>("Name").Text = found ? waypoint.Name : UnknownName;
-            rowNode.GetNode<Label>("Description").Text = found ? waypoint.Description : UnknownDescription;
+            var colour = !waypoint.Found ? TextColour.Dim
+                : waypoint.YouAreHere ? TextColour.Green
+                : bright ? TextColour.Blue
+                : TextColour.Yellow;
+            var name = rowNode.GetNode<HudLabel>("Name");
+            var description = rowNode.GetNode<HudLabel>("Description");
+            name.Text = waypoint.Found ? waypoint.Name : UnknownName;
+            description.Text = waypoint.Found ? waypoint.Line : UnknownDescription;
+            name.Colour = colour;
+            description.Colour = colour;
         }
 
+        Search.PlaceholderText = HintIndent + window.Hint(hoveredRow);
         ShowScroll(window);
     }
 
@@ -95,7 +107,7 @@ public partial class WaypointWindowView : Control
     {
         if (window != null)
         {
-            ShowWaypoints(window, player);
+            ShowWaypoints(window);
         }
     }
 
@@ -116,7 +128,6 @@ public partial class WaypointWindowView : Control
         if (isOpen)
         {
             Search.Clear();
-            window?.ClearSearch(player.Waypoints);
             Search.GrabFocus();
             Search.Edit();
         }
@@ -128,14 +139,14 @@ public partial class WaypointWindowView : Control
 
     private void SearchFor(string search)
     {
-        window?.SetSearch(search, player.Waypoints);
+        window?.SetSearch(search);
         Redraw();
     }
 
     private void ClearAndType()
     {
         Search.Clear();
-        window?.ClearSearch(player.Waypoints);
+        window?.ClearSearch();
         TypeInSearch();
         Redraw();
     }

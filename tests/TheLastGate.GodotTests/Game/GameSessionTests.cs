@@ -211,7 +211,7 @@ public class GameSessionTests
     [TestCase]
     public void OpeningAShop_ClosesTheWaypointWindow()
     {
-        session.WaypointWindow.Open();
+        session.WaypointWindow.Show([new WaypointRow(1, "Aston", "", 0, true, false)]);
 
         Process(ShopCommands());
 
@@ -269,7 +269,7 @@ public class GameSessionTests
     [TestCase]
     public void Escape_ClosesTheWaypointWindowWithoutAPause()
     {
-        session.WaypointWindow.Open();
+        session.WaypointWindow.Show([new WaypointRow(1, "Aston", "", 0, true, false)]);
 
         AssertThat(session.CloseWindowsByEscape()).IsTrue();
 

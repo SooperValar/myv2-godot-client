@@ -23,7 +23,7 @@ public sealed class GameSession
         state.HeldItemChanged += () => GiveMore.HeldItemChanged(state.Player);
         state.ShopOpened += _ => CloseTheWindowsAShopReplaces();
         state.ShopClosedByServer += Pause.Start;
-        state.WaypointsOffered += WaypointWindow.Open;
+        state.WaypointListChanged += () => ShowWaypointList(state.WaypointList);
         state.WindowRequested += TextWindows.Show;
     }
 
@@ -121,5 +121,17 @@ public sealed class GameSession
         Pause.EndOfTick();
         MapFrames.EndOfTick(state.Map, state.ServerTick);
         AutoWalk.EndOfTick(state.Map);
+    }
+
+    private void ShowWaypointList(WaypointList list)
+    {
+        if (list.Open)
+        {
+            WaypointWindow.Show(list.Rows);
+        }
+        else
+        {
+            WaypointWindow.Close();
+        }
     }
 }

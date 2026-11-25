@@ -11,7 +11,8 @@ public sealed class WaypointWindow
 {
     public const int VisibleRows = 8;
 
-    private IReadOnlyList<Waypoint> shown = Waypoints.All;
+    private IReadOnlyList<WaypointRow> all = [];
+    private IReadOnlyList<WaypointRow> shown = [];
 
     public WaypointWindow(WindowPause pause) => Pause = pause;
 
@@ -19,7 +20,6 @@ public sealed class WaypointWindow
 
     public bool IsOpen { get; private set; }
 
-    // Kept while the window is shut, so it reopens where it was left.
     public int Scroll { get; private set; }
 
     public string Search { get; private set; } = "";
@@ -31,11 +31,20 @@ public sealed class WaypointWindow
     public int ScrollLimit => Math.Max(0, shown.Count - VisibleRows);
 
     // Unfound waypoints are left out of a search so their names stay secret.
-    public static bool Matches(Waypoint waypoint, string search, int foundMask) =>
-        Waypoints.Found(foundMask, waypoint.Number)
-        && waypoint.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase);
+    public static bool Matches(WaypointRow waypoint, string search) =>
+        waypoint.Found && waypoint.Name.Contains(search.Trim(), StringComparison.OrdinalIgnoreCase);
 
-    public void Open() => IsOpen = true;
+    // The server sends the whole list whenever the player clicks a waypoint, and the list opens on the one he stands at.
+    public void Show(IReadOnlyList<WaypointRow> rows)
+    {
+        all = rows;
+        shown = rows;
+        Search = "";
+        Selected = null;
+        var here = rows.ToList().FindIndex(row => row.YouAreHere);
+        Scroll = here < 0 ? 0 : Math.Clamp(here - VisibleRows / 2, 0, ScrollLimit);
+        IsOpen = true;
+    }
 
     public bool Close()
     {
@@ -44,7 +53,7 @@ public sealed class WaypointWindow
         return wasOpen;
     }
 
-    public void SetSearch(string search, int foundMask)
+    public void SetSearch(string search)
     {
         if (search == Search)
         {
@@ -52,16 +61,14 @@ public sealed class WaypointWindow
         }
 
         Search = search;
-        shown = search.Trim().Length == 0
-            ? Waypoints.All
-            : Waypoints.All.Where(waypoint => Matches(waypoint, search, foundMask)).ToList();
+        shown = search.Trim().Length == 0 ? all : all.Where(waypoint => Matches(waypoint, search)).ToList();
         Scroll = 0;
         Selected = search.Trim().Length > 0 && shown.Count > 0 ? 0 : null;
     }
 
-    public void ClearSearch(int foundMask)
+    public void ClearSearch()
     {
-        SetSearch("", foundMask);
+        SetSearch("");
         ClearSelection();
     }
 
@@ -94,32 +101,36 @@ public sealed class WaypointWindow
 
     public bool IsSelected(int row) => Selected == row + Scroll;
 
-    public Waypoint At(int row) => shown[row + Scroll];
+    public WaypointRow At(int row) => shown[row + Scroll];
 
-    public byte[]? ChooseSelected(int foundMask) =>
-        Selected is { } index ? ChooseIndex(index, MapButton.Left, foundMask) : null;
-
-    public byte[]? Choose(int row, MapButton button, int foundMask) =>
-        HasRow(row) ? ChooseIndex(row + Scroll, button, foundMask) : null;
-
-    // Travelling to an unknown waypoint is still sent; the server answers that it isn't known yet.
-    private byte[]? ChooseIndex(int index, MapButton button, int foundMask)
+    public string Hint(int? hoveredRow)
     {
-        var number = shown[index].Number;
-        switch (button)
+        var index = hoveredRow is { } row && HasRow(row) ? row + Scroll : Selected;
+        if (index is not { } shownIndex)
         {
-            case MapButton.Left:
-                if (Waypoints.Found(foundMask, number))
-                {
-                    IsOpen = false;
-                    Pause.Start();
-                }
-
-                return WaypointPackets.Travel(number);
-            case MapButton.Right:
-                return WaypointPackets.Describe(number);
-            default:
-                return null;
+            return $"Waypoints found: {all.Count(waypoint => waypoint.Found)} of {all.Count}. Type to search.";
         }
+
+        var waypoint = shown[shownIndex];
+        return !waypoint.Found ? "You have not found this waypoint yet."
+            : waypoint.YouAreHere ? "You are here."
+            : $"Travel to {waypoint.Name}.";
+    }
+
+    public byte[]? ChooseSelected() => Selected is { } index ? ChooseIndex(index, MapButton.Left) : null;
+
+    public byte[]? Choose(int row, MapButton button) => HasRow(row) ? ChooseIndex(row + Scroll, button) : null;
+
+    private byte[]? ChooseIndex(int index, MapButton button)
+    {
+        var waypoint = shown[index];
+        if (button != MapButton.Left || !waypoint.Found || waypoint.YouAreHere)
+        {
+            return null;
+        }
+
+        IsOpen = false;
+        Pause.Start();
+        return WaypointPackets.Travel(waypoint.Number);
     }
 }
