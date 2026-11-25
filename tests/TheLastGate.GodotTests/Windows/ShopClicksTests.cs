@@ -105,4 +105,29 @@ public class ShopClicksTests
 
         AssertThat(ShopText.Balance(ShopKind.Merchant, [new ShopItem(1000, 0, false, false, 0)], balances)).IsNull();
     }
+
+    [TestCase]
+    public void Bank_ShowsTheRentADay()
+    {
+        AssertThat(ShopText.Price(ShopKind.Bank, 120, false)).IsEqual("  Rent a day:         1G 20S");
+        AssertThat(ShopText.Sell(ShopKind.Bank, 250)).IsEqual("Store for:         2G 50S a day");
+    }
+
+    [TestCase]
+    public void Bank_CountsTheStoredItems()
+    {
+        var balances = new ShopBalances(0, 0, 0, 0, 0);
+        ShopItem[] items = [new(1000, 120, false, false, 0), new(0, 0, false, false, 0), new(1001, 80, false, false, 0)];
+
+        AssertThat(ShopText.Balance(ShopKind.Bank, items, balances)).IsEqual("Depot: 2 of 3 items");
+    }
+
+    [TestCase(MapButton.Left, MapKeys.None, true)]
+    [TestCase(MapButton.Right, MapKeys.None, true)]
+    [TestCase(MapButton.Left, MapKeys.Ctrl, false)]
+    [TestCase(MapButton.Left, MapKeys.Alt, false)]
+    public void BankPacket_TakesOrDescribesButNeverBuysTen(MapButton button, MapKeys keys, bool sends)
+    {
+        AssertThat(ShopClicks.BankPacket(button, keys, 0x8000 | 12, 4) != null).IsEqual(sends);
+    }
 }

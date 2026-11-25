@@ -110,7 +110,7 @@ internal static class LookCommands
         // The server sends the shop's kind in the first catalyst byte of the pair that reaches the last slot.
         if (firstSlot is >= CharacterLook.ShopSlots - ShopItemsPerCommand and <= CharacterLook.ShopSlots)
         {
-            OpenShop(state, IsTrash(look.Number) ? ShopKind.Trash : ShopKindOf(catalysts[0]), look.Copy());
+            OpenShop(state, MyV2WindowKind(look.Number) ?? ShopKindOf(catalysts[0]), look.Copy());
         }
     }
 
@@ -121,8 +121,11 @@ internal static class LookCommands
         state.ReportShopOpened(kind);
     }
 
-    // MyV2 opens its trash window as a shop whose number carries 0x4000; its depot window carries 0x8000.
-    private static bool IsTrash(int shopNumber) => (shopNumber & (TrashWindowBit | DepotWindowBit)) == TrashWindowBit;
+    // MyV2 opens its depot as a shop whose number carries 0x8000, and its trash window as one carrying 0x4000.
+    private static ShopKind? MyV2WindowKind(int shopNumber) =>
+        (shopNumber & DepotWindowBit) != 0 ? ShopKind.Bank
+        : (shopNumber & TrashWindowBit) != 0 ? ShopKind.Trash
+        : null;
 
     private static ShopKind ShopKindOf(byte kindByte) => kindByte switch
     {

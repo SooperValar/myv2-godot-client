@@ -31,6 +31,7 @@ public static class ShopText
         {
             ShopKind.Merchant when buyingTen => $"Buy 10 for: {Money(price * BuyTenCount)}",
             ShopKind.Merchant => $"   Buy for: {Money(price)}",
+            ShopKind.Bank => $"  Rent a day: {Money(price)}",
             ShopKind.BlackStronghold => $"    Take reward for: {Padded(price)} Stronghold Pts",
             ShopKind.Casino => $"Take reward for: {Padded(price)} Tokens",
             ShopKind.Contract => $"  Take reward for: {Padded(price)} Contract Pts",
@@ -39,12 +40,22 @@ public static class ShopText
         };
     }
 
-    public static string? Sell(ShopKind kind, int heldItemPrice) =>
-        kind == ShopKind.Merchant && heldItemPrice > 0 ? $"  Sell for: {Money(heldItemPrice)}" : null;
+    public static string? Sell(ShopKind kind, int heldItemPrice) => (kind, heldItemPrice) switch
+    {
+        (_, <= 0) => null,
+        (ShopKind.Merchant, _) => $"  Sell for: {Money(heldItemPrice)}",
+        (ShopKind.Bank, _) => $"Store for: {Money(heldItemPrice)} a day",
+        _ => null,
+    };
 
     // Shown only if something is for sale, so a corpse's loot window has no money line.
     public static string? Balance(ShopKind kind, IReadOnlyList<ShopItem> items, ShopBalances balances)
     {
+        if (kind == ShopKind.Bank)
+        {
+            return $"Depot: {items.Count(item => item.Sprite != 0)} of {items.Count} items";
+        }
+
         if (!items.Any(item => item.Price > 0))
         {
             return null;

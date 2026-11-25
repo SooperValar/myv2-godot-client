@@ -1251,9 +1251,13 @@ public partial class HudView : Control
         }
 
         var slot = ShopClicks.SlotFor(cell);
-        var packet = state.OpenShop == ShopKind.Trash
-            ? ShopClicks.TrashPacket(button, HeldKeys.Current(), state.Shop.Number, slot)
-            : ShopClicks.Packet(button, HeldKeys.Current(), state.Shop.Number, slot);
+        var keys = HeldKeys.Current();
+        var packet = state.OpenShop switch
+        {
+            ShopKind.Trash => ShopClicks.TrashPacket(button, keys, state.Shop.Number, slot),
+            ShopKind.Bank => ShopClicks.BankPacket(button, keys, state.Shop.Number, slot),
+            _ => ShopClicks.Packet(button, keys, state.Shop.Number, slot),
+        };
         if (packet != null)
         {
             sendCommand(packet);
@@ -1608,8 +1612,7 @@ public partial class HudView : Control
 
     private ItemTooltipRequest? ShopTooltip(int slot)
     {
-        if (!itemTooltipsShown || state is not { OpenShop: not null and not ShopKind.Trash } shown
-            || shown.Player.HeldItem.Sprite != 0
+        if (!itemTooltipsShown || state is not { OpenShop: not null } shown || shown.Player.HeldItem.Sprite != 0
             || slot >= shown.Shop.ShopItems.Length || shown.Shop.ShopItems[slot].Sprite == 0)
         {
             return null;

@@ -22,7 +22,7 @@ public partial class ShopWindowView : Control
 
     public static bool Shows(ShopKind? kind) =>
         kind is ShopKind.Merchant or ShopKind.BlackStronghold or ShopKind.Casino or ShopKind.Contract
-            or ShopKind.Experience or ShopKind.Trash;
+            or ShopKind.Experience or ShopKind.Trash or ShopKind.Bank;
 
     public void ShowItems(GameState state)
     {

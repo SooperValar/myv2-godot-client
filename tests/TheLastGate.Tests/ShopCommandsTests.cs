@@ -83,9 +83,10 @@ public class ShopCommandsTests
 
     [Theory]
     [InlineData(0x4000 | 12, ShopKind.Trash)]
-    [InlineData(0x8000 | 12, ShopKind.Merchant)]
-    [InlineData(0xC000 | 12, ShopKind.Merchant)]
-    public void Shop_IsTheTrashWindowWhenItsNumberCarries0x4000(int shopNumber, ShopKind kind)
+    [InlineData(0x8000 | 12, ShopKind.Bank)]
+    [InlineData(0xC000 | 12, ShopKind.Bank)]
+    [InlineData(12, ShopKind.Merchant)]
+    public void Shop_IsMyV2sTrashOrDepotWindowByItsNumber(int shopNumber, ShopKind kind)
     {
         var state = new GameState();
 

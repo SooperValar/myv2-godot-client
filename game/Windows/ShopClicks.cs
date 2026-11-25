@@ -28,6 +28,10 @@ public static class ShopClicks
             ? ShopPackets.Buy(trashNumber, slot)
             : null;
 
+    // The depot takes an item out on a click, or stores the one in the hand; it has nothing to buy ten of.
+    public static byte[]? BankPacket(MapButton button, MapKeys keys, int bankNumber, int slot) =>
+        (keys & (MapKeys.Ctrl | MapKeys.Alt)) != 0 ? null : Packet(button, keys, bankNumber, slot);
+
     public static MouseCursor Cursor(bool slotHasItem, bool holdingItem) => (slotHasItem, holdingItem) switch
     {
         (true, _) => MouseCursor.Take,
