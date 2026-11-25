@@ -36,7 +36,11 @@ public static class GeneralOptions
             "Holding Ctrl+Shift when giving an item will attempt to reload that item.",
             false,
             false),
-        new(GeneralOption.UseQueue, "Holding Ctrl+Shift when using an item queues that use. Limit 5.", false, false),
+        new(
+            GeneralOption.UseQueue,
+            "Queued Actions: holding Ctrl+Shift when using or taking an item queues it. Limit 5.",
+            false,
+            false),
         new(
             GeneralOption.EnterToTalk,
             "Press Enter to activate chat mode before typing. Press Enter again to send, or ESC to cancel.",
