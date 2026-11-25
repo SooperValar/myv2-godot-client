@@ -46,12 +46,4 @@ public class EquipmentClicksTests
     {
         AssertThat(EquipmentClicks.Cursor(slotHasItem, holdingItem, keys)).IsEqual(cursor);
     }
-
-    [TestCase]
-    public void SwapSetPacket_SwapsToTheStoredSetOnALeftClick()
-    {
-        AssertThat(EquipmentClicks.SwapSetPacket(MapButton.Left, Selected))
-            .IsEqual(InventoryPackets.For(InventoryAction.Special, 1, Selected));
-        AssertThat(EquipmentClicks.SwapSetPacket(MapButton.Right, Selected)).IsNull();
-    }
 }

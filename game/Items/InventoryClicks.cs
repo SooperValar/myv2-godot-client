@@ -8,16 +8,12 @@ namespace TheLastGate.Items;
 
 public static class InventoryClicks
 {
-    private const MapKeys AllKeys = MapKeys.Shift | MapKeys.Ctrl | MapKeys.Alt;
-    private const int TrashHeldItem = 0;
-
     public static IReadOnlyList<byte[]> Packets(
         int slot,
         ItemSlot item,
         bool holdingItem,
         MapButton button,
         MapKeys keys,
-        ShopSale? sale,
         int selectedCharacter,
         int? openTrash = null)
     {
@@ -38,26 +34,13 @@ public static class InventoryClicks
             return item.Sprite != 0 ? [ShopPackets.PutInTrash(trash, slot)] : [];
         }
 
-        if (keys == AllKeys)
+        return keys switch
         {
-            return CanTrash(item, holdingItem)
-                ?
-                [
-                    InventoryPackets.For(InventoryAction.SwapWithInventorySlot, slot, selectedCharacter),
-                    InventoryPackets.For(InventoryAction.Special, TrashHeldItem, selectedCharacter),
-                ]
-                : [];
-        }
-
-        if (HoldsControlOrAlt(keys))
-        {
-            return sale is { } shop
-                ? [ClientPackets.ThreeValues(ClientCommand.QuickShop, shop.Shop, slot, shop.DepotPage)]
-                : [InventoryPackets.For(InventoryAction.MoveStack, slot, selectedCharacter)];
-        }
-
-        var action = keys.HasFlag(MapKeys.Shift) ? InventoryAction.SwapWithInventorySlot : InventoryAction.UseItem;
-        return [InventoryPackets.For(action, slot, selectedCharacter)];
+            MapKeys.Ctrl => [InventoryPackets.For(InventoryAction.TakeOneFromStack, slot, selectedCharacter)],
+            MapKeys.None => [InventoryPackets.For(InventoryAction.UseItem, slot, selectedCharacter)],
+            MapKeys.Shift => [InventoryPackets.For(InventoryAction.SwapWithInventorySlot, slot, selectedCharacter)],
+            _ => [],
+        };
     }
 
     public static MouseCursor Cursor(ItemSlot item, bool holdingItem, MapKeys keys, bool trashOpen = false)
@@ -68,19 +51,24 @@ public static class InventoryClicks
             return hasItem ? MouseCursor.Trash : MouseCursor.None;
         }
 
-        if (keys == AllKeys)
-        {
-            return hasItem && CanTrash(item, holdingItem) ? MouseCursor.Trash : MouseCursor.None;
-        }
-
         if (keys == MapKeys.None)
         {
             return hasItem ? MouseCursor.Use : MouseCursor.None;
         }
 
+        if (keys == MapKeys.Ctrl)
+        {
+            return hasItem ? MouseCursor.Take : MouseCursor.None;
+        }
+
+        if (keys != MapKeys.Shift)
+        {
+            return MouseCursor.None;
+        }
+
         return (hasItem, holdingItem) switch
         {
-            (true, true) => keys == MapKeys.Shift ? MouseCursor.Swap : MouseCursor.None,
+            (true, true) => MouseCursor.Swap,
             (true, false) => MouseCursor.Take,
             (false, true) => MouseCursor.Drop,
             (false, false) => MouseCursor.None,
@@ -88,11 +76,4 @@ public static class InventoryClicks
     }
 
     private static bool HoldsControlOrAlt(MapKeys keys) => keys.HasFlag(MapKeys.Ctrl) || keys.HasFlag(MapKeys.Alt);
-
-    private static bool CanTrash(ItemSlot item, bool holdingItem)
-    {
-        var flags = (CarriedItemFlags)item.Flags;
-        return !holdingItem && item.Stack == 0 && !flags.HasFlag(CarriedItemFlags.Soulstoned)
-            && !flags.HasFlag(CarriedItemFlags.Enchanted) && !flags.HasFlag(CarriedItemFlags.Corrupted);
-    }
 }

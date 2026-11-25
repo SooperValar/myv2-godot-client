@@ -7,8 +7,6 @@ namespace TheLastGate.Items;
 
 public static class EquipmentClicks
 {
-    private const int SwapToStoredSet = 1;
-
     public static byte[]? Packet(WornSlot slot, MapButton button, MapKeys keys, int selectedCharacter)
     {
         if (keys.HasFlag(MapKeys.Ctrl) || keys.HasFlag(MapKeys.Alt))
@@ -47,9 +45,4 @@ public static class EquipmentClicks
             (false, false) => MouseCursor.None,
         };
     }
-
-    public static byte[]? SwapSetPacket(MapButton button, int selectedCharacter) =>
-        button == MapButton.Left
-            ? InventoryPackets.For(InventoryAction.Special, SwapToStoredSet, selectedCharacter)
-            : null;
 }

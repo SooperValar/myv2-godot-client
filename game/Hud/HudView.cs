@@ -35,7 +35,6 @@ public partial class HudView : Control
     private const string StrongholdName = "Stronghold";
     private const string CasinoName = "Casino";
     private const string ContractName = "Contract";
-    private const string SwapSetHint = "Swap equipment with a stored alternate set.";
     private const string TrashCanName = "TrashCan";
     private const string ItemTooltipBinding = "item_tooltip_hotkey";
     private const string WorldMapWindowScenePath = "res://Map/world_map_window.tscn";
@@ -227,7 +226,6 @@ public partial class HudView : Control
                     HeldKeys.Current()));
         }
 
-        GetNode<ClickArea>("%SwapSetButton").Released += ClickSwapSet;
         var trashCan = GetNode<ClickArea>("%" + TrashCanName);
         trashCan.Released += ClickTrashCan;
         WatchCursor(trashCan, () => TrashCan.Cursor(HoldingItem));
@@ -768,7 +766,6 @@ public partial class HudView : Control
             player.HeldItem.Sprite != 0,
             button,
             keys,
-            SaleToOpenShop(),
             selectedCharacter,
             state.OpenShop == ShopKind.Trash ? state.Shop.Number : null);
         foreach (var packet in packets)
@@ -776,11 +773,6 @@ public partial class HudView : Control
             sendCommand(packet);
         }
     }
-
-    private ShopSale? SaleToOpenShop() =>
-        state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith and not ShopKind.Trash
-            ? new ShopSale(state.Shop.Number, depotPage.Current)
-            : null;
 
     private bool RunHotkey(string id)
     {
@@ -821,9 +813,9 @@ public partial class HudView : Control
             return true;
         }
 
+        // MyV2 has no stored gear sets.
         if (id == "swap_gear_hotkey")
         {
-            ClickSwapSet(MapButton.Left);
             return true;
         }
 
@@ -1158,18 +1150,6 @@ public partial class HudView : Control
         {
             notesNoticeShown = true;
             gameSession.WorldMapWindow.ShowSetAsideNotice(fileName, Time.GetTicksMsec() / 1000.0);
-        }
-    }
-
-    private void ClickSwapSet(MapButton button)
-    {
-        if (EquipmentClicks.SwapSetPacket(button, selectedCharacter) is { } packet)
-        {
-            sendCommand(packet);
-        }
-        else if (button == MapButton.Right)
-        {
-            state?.Chat.Add(new LogLine(SwapSetHint, HintFont));
         }
     }
 

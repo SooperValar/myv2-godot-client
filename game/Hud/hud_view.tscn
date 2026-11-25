@@ -617,6 +617,7 @@ DarkSpriteNumber = 118004
 
 [node name="SwapSetButton" type="Control" parent="." unique_id=1530283471]
 unique_name_in_owner = true
+visible = false
 layout_mode = 0
 offset_left = 671.0
 offset_top = 6.0

@@ -94,7 +94,6 @@ public class TrashTests
             false,
             MapButton.Left,
             MapKeys.Shift,
-            null,
             0,
             TrashNumber);
 
