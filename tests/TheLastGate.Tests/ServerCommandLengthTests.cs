@@ -45,6 +45,7 @@ public class ServerCommandLengthTests
     [InlineData(ServerCommand.Tiers, 64)]
     [InlineData(ServerCommand.ItemMarks, 126)]
     [InlineData(ServerCommand.WaypointRow, 80)]
+    [InlineData(ServerCommand.Zone, 41)]
     public void Of_GivesEachFixedLengthCommandItsLength(ServerCommand commandId, int expectedLength)
     {
         Assert.Equal(expectedLength, ServerCommandLength.Of(Command(commandId)));

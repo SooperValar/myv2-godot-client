@@ -42,6 +42,9 @@ internal static class ServerInfoCommands
             case ServerCommand.WaypointRow:
                 ReadWaypointRow(state, command);
                 break;
+            case ServerCommand.Zone:
+                reader.ReadBytes(state.Player.LocationField.Length).CopyTo(state.Player.LocationField);
+                break;
             default:
                 throw new UnreachableException();
         }

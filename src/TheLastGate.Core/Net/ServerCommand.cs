@@ -72,5 +72,6 @@ public enum ServerCommand : byte
     Tiers = 77,
     ItemMarks = 78,
     WaypointRow = 79,
+    Zone = 80,
     SetMap = 128,
 }

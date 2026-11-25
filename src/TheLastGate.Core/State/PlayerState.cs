@@ -16,7 +16,7 @@ public sealed class PlayerState
     public const int SmithSlots = 4;
 
     private const int NameLength = 40;
-    private const int LocationLength = 20;
+    private const int LocationLength = 40;
 
     public string Name => NulTerminatedText.Read(NameField);
     public int Race { get; internal set; }

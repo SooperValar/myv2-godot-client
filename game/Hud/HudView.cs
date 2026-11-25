@@ -470,7 +470,7 @@ public partial class HudView : Control
         ShowPoints("Stronghold", StrongholdName, player.BlackStrongholdPoints);
         ShowPoints("Casino", CasinoName, player.Tokens);
         ShowPoints("Contract", ContractName, player.OsirisPoints);
-        SetText("Location", player.Location);
+        SetText("Location", ZoneText.Fitted(player.Location));
         if (gameSession.TextWindows.AnyOpen || gameSession.WaypointWindow.IsOpen
             || gameSession.SkillTreeWindow.Open != null
             || state.OpenShop != null)

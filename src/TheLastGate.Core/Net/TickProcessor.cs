@@ -101,7 +101,8 @@ public sealed class TickProcessor(GameState state)
                     or ServerCommand.ItemInfo
                     or ServerCommand.Tiers
                     or ServerCommand.ItemMarks
-                    or ServerCommand.WaypointRow:
+                    or ServerCommand.WaypointRow
+                    or ServerCommand.Zone:
                     ServerInfoCommands.Apply(state, command);
                     break;
                 case ServerCommand.Tick:
