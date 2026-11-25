@@ -13,11 +13,15 @@ namespace TheLastGate.Hud;
 public sealed record ItemTooltipRequest(IReadOnlyList<LogLine>? Lines, IReadOnlyList<IReadOnlyList<LogLine>> Equipped)
 {
     // The server's tooltip fonts: 0-3 its four text colours, 8 the worn slots the item compares with (not shown),
-    // 9 a divider, and 10-14 the item tiers Common, Magic, Rare, Epic and Legendary.
+    // 9 a divider, 10-14 the item tiers Common, Magic, Rare, Epic and Legendary, 15 a row of the stat table and
+    // 16 grey text.
     public const int CompareFont = 8;
 
     private const int DividerFont = 9;
     private const int FirstTierFont = 10;
+    private const int TableRowFont = 15;
+    private const int DimFont = 16;
+    private const char CellSeparator = '\t';
     private const string FetchingText = "Fetching item details...";
     private const string EquippedTitle = "Equipped:";
     private const string CompareStart = "W ";
@@ -69,8 +73,21 @@ public sealed record ItemTooltipRequest(IReadOnlyList<LogLine>? Lines, IReadOnly
 
     private static IEnumerable<TooltipPart> PartsOf(IReadOnlyList<LogLine> lines)
     {
+        var tableRows = new List<IReadOnlyList<TooltipText>>();
         foreach (var line in lines)
         {
+            if (line.Font == TableRowFont)
+            {
+                tableRows.Add(Cells(line.Text));
+                continue;
+            }
+
+            if (tableRows.Count > 0)
+            {
+                yield return Table(tableRows);
+                tableRows = [];
+            }
+
             switch (line.Font)
             {
                 case CompareFont:
@@ -83,10 +100,50 @@ public sealed record ItemTooltipRequest(IReadOnlyList<LogLine>? Lines, IReadOnly
                     continue;
             }
         }
+
+        if (tableRows.Count > 0)
+        {
+            yield return Table(tableRows);
+        }
     }
 
-    private static TextColour ColourOf(int font) =>
-        font >= FirstTierFont && font < FirstTierFont + TierColours.Length
-            ? TierColours[font - FirstTierFont]
-            : font is >= (int)TextColour.Red and <= (int)TextColour.Blue ? (TextColour)font : TextColour.Yellow;
+    // A short row (the server ran out of room on the line) is padded so the grid's columns stay in step.
+    private static TooltipTable Table(List<IReadOnlyList<TooltipText>> rows)
+    {
+        var header = rows[0];
+        var body = rows.Skip(1)
+            .Select(row => row.Count >= header.Count
+                ? row.Take(header.Count).ToArray()
+                : row.Concat(Enumerable.Repeat(new TooltipText("", TextColour.Dim), header.Count - row.Count))
+                    .ToArray())
+            .ToArray();
+        return new TooltipTable(header, body);
+    }
+
+    // Each cell starts with a letter for its colour; an empty cell has neither.
+    private static TooltipText[] Cells(string row) =>
+        row.Split(CellSeparator)
+            .Select(cell => cell.Length == 0
+                ? new TooltipText("", TextColour.Dim)
+                : new TooltipText(cell[1..], CellColour(cell[0])))
+            .ToArray();
+
+    private static TextColour CellColour(char letter) => letter switch
+    {
+        'r' => TextColour.Red,
+        'y' => TextColour.Yellow,
+        'g' => TextColour.Green,
+        'b' => TextColour.Blue,
+        't' => TextColour.Teal,
+        'w' => TextColour.White,
+        _ => TextColour.Dim,
+    };
+
+    private static TextColour ColourOf(int font) => font switch
+    {
+        DimFont => TextColour.Dim,
+        >= FirstTierFont and < TableRowFont => TierColours[font - FirstTierFont],
+        >= (int)TextColour.Red and <= (int)TextColour.Blue => (TextColour)font,
+        _ => TextColour.Yellow,
+    };
 }
