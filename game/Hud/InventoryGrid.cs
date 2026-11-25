@@ -39,14 +39,14 @@ public partial class InventoryGrid : GridContainer
 
     public int SlotShownIn(int cell) => scroll.SlotShownIn(cell);
 
-    public void Show(PlayerState player, int[] hotbarActions)
+    public void Show(PlayerState player, ItemTiers tiers, int[] hotbarActions)
     {
         for (var cell = 0; cell < InventoryScroll.VisibleSlots; cell++)
         {
             var slot = scroll.SlotShownIn(cell);
             var item = player.Inventory[slot];
             var slotView = GetChild<ItemSlotView>(cell);
-            slotView.Show(item, ItemOverlays.Carried(item), false);
+            slotView.Show(item, [], false, ItemMark.Carried(tiers, slot));
             slotView.ShowHotbarKey(HotbarButtons.InventoryKeyButton(hotbarActions, slot));
         }
     }

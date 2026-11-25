@@ -1,10 +1,12 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using Godot;
 using TheLastGate.Assets;
 using TheLastGate.Hotkeys;
 using TheLastGate.Items;
 using TheLastGate.State;
+using TheLastGate.World;
 
 namespace TheLastGate.Hud;
 
@@ -12,6 +14,9 @@ namespace TheLastGate.Hud;
 public partial class ItemSlotView : ClickArea, IHudContextUser
 {
     private const float HighlightBrightness = 2f;
+    private const string TintShaderPath = "res://World/sprite_tint.gdshader";
+
+    private static readonly Dictionary<int, ShaderMaterial> OutlineMaterials = [];
     private IFontSet? fonts;
 
     private int previewSprite;
@@ -53,9 +58,17 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         ShowPreview();
     }
 
-    public void Show(ItemSlot item, IReadOnlyList<ItemOverlay> overlays, bool blocked)
+    public void Show(ItemSlot item, IReadOnlyList<ItemOverlay> overlays, bool blocked, ItemMark mark = default)
     {
-        GetNode<ArchiveSprite>("Highlighted/Item").SpriteNumber = item.Sprite;
+        var itemSprite = GetNode<ArchiveSprite>("Highlighted/Item");
+        itemSprite.SpriteNumber = item.Sprite;
+        itemSprite.Material = item.Sprite != 0 ? OutlineMaterial(mark.Tier) : null;
+        var letter = GetNode<Label>("MarkLetter");
+        letter.Visible = item.Sprite != 0 && mark.Letter != '\0';
+        letter.Text = mark.Letter.ToString();
+        var number = GetNode<Label>("MarkNumber");
+        number.Visible = item.Sprite != 0 && mark.Number != null;
+        number.Text = mark.Number?.ToString(CultureInfo.InvariantCulture) ?? "";
         var overlayNodes = GetNode<Control>("Highlighted/Overlays");
         while (overlayNodes.GetChildCount() < overlays.Count)
         {
@@ -74,6 +87,23 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         }
 
         GetNode<CanvasItem>("Blocked").Visible = blocked;
+    }
+
+    private static ShaderMaterial? OutlineMaterial(int tier)
+    {
+        if (tier == TierOutline.None)
+        {
+            return null;
+        }
+
+        if (!OutlineMaterials.TryGetValue(tier, out var material))
+        {
+            material = new ShaderMaterial { Shader = GD.Load<Shader>(TintShaderPath) };
+            material.SetShaderParameter("outline_color", TierOutline.For(tier));
+            OutlineMaterials[tier] = material;
+        }
+
+        return material;
     }
 
     public void ShowHotbarKey(int? button)

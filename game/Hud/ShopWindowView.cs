@@ -25,7 +25,8 @@ public partial class ShopWindowView : Control
         for (var cell = 0; cell < ShopClicks.Cells; cell++)
         {
             var item = cell < items.Length ? items[cell] : default;
-            grid.GetChild<ItemSlotView>(cell).Show(new ItemSlot(item.Sprite, 0, 0, 0), ItemOverlays.Shop(item), false);
+            grid.GetChild<ItemSlotView>(cell)
+                .Show(new ItemSlot(item.Sprite, 0, 0, 0), [], false, ItemMark.Shop(state.ItemTiers, cell));
         }
     }
 

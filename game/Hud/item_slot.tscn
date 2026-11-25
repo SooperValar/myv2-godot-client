@@ -40,6 +40,33 @@ horizontal_alignment = 2
 script = ExtResource("3_label")
 Colour = 9
 
+[node name="MarkLetter" type="Label" parent="." unique_id=1213649201]
+visible = false
+layout_mode = 0
+offset_left = 1.0
+offset_right = 12.0
+offset_bottom = 9.0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "S"
+script = ExtResource("3_label")
+Colour = 1
+
+[node name="MarkNumber" type="Label" parent="." unique_id=1508270633]
+visible = false
+layout_mode = 0
+offset_left = 12.0
+offset_right = 31.0
+offset_bottom = 9.0
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 1)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+text = "12"
+horizontal_alignment = 2
+script = ExtResource("3_label")
+Colour = 9
+
 [node name="Blocked" type="TextureRect" parent="." unique_id=1807665179]
 visible = false
 layout_mode = 0

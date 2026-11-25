@@ -511,7 +511,7 @@ public partial class HudView : Control
             hotbarButton.ShowKey();
         }
 
-        GetNode<InventoryGrid>("%Inventory").Show(player, Settings.HotbarActions);
+        GetNode<InventoryGrid>("%Inventory").Show(player, state.ItemTiers, Settings.HotbarActions);
         ShowStats(player);
         ShowQuickStats(player);
         ShowMinimap();
@@ -1163,7 +1163,7 @@ public partial class HudView : Control
     private void ShowHeldItem(ItemSlot item)
     {
         var held = GetNode<ItemSlotView>("%HeldItem");
-        held.Show(item, ItemOverlays.Worn(item), false);
+        held.Show(item, [], false);
         held.Position = mousePosition - HeldItemOffset;
         held.SetHighlighted(HeldItem.IsHighlighted(CursorShapes.CursorFor(Input.GetCurrentCursorShape())));
     }
@@ -2119,7 +2119,7 @@ public partial class HudView : Control
             var item = player.Worn[(int)slot];
             var showBlocked = blocked.Contains(slot) && (slot != WornSlot.SecondCharm || secondCharmWorn);
             var slotView = GetNode<ItemSlotView>("%" + slot);
-            slotView.Show(item, ItemOverlays.Worn(item), showBlocked);
+            slotView.Show(item, [], showBlocked, ItemMark.Worn(state!.ItemTiers, (int)slot));
             var hotbarKey = item.Sprite != 0 ? HotbarButtons.GearKeyButton(Settings.HotbarActions, slot) : null;
             slotView.ShowHotbarKey(hotbarKey);
         }

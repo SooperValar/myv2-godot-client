@@ -17,6 +17,7 @@ public partial class WorldView : Node2D
     private const int TintShift = 4;
     private const int HighlightBit = 1 << 7;
     private const int SelectedBit = 1 << 8;
+    private const int OutlineShift = 9;
     private const int DefaultTextColour = 0;
     private const int UnshownEffect = -1;
     private const int UnshownSprite = -1;
@@ -52,7 +53,8 @@ public partial class WorldView : Node2D
     private readonly Sprite2D[] shadowNodes = new Sprite2D[TileCount];
     private readonly int[] shownShadows = new int[TileCount];
     private readonly TileEffects?[] tileEffects = new TileEffects?[TileCount];
-    private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected), ShaderMaterial> tintMaterials = [];
+    private readonly Dictionary<(SpriteTint Tint, bool Highlighted, bool Selected, int Outline), ShaderMaterial>
+        tintMaterials = [];
     private readonly Sprite2D walkMarker = new() { Centered = false, Visible = false };
 
     // The tiles are put together at a whole-number scale of the virtual resolution, and only the finished picture is
@@ -578,7 +580,8 @@ public partial class WorldView : Node2D
                 tile.Light,
                 environmentTint,
                 IsHighlighted(tileIndex, MapLayer.Object) || areaGlows.Contains(tileIndex),
-                false));
+                false,
+                TierOutline.OfObject(tile.Glow)));
         var character = MapSpriteRules.CharacterSprite(tile, Session.MapFrames.CharacterSprite(tileIndex), column, row);
         var selected = character != 0 && SelectedCharacter != 0 && tile.CharacterNumber == SelectedCharacter;
         Show(
@@ -589,7 +592,8 @@ public partial class WorldView : Node2D
                 tile.Light,
                 MapSpriteRules.CharacterTint(tile, PlainInfravision),
                 IsHighlighted(tileIndex, MapLayer.Character),
-                selected));
+                selected,
+                TierOutline.OfCharacter(tile.Glow)));
         ShowShadow(tileIndex, character);
         return selected;
     }
@@ -1032,14 +1036,15 @@ public partial class WorldView : Node2D
         var effect = look.Light
             | ((int)look.Tint << TintShift)
             | (look.Highlighted ? HighlightBit : 0)
-            | (look.Selected ? SelectedBit : 0);
+            | (look.Selected ? SelectedBit : 0)
+            | (look.Outline << OutlineShift);
         if (layer.ShownEffects[tileIndex] == effect)
         {
             return;
         }
 
         layer.ShownEffects[tileIndex] = effect;
-        var needsShader = look.Tint != SpriteTint.None || look.Selected;
+        var needsShader = look.Tint != SpriteTint.None || look.Selected || look.Outline != TierOutline.None;
         var brightness = SpriteLighting.Brightness(look.Light, WorldGamma);
         if (look.Highlighted && !needsShader)
         {
@@ -1047,12 +1052,12 @@ public partial class WorldView : Node2D
         }
 
         node.SelfModulate = new Color(brightness, brightness, brightness);
-        node.Material = needsShader ? TintMaterial(look.Tint, look.Highlighted, look.Selected) : null;
+        node.Material = needsShader ? TintMaterial(look.Tint, look.Highlighted, look.Selected, look.Outline) : null;
     }
 
-    private ShaderMaterial TintMaterial(SpriteTint tint, bool highlighted, bool selected)
+    private ShaderMaterial TintMaterial(SpriteTint tint, bool highlighted, bool selected, int outline = TierOutline.None)
     {
-        if (tintMaterials.TryGetValue((tint, highlighted, selected), out var material))
+        if (tintMaterials.TryGetValue((tint, highlighted, selected, outline), out var material))
         {
             return material;
         }
@@ -1064,7 +1069,8 @@ public partial class WorldView : Node2D
         material.SetShaderParameter("underwater", tint.HasFlag(SpriteTint.Underwater));
         material.SetShaderParameter("highlight", highlighted);
         material.SetShaderParameter("selected", selected);
-        tintMaterials[(tint, highlighted, selected)] = material;
+        material.SetShaderParameter("outline_color", TierOutline.For(outline));
+        tintMaterials[(tint, highlighted, selected, outline)] = material;
         return material;
     }
 
@@ -1075,7 +1081,12 @@ public partial class WorldView : Node2D
         int ActionTile,
         int ActionSprite);
 
-    private readonly record struct SpriteLook(int Light, SpriteTint Tint, bool Highlighted, bool Selected);
+    private readonly record struct SpriteLook(
+        int Light,
+        SpriteTint Tint,
+        bool Highlighted,
+        bool Selected,
+        int Outline = TierOutline.None);
 
     private sealed class TileEffects
     {
