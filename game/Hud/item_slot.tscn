@@ -45,4 +45,4 @@ visible = false
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 4
+SpriteNumber = 100004

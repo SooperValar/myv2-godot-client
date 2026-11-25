@@ -54,8 +54,7 @@ public partial class SkillList : VBoxContainer
 
         var order = SkillOrder.Sorted(
             terminology.Skills.Select((text, number) =>
-                new SkillEntry(number, text.Name, text.SortKey, player.Skills[number][0] != 0)),
-            player.Kindred);
+                SkillEntry.For(number, text.Name, text.SortKey, player.Skills[number])));
         for (var row = 0; row < SkillScroll.VisibleRows; row++)
         {
             var number = order[Panel.Skills.PositionShownIn(row)];

@@ -7,7 +7,7 @@ namespace TheLastGate.GodotTests.Updates;
 [TestSuite]
 public class ReleaseUrlsTests
 {
-    private const string Repository = "https://github.com/jamesblack/thelastgate-godot";
+    private const string Repository = "https://github.com/SooperValar/myv2-godot-client";
     private const string FullPackage = "TheLastGateGodot-1.2.0-full.nupkg";
 
     [TestCase("win")]
@@ -24,7 +24,7 @@ public class ReleaseUrlsTests
     [TestCase]
     public void TestReleases_ListsReleasesThroughTheApi() =>
         AssertThat(ReleaseUrls.TestReleases.AbsoluteUri)
-            .IsEqual("https://api.github.com/repos/jamesblack/thelastgate-godot/releases?per_page=100");
+            .IsEqual("https://api.github.com/repos/SooperValar/myv2-godot-client/releases?per_page=100");
 
     [TestCase]
     public void Package_ProductionUsesTheVersionsTag() =>

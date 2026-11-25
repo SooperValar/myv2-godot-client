@@ -46,7 +46,8 @@ public partial class HudView : Control
     private const int HintFont = 1;
     private const int WarningFont = 0;
     private const int HitPointsRow = 5;
-    private const int ManaRow = 6;
+    private const int EnduranceRow = 6;
+    private const int ManaRow = 7;
     private const int HitScoreMeta = 5;
     private const int ParryScoreMeta = 6;
 
@@ -1206,6 +1207,8 @@ public partial class HudView : Control
 
         var hitPoints = StatLines.HitPoints(player.HitPoints, statPlan, player.Points);
         rows.GetChild<StatRow>(HitPointsRow).Show(hitPoints, StatSlots.HitPoints, showBase);
+        var endurance = StatLines.Endurance(player.Endurance, statPlan, player.Points);
+        rows.GetChild<StatRow>(EnduranceRow).Show(endurance, StatSlots.Endurance, showBase);
         var mana = StatLines.Mana(player.Mana, statPlan, player.Points);
         rows.GetChild<StatRow>(ManaRow).Show(mana, StatSlots.Mana, showBase);
     }
@@ -1365,7 +1368,7 @@ public partial class HudView : Control
         }
     }
 
-    // The button answers clicks even while it isn't drawn, so a character with only contract points can open that tree.
+    // The MyV2 server has no skill trees, so the button stays hidden, and with it its clicks, until tree points arrive.
     private void ShowTreeButton()
     {
         if (state == null || gameSession == null)
@@ -1375,6 +1378,7 @@ public partial class HudView : Control
 
         var button = GetNode<Control>("%TreeButton");
         var player = state.Player;
+        button.Visible = SkillTreeWindow.ButtonShows(player.TreePoints);
         button.GetNode<CanvasItem>("Picture").Visible = SkillTreeWindow.ButtonShows(player.TreePoints);
         var glow = button.GetNode<CanvasItem>("Glow");
         glow.Visible = SkillTreeWindow.ButtonShows(player.TreePoints)
@@ -1940,12 +1944,11 @@ public partial class HudView : Control
         using var timing = Timings.Measure("planner.refresh");
         var enabled = PlannerEnabled;
         var buttonShown = enabled && !GetNode<SkillList>("%SkillRows").Panel.ShowsMetaStats;
-        foreach (var name in (string[])["%PlannerBox", "%PlannerLabel", "%PlannerButton"])
+        foreach (var name in (string[])["%PlannerLabel", "%PlannerButton"])
         {
             GetNode<CanvasItem>(name).Visible = buttonShown;
         }
 
-        GetNode<PlannerButtonBox>("%PlannerBox").DarkMode = DarkMode;
         if (state == null || gameSession == null || plannerWindow == null)
         {
             return;
@@ -2099,8 +2102,11 @@ public partial class HudView : Control
     private void ShowLookBar(string name, int current, int maximum) =>
         GetNode<PortraitBar>("%" + name).Show(PortraitBars.For(current, maximum, 0), true);
 
+    // The MyV2 server sends none of these points yet, so a row stays hidden until it has some.
     private void ShowPoints(string name, string shownName, int points)
     {
+        GetNode<CanvasItem>("%" + name + "Name").Visible = points != 0;
+        GetNode<CanvasItem>("%" + name).Visible = points != 0;
         SetText(name + "Name", Currencies.RowName(shownName, points));
         SetText(name, Number(points));
     }

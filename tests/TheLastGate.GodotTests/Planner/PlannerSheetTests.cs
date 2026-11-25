@@ -333,9 +333,9 @@ public class PlannerSheetTests
     }
 
     [TestCase]
-    public void Score_JoinsTheHighAndLowParts()
+    public void Score_IsTheTotalTheServerSends()
     {
-        AssertThat(PlannerGame.Score([0, 0, 0, 0, 1, 44])).IsEqual(300);
+        AssertThat(PlannerGame.Score([0, 0, 0, 0, 1, 44])).IsEqual(44);
     }
 
     [TestCase]

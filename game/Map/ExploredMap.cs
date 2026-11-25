@@ -2,6 +2,7 @@ using System;
 using System.Buffers.Binary;
 using System.IO;
 using System.IO.Compression;
+using TheLastGate.State;
 
 namespace TheLastGate.Map;
 
@@ -9,7 +10,7 @@ namespace TheLastGate.Map;
 // x * height + y.
 public sealed class ExploredMap
 {
-    public const int Size = 2048;
+    public const int Size = WorldMap.WorldTiles;
 
     // "TLGM", then little-endian u32 format, width, height and compressed size, then the zlib-compressed tiles.
     // Format 1 tiles are u16 RGB555, format 2 tiles are u32 0x00RRGGBB.

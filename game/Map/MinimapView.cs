@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using TheLastGate.State;
 
 namespace TheLastGate.Map;
 
@@ -17,7 +18,7 @@ public sealed class MinimapView
     public const int Pixels = 128;
 
     // Only the top half of the stored map is ever part of the world.
-    private const int WorldRows = 1024;
+    private const int WorldRows = WorldMap.WorldTiles;
     private const int SmallestMagnification = 1;
     private const int LargestMagnification = 4;
     private const int BytesPerPixel = 4;

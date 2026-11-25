@@ -34,8 +34,8 @@ script = ExtResource("2_label")
 
 [node name="Current" type="Label" parent="." unique_id=826038037]
 layout_mode = 0
-offset_left = 140.0
-offset_right = 158.0
+offset_left = 138.0
+offset_right = 163.0
 offset_bottom = 9.0
 text = "12"
 horizontal_alignment = 2
@@ -43,8 +43,8 @@ script = ExtResource("2_label")
 
 [node name="Raise" type="Label" parent="." unique_id=1298233222]
 layout_mode = 0
-offset_left = 163.0
-offset_right = 169.0
+offset_left = 167.0
+offset_right = 173.0
 offset_bottom = 9.0
 text = "+"
 script = ExtResource("2_label")
@@ -96,16 +96,16 @@ script = ExtResource("3_click")
 
 [node name="RaiseArea" type="Control" parent="." unique_id=1368325786]
 layout_mode = 0
-offset_left = 160.0
+offset_left = 164.0
 offset_top = -6.0
-offset_right = 172.0
+offset_right = 175.0
 offset_bottom = 8.0
 mouse_filter = 1
 script = ExtResource("3_click")
 
 [node name="LowerArea" type="Control" parent="." unique_id=470171003]
 layout_mode = 0
-offset_left = 172.0
+offset_left = 175.0
 offset_top = -6.0
 offset_right = 185.0
 offset_bottom = 8.0

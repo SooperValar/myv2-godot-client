@@ -1,20 +1,23 @@
 namespace TheLastGate.Characters;
 
-// The server's race number is template + game mode * 10000 + season * 100000.
+// The MyV2 server's race number is its character template. It makes new characters only from the six starting
+// templates and ignores game modes and seasons, which The Last Gate added above the template.
 public readonly record struct CharacterRace(CharacterClass Class, Body Body, GameMode GameMode, Season Season)
 {
     private const int GameModeFactor = 10000;
     private const int SeasonFactor = 100000;
 
-    // Indexed by class, then body. Both Lycanthrope bodies share one template.
+    // Indexed by class, then body. The Last Gate's own classes have no MyV2 template.
+    private const int NoTemplate = -1;
+
     private static readonly int[,] Templates =
     {
-        { 4, 5 }, { 6, 7 }, { 8, 9 }, { 12, 13 }, { 14, 15 }, { 16, 17 },
-        { 10, 11 }, { 18, 19 }, { 20, 21 }, { 22, 23 }, { 2, 3 }, { 1554, 1554 },
+        { 3, 77 }, { 2, 76 }, { 4, 78 }, { 544, 549 }, { NoTemplate, NoTemplate }, { 547, 552 },
+        { 13, 79 }, { 546, 551 }, { NoTemplate, NoTemplate }, { 545, 550 }, { NoTemplate, NoTemplate },
+        { NoTemplate, NoTemplate },
     };
 
-    public int ToNumber() =>
-        Templates[(int)Class, (int)Body] + (int)GameMode * GameModeFactor + (int)Season * SeasonFactor;
+    public int ToNumber() => Templates[(int)Class, (int)Body];
 
     // A template that isn't listed is read as a masculine Templar.
     public static CharacterRace FromNumber(int number)

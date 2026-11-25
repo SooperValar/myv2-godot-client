@@ -149,6 +149,7 @@ popup/item_1/text = "Feminine"
 popup/item_1/id = 1
 
 [node name="GameModeLabel" type="Label" parent="CharacterForm" unique_id=133048277]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 22)
 layout_mode = 2
@@ -156,6 +157,7 @@ text = "Game Mode"
 vertical_alignment = 1
 
 [node name="GameModeOption" type="OptionButton" parent="CharacterForm" unique_id=1245462479]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(156, 22)
 layout_mode = 2
@@ -168,6 +170,7 @@ popup/item_1/text = "Hard Mode"
 popup/item_1/id = 1
 
 [node name="SeasonLabel" type="Label" parent="CharacterForm" unique_id=428645059]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(150, 22)
 layout_mode = 2
@@ -175,6 +178,7 @@ text = "Season"
 vertical_alignment = 1
 
 [node name="SeasonOption" type="OptionButton" parent="CharacterForm" unique_id=683560613]
+visible = false
 unique_name_in_owner = true
 custom_minimum_size = Vector2(156, 22)
 layout_mode = 2

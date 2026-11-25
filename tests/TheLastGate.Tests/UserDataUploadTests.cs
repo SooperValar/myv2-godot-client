@@ -24,6 +24,18 @@ public class UserDataUploadTests
         Assert.Null(UserDataUpload.For(record, chat));
     }
 
+    [Theory]
+    [InlineData("")]
+    [InlineData("Too short")]
+    public void ACharacterWithTooShortADescription_SendsNothing(string description)
+    {
+        var record = CharacterRecord.CreateNew();
+        record.CharacterName = "Ishtar";
+        record.Description = description;
+
+        Assert.Null(UserDataUpload.For(record, chat));
+    }
+
     [Fact]
     public void AChangedCharacter_SendsItsNameAndDescription()
     {

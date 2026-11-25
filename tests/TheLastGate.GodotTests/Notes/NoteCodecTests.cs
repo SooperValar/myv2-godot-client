@@ -55,7 +55,7 @@ public class NoteCodecTests
         var route = set.AddCategory("Route", 5);
         var pin = set.AddPoint(givers, NoteKind.Pin, 55, 66, "Elder");
         set.SetNoteColour(pin, 4);
-        set.AddPath(route, [new PathSegment(10, 20, 30, 40), new PathSegment(30, 40, 2047, 0)], "Maze");
+        set.AddPath(route, [new PathSegment(10, 20, 30, 40), new PathSegment(30, 40, 1023, 0)], "Maze");
         set.FindCategory(aston)!.ShowLabels = false;
         set.FindCategory(route)!.Visible = false;
         var bytes = new List<byte>();
@@ -78,7 +78,7 @@ public class NoteCodecTests
         AssertThat((loadedGivers.Notes[0].TileX, loadedGivers.Notes[0].TileY)).IsEqual((55, 66));
         AssertThat(loadedRoute.Notes[0].ColourIndex).IsEqual(Note.CategoryColour);
         AssertThat(loadedRoute.Notes[0].Segments)
-            .ContainsExactly(new PathSegment(10, 20, 30, 40), new PathSegment(30, 40, 2047, 0));
+            .ContainsExactly(new PathSegment(10, 20, 30, 40), new PathSegment(30, 40, 1023, 0));
         AssertThat(tree.Changed).IsFalse();
     }
 

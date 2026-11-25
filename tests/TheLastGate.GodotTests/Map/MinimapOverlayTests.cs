@@ -13,9 +13,9 @@ public class MinimapOverlayTests
 
     private static readonly PathSegment[] Segments =
     [
-        new(2000, 5, 3, 1900), new(1900, 1700, 20, 30), new(0, 0, 300, 300), new(700, 2047, 300, 0),
-        new(350, 410, 360, 1200), new(420, 900, 330, 905), new(400, 400, 401, 450), new(380, 390, 381, 395),
-        new(200, 2047, 600, 0), new(400, 420, 400, 420), new(0, 2047, 2047, 0), new(1500, 470, 0, 431),
+        new(1000, 5, 3, 950), new(950, 850, 20, 30), new(0, 0, 300, 300), new(700, 1023, 300, 0),
+        new(350, 410, 360, 600), new(420, 900, 330, 905), new(400, 400, 401, 450), new(380, 390, 381, 395),
+        new(200, 1023, 600, 0), new(400, 420, 400, 420), new(0, 1023, 1023, 0), new(750, 470, 0, 431),
     ];
 
     private NoteSet notes = new();
@@ -25,7 +25,7 @@ public class MinimapOverlayTests
     {
         get
         {
-            int[][] origins = [[0, 0], [330, 400], [390, 410], [1900, 1900]];
+            int[][] origins = [[0, 0], [330, 400], [390, 410], [950, 950]];
             int[] magnifications = [1, 2, 3, 5];
             for (var segmentIndex = 0; segmentIndex < Segments.Length; segmentIndex++)
             {
@@ -178,7 +178,7 @@ public class MinimapOverlayTests
     public void Paint_DrawsNothingForAFloodOfSegmentsOffTheMinimap()
     {
         var segments = Enumerable.Range(0, NoteLimits.SegmentsPerPath)
-            .Select(index => new PathSegment(200 + index, 0, 200 + index, 2047))
+            .Select(index => new PathSegment(200 + index, 0, 200 + index, 1023))
             .ToArray();
         for (var categoryIndex = 0; categoryIndex < 16; categoryIndex++)
         {

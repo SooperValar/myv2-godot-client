@@ -1,31 +1,29 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using TheLastGate.State;
 
 namespace TheLastGate.Stats;
 
+// The order merc.exe lists skills in: learnt ones first, ones fixed at their limit below them, then by group and name.
 public static class SkillOrder
 {
-    private const int SeyanDuSkill = 44;
-    private const int IdentifySkill = 52;
-
-    private static readonly HashSet<int> ClassSkills = [50, 51, 52, 53, 54];
-    private static readonly HashSet<int> LycanthropeSkills = [53, 54];
-    private static readonly HashSet<int> WorksUnlearnt = [8, 23, 28, 29, 30, 32, 44, 50, 51, 52, 53, 54];
-
-    public static int[] Sorted(IEnumerable<SkillEntry> skills, uint kindred)
+    public static int[] Sorted(IEnumerable<SkillEntry> skills)
     {
         var sorted = skills.ToArray();
-        Array.Sort(sorted, (first, second) => Compare(first, second, kindred));
+        Array.Sort(sorted, Compare);
         return Array.ConvertAll(sorted, skill => skill.Number);
     }
 
-    private static int Compare(SkillEntry first, SkillEntry second, uint kindred)
+    private static int Compare(SkillEntry first, SkillEntry second)
     {
         if (first.Number == second.Number)
         {
             return 0;
+        }
+
+        if (Last(first, second, skill => skill.Name.Length == 0) is { } unnamed)
+        {
+            return unnamed;
         }
 
         if (first.Learnt != second.Learnt)
@@ -33,39 +31,9 @@ public static class SkillOrder
             return first.Learnt ? -1 : 1;
         }
 
-        var knowsIdentify = (kindred & Kindred.KnowsIdentify) != 0;
-        if (!knowsIdentify && Last(first, second, skill => skill.Number == IdentifySkill) is { } identify)
+        if (Last(first, second, skill => skill.Fixed) is { } fixedSkill)
         {
-            return identify;
-        }
-
-        var isLycanthrope = (kindred & Kindred.Lycanthrope) != 0;
-        if (!isLycanthrope && Last(first, second, skill => LycanthropeSkills.Contains(skill.Number)) is { } lycanthrope)
-        {
-            return lycanthrope;
-        }
-
-        if (Last(first, second, skill => !ClassSkills.Contains(skill.Number)) is { } classSkill)
-        {
-            return classSkill;
-        }
-
-        if (!first.Learnt && Last(first, second, skill => !WorksUnlearnt.Contains(skill.Number)) is { } unlearnt)
-        {
-            return unlearnt;
-        }
-
-        if ((kindred & Kindred.SeyanDu) == 0)
-        {
-            if (first.Number == SeyanDuSkill)
-            {
-                return 1;
-            }
-
-            if (second.Number == SeyanDuSkill)
-            {
-                return -1;
-            }
+            return fixedSkill;
         }
 
         return first.SortKey != second.SortKey

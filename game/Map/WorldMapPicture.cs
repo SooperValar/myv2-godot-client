@@ -1,13 +1,13 @@
 using System;
+using TheLastGate.State;
 
 namespace TheLastGate.Map;
 
-// The explored map as one picture for the world map window: map y across, map x down, over the top half of the
-// stored map, which is all of the world there is. Unexplored tiles are black.
+// The explored map as one picture for the world map window: map y across, map x down. Unexplored tiles are black.
 public static class WorldMapPicture
 {
-    public const int Width = 2048;
-    public const int Height = 1024;
+    public const int Width = WorldMap.WorldTiles;
+    public const int Height = WorldMap.WorldTiles;
 
     private const int BytesPerPixel = 4;
 

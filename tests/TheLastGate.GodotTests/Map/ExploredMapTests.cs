@@ -26,8 +26,8 @@ public sealed class ExploredMapTests
     {
         var map = new ExploredMap();
 
-        AssertThat(map.Width).IsEqual(2048);
-        AssertThat(map.Height).IsEqual(2048);
+        AssertThat(map.Width).IsEqual(1024);
+        AssertThat(map.Height).IsEqual(1024);
         AssertThat(map.ColourAt(1000, 1000)).IsEqual(0u);
         AssertThat(map.Changed).IsFalse();
     }

@@ -10,5 +10,5 @@ public static class NoteLimits
     public const int NotesPerCategory = 256;
     public const int SegmentsPerPath = 512;
     public const int SegmentsPerCategory = 4096;
-    public const int Tiles = 2048;
+    public const int Tiles = 1024;
 }

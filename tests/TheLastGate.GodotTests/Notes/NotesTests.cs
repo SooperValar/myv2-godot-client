@@ -395,5 +395,5 @@ public class NotesTests
         new(NoteKind.Pin, "", tileX, tileY, [], Note.CategoryColour) { Id = id };
 
     private static PathSegment[] LongPath(int segments) =>
-        Enumerable.Range(0, segments).Select(index => new PathSegment(index % 2047, 1, index % 2047 + 1, 1)).ToArray();
+        Enumerable.Range(0, segments).Select(index => new PathSegment(index % 1023, 1, index % 1023 + 1, 1)).ToArray();
 }

@@ -9,7 +9,7 @@ public sealed class SkillScroll
 
     public int Row { get; private set; }
 
-    public static int LastRow => Terminology.SkillCount - VisibleRows;
+    public static int LastRow => MyV2Skills.Listed - VisibleRows;
 
     public void ScrollBy(int rows) => ScrollTo(Row + rows);
 

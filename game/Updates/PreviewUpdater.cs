@@ -65,6 +65,6 @@ public sealed class PreviewUpdater(bool failDownload) : IUpdater
     private static AvailableRelease Release(string version, string date, string sections) =>
         new(
             Version.Parse(version),
-            $"## [{version}](https://github.com/jamesblack/thelastgate-godot/compare/v0...v{version}) ({date})\n\n\n{sections}\n",
+            $"## [{version}](https://github.com/SooperValar/myv2-godot-client/compare/v0...v{version}) ({date})\n\n\n{sections}\n",
             FullSizeBytes);
 }

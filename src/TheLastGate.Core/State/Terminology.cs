@@ -14,6 +14,8 @@ public sealed class Terminology
 
     private bool askedForMetaText;
 
+    public Terminology() => MyV2Skills.Fill(Skills);
+
     // Shown until the server sends the trees' real icons and names.
     public SkillTreeNode[][] Trees { get; } =
     [

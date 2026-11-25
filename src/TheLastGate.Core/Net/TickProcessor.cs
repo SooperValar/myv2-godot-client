@@ -117,6 +117,7 @@ public sealed class TickProcessor(GameState state)
             }
         }
 
+        MyV2Skills.ShowFor(state.Terminology.Skills, state.Player.Skills);
         state.ItemLooks.EndOfTick();
         state.BuffWatch.EndOfTick();
         state.WatchViewCentre();

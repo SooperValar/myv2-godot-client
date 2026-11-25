@@ -16,7 +16,7 @@ namespace TheLastGate.Launcher;
 public partial class LauncherScreen : Control
 {
     private const string StartAsArgument = "--start-as=";
-    private const string DiscordInvite = "https://discord.gg/jJbPv2R";
+    private const string DiscordInvite = "https://discord.gg/hVpuUPp3jp";
     private const int MaxDescriptionLength = 159;
     private const int WindowedOptionId = 1;
     private const int DialogButtonGap = 10;

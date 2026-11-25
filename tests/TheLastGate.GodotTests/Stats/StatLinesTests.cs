@@ -27,7 +27,7 @@ public class StatLinesTests
     {
         var line = StatLines.Attribute(0, [10, 0, 50, 3, 1, 44], new StatPlan(), Plenty);
 
-        AssertThat(line).IsEqual(new StatLine("Braveness", TextColour.Yellow, 10, 300, true, 150));
+        AssertThat(line).IsEqual(new StatLine("Braveness", TextColour.Yellow, 10, 44, true, 150));
     }
 
     [TestCase(150, true)]
@@ -123,7 +123,7 @@ public class StatLinesTests
 
         var line = StatLines.Attribute(0, values, plan, Plenty);
 
-        AssertThat(line).IsEqual(new StatLine("Braveness", TextColour.Yellow, 12, 302, true, 259, true));
+        AssertThat(line).IsEqual(new StatLine("Braveness", TextColour.Yellow, 12, 46, true, 259, true));
     }
 
     [TestCase(349, true)]

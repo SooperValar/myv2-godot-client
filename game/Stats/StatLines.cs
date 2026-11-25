@@ -6,8 +6,7 @@ namespace TheLastGate.Stats;
 public static class StatLines
 {
     private const int BaseValue = 0;
-    private const int ScoreHigh = 4;
-    private const int ScoreLow = 5;
+    private const int Total = 5;
     private const int Maximum = 5;
     private const int NotLearntValue = 300;
 
@@ -16,6 +15,9 @@ public static class StatLines
 
     public static StatLine HitPoints(int[] values, StatPlan plan, int points) =>
         Raisable("Hitpoints", StatSlots.HitPoints, values, values[Maximum], plan, points);
+
+    public static StatLine Endurance(int[] values, StatPlan plan, int points) =>
+        Raisable("Endurance", StatSlots.Endurance, values, values[Maximum], plan, points);
 
     public static StatLine Mana(int[] values, StatPlan plan, int points) =>
         Raisable("Mana", StatSlots.Mana, values, values[Maximum], plan, points);
@@ -44,5 +46,5 @@ public static class StatLines
             planned > 0);
     }
 
-    private static int Score(int[] values) => (values[ScoreHigh] << 8) | values[ScoreLow];
+    private static int Score(int[] values) => values[Total];
 }

@@ -40,8 +40,8 @@ public class WorldMapViewTests
         AssertThat(Math.Round(back.Y, Precision)).IsEqual(Math.Round(panelY, Precision));
     }
 
-    [TestCase(1024, 1024)]
-    [TestCase(2048, 512)]
+    [TestCase(512, 512)]
+    [TestCase(1024, 512)]
     public void TheSmallestZoom_FitsTheWholeWorld(double panelWidth, double panelHeight)
     {
         AssertThat(Math.Round(WorldMapView.MinPixelsPerTile(panelWidth, panelHeight), Precision))
@@ -64,7 +64,7 @@ public class WorldMapViewTests
         view.CentreTileY = 5000;
         view.Clamp(Width, Height);
         AssertThat(Math.Round(view.CentreTileX, Precision)).IsEqual(0.0);
-        AssertThat(Math.Round(view.CentreTileY, Precision)).IsEqual(2048.0);
+        AssertThat(Math.Round(view.CentreTileY, Precision)).IsEqual(1024.0);
     }
 
     [TestCase]

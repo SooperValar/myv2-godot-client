@@ -24,6 +24,12 @@ public class RaiseCostTests
     }
 
     [Fact]
+    public void Endurance_CostsItsValueTimesItsDifficultyOverTwo()
+    {
+        Assert.Equal(90, RaiseCost.At(StatSlots.Endurance, [60, 0, 500, 3], 0));
+    }
+
+    [Fact]
     public void ASkill_CostsItsValueCubedTimesItsDifficultyOverFortyButAtLeastItsValue()
     {
         Assert.Equal(3, RaiseCost.At(StatSlots.Skill(Dagger), [3, 0, 50, 1], 0));

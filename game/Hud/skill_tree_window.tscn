@@ -54,7 +54,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6601
+SpriteNumber = 106601
 
 [node name="Corruption" type="TextureRect" parent="Node0" unique_id=1245436168]
 visible = false
@@ -63,7 +63,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node1" type="Control" parent="." unique_id=1095741361]
 layout_mode = 0
@@ -88,7 +88,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6602
+SpriteNumber = 106602
 
 [node name="Corruption" type="TextureRect" parent="Node1" unique_id=1187269403]
 visible = false
@@ -97,7 +97,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node2" type="Control" parent="." unique_id=1232756515]
 layout_mode = 0
@@ -122,7 +122,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6603
+SpriteNumber = 106603
 
 [node name="Corruption" type="TextureRect" parent="Node2" unique_id=1517520957]
 visible = false
@@ -131,7 +131,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node3" type="Control" parent="." unique_id=756643925]
 layout_mode = 0
@@ -156,7 +156,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6604
+SpriteNumber = 106604
 
 [node name="Corruption" type="TextureRect" parent="Node3" unique_id=1103653086]
 visible = false
@@ -165,7 +165,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node4" type="Control" parent="." unique_id=187812183]
 layout_mode = 0
@@ -190,7 +190,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6605
+SpriteNumber = 106605
 
 [node name="Corruption" type="TextureRect" parent="Node4" unique_id=700343700]
 visible = false
@@ -199,7 +199,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node5" type="Control" parent="." unique_id=1745543620]
 layout_mode = 0
@@ -224,7 +224,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6606
+SpriteNumber = 106606
 
 [node name="Corruption" type="TextureRect" parent="Node5" unique_id=1958301255]
 visible = false
@@ -233,7 +233,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node6" type="Control" parent="." unique_id=1384831652]
 layout_mode = 0
@@ -258,7 +258,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6607
+SpriteNumber = 106607
 
 [node name="Corruption" type="TextureRect" parent="Node6" unique_id=1489116281]
 visible = false
@@ -267,7 +267,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node7" type="Control" parent="." unique_id=1042105995]
 layout_mode = 0
@@ -292,7 +292,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6608
+SpriteNumber = 106608
 
 [node name="Corruption" type="TextureRect" parent="Node7" unique_id=1508354113]
 visible = false
@@ -301,7 +301,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node8" type="Control" parent="." unique_id=1084503174]
 layout_mode = 0
@@ -326,7 +326,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6609
+SpriteNumber = 106609
 
 [node name="Corruption" type="TextureRect" parent="Node8" unique_id=1287036785]
 visible = false
@@ -335,7 +335,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node9" type="Control" parent="." unique_id=959757930]
 layout_mode = 0
@@ -360,7 +360,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6610
+SpriteNumber = 106610
 
 [node name="Corruption" type="TextureRect" parent="Node9" unique_id=700656653]
 visible = false
@@ -369,7 +369,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node10" type="Control" parent="." unique_id=1162476082]
 layout_mode = 0
@@ -394,7 +394,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6611
+SpriteNumber = 106611
 
 [node name="Corruption" type="TextureRect" parent="Node10" unique_id=986285770]
 visible = false
@@ -403,7 +403,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Node11" type="Control" parent="." unique_id=1430623003]
 layout_mode = 0
@@ -428,7 +428,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6612
+SpriteNumber = 106612
 
 [node name="Corruption" type="TextureRect" parent="Node11" unique_id=275122587]
 visible = false
@@ -437,7 +437,7 @@ offset_left = 2.0
 offset_top = 2.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 7067
+SpriteNumber = 107067
 
 [node name="Centre" type="TextureRect" parent="." unique_id=1091720413]
 layout_mode = 0
@@ -445,7 +445,7 @@ offset_left = 128.0
 offset_top = 128.0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 6600
+SpriteNumber = 106600
 
 [node name="Counter" type="Label" parent="." unique_id=1134194505]
 layout_mode = 0

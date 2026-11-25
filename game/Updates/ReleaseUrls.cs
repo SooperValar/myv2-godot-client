@@ -4,14 +4,14 @@ namespace TheLastGate.Updates;
 
 public static class ReleaseUrls
 {
-    public const string Repository = "https://github.com/jamesblack/thelastgate-godot";
+    public const string Repository = "https://github.com/SooperValar/myv2-godot-client";
     public const string TestChannelPrefix = "test-";
     public const string TestTagPrefix = "updater-test-v";
 
     private const string ProductionTagPrefix = "v";
 
     public static Uri TestReleases { get; } =
-        new("https://api.github.com/repos/jamesblack/thelastgate-godot/releases?per_page=100");
+        new("https://api.github.com/repos/SooperValar/myv2-godot-client/releases?per_page=100");
 
     public static bool IsTestChannel(string channel) => channel.StartsWith(TestChannelPrefix, StringComparison.Ordinal);
 

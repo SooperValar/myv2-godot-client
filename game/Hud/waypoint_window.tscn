@@ -51,7 +51,7 @@ script = ExtResource("1_view")
 layout_mode = 0
 mouse_filter = 2
 script = ExtResource("2_sprite")
-SpriteNumber = 5
+SpriteNumber = 100005
 DarkSpriteNumber = 118005
 FadesAs = 5
 

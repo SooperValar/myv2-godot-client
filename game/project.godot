@@ -10,10 +10,10 @@ config_version=5
 
 [application]
 
-config/name="The Last Gate: Godot"
+config/name="Mercenaries of Asgard v2"
 run/main_scene="res://Launcher/launcher.tscn"
 config/use_custom_user_dir=true
-config/custom_user_dir_name="TheLastGateGodot"
+config/custom_user_dir_name="MercenariesOfAsgardV2"
 config/features=PackedStringArray("4.7", "C#", "GL Compatibility")
 config/icon="res://images/app-icon.png"
 

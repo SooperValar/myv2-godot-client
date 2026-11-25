@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using TheLastGate.Notes;
+using TheLastGate.State;
 
 namespace TheLastGate.Map;
 
@@ -13,8 +14,8 @@ public sealed class WorldMapView
     public const double MaxPixelsPerTile = 16;
     public const double ZoomStep = 1.25;
 
-    private const int TilesDown = 1024;
-    private const int TilesAcross = 2048;
+    private const int TilesDown = WorldMap.WorldTiles;
+    private const int TilesAcross = WorldMap.WorldTiles;
     private const double OpeningPixelsPerTile = 8;
     private const double SmallestFit = 1e-3;
 

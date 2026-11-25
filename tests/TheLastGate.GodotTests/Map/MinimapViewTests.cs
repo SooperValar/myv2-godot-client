@@ -83,15 +83,15 @@ public class MinimapViewTests
         AssertThat(view.Origin(10, 10)).IsEqual((0, 0));
     }
 
-    [TestCase(1, 896, 1920)]
-    [TestCase(2, 960, 1984)]
-    [TestCase(3, 981, 2005)]
-    [TestCase(4, 992, 2016)]
+    [TestCase(1, 896, 896)]
+    [TestCase(2, 960, 960)]
+    [TestCase(3, 981, 981)]
+    [TestCase(4, 992, 992)]
     public void Origin_ShowsTheLastRowAndColumnOfTheWorld(int magnification, int originX, int originY)
     {
         ZoomTo(magnification);
 
-        AssertThat(view.Origin(1023, 2047)).IsEqual((originX, originY));
+        AssertThat(view.Origin(1023, 1023)).IsEqual((originX, originY));
     }
 
     [TestCase]

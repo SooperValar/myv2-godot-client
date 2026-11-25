@@ -19,8 +19,7 @@ public sealed class PlannerGame
 {
     public const int StatValueCount = PlayerState.StatValueCount;
 
-    private const int ScoreHigh = 4;
-    private const int ScoreLow = 5;
+    private const int Total = 5;
 
     public int Points { get; set; }
 
@@ -88,8 +87,7 @@ public sealed class PlannerGame
                 .ToArray(),
             SkillOrder = Stats.SkillOrder.Sorted(
                 terminology.Skills.Select((text, number) =>
-                    new SkillEntry(number, text.Name, text.SortKey, player.Skills[number][0] != 0)),
-                player.Kindred),
+                    SkillEntry.For(number, text.Name, text.SortKey, player.Skills[number]))),
             Plan = plan,
             Choices = choices,
         };
@@ -134,7 +132,7 @@ public sealed class PlannerGame
         _ => Skills[slot - StatSlots.FirstSkill],
     };
 
-    public static int Score(int[] values) => (values[ScoreHigh] << 8) | values[ScoreLow];
+    public static int Score(int[] values) => values[Total];
 
     private static void CopyValues(int[][] from, int[][] to)
     {

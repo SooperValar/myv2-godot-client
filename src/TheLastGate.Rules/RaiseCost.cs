@@ -22,6 +22,7 @@ public static class RaiseCost
         {
             < PlayerState.AttributeCount => value * value * value * difficulty / 20,
             StatSlots.HitPoints or StatSlots.Mana => value * difficulty,
+            StatSlots.Endurance => value * difficulty / 2,
             _ => Math.Max(value, value * value * value * difficulty / 40),
         };
     }

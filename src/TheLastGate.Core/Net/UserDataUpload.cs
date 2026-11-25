@@ -10,6 +10,7 @@ namespace TheLastGate.Net;
 public sealed class UserDataUpload
 {
     private const int TicksBetweenCommands = 5;
+    private const int ShortestDescription = 10;
     private const int ChunkLength = 13;
     private const int ChunksPerText = 6;
     private const int TextLength = ChunksPerText * ChunkLength;
@@ -41,9 +42,12 @@ public sealed class UserDataUpload
     public bool Done => nextChunk >= ChunkCount;
 
     // Only a character marked changed is sent, as in the current client: a new one, one whose description was edited,
-    // or one just picked from the launcher's list.
+    // or one just picked from the launcher's list. One with too short a description isn't: the MyV2 server answers that
+    // by replacing the character's own description with a nondescript one.
     public static UserDataUpload? For(CharacterRecord record, TextLog chat) =>
-        record.Changed ? new UserDataUpload(record.CharacterName, record.Description, chat) : null;
+        record.Changed && record.Description.Length >= ShortestDescription
+            ? new UserDataUpload(record.CharacterName, record.Description, chat)
+            : null;
 
     // The command to send this tick, if any.
     public byte[]? Tick()

@@ -3,10 +3,12 @@ using TheLastGate.Net;
 
 namespace TheLastGate.State;
 
-// The server numbers the values a stat point can raise: the attributes first, then hitpoints, mana and the skills.
+// The server numbers the values a stat point can raise: the attributes first, then hitpoints, endurance, mana and the
+// skills.
 public static class StatSlots
 {
     public const int HitPoints = 5;
+    public const int Endurance = 6;
     public const int Mana = 7;
     public const int FirstSkill = StatPackets.FirstSkillSlot;
     public const int Count = FirstSkill + PlayerState.SkillSlots;
@@ -20,6 +22,7 @@ public static class StatSlots
     {
         < PlayerState.AttributeCount => player.Attributes[slot],
         HitPoints => player.HitPoints,
+        Endurance => player.Endurance,
         Mana => player.Mana,
         _ => player.Skills[slot - FirstSkill],
     };
