@@ -22,6 +22,12 @@ public static class ShopClicks
         _ => null,
     };
 
+    // In the trash window a click takes an item back to the backpack; nothing there buys or describes.
+    public static byte[]? TrashPacket(MapButton button, MapKeys keys, int trashNumber, int slot) =>
+        button == MapButton.Left && (keys & (MapKeys.Ctrl | MapKeys.Alt)) == 0
+            ? ShopPackets.Buy(trashNumber, slot)
+            : null;
+
     public static MouseCursor Cursor(bool slotHasItem, bool holdingItem) => (slotHasItem, holdingItem) switch
     {
         (true, _) => MouseCursor.Take,

@@ -18,7 +18,8 @@ public static class InventoryClicks
         MapButton button,
         MapKeys keys,
         ShopSale? sale,
-        int selectedCharacter)
+        int selectedCharacter,
+        int? openTrash = null)
     {
         if (button == MapButton.Right)
         {
@@ -30,6 +31,11 @@ public static class InventoryClicks
         if (button != MapButton.Left)
         {
             return [];
+        }
+
+        if (keys == MapKeys.Shift && openTrash is { } trash)
+        {
+            return item.Sprite != 0 ? [ShopPackets.PutInTrash(trash, slot)] : [];
         }
 
         if (keys == AllKeys)
@@ -54,9 +60,14 @@ public static class InventoryClicks
         return [InventoryPackets.For(action, slot, selectedCharacter)];
     }
 
-    public static MouseCursor Cursor(ItemSlot item, bool holdingItem, MapKeys keys)
+    public static MouseCursor Cursor(ItemSlot item, bool holdingItem, MapKeys keys, bool trashOpen = false)
     {
         var hasItem = item.Sprite != 0;
+        if (keys == MapKeys.Shift && trashOpen)
+        {
+            return hasItem ? MouseCursor.Trash : MouseCursor.None;
+        }
+
         if (keys == AllKeys)
         {
             return hasItem && CanTrash(item, holdingItem) ? MouseCursor.Trash : MouseCursor.None;

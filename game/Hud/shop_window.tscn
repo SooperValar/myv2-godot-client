@@ -6,6 +6,14 @@
 [ext_resource type="Script" uid="uid://bsuu4hjc2626f" path="res://Hud/ClickArea.cs" id="4_click"]
 [ext_resource type="PackedScene" uid="uid://c6vnyqfwgtfq3" path="res://Hud/item_slot.tscn" id="5_slot"]
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_trash"]
+bg_color = Color(0.3529412, 0.15686275, 0.13333334, 1)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.54901963, 0.41960785, 0.22745098, 1)
+
 [node name="ShopWindow" type="Control" unique_id=1778383656]
 visible = false
 layout_mode = 0
@@ -257,3 +265,28 @@ offset_top = 1.0
 offset_right = 296.0
 offset_bottom = 14.0
 script = ExtResource("4_click")
+
+[node name="TrashButton" type="Control" parent="." unique_id=1650237718]
+visible = false
+layout_mode = 0
+offset_left = 197.0
+offset_top = 285.0
+offset_right = 275.0
+offset_bottom = 309.0
+script = ExtResource("4_click")
+
+[node name="Panel" type="Panel" parent="TrashButton" unique_id=301928475]
+layout_mode = 0
+offset_right = 78.0
+offset_bottom = 24.0
+mouse_filter = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_trash")
+
+[node name="Text" type="Label" parent="TrashButton" unique_id=1192837460]
+layout_mode = 0
+offset_right = 78.0
+offset_bottom = 24.0
+text = "Trash"
+horizontal_alignment = 1
+vertical_alignment = 1
+script = ExtResource("3_label")

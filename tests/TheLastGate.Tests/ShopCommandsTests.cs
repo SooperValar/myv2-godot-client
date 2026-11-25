@@ -81,11 +81,24 @@ public class ShopCommandsTests
         Assert.Equal(1000, state.Shop.ShopItems[0].Sprite);
     }
 
-    private static TestCommand[] ShopLookCommands() =>
+    [Theory]
+    [InlineData(0x4000 | 12, ShopKind.Trash)]
+    [InlineData(0x8000 | 12, ShopKind.Merchant)]
+    [InlineData(0xC000 | 12, ShopKind.Merchant)]
+    public void Shop_IsTheTrashWindowWhenItsNumberCarries0x4000(int shopNumber, ShopKind kind)
+    {
+        var state = new GameState();
+
+        Process(state, [.. ShopLookCommands((ushort)shopNumber), .. ShopItemCommands(0)]);
+
+        Assert.Equal(kind, state.OpenShop);
+    }
+
+    private static TestCommand[] ShopLookCommands(ushort shopNumber = ShopNumber) =>
     [
         TestCommand.Of(ServerCommand.Look1),
         TestCommand.Of(ServerCommand.Look2),
-        TestCommand.Of(ServerCommand.Look3).UInt16(0).UInt16(0).UInt16(0).UInt16(ShopNumber).UInt16(7),
+        TestCommand.Of(ServerCommand.Look3).UInt16(0).UInt16(0).UInt16(0).UInt16(shopNumber).UInt16(7),
         TestCommand.Of(ServerCommand.Look4).UInt16(0).UInt16(0).Byte((byte)LookFlags.Shop).UInt32(250),
         TestCommand.Of(ServerCommand.Look5).Text("Merchant", 15),
     ];

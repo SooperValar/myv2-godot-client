@@ -10,4 +10,5 @@ public enum ShopKind
     WeaponSmith,
     ArmourSmith,
     Depot,
+    Trash,
 }

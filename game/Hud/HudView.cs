@@ -70,6 +70,8 @@ public partial class HudView : Control
 
     private readonly DepotPage depotPage = new();
     private readonly ExitSequence exit = new();
+    private readonly TrashButton trashButton = new();
+    private readonly TrashWatch trashWatch = new();
     private readonly FocusCache focusCache = new();
     private readonly LookPanel lookPanel = new();
     private readonly byte[] minimapPixels = new byte[MinimapView.Pixels * MinimapView.Pixels * 4];
@@ -280,7 +282,8 @@ public partial class HudView : Control
                 () => InventoryClicks.Cursor(
                     Player.Inventory[inventory.SlotShownIn(clickedCell)],
                     HoldingItem,
-                    HeldKeys.Current()));
+                    HeldKeys.Current(),
+                    state?.OpenShop == ShopKind.Trash));
         }
 
         state.LookShown += ShowLook;
@@ -291,6 +294,7 @@ public partial class HudView : Control
         chatLine.EscapePressed += PressEscape;
         var shopWindow = GetNode<ShopWindowView>("%ShopWindow");
         shopWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
+        shopWindow.GetNode<ClickArea>("TrashButton").Released += ClickTrashButton;
         foreach (var node in shopWindow.GetNode("Grid").GetChildren())
         {
             var shopCell = (ItemSlotView)node;
@@ -624,7 +628,14 @@ public partial class HudView : Control
         ShowHeldItem(state.Player.HeldItem);
         ShowTreeButton();
         var buyingTen = Input.IsKeyPressed(Key.Ctrl) || Input.IsKeyPressed(Key.Alt);
-        GetNode<ShopWindowView>("%ShopWindow").ShowText(state, hoveredShopCell, buyingTen);
+        if (trashWatch.Follow(state.OpenShop, state.Shop.Number) is { } trashClosed)
+        {
+            trashButton.Disarm();
+            sendCommand(trashClosed);
+        }
+
+        GetNode<ShopWindowView>("%ShopWindow")
+            .ShowText(state, hoveredShopCell, buyingTen, trashButton.IsArmed(UiClock()));
         if (hoveredSlot is not { } hover)
         {
             return;
@@ -758,7 +769,8 @@ public partial class HudView : Control
             button,
             keys,
             SaleToOpenShop(),
-            selectedCharacter);
+            selectedCharacter,
+            state.OpenShop == ShopKind.Trash ? state.Shop.Number : null);
         foreach (var packet in packets)
         {
             sendCommand(packet);
@@ -766,7 +778,7 @@ public partial class HudView : Control
     }
 
     private ShopSale? SaleToOpenShop() =>
-        state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith
+        state?.OpenShop is { } shop and not ShopKind.WeaponSmith and not ShopKind.ArmourSmith and not ShopKind.Trash
             ? new ShopSale(state.Shop.Number, depotPage.Current)
             : null;
 
@@ -1010,11 +1022,12 @@ public partial class HudView : Control
 
     private void ClickTrashCan(MapButton button)
     {
-        if (TrashCan.Packet(button, selectedCharacter) is { } packet)
+        foreach (var packet in TrashCan.Packets(button, HoldingItem, selectedCharacter))
         {
             sendCommand(packet);
         }
-        else if (button == MapButton.Right)
+
+        if (button == MapButton.Right)
         {
             state?.Chat.Add(new LogLine(TrashCan.Hint, HintFont));
         }
@@ -1258,11 +1271,30 @@ public partial class HudView : Control
         }
 
         var slot = ShopClicks.SlotFor(cell);
-        if (ShopClicks.Packet(button, HeldKeys.Current(), state.Shop.Number, slot) is { } packet)
+        var packet = state.OpenShop == ShopKind.Trash
+            ? ShopClicks.TrashPacket(button, HeldKeys.Current(), state.Shop.Number, slot)
+            : ShopClicks.Packet(button, HeldKeys.Current(), state.Shop.Number, slot);
+        if (packet != null)
         {
             sendCommand(packet);
         }
     }
+
+    private void ClickTrashButton(MapButton button)
+    {
+        if (state == null || button != MapButton.Left)
+        {
+            return;
+        }
+
+        var itemCount = state.Shop.ShopItems.Count(item => item.Sprite != 0);
+        if (trashButton.Click(UiClock(), state.Shop.Number, itemCount) is { } packet)
+        {
+            sendCommand(packet);
+        }
+    }
+
+    private static TimeSpan UiClock() => TimeSpan.FromMilliseconds(Time.GetTicksMsec());
 
     private void ClickDepot(int cell, MapButton button)
     {
@@ -1596,7 +1628,8 @@ public partial class HudView : Control
 
     private ItemTooltipRequest? ShopTooltip(int slot)
     {
-        if (!itemTooltipsShown || state is not { OpenShop: not null } shown || shown.Player.HeldItem.Sprite != 0
+        if (!itemTooltipsShown || state is not { OpenShop: not null and not ShopKind.Trash } shown
+            || shown.Player.HeldItem.Sprite != 0
             || slot >= shown.Shop.ShopItems.Length || shown.Shop.ShopItems[slot].Sprite == 0)
         {
             return null;

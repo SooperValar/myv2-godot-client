@@ -6,6 +6,9 @@ namespace TheLastGate.Net.Handlers;
 
 internal static class LookCommands
 {
+    private const int TrashWindowBit = 0x4000;
+    private const int DepotWindowBit = 0x8000;
+
     private const int NameBytesSent = 15;
     private const int ShopItemsPerCommand = 2;
     private const uint SoulstoneBit = 1u << 30;
@@ -107,7 +110,7 @@ internal static class LookCommands
         // The server sends the shop's kind in the first catalyst byte of the pair that reaches the last slot.
         if (firstSlot is >= CharacterLook.ShopSlots - ShopItemsPerCommand and <= CharacterLook.ShopSlots)
         {
-            OpenShop(state, ShopKindOf(catalysts[0]), look.Copy());
+            OpenShop(state, IsTrash(look.Number) ? ShopKind.Trash : ShopKindOf(catalysts[0]), look.Copy());
         }
     }
 
@@ -117,6 +120,9 @@ internal static class LookCommands
         state.OpenShop = kind;
         state.ReportShopOpened(kind);
     }
+
+    // MyV2 opens its trash window as a shop whose number carries 0x4000; its depot window carries 0x8000.
+    private static bool IsTrash(int shopNumber) => (shopNumber & (TrashWindowBit | DepotWindowBit)) == TrashWindowBit;
 
     private static ShopKind ShopKindOf(byte kindByte) => kindByte switch
     {

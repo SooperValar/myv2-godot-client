@@ -12,4 +12,7 @@ public enum InventoryAction
     LookAtGear = 7,
     LookAtItem = 8,
     Special = 9,
+
+    // MyV2's own: the item in the hand is destroyed.
+    TrashHeldItem = 10,
 }
