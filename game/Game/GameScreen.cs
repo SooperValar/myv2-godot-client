@@ -283,6 +283,7 @@ public partial class GameScreen : Control
         soundEffects.Start(DataPaths.Root(), clientSettings.SoundEnabled, clientSettings.SoundVolume);
         gameState.SoundRequested += soundEffects.PlayServerSound;
         // MyV2 answers item looks in chat and has no #buffs command; its own SV_ITEMINFO and SV_SPELLTIME replace both.
+        gameState.ItemInfo.Send = Counted("ItemInfo", connection.SendCommand);
         gameState.ItemLooks.Enabled = clientSettings.ItemTooltips;
         gameSession.UseQueue.Enabled = clientSettings.UseQueue;
 

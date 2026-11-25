@@ -14,12 +14,33 @@ border_width_right = 1
 border_width_bottom = 1
 border_color = Color(0.54901963, 0.41960785, 0.22745098, 1)
 
+[sub_resource type="StyleBoxLine" id="StyleBoxLine_divider"]
+color = Color(0.43137255, 0.43137255, 0.5019608, 0.5019608)
+vertical = true
+
 [node name="ItemTooltip" type="PanelContainer" unique_id=1617355546]
 mouse_filter = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_tooltip")
 script = ExtResource("1_view")
 
-[node name="Parts" type="VBoxContainer" parent="." unique_id=979647344]
+[node name="Columns" type="HBoxContainer" parent="." unique_id=1384265170]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 8
+
+[node name="Parts" type="VBoxContainer" parent="Columns" unique_id=979647344]
+layout_mode = 2
+mouse_filter = 2
+theme_override_constants/separation = 3
+
+[node name="Divider" type="VSeparator" parent="Columns" unique_id=520391877]
+visible = false
+layout_mode = 2
+mouse_filter = 2
+theme_override_styles/separator = SubResource("StyleBoxLine_divider")
+
+[node name="Equipped" type="VBoxContainer" parent="Columns" unique_id=1872046611]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 3

@@ -23,13 +23,15 @@ public partial class ItemTooltipView : PanelContainer
     private IFontSet? fonts;
     private ItemTooltipRequest? shown;
     private Func<ItemTooltipRequest?>? source;
+    private Viewport? shownIn;
 
     public override void _Process(double delta) => Update();
 
-    public void Watch(Func<ItemTooltipRequest?> tooltipSource, IFontSet fontSet)
+    public void Watch(Func<ItemTooltipRequest?> tooltipSource, IFontSet fontSet, Viewport slotViewport)
     {
         source = tooltipSource;
         fonts = fontSet;
+        shownIn = slotViewport;
         Update();
     }
 
@@ -117,14 +119,37 @@ public partial class ItemTooltipView : PanelContainer
 
         if (source() is { } request && request != shown)
         {
-            ShowParts(request.Parts(), fonts);
+            ShowParts(GetNode<VBoxContainer>("Columns/Parts"), request.Parts(), fonts);
+            var equipped = request.EquippedParts();
+            ShowParts(GetNode<VBoxContainer>("Columns/Equipped"), equipped, fonts);
+            GetNode<Control>("Columns/Equipped").Visible = equipped.Count > 0;
+            GetNode<Control>("Columns/Divider").Visible = equipped.Count > 0;
             shown = request;
+            CallDeferred(MethodName.FitPopup);
         }
     }
 
-    private void ShowParts(IReadOnlyList<TooltipPart> parts, IFontSet fontSet)
+    // Godot sizes and places its tooltip popup only when it opens, so a tooltip that grows (Shift adds the worn
+    // items) or shrinks again has to refit the popup itself and keep it inside the screen.
+    private void FitPopup()
     {
-        var rows = GetNode<VBoxContainer>("Parts");
+        var popup = GetWindow();
+        if (shownIn == null || popup == GetTree().Root)
+        {
+            return;
+        }
+
+        popup.Size = Vector2I.Zero;
+        var screen = shownIn.GetVisibleRect();
+        var left = (int)screen.Position.X;
+        var top = (int)screen.Position.Y;
+        var right = Math.Max(left, (int)screen.End.X - popup.Size.X);
+        var bottom = Math.Max(top, (int)screen.End.Y - popup.Size.Y);
+        popup.Position = new Vector2I(Math.Clamp(popup.Position.X, left, right), Math.Clamp(popup.Position.Y, top, bottom));
+    }
+
+    private static void ShowParts(VBoxContainer rows, IReadOnlyList<TooltipPart> parts, IFontSet fontSet)
+    {
         foreach (var child in rows.GetChildren())
         {
             rows.RemoveChild(child);

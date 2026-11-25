@@ -68,27 +68,13 @@ internal static class ServerInfoCommands
         var slot = reader.ReadByte();
         var line = reader.ReadByte();
         var font = reader.ReadByte();
-        var reply = state.ItemInfo;
         if (line == ItemInfoComplete)
         {
-            if (reply.Where == where && reply.Slot == slot)
-            {
-                reply.Complete = true;
-                state.ReportItemInfoReceived(reply);
-            }
-
+            state.ItemInfo.Complete(where, slot);
             return;
         }
 
-        if (line == 0)
-        {
-            reply.Where = where;
-            reply.Slot = slot;
-            reply.Lines.Clear();
-            reply.Complete = false;
-        }
-
-        reply.Lines.Add(new LogLine(NulTerminatedText.Read(reader.ReadBytes(ItemInfoTextLength)), font));
+        state.ItemInfo.Receive(where, slot, line, font, NulTerminatedText.Read(reader.ReadBytes(ItemInfoTextLength)));
     }
 
     private static void ReadWaypointRow(GameState state, ReadOnlySpan<byte> command)

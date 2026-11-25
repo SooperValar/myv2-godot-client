@@ -296,6 +296,7 @@ public partial class HudView : Control
             var shopCell = (ItemSlotView)node;
             var cell = shopCell.GetIndex();
             shopCell.Released += button => ClickShop(cell, button);
+            shopCell.TooltipRequest = () => ShopTooltip(ShopClicks.SlotFor(cell));
             shopCell.MouseEntered += () => hoveredShopCell = cell;
             shopCell.MouseExited += () => hoveredShopCell = null;
             WatchCursor(shopCell, () => ShopCursor(ShopClicks.SlotFor(cell)));
@@ -1582,38 +1583,73 @@ public partial class HudView : Control
 
     private ItemTooltipRequest? InventoryTooltip(int slot)
     {
-        if (!itemTooltipsShown || state is not { ItemLooks.Enabled: true } shown || shown.Player.HeldItem.Sprite != 0
+        if (!itemTooltipsShown || state is not { } shown || shown.Player.HeldItem.Sprite != 0
             || shown.Player.Inventory[slot].Sprite == 0)
         {
             return null;
         }
 
-        return new ItemTooltipRequest(ItemTooltipMode.Plain, shown.ItemLooks.For(ItemSlotKind.Inventory, slot), null);
+        var now = (long)Time.GetTicksMsec();
+        var lines = shown.ItemInfo.For(ItemInfoCache.Backpack, slot, shown.Player.Inventory[slot].Sprite, 0, now);
+        return new ItemTooltipRequest(lines, EquippedFor(shown, lines, now));
     }
 
-    // Holding an item over gear it fits compares the two; gear it doesn't fit shows its usual tooltip.
-    private ItemTooltipRequest? WornTooltip(WornSlot slot)
+    private ItemTooltipRequest? ShopTooltip(int slot)
     {
-        if (!itemTooltipsShown || state is not { ItemLooks.Enabled: true } shown)
+        if (!itemTooltipsShown || state is not { OpenShop: not null } shown || shown.Player.HeldItem.Sprite != 0
+            || slot >= shown.Shop.ShopItems.Length || shown.Shop.ShopItems[slot].Sprite == 0)
         {
             return null;
         }
 
-        var player = shown.Player;
-        var filled = player.Worn[(int)slot].Sprite != 0;
-        var worn = shown.ItemLooks.For(ItemSlotKind.Worn, (int)slot);
-        if (player.HeldItem.Sprite != 0 && !Equipment.BlockedSlots(player.HeldItem, player.Worn).Contains(slot))
-        {
-            var held = shown.ItemLooks.Held;
-            if (filled)
-            {
-                return new ItemTooltipRequest(ItemTooltipMode.Comparing, worn, held);
-            }
+        var now = (long)Time.GetTicksMsec();
+        var lines = shown.ItemInfo.For(
+            ItemInfoCache.Shop,
+            slot,
+            shown.Shop.ShopItems[slot].Sprite,
+            shown.Shop.Number,
+            now);
+        return new ItemTooltipRequest(lines, EquippedFor(shown, lines, now));
+    }
 
-            return held != null ? new ItemTooltipRequest(ItemTooltipMode.EmptySlot, null, held) : null;
+    private ItemTooltipRequest? WornTooltip(WornSlot slot)
+    {
+        if (!itemTooltipsShown || state is not { } shown || shown.Player.Worn[(int)slot].Sprite == 0)
+        {
+            return null;
         }
 
-        return filled ? new ItemTooltipRequest(ItemTooltipMode.Plain, worn, null) : null;
+        var lines = shown.ItemInfo.For(
+            ItemInfoCache.Worn,
+            (int)slot,
+            shown.Player.Worn[(int)slot].Sprite,
+            0,
+            (long)Time.GetTicksMsec());
+        return new ItemTooltipRequest(lines, []);
+    }
+
+    // With Shift held, the worn pieces the item would replace, as merc.exe shows them beside it.
+    private static IReadOnlyList<IReadOnlyList<LogLine>> EquippedFor(
+        GameState shown,
+        IReadOnlyList<LogLine>? lines,
+        long now)
+    {
+        if (!Input.IsKeyPressed(Key.Shift))
+        {
+            return [];
+        }
+
+        var equipped = new List<IReadOnlyList<LogLine>>();
+        foreach (var wornSlot in ItemTooltipRequest.ComparedSlots(lines))
+        {
+            if (wornSlot < PlayerState.WornSlots && shown.Player.Worn[wornSlot].Sprite is var sprite and not 0
+                && shown.ItemInfo.For(ItemInfoCache.Worn, wornSlot, sprite, 0, now) is { } wornLines)
+            {
+                equipped.Add(wornLines);
+            }
+        }
+
+        return equipped;
     }
 
     private void ShowQuickStats(PlayerState player)

@@ -37,6 +37,9 @@ public enum ClientCommand : byte
     Unique = 32,
     Password = 33,
     Smith = 34,
+
+    // The MyV2 server reads The Last Gate's smith number as its item info request.
+    ItemInfo = Smith,
     Waypoints = 35,
     MessageOfTheDay = 36,
     BlacksmithShop = 37,

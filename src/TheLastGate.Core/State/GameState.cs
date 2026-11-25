@@ -34,7 +34,7 @@ public sealed class GameState
 
     public ItemTiers ItemTiers { get; } = new();
 
-    public ItemInfoReply ItemInfo { get; } = new();
+    public ItemInfoCache ItemInfo { get; } = new();
 
     public WaypointList WaypointList { get; } = new();
     public CharacterLook? Look { get; internal set; }
@@ -62,8 +62,6 @@ public sealed class GameState
     public event Action<PlayerTarget, PlayerTarget>? TargetChanged;
     public event Action? HeldItemChanged;
     public event Action? WaypointsOffered;
-
-    public event Action<ItemInfoReply>? ItemInfoReceived;
 
     public event Action? WaypointListChanged;
     public event Action? SpectatingStarted;
@@ -111,8 +109,6 @@ public sealed class GameState
     internal void ReportHeldItemChanged() => HeldItemChanged?.Invoke();
 
     internal void ReportWaypointsOffered() => WaypointsOffered?.Invoke();
-
-    internal void ReportItemInfoReceived(ItemInfoReply reply) => ItemInfoReceived?.Invoke(reply);
 
     internal void ReportWaypointListChanged() => WaypointListChanged?.Invoke();
 

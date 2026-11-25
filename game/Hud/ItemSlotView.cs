@@ -48,7 +48,7 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         }
 
         var view = GD.Load<PackedScene>(TooltipScenePath).Instantiate<ItemTooltipView>();
-        view.Watch(TooltipRequest, fonts);
+        view.Watch(TooltipRequest, fonts, GetViewport());
         return view;
     }
 
