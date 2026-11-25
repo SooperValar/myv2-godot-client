@@ -517,7 +517,7 @@ public partial class HudView : Control
         ShowMinimap();
         ShowWorldMap();
         ShowPlanner();
-        var buffIcons = BuffIcons.For(player.Buffs);
+        var buffIcons = BuffIcons.For(player.Buffs, state.BuffTimers);
         GetNode<BuffIconsView>("%Buffs").Show(buffIcons.Buffs);
         GetNode<BuffIconsView>("%Debuffs").Show(buffIcons.Debuffs);
     }

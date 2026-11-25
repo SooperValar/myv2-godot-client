@@ -12,11 +12,6 @@ namespace TheLastGate.Hud;
 public partial class ItemSlotView : ClickArea, IHudContextUser
 {
     private const float HighlightBrightness = 2f;
-    private const string TooltipScenePath = "res://Hud/item_tooltip.tscn";
-
-    // Godot wraps a custom tooltip in a TooltipPanel under the control that owns it, so the slot's theme styles that
-    // panel. The tooltip draws its own background and border.
-    private static readonly Theme TooltipTheme = MakeTooltipTheme();
     private IFontSet? fonts;
 
     private int previewSprite;
@@ -47,14 +42,12 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
             return null;
         }
 
-        var view = GD.Load<PackedScene>(TooltipScenePath).Instantiate<ItemTooltipView>();
-        view.Watch(TooltipRequest, fonts, GetViewport());
-        return view;
+        return ItemTooltipView.Create(TooltipRequest, fonts, GetViewport());
     }
 
     public override void _Ready()
     {
-        Theme ??= TooltipTheme;
+        Theme ??= ItemTooltipView.OwnerTheme;
         MouseEntered += () => SetHighlighted(true);
         MouseExited += () => SetHighlighted(false);
         ShowPreview();
@@ -91,13 +84,6 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         {
             hotbarKey.Text = BindingRules.HotbarKeyName(slot);
         }
-    }
-
-    private static Theme MakeTooltipTheme()
-    {
-        var theme = new Theme();
-        theme.SetStylebox("panel", "TooltipPanel", new StyleBoxEmpty());
-        return theme;
     }
 
     public void SetHighlighted(bool highlighted)

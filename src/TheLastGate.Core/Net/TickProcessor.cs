@@ -121,6 +121,7 @@ public sealed class TickProcessor(GameState state)
         MyV2Skills.ShowFor(state.Terminology.Skills, state.Player.Skills);
         state.ItemLooks.EndOfTick();
         state.BuffWatch.EndOfTick();
+        state.BuffTimers.EndOfTick();
         state.WatchViewCentre();
         state.NameRequests.EndOfTick(state.Map, state.Names);
         // Before the shop refresh: the end of a paused tick can close the shop, and a closed shop isn't refreshed.

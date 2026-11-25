@@ -11,6 +11,7 @@ namespace TheLastGate.Hud;
 // changes, such as the item's text arriving.
 public partial class ItemTooltipView : PanelContainer
 {
+    private const string ScenePath = "res://Hud/item_tooltip.tscn";
     private const float WrapWidth = 272;
     private const int BadgeGap = 6;
     private const int ChangeGap = 4;
@@ -25,14 +26,32 @@ public partial class ItemTooltipView : PanelContainer
     private Func<ItemTooltipRequest?>? source;
     private Viewport? shownIn;
 
+    // Godot wraps a custom tooltip in a TooltipPanel under the control that owns it, so that control's theme styles the
+    // panel. The tooltip draws its own background and border.
+    public static Theme OwnerTheme { get; } = MakeOwnerTheme();
+
     public override void _Process(double delta) => Update();
 
-    public void Watch(Func<ItemTooltipRequest?> tooltipSource, IFontSet fontSet, Viewport slotViewport)
+    public static ItemTooltipView Create(Func<ItemTooltipRequest?> tooltipSource, IFontSet fontSet, Viewport ownerViewport)
+    {
+        var view = GD.Load<PackedScene>(ScenePath).Instantiate<ItemTooltipView>();
+        view.Watch(tooltipSource, fontSet, ownerViewport);
+        return view;
+    }
+
+    private void Watch(Func<ItemTooltipRequest?> tooltipSource, IFontSet fontSet, Viewport slotViewport)
     {
         source = tooltipSource;
         fonts = fontSet;
         shownIn = slotViewport;
         Update();
+    }
+
+    private static Theme MakeOwnerTheme()
+    {
+        var theme = new Theme();
+        theme.SetStylebox("panel", "TooltipPanel", new StyleBoxEmpty());
+        return theme;
     }
 
     // A value that equipping the held item would change is followed by the change.

@@ -73,4 +73,32 @@ public class BuffIconsTests
         AssertThat(MathF.Round(BuffIcons.For([new BuffSlot(Buff, active)]).Buffs[0].Brightness, DecimalPlaces))
             .IsEqual(MathF.Round(brightness, DecimalPlaces));
     }
+
+    [TestCase(3725, "1h", "1:02:05 left")]
+    [TestCase(272, "4m", "4:32 left")]
+    [TestCase(52, "52s", "0:52 left")]
+    [TestCase(0, "0s", "0:00 left")]
+    public void Times_ShowHoursMinutesOrSeconds(int seconds, string shortTime, string longTime)
+    {
+        var icon = new BuffIcon(Buff, 1f, "Bless", seconds);
+
+        AssertThat(icon.ShortTime).IsEqual(shortTime);
+        AssertThat(icon.LongTime).IsEqual(longTime);
+    }
+
+    [TestCase(9, true)]
+    [TestCase(10, false)]
+    public void RunningOut_UnderTenSeconds(int seconds, bool runningOut)
+    {
+        AssertThat(new BuffIcon(Buff, 1f, "Bless", seconds).RunningOut).IsEqual(runningOut);
+    }
+
+    [TestCase]
+    public void Times_AreEmptyWithoutATimer()
+    {
+        var icon = new BuffIcon(Buff, 1f);
+
+        AssertThat(icon.ShortTime).IsEmpty();
+        AssertThat(icon.RunningOut).IsFalse();
+    }
 }

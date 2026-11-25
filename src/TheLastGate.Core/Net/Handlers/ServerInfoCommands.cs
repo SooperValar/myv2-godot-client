@@ -58,7 +58,7 @@ internal static class ServerInfoCommands
         var name = NulTerminatedText.Read(reader.ReadBytes(BuffNameLength));
         if (slot < BuffTimers.Slots)
         {
-            timers.Timers[slot] = new BuffTimer(secondsLeft, isHarmful, name);
+            timers.Set(slot, new BuffTimer(secondsLeft, isHarmful, name));
         }
     }
 

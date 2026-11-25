@@ -1,16 +1,24 @@
 using System.Collections.Generic;
 using System.Linq;
 using Godot;
+using TheLastGate.Assets;
 using TheLastGate.Profiling;
 
 namespace TheLastGate.Hud;
 
 [Tool]
-public partial class BuffIconsView : VFlowContainer
+public partial class BuffIconsView : VFlowContainer, IHudContextUser
 {
+    private IFontSet? fonts;
     private int[] previewSprites = [];
 
-    [Export] public Vector2 CellSize { get; set; } = new(20, 23);
+    public BuffIconsView() => AddToGroup(HudContext.Group);
+
+    [Export] public bool Harmful { get; set; }
+
+    [Export] public Vector2 CellSize { get; set; } = new(38, 23);
+
+    [Export] public float IconWidth { get; set; } = 20;
 
     [Export]
     public int[] PreviewSprites
@@ -25,34 +33,24 @@ public partial class BuffIconsView : VFlowContainer
 
     public override void _Ready() => ShowPreview();
 
+    public void ShowContext(HudContext context) => fonts = context.Fonts;
+
     public void Show(IReadOnlyList<BuffIcon> icons)
     {
         using var timing = Timings.Measure("bufficons.show");
         while (GetChildCount() < icons.Count)
         {
-            var cell = new Control
-            {
-                CustomMinimumSize = CellSize,
-                MouseFilter = MouseFilterEnum.Ignore,
-                LayoutDirection = LayoutDirectionEnum.Ltr,
-            };
-            cell.AddChild(new ArchiveSprite { MouseFilter = MouseFilterEnum.Ignore });
-            AddChild(cell);
+            AddChild(new BuffCellView { CustomMinimumSize = CellSize, Size = CellSize });
         }
 
         for (var index = 0; index < GetChildCount(); index++)
         {
-            var cell = GetChild<Control>(index);
+            var cell = GetChild<BuffCellView>(index);
             cell.Visible = index < icons.Count;
-            if (!cell.Visible)
+            if (cell.Visible)
             {
-                continue;
+                cell.Show(icons[index], Harmful, IconWidth, fonts);
             }
-
-            var sprite = cell.GetChild<ArchiveSprite>(0);
-            sprite.SpriteNumber = icons[index].Sprite;
-            var brightness = icons[index].Brightness;
-            sprite.SelfModulate = new Color(brightness, brightness, brightness);
         }
     }
 
