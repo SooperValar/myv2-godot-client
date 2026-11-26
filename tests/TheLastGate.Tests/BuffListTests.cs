@@ -122,7 +122,9 @@ public class BuffListTests
     [InlineData("Ishtar cast bless on you.", BuffKind.Bless)]
     [InlineData("Ishtar cast enhance weapon on you.", BuffKind.Enhance)]
     [InlineData("Ishtar cast protect on you.", BuffKind.Protect)]
-    public void CastKind_WhenBlessEnhanceOrProtectLandsOnThePlayer(string text, BuffKind kind)
+    [InlineData("Magic Shield active!", BuffKind.MagicShield)]
+    [InlineData("Ishtar cast magic shield on you.", BuffKind.MagicShield)]
+    public void CastKind_WhenABuffLandsOnThePlayer(string text, BuffKind kind)
     {
         Assert.Equal(kind, BuffList.CastKind(text));
     }
@@ -132,6 +134,7 @@ public class BuffListTests
     [InlineData("Ishtar's weapon is now stronger.")]
     [InlineData("Ishtar is now protected.")]
     [InlineData("Ishtar cast curse on you.")]
+    [InlineData("Ishtar's Magic Shield activated.")]
     [InlineData("Ishtar: \"cast bless on you.\"")]
     public void CastKind_IsNoneForOtherLines(string text)
     {

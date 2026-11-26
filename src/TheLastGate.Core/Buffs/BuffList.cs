@@ -15,10 +15,10 @@ public static class BuffList
 
     // In BuffKind order. The sensed messages follow the caster's name.
     private static readonly string[] SelfCastMessages =
-        ["You have been blessed.", "Your weapon feels stronger.", "You feel protected."];
+        ["You have been blessed.", "Your weapon feels stronger.", "You feel protected.", "Magic Shield active!"];
 
     private static readonly string[] SensedCastMessages =
-        [" cast bless on you.", " cast enhance weapon on you.", " cast protect on you."];
+        [" cast bless on you.", " cast enhance weapon on you.", " cast protect on you.", " cast magic shield on you."];
 
     public static BuffKind? SpriteKind(int sprite) => sprite switch
     {
