@@ -46,15 +46,6 @@ public partial class PlannerAdvancedRow : Control
     // A row the planner always counts, such as the skill tree's.
     public void ShowAlwaysOn(string name) => ShowTick(name, true, false, Gold);
 
-    // A line under a row, such as a spell's warning.
-    public void ShowNote(string text)
-    {
-        Tick.Visible = false;
-        var label = GetNode<Label>("Name");
-        label.Text = text;
-        label.AddThemeColorOverride("font_color", Hint);
-    }
-
     public void ShowEffect(string effect) => GetNode<Label>("Effect").Text = effect;
 
     // The count being typed is left alone until the typing ends.

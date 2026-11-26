@@ -47,6 +47,20 @@ public class PlannerSheetTests
     }
 
     [TestCase]
+    public void ABuffAlreadyOnYou_IsLeftOutAndOnlyYourOwnCastCounts()
+    {
+        game.BuffActive[(int)BuffKind.Bless] = true;
+        game.BuffReadings[(int)BuffKind.Bless] = new BuffReading { Known = true, Power = 90 };
+
+        AssertThat(PlannerSheet.For(game).Attributes.Select(row => row.Preview).Distinct().ToArray())
+            .ContainsExactly(43);
+
+        game.Choices.SpellToggles = 0;
+        AssertThat(PlannerSheet.For(game).Attributes.Select(row => row.Preview).Distinct().ToArray())
+            .ContainsExactly(29);
+    }
+
+    [TestCase]
     public void ABlessNotToggledOn_LeavesThemAlone()
     {
         game.Choices.SpellToggles = 0;

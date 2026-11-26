@@ -232,10 +232,8 @@ public sealed class PlannerSheet
                 input.Active[kind] = reading;
             }
 
-            // A buff from a spell you don't know stays in the numbers; it has no toggle.
             var toggledOn = ((choices.SpellToggles >> kind) & 1) != 0;
-            var readingReady = !Game.BuffActive[kind] || Game.BuffReadings[kind] != null;
-            input.ShowBuffed[kind] = known ? toggledOn && readingReady : Game.BuffActive[kind];
+            input.ShowBuffed[kind] = known && toggledOn;
         }
 
         return input;

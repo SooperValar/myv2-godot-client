@@ -7,7 +7,7 @@ using TheLastGate.Rules;
 namespace TheLastGate.Planner;
 
 // A spell's row in the Advanced window; it can only be toggled once the buff model can show it.
-public sealed record AdvancedSpell(BuffKind Kind, string Label, bool Ready, string? Warning);
+public sealed record AdvancedSpell(BuffKind Kind, string Label, bool Ready);
 
 // What the planner's Advanced window shows besides the choices themselves: the spells you know, the learned tree nodes
 // in the math, and how many copies of each corruptor the tree already has.
@@ -62,19 +62,6 @@ public sealed class AdvancedSheet
 
     public static string TreeCopiesText(int copies) => copies > 0 ? $"+{copies} tree" : "";
 
-    // A buff on you can only be modelled once its power has been read, and a weaker cast of your own doesn't replace
-    // it.
-    private static AdvancedSpell Spell(PlannerSheet sheet, BuffKind kind)
-    {
-        var game = sheet.Game;
-        var name = game.SkillTexts[PlannerSheet.SpellSkillNumbers[(int)kind]].Name;
-        var reading = game.BuffReadings[(int)kind];
-        var ready = sheet.Planned != null && (!game.BuffActive[(int)kind] || reading != null);
-        var toggledOn = ((game.Choices.SpellToggles >> (int)kind) & 1) != 0;
-        var castPower = sheet.Planned?.CastPower[(int)kind] ?? 0;
-        var warning = ready && toggledOn && reading != null && castPower < reading.Power
-            ? $"Your {name} ({castPower}) won't replace the active one ({reading.Power})"
-            : null;
-        return new AdvancedSpell(kind, ready ? name : $"{name} (reading buffs...)", ready, warning);
-    }
+    private static AdvancedSpell Spell(PlannerSheet sheet, BuffKind kind) =>
+        new(kind, sheet.Game.SkillTexts[PlannerSheet.SpellSkillNumbers[(int)kind]].Name, sheet.Planned != null);
 }

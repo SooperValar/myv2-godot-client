@@ -169,8 +169,8 @@ public sealed class BuffModelResult
 // What the planner shows with the player's own buffs on or off, by MyV2's skill_driver.c. Bless is recast from the
 // stats the last cast gave, which raises the Bless skill through its own attributes, until it settles. Spell power is
 // the skill held to Compatibility (the sum of the base attributes, which only the plan raises), times the Spell Bonus;
-// Magic Shield has no cap. Buffs already on the player are taken out of the server's totals first, using the power
-// SV_SPELLTIME gave. The tarot, tree and item effects are The Last Gate's and stay at zero for MyV2.
+// Magic Shield has no cap. Only the player's own casts count: buffs already on the player, anyone's, are taken out of
+// the server's totals first, using the power SV_SPELLTIME gave. The tarot, tree and item effects are The Last Gate's and stay at zero for MyV2.
 public static class BuffModel
 {
     private const int PercentBase = 100;
@@ -585,11 +585,8 @@ public static class BuffModel
         return active.HasExact ? exactBonus : bonus(active.Power);
     }
 
-    private static int ShownPower(BuffModelInput input, BuffModelResult result, int kind)
-    {
-        var activePower = input.Active[kind].Known ? input.Active[kind].Power : 0;
-        return input.ShowBuffed[kind] ? Math.Max(result.CastPower[kind], activePower) : 0;
-    }
+    private static int ShownPower(BuffModelInput input, BuffModelResult result, int kind) =>
+        input.ShowBuffed[kind] ? result.CastPower[kind] : 0;
 
     private static AttributeAmounts AttributesWithBless(
         BuffModelInput input,

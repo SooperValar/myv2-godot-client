@@ -23,16 +23,7 @@ public class AdvancedSheetTests
         AssertThat(spells).HasSize(1);
         var spell = spells[0];
 
-        AssertThat(spell).IsEqual(new AdvancedSpell(BuffKind.Bless, "Bless", true, null));
-    }
-
-    [TestCase]
-    public void ASpellOnYouWaitsForItsReading()
-    {
-        game.BuffActive[(int)BuffKind.Bless] = true;
-
-        AssertThat(Sheet().Spells.Single())
-            .IsEqual(new AdvancedSpell(BuffKind.Bless, "Bless (reading buffs...)", false, null));
+        AssertThat(spell).IsEqual(new AdvancedSpell(BuffKind.Bless, "Bless", true));
     }
 
     [TestCase]
@@ -41,28 +32,6 @@ public class AdvancedSheetTests
         game.MetaStats.Clear();
 
         AssertThat(Sheet().Spells.Single().Ready).IsFalse();
-    }
-
-    [TestCase]
-    public void AWeakerCastOfYourOwn_WarnsThatItWontReplaceTheActiveBuff()
-    {
-        game.BuffActive[(int)BuffKind.Bless] = true;
-        game.BuffReadings[(int)BuffKind.Bless] = new BuffReading { Known = true, Power = 90 };
-
-        AssertThat(Sheet().Spells.Single().Warning)
-            .IsEqual("Your Bless (55) won't replace the active one (90)");
-    }
-
-    [TestCase]
-    public void AStrongerCastOrASpellToggledOff_HasNoWarning()
-    {
-        game.BuffActive[(int)BuffKind.Bless] = true;
-        game.BuffReadings[(int)BuffKind.Bless] = new BuffReading { Known = true, Power = 40 };
-        AssertThat(Sheet().Spells.Single().Warning).IsNull();
-
-        game.BuffReadings[(int)BuffKind.Bless] = new BuffReading { Known = true, Power = 90 };
-        game.Choices.SpellToggles = 0;
-        AssertThat(Sheet().Spells.Single().Warning).IsNull();
     }
 
     [TestCase]

@@ -48,7 +48,7 @@ public partial class PlannerAdvancedWindowView : Panel, IHudContextUser
         AddGearRows();
         if (Engine.IsEditorHint())
         {
-            ShowSpells([new AdvancedSpell(BuffKind.Bless, "Bless", true, null)], new PlannerChoices());
+            ShowSpells([new AdvancedSpell(BuffKind.Bless, "Bless", true)], new PlannerChoices());
             ShowTreeRows(["False Strength"]);
             return;
         }
@@ -173,13 +173,11 @@ public partial class PlannerAdvancedWindowView : Panel, IHudContextUser
         }
     }
 
-    // Each spell has its row and a line under it for a warning.
     private void AddSpellRows()
     {
         foreach (var kind in Enum.GetValues<BuffKind>())
         {
             AddRow(Spells, choices => choices.ToggleSpell(kind));
-            AddRow(Spells, null);
         }
     }
 
@@ -191,14 +189,11 @@ public partial class PlannerAdvancedWindowView : Panel, IHudContextUser
         foreach (var kind in Enum.GetValues<BuffKind>())
         {
             var spell = spells.FirstOrDefault(known => known.Kind == kind);
-            var spellRow = rows[2 * (int)kind];
-            var noteRow = rows[2 * (int)kind + 1];
+            var spellRow = rows[(int)kind];
             spellRow.Visible = spell != null;
-            noteRow.Visible = spell?.Warning != null;
             if (spell != null)
             {
                 spellRow.Show(spell.Label, ((choices.SpellToggles >> (int)kind) & 1) != 0, spell.Ready);
-                noteRow.ShowNote(spell.Warning ?? "");
             }
         }
     }
