@@ -1,3 +1,4 @@
+using System.Linq;
 using GdUnit4;
 using TheLastGate.Stats;
 using static GdUnit4.Assertions;
@@ -8,9 +9,15 @@ namespace TheLastGate.GodotTests.Stats;
 public class StatPanelTests
 {
     [TestCase]
-    public void LastMetaRow_DoesNotScrollListsThatFitInView()
+    public void LastMetaRow_InOffenses_LeavesTheLastTenRowsInView()
     {
-        AssertThat(StatPanel.LastMetaRow).IsEqual(0);
+        AssertThat(PanelIn(StatListMode.Offenses).LastMetaRow).IsEqual(13);
+    }
+
+    [TestCase]
+    public void LastMetaRow_InDefenses_DoesNotScrollAListThatFits()
+    {
+        AssertThat(PanelIn(StatListMode.Defenses).LastMetaRow).IsEqual(0);
     }
 
     [TestCase]
@@ -75,8 +82,8 @@ public class StatPanelTests
         panel.Choose(StatListMode.Offenses);
         panel.ScrollTo(50);
 
-        AssertThat(panel.Row).IsEqual(31);
-        AssertThat(panel.LastRow).IsEqual(31);
+        AssertThat(panel.Row).IsEqual(13);
+        AssertThat(panel.LastRow).IsEqual(13);
         AssertThat(panel.Skills.Row).IsEqual(5);
     }
 
@@ -123,8 +130,9 @@ public class StatPanelTests
     public void BottomMeta_InOffenses_StartsAfterTheTopRows()
     {
         var panel = PanelIn(StatListMode.Offenses);
+        panel.ScrollTo(2);
 
-        AssertThat(panel.BottomMeta(1)).IsEqual(8);
+        AssertThat(panel.BottomMeta(1)).IsEqual(10);
     }
 
     [TestCase]
@@ -136,12 +144,30 @@ public class StatPanelTests
     }
 
     [TestCase]
-    public void BottomMeta_ScrolledDown_StaysOnTheFirstRows()
+    public void BottomMeta_ScrolledToTheEnd_ReachesTheLastStatOfEachList()
     {
         var offenses = PanelIn(StatListMode.Offenses);
-        offenses.ScrollBy(3);
+        offenses.ScrollTo(offenses.LastMetaRow);
+        var defenses = PanelIn(StatListMode.Defenses);
 
-        AssertThat(offenses.BottomMeta(0)).IsEqual(7);
+        AssertThat(offenses.BottomMeta(9)).IsEqual(29);
+        AssertThat(defenses.BottomMeta(8)).IsEqual(56);
+        AssertThat(defenses.BottomMeta(9)).IsEqual(StatPanel.BlankMeta);
+    }
+
+    [TestCase]
+    public void ListShown_LeavesOutHiddenStatsAndScrollsBackIntoTheShorterList()
+    {
+        int[] shown = [7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 20];
+
+        var panel = PanelIn(StatListMode.Offenses);
+        panel.ScrollTo(13);
+        var changed = panel.ListShown(shown.Contains);
+
+        AssertThat(changed).IsTrue();
+        AssertThat(panel.MetaRow).IsEqual(2);
+        AssertThat(panel.BottomMeta(9)).IsEqual(20);
+        AssertThat(panel.ListShown(shown.Contains)).IsFalse();
     }
 
     [TestCase(StatListMode.Skills)]

@@ -66,6 +66,11 @@ public partial class SkillList : VBoxContainer
 
     private void ShowMeta(Terminology terminology)
     {
+        if (Panel.ListShown(slot => terminology.MetaStats[slot].Show != 0))
+        {
+            ShowScroll();
+        }
+
         for (var row = 0; row < SkillScroll.VisibleRows; row++)
         {
             var meta = Panel.BottomMeta(row)!.Value;

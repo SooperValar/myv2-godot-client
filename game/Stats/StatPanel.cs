@@ -1,5 +1,6 @@
 using System;
 using System.Diagnostics;
+using System.Linq;
 using TheLastGate.State;
 
 namespace TheLastGate.Stats;
@@ -7,9 +8,11 @@ namespace TheLastGate.Stats;
 public sealed class StatPanel
 {
     public const int TopRows = 7;
+    // Past the end of a short list: a slot the server never shows, so the row stays blank.
+    public const int BlankMeta = Terminology.MetaStatCount - 1;
 
-    public static int LastMetaRow =>
-        Math.Max(0, Math.Max(MyV2MetaStats.OffenseRows, MyV2MetaStats.DefenseRows) - SkillScroll.VisibleRows);
+    private int[] offenseRows = MyV2MetaStats.OffenseSlots;
+    private int[] defenseRows = MyV2MetaStats.DefenseSlots;
 
     public StatListMode Mode { get; private set; }
 
@@ -24,6 +27,10 @@ public sealed class StatPanel
     public int Row => ShowsMetaStats ? MetaRow : Skills.Row;
 
     public int LastRow => ShowsMetaStats ? LastMetaRow : SkillScroll.LastRow;
+
+    public int LastMetaRow => Math.Max(0, MetaRows.Length - SkillScroll.VisibleRows);
+
+    private int[] MetaRows => Mode == StatListMode.Defenses ? defenseRows : offenseRows;
 
     public static string Help(StatListMode button) => button switch
     {
@@ -41,6 +48,17 @@ public sealed class StatPanel
 
     public bool IsMarked(StatListMode button) =>
         button == (Mode == StatListMode.SkillsAndMeta ? StatListMode.Skills : Mode);
+
+    public bool ListShown(Func<int, bool> isShown)
+    {
+        var offenses = Shown(MyV2MetaStats.OffenseSlots, isShown);
+        var defenses = Shown(MyV2MetaStats.DefenseSlots, isShown);
+        var changed = !offenses.SequenceEqual(offenseRows) || !defenses.SequenceEqual(defenseRows);
+        offenseRows = offenses;
+        defenseRows = defenses;
+        MetaRow = Math.Clamp(MetaRow, 0, LastMetaRow);
+        return changed;
+    }
 
     public void ScrollBy(int rows) => ScrollTo(Row + rows);
 
@@ -61,8 +79,10 @@ public sealed class StatPanel
     public int? BottomMeta(int row) => Mode switch
     {
         StatListMode.Skills or StatListMode.SkillsAndMeta => null,
-        StatListMode.Offenses => TopRows + row + MetaRow,
-        StatListMode.Defenses => MyV2MetaStats.FirstDefense + row + MetaRow,
+        StatListMode.Offenses or StatListMode.Defenses =>
+            row + MetaRow < MetaRows.Length ? MetaRows[row + MetaRow] : BlankMeta,
         _ => throw new UnreachableException(),
     };
+
+    private static int[] Shown(int[] slots, Func<int, bool> isShown) => slots.Where(isShown).ToArray();
 }

@@ -18,15 +18,25 @@ public class MyV2MetaStatsTests
     {
         var regen = new Terminology().MetaStats[50];
 
-        Assert.Equal("Hit Point Regen", regen.Name);
+        Assert.Equal("Health Regen Rate", regen.Name);
         Assert.Equal("/s", regen.Affix);
         Assert.NotEqual(0, regen.Flag);
     }
 
     [Fact]
-    public void Rows_CountEachList()
+    public void Slots_ListEachListInOrder()
     {
-        Assert.Equal(6, MyV2MetaStats.OffenseRows);
-        Assert.Equal(7, MyV2MetaStats.DefenseRows);
+        Assert.Equal(23, MyV2MetaStats.OffenseSlots.Length);
+        Assert.Equal(7, MyV2MetaStats.OffenseSlots[0]);
+        Assert.Equal([48, 49, 50, 51, 52, 53, 54, 55, 56], MyV2MetaStats.DefenseSlots);
+    }
+
+    [Fact]
+    public void Fill_GivesHeadingsNoNumber()
+    {
+        var heading = new Terminology().MetaStats[7];
+
+        Assert.Equal("  Passive Stats:", heading.Name);
+        Assert.Equal("", MetaStat.ValueText(65535, heading.Flag != 0));
     }
 }
