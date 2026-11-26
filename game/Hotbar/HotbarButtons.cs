@@ -33,6 +33,7 @@ public static class HotbarButtons
 
     public static byte[]? UsePacket(int action, int selectedCharacter) => action switch
     {
+        >= GcCommands.FirstAction => null,
         >= FirstEquipmentAction =>
             InventoryPackets.For(InventoryAction.UseGear, action - FirstEquipmentAction, selectedCharacter),
         >= FirstInventoryAction =>

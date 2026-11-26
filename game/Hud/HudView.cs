@@ -1719,7 +1719,8 @@ public partial class HudView : Control
 
         var skillNames = state.Terminology.Skills;
         var skills = HotbarAssignments.MenuSkills(state.Player.Skills)
-            .Select(number => (number, skillNames[number].Name));
+            .Select(number => (number, skillNames[number].Name))
+            .Concat(GcCommands.MenuFor(state.Player.Skills));
         GetNode<HotbarMenu>("%HotbarMenu").Open(slot, skills, mousePosition);
     }
 
@@ -1737,8 +1738,8 @@ public partial class HudView : Control
 
     private void AssignHotbar(int slot, int action)
     {
-        var name = action < HotbarButtons.FirstInventoryAction
-            ? state!.Terminology.Skills[action].Name
+        var name = GcCommands.IsCommand(action) ? GcCommands.Name(action)
+            : action < HotbarButtons.FirstInventoryAction ? state!.Terminology.Skills[action].Name
             : HotbarButtons.ItemName(action);
         var keyName = BindingRules.HotbarKeyName(slot);
         state!.Chat.Add(HotbarAssignments.Assign(Settings, slot, action, name, keyName));
@@ -1753,6 +1754,12 @@ public partial class HudView : Control
 
     private void UseHotbar(int slot)
     {
+        if (GcCommands.Line(Settings.HotbarActions[slot], selectedCharacter) is { } line)
+        {
+            Say(line);
+            return;
+        }
+
         if (HotbarButtons.UsePacket(Settings.HotbarActions[slot], selectedCharacter) is { } packet)
         {
             sendCommand(packet);
