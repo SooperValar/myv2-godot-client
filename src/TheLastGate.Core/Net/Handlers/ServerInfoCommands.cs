@@ -46,8 +46,23 @@ internal static class ServerInfoCommands
             case ServerCommand.Zone:
                 reader.ReadBytes(state.Player.LocationField.Length).CopyTo(state.Player.LocationField);
                 break;
+            case ServerCommand.Meta:
+                ReadMeta(state.Terminology.MetaStats, ref reader);
+                break;
             default:
                 throw new UnreachableException();
+        }
+    }
+
+    private static void ReadMeta(MetaStat[] stats, ref PacketReader reader)
+    {
+        var number = reader.ReadByte();
+        var value = (int)reader.ReadUInt32();
+        var show = reader.ReadByte();
+        if (number < stats.Length)
+        {
+            stats[number].Value = value;
+            stats[number].Show = show;
         }
     }
 

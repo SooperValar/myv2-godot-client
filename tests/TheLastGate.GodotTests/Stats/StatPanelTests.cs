@@ -8,9 +8,9 @@ namespace TheLastGate.GodotTests.Stats;
 public class StatPanelTests
 {
     [TestCase]
-    public void LastMetaRow_LeavesTenOfEachListsFortyOneStatsInView()
+    public void LastMetaRow_DoesNotScrollListsThatFitInView()
     {
-        AssertThat(StatPanel.LastMetaRow).IsEqual(31);
+        AssertThat(StatPanel.LastMetaRow).IsEqual(0);
     }
 
     [TestCase]
@@ -123,9 +123,8 @@ public class StatPanelTests
     public void BottomMeta_InOffenses_StartsAfterTheTopRows()
     {
         var panel = PanelIn(StatListMode.Offenses);
-        panel.ScrollTo(2);
 
-        AssertThat(panel.BottomMeta(1)).IsEqual(10);
+        AssertThat(panel.BottomMeta(1)).IsEqual(8);
     }
 
     [TestCase]
@@ -137,15 +136,12 @@ public class StatPanelTests
     }
 
     [TestCase]
-    public void BottomMeta_ScrolledToTheEnd_ReachesTheLastStatOfEachList()
+    public void BottomMeta_ScrolledDown_StaysOnTheFirstRows()
     {
         var offenses = PanelIn(StatListMode.Offenses);
-        offenses.ScrollTo(StatPanel.LastMetaRow);
-        var defenses = PanelIn(StatListMode.Defenses);
-        defenses.ScrollTo(StatPanel.LastMetaRow);
+        offenses.ScrollBy(3);
 
-        AssertThat(offenses.BottomMeta(9)).IsEqual(47);
-        AssertThat(defenses.BottomMeta(9)).IsEqual(88);
+        AssertThat(offenses.BottomMeta(0)).IsEqual(7);
     }
 
     [TestCase(StatListMode.Skills)]

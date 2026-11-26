@@ -7,9 +7,9 @@ namespace TheLastGate.Stats;
 public sealed class StatPanel
 {
     public const int TopRows = 7;
-    private const int FirstDefenseMeta = 48;
 
-    public static int LastMetaRow => (Terminology.MetaStatCount - TopRows) / 2 - SkillScroll.VisibleRows;
+    public static int LastMetaRow =>
+        Math.Max(0, Math.Max(MyV2MetaStats.OffenseRows, MyV2MetaStats.DefenseRows) - SkillScroll.VisibleRows);
 
     public StatListMode Mode { get; private set; }
 
@@ -62,7 +62,7 @@ public sealed class StatPanel
     {
         StatListMode.Skills or StatListMode.SkillsAndMeta => null,
         StatListMode.Offenses => TopRows + row + MetaRow,
-        StatListMode.Defenses => FirstDefenseMeta + row + MetaRow,
+        StatListMode.Defenses => MyV2MetaStats.FirstDefense + row + MetaRow,
         _ => throw new UnreachableException(),
     };
 }

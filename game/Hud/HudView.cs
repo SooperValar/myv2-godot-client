@@ -253,7 +253,6 @@ public partial class HudView : Control
         {
             var modeButton = (StatModeButton)node;
             modeButton.Released += button => ClickStatMode(modeButton.Mode, button);
-            modeButton.MouseEntered += AskForMetaText;
         }
 
         GetNode<ClickArea>("%UpdateButton").Released += ClickUpdate;
@@ -1218,14 +1217,6 @@ public partial class HudView : Control
         }
     }
 
-    private void AskForMetaText()
-    {
-        if (state?.Terminology.AskForMetaText() == true)
-        {
-            sendCommand(MetaPackets.Request());
-        }
-    }
-
     private void ClickStatMode(StatListMode mode, MapButton button)
     {
         if (button == MapButton.Right)
@@ -1931,11 +1922,7 @@ public partial class HudView : Control
             return;
         }
 
-        if (gameSession.PlannerWindow.Toggle())
-        {
-            AskForMetaText();
-        }
-
+        gameSession.PlannerWindow.Toggle();
         ShowPlanner();
     }
 

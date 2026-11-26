@@ -1,3 +1,4 @@
+using System;
 using System.Globalization;
 using TheLastGate.Characters;
 
@@ -26,7 +27,9 @@ public sealed class MetaStat
 
     public static string ValueText(int value, bool hundredths) =>
         hundredths
-            ? string.Create(CultureInfo.InvariantCulture, $"{value / Hundredths}.{value % Hundredths:00}")
+            ? string.Create(
+                CultureInfo.InvariantCulture,
+                $"{(value < 0 ? "-" : "")}{Math.Abs(value) / Hundredths}.{Math.Abs(value) % Hundredths:00}")
             : value == UnsetValue
                 ? ""
                 : value.ToString(CultureInfo.InvariantCulture);
