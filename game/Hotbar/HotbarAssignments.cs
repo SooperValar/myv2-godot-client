@@ -9,9 +9,10 @@ namespace TheLastGate.Hotbar;
 public static class HotbarAssignments
 {
     private const int ButtonNameLength = 7;
+    private const int Identify = 52;
 
-    private static readonly int[] UsableSkills =
-        [37, 40, 16, 49, 22, 48, 41, 35, 24, 21, 20, 25, 18, 27, 47, 26, 52, 15, 50, 11, 42, 17, 43, 51, 46, 19];
+    // The skills the MyV2 server does something with when used (skill_driver.c), buffs first.
+    private static readonly int[] UsableSkills = [21, 18, 17, 11, 26, 24, 20, 19, 25, 27, 35, 16, 22, 14, 15, 13];
 
     public static LogLine Assign(
         CharacterSettings settings,
@@ -37,10 +38,8 @@ public static class HotbarAssignments
         settings.HotbarNames[slot] = CharacterSettings.EmptyHotbarName;
     }
 
-    public static IReadOnlyList<int> MenuSkills(int[][] skills, uint kindred) =>
-        UsableSkills
-            .Where(skill => Kindred.IsKnown(skill, skills[skill][0] != 0, kindred))
-            .ToList();
+    public static IReadOnlyList<int> MenuSkills(int[][] skills) =>
+        UsableSkills.Where(skill => skills[skill][0] != 0).ToList();
 
     private static LogLine Line(string text) => new(text, (int)TextColour.Yellow);
 }

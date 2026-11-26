@@ -1712,7 +1712,7 @@ public partial class HudView : Control
         }
 
         var skillNames = state.Terminology.Skills;
-        var skills = HotbarAssignments.MenuSkills(state.Player.Skills, state.Player.Kindred)
+        var skills = HotbarAssignments.MenuSkills(state.Player.Skills)
             .Select(number => (number, skillNames[number].Name));
         GetNode<HotbarMenu>("%HotbarMenu").Open(slot, skills, mousePosition);
     }

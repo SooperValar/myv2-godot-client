@@ -11,10 +11,11 @@ namespace TheLastGate.GodotTests.Hotbar;
 public class HotbarAssignmentsTests
 {
     private const int Protect = 17;
-    private const int Blind = 37;
-    private const int Light = 50;
-    private const int Recall = 51;
-    private const int Identify = 52;
+    private const int Bless = 21;
+    private const int Light = 14;
+    private const int Identify = 22;
+    private const int Sword = 3;
+    private const int Meditate = 30;
 
     [TestCase]
     public void Assign_PutsTheSkillOnTheButton()
@@ -45,10 +46,10 @@ public class HotbarAssignmentsTests
         var settings = new CharacterSettings();
         HotbarAssignments.Assign(settings, 3, Protect, "Protect", "C-4");
 
-        HotbarAssignments.Assign(settings, 3, Blind, "Blind", "C-4");
+        HotbarAssignments.Assign(settings, 3, Bless, "Bless", "C-4");
 
-        AssertThat(settings.HotbarActions[3]).IsEqual(Blind);
-        AssertThat(settings.HotbarNames[3]).IsEqual("Blind");
+        AssertThat(settings.HotbarActions[3]).IsEqual(Bless);
+        AssertThat(settings.HotbarNames[3]).IsEqual("Bless");
     }
 
     [TestCase]
@@ -89,30 +90,16 @@ public class HotbarAssignmentsTests
     }
 
     [TestCase]
-    public void MenuSkills_ListsTheLearntUsableSkillsInMenuOrder()
+    public void MenuSkills_ListsTheLearntSkillsMyV2LetsYouUseInMenuOrder()
     {
         var skills = new PlayerState().Skills;
         skills[Protect][0] = 10;
-        skills[Blind][0] = 5;
-        skills[3][0] = 20;
+        skills[Light][0] = 1;
+        skills[Bless][0] = 5;
+        skills[Identify][0] = 1;
+        skills[Sword][0] = 20;
+        skills[Meditate][0] = 20;
 
-        AssertThat(HotbarAssignments.MenuSkills(skills, 0)).ContainsExactly(Blind, Light, Protect, Recall);
-    }
-
-    [TestCase]
-    public void MenuSkills_ListsLightAndRecallThoughTheServerSendsNoValueForThem()
-    {
-        var skills = new PlayerState().Skills;
-
-        AssertThat(HotbarAssignments.MenuSkills(skills, 0)).ContainsExactly(Light, Recall);
-    }
-
-    [TestCase(0u, false)]
-    [TestCase(Kindred.KnowsIdentify, true)]
-    public void MenuSkills_ListsIdentifyOnlyForCharactersWhoKnowIt(uint kindred, bool listed)
-    {
-        var skills = new PlayerState().Skills;
-
-        AssertThat(HotbarAssignments.MenuSkills(skills, kindred).Contains(Identify)).IsEqual(listed);
+        AssertThat(HotbarAssignments.MenuSkills(skills)).ContainsExactly(Bless, Protect, Identify, Light);
     }
 }
