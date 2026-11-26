@@ -1,3 +1,4 @@
+using System.Linq;
 using GdUnit4;
 using TheLastGate.Launcher;
 using static GdUnit4.Assertions;
@@ -76,5 +77,45 @@ public class CharacterHistoryTests
         history.RemoveMissingFiles();
 
         AssertThat(history.Entries).ContainsExactly(new PreviousCharacter("Kept", kept));
+    }
+
+    [TestCase]
+    public void Remove_DropsOnlyThatFile()
+    {
+        var history = new CharacterHistory();
+        history.Use("Bran", "C:/saves/bran.moa");
+        history.Use("Bran", "C:/saves/bran-old.moa");
+        history.Use("Ishtar", "C:/saves/ishtar.moa");
+
+        history.Remove("C:/saves/BRAN-OLD.moa");
+
+        AssertThat(history.Entries).ContainsExactly(
+            new PreviousCharacter("Ishtar", "C:/saves/ishtar.moa"),
+            new PreviousCharacter("Bran", "C:/saves/bran.moa"));
+    }
+
+    [TestCase]
+    public void Clear_EmptiesTheList()
+    {
+        var history = new CharacterHistory();
+        history.Use("Bran", "C:/saves/bran.moa");
+        history.Use("Ishtar", "C:/saves/ishtar.moa");
+
+        history.Clear();
+
+        AssertThat(history.Entries).IsEmpty();
+    }
+
+    [TestCase]
+    public void Label_AddsTheFileNameOnlyWhenTheNameRepeats()
+    {
+        var history = new CharacterHistory();
+        history.Use("Bran", "C:/saves/bran.moa");
+        history.Use("Bran", "C:/saves/bran-old.moa");
+        history.Use("Ishtar", "C:/saves/ishtar.moa");
+        history.Use("", "C:/saves/nameless.moa");
+
+        AssertThat(history.Entries.Select(history.Label).ToArray())
+            .ContainsExactly("nameless", "Ishtar", "Bran (bran-old)", "Bran (bran)");
     }
 }

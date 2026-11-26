@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 namespace TheLastGate.Launcher;
 
@@ -42,8 +43,25 @@ public sealed class CharacterHistory
         }
     }
 
+    public string Label(PreviousCharacter entry)
+    {
+        var fileName = Path.GetFileNameWithoutExtension(entry.FilePath);
+        if (entry.Name.Length == 0)
+        {
+            return fileName;
+        }
+
+        return entries.Count(other => other.Name == entry.Name) > 1 ? $"{entry.Name} ({fileName})" : entry.Name;
+    }
+
+    public void Remove(string filePath) => entries.RemoveAll(entry => SameFile(entry.FilePath, filePath));
+
+    public void Clear() => entries.Clear();
+
     public void RemoveMissingFiles() => entries.RemoveAll(entry => !File.Exists(entry.FilePath));
 
-    private int IndexOf(string filePath) =>
-        entries.FindIndex(entry => string.Equals(entry.FilePath, filePath, StringComparison.OrdinalIgnoreCase));
+    private int IndexOf(string filePath) => entries.FindIndex(entry => SameFile(entry.FilePath, filePath));
+
+    private static bool SameFile(string first, string second) =>
+        string.Equals(first, second, StringComparison.OrdinalIgnoreCase);
 }

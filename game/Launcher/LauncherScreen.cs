@@ -23,6 +23,7 @@ public partial class LauncherScreen : Control
 
     private static readonly Color LockedRowColour = new(1, 1, 1, 0.6f);
     private static readonly Vector2 PreviousCharacterButtonSize = new(240, 24);
+    private static readonly Vector2 RemoveCharacterButtonSize = new(24, 24);
 
     private Label accountName = null!;
     private OptionButton bodyOption = null!;
@@ -154,6 +155,12 @@ public partial class LauncherScreen : Control
             "",
             "Every area explored on this server, by all of your characters, will be forgotten.",
             ClearSavedMap);
+        GetNode<Button>("%ClearHistoryButton").Pressed += () => Confirm(
+            "Clear previous characters?",
+            "Do you want to clear the list of previous characters?",
+            "Only the list is cleared. Your .moa files stay where they are.",
+            "",
+            ClearCharacterHistory);
         GetNode<Button>("%OpenDataFolderButton").Pressed += () => OpenFolder(DataPaths.PlayerData());
         GetNode<Button>("%OpenOverridesFolderButton").Pressed += () => OpenFolder(DataPaths.PlayerOverrides());
 
@@ -510,17 +517,42 @@ public partial class LauncherScreen : Control
 
         foreach (var entry in settings.CharacterHistory.Entries)
         {
+            var filePath = entry.FilePath;
             var button = new Button
             {
-                Text = entry.Name.Length > 0 ? entry.Name : Path.GetFileNameWithoutExtension(entry.FilePath),
-                TooltipText = entry.FilePath,
+                Text = settings.CharacterHistory.Label(entry),
+                TooltipText = filePath,
                 CustomMinimumSize = PreviousCharacterButtonSize,
-                SizeFlagsHorizontal = SizeFlags.ShrinkCenter,
             };
-            var filePath = entry.FilePath;
             button.Pressed += () => Import(filePath);
-            previousCharacterList.AddChild(button);
+            var removeButton = new Button
+            {
+                Text = "x",
+                TooltipText = "Remove from this list (the file stays)",
+                CustomMinimumSize = RemoveCharacterButtonSize,
+            };
+            removeButton.Pressed += () => ForgetCharacter(filePath);
+            var row = new HBoxContainer { SizeFlagsHorizontal = SizeFlags.ShrinkCenter };
+            row.AddChild(button);
+            row.AddChild(removeButton);
+            previousCharacterList.AddChild(row);
         }
+
+        GetNode<Button>("%ClearHistoryButton").Disabled = settings.CharacterHistory.Entries.Count == 0;
+    }
+
+    private void ForgetCharacter(string filePath)
+    {
+        settings.CharacterHistory.Remove(filePath);
+        settings.Save();
+        ShowPreviousCharacters();
+    }
+
+    private void ClearCharacterHistory()
+    {
+        settings.CharacterHistory.Clear();
+        settings.Save();
+        ShowPreviousCharacters();
     }
 
     private void StartUpdates()
