@@ -9,6 +9,10 @@ public static class MyV2MetaStats
     public const int FirstOffense = 7;
     public const int FirstDefense = 48;
 
+    // Never shown: the planner reads them.
+    public const int SpeedStepSlot = 86;
+    public const int WeaponSkillSlot = 87;
+
     private const string PerSecond = "/s";
     private const string Percent = "%";
     private const string PassiveHeading = "  Passive Stats:";
@@ -55,6 +59,8 @@ public static class MyV2MetaStats
         new(54, "Effective Resistance", "Your Resistance against spells cast at you.", LogFont.Teal),
         new(55, "Deflect Chance", "The chance of a two-handed sword turning a melee blow that would hit you. Grows with Agility.", LogFont.Teal, Percent, true),
         new(56, "Thorns Score", "Up to this much damage to whoever lands a melee blow on you.", LogFont.Teal),
+        new(SpeedStepSlot, "Speed Step", "", LogFont.White, Listed: false),
+        new(WeaponSkillSlot, "Weapon Skill Number", "", LogFont.White, Listed: false),
     ];
 
     public static int[] OffenseSlots { get; } = Slots(FirstOffense, FirstDefense);
@@ -75,7 +81,7 @@ public static class MyV2MetaStats
     }
 
     private static int[] Slots(int first, int end) =>
-        Stats.Select(stat => stat.Number).Where(number => number >= first && number < end).ToArray();
+        Stats.Where(stat => stat.Listed && stat.Number >= first && stat.Number < end).Select(stat => stat.Number).ToArray();
 
     private sealed record Meta(
         int Number,
@@ -83,5 +89,6 @@ public static class MyV2MetaStats
         string Description,
         LogFont Font,
         string Affix = "",
-        bool Hundredths = false);
+        bool Hundredths = false,
+        bool Listed = true);
 }

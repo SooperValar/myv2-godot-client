@@ -30,26 +30,26 @@ public sealed class PlannerChoicesTests
     [TestCase]
     public void SavedChoices_LoadBack()
     {
-        AssertThat(PlannerChoicesStore.Save(FilePath, 1234, Choices(CombatWeapon.Axe, CombatOffhand.Shield))).IsTrue();
+        AssertThat(PlannerChoicesStore.Save(FilePath, 1234, Choices(CombatWeapon.Axe, CombatOffhand.None))).IsTrue();
 
         var loaded = PlannerChoicesStore.Load(FilePath, 1234);
 
         AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Axe);
-        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.Shield);
+        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.None);
     }
 
     [TestCase]
     public void Characters_AreKeptApart()
     {
-        PlannerChoicesStore.Save(FilePath, 11, Choices(CombatWeapon.Dagger, CombatOffhand.DualWield));
+        PlannerChoicesStore.Save(FilePath, 11, Choices(CombatWeapon.Dagger, CombatOffhand.None));
         PlannerChoicesStore.Save(FilePath, 22, Choices(CombatWeapon.Staff, CombatOffhand.None));
-        PlannerChoicesStore.Save(FilePath, 11, Choices(CombatWeapon.Sword, CombatOffhand.Shield));
+        PlannerChoicesStore.Save(FilePath, 11, Choices(CombatWeapon.Sword, CombatOffhand.None));
 
         var first = PlannerChoicesStore.Load(FilePath, 11);
         var second = PlannerChoicesStore.Load(FilePath, 22);
 
         AssertThat(first.Weapon).IsEqual(CombatWeapon.Sword);
-        AssertThat(first.Offhand).IsEqual(CombatOffhand.Shield);
+        AssertThat(first.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(second.Weapon).IsEqual(CombatWeapon.Staff);
         AssertThat(second.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(PlannerChoicesStore.Load(FilePath, 33).Weapon).IsNull();
@@ -72,10 +72,10 @@ public sealed class PlannerChoicesTests
         File.WriteAllText(FilePath, "not a planner file");
         AssertThat(PlannerChoicesStore.Load(FilePath, 1234).Weapon).IsNull();
 
-        AssertThat(PlannerChoicesStore.Save(FilePath, 1234, Choices(CombatWeapon.Spear, CombatOffhand.None))).IsTrue();
+        AssertThat(PlannerChoicesStore.Save(FilePath, 1234, Choices(CombatWeapon.Greataxe, CombatOffhand.None))).IsTrue();
 
         var loaded = PlannerChoicesStore.Load(FilePath, 1234);
-        AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Spear);
+        AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Greataxe);
         AssertThat(loaded.Offhand).IsEqual(CombatOffhand.None);
     }
 
@@ -89,7 +89,7 @@ public sealed class PlannerChoicesTests
     [TestCase]
     public void SpellsAndCards_RoundTrip()
     {
-        var saved = Choices(CombatWeapon.Sword, CombatOffhand.Shield);
+        var saved = Choices(CombatWeapon.Sword, CombatOffhand.None);
         saved.SpellToggles = 0x5;
         saved.TarotCards = (1ul << 22) | (1ul << 43);
 
@@ -97,7 +97,7 @@ public sealed class PlannerChoicesTests
         var loaded = PlannerChoicesStore.Load(FilePath, 7);
 
         AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Sword);
-        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.Shield);
+        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(loaded.SpellToggles).IsEqual(0x5u);
         AssertThat(loaded.TarotCards).IsEqual(saved.TarotCards);
     }
@@ -110,7 +110,7 @@ public sealed class PlannerChoicesTests
         var loaded = PlannerChoicesStore.Load(FilePath, 7);
 
         AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Sword);
-        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.Shield);
+        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(loaded.SpellToggles).IsEqual(0u);
         AssertThat(loaded.TarotCards).IsEqual(0ul);
     }
@@ -124,14 +124,14 @@ public sealed class PlannerChoicesTests
 
         var loaded = PlannerChoicesStore.Load(FilePath, 7);
         AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Sword);
-        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.Shield);
+        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(PlannerChoicesStore.Load(FilePath, 9).Weapon).IsEqual(CombatWeapon.Axe);
     }
 
     [TestCase]
     public void Corruptors_RoundTrip()
     {
-        var saved = Choices(CombatWeapon.Sword, CombatOffhand.Shield);
+        var saved = Choices(CombatWeapon.Sword, CombatOffhand.None);
         saved.CorruptorTicks = 0x5;
         saved.CorruptorCounts[0] = 2;
         saved.CorruptorCounts[1] = 4;
@@ -152,12 +152,12 @@ public sealed class PlannerChoicesTests
     [TestCase]
     public void AFormatTwoFile_LoadsWithoutCorruptors()
     {
-        WriteWords(2, 1, 7, (uint)CombatWeapon.Sword, (uint)CombatOffhand.Shield, 0x5, 0x400000, 0x800);
+        WriteWords(2, 1, 7, (uint)CombatWeapon.Sword, (uint)CombatOffhand.None, 0x5, 0x400000, 0x800);
 
         var loaded = PlannerChoicesStore.Load(FilePath, 7);
 
         AssertThat(loaded.Weapon).IsEqual(CombatWeapon.Sword);
-        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.Shield);
+        AssertThat(loaded.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(loaded.SpellToggles).IsEqual(0x5u);
         AssertThat(loaded.TarotCards).IsEqual((0x800ul << 32) | 0x400000);
         AssertThat(loaded.CorruptorTicks).IsEqual(0u);
@@ -167,7 +167,7 @@ public sealed class PlannerChoicesTests
     [TestCase]
     public void CorruptorCounts_AreKeptBetweenOneTickedAnd20()
     {
-        var saved = Choices(CombatWeapon.Sword, CombatOffhand.Shield);
+        var saved = Choices(CombatWeapon.Sword, CombatOffhand.None);
         saved.CorruptorTicks = 0x7;
         saved.CorruptorCounts[0] = 0;
         saved.CorruptorCounts[1] = 21;
@@ -183,7 +183,7 @@ public sealed class PlannerChoicesTests
     [TestCase]
     public void Items_RoundTrip()
     {
-        var saved = Choices(CombatWeapon.Sword, CombatOffhand.Shield);
+        var saved = Choices(CombatWeapon.Sword, CombatOffhand.None);
         saved.EnchantTicks = 0x41;
         saved.EnchantCounts[0] = 2;
         saved.EnchantCounts[6] = 5;
@@ -207,7 +207,7 @@ public sealed class PlannerChoicesTests
             1,
             7,
             (uint)CombatWeapon.Sword,
-            (uint)CombatOffhand.Shield,
+            (uint)CombatOffhand.None,
             0x5,
             0x400000,
             0x800,
@@ -235,7 +235,7 @@ public sealed class PlannerChoicesTests
     [TestCase]
     public void EnchantCounts_AreKeptBetweenOneTickedAnd20()
     {
-        var saved = Choices(CombatWeapon.Sword, CombatOffhand.Shield);
+        var saved = Choices(CombatWeapon.Sword, CombatOffhand.None);
         saved.EnchantTicks = 0x7;
         saved.EnchantCounts[0] = 0;
         saved.EnchantCounts[1] = 21;
@@ -280,7 +280,7 @@ public sealed class PlannerChoicesTests
     private static IEnumerable<uint> Words(byte[] bytes) =>
         Enumerable.Range(0, bytes.Length / 4).Select(index => BitConverter.ToUInt32(bytes, index * 4));
 
-    private void WriteFormatOneFile() => WriteWords(1, 1, 7, (uint)CombatWeapon.Sword, (uint)CombatOffhand.Shield);
+    private void WriteFormatOneFile() => WriteWords(1, 1, 7, (uint)CombatWeapon.Sword, (uint)CombatOffhand.None);
 
     private void WriteWords(params uint[] words) =>
         File.WriteAllBytes(FilePath, words.SelectMany(BitConverter.GetBytes).ToArray());

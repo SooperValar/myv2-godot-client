@@ -18,7 +18,7 @@ public sealed class BuffFocusInput : IEquatable<BuffFocusInput>
     public int FocusedRaiseIndex { get; set; }
 
     // The stat raise slot of each spell skill; NoSlot when not known.
-    public int[] SpellRaiseIndex { get; } = [BuffFocus.NoSlot, BuffFocus.NoSlot, BuffFocus.NoSlot];
+    public int[] SpellRaiseIndex { get; } = Enumerable.Repeat(BuffFocus.NoSlot, BuffModelInput.BuffCount).ToArray();
 
     // The focused Resistance or Immunity gains a tenth of the shown AV.
     public bool ArmorFeedsFocused { get; set; }

@@ -32,16 +32,21 @@ public partial class PlannerValueRow : Control
         GetNode<CanvasItem>("Planned").Visible = false;
     }
 
-    public void ShowPlanned(string name, int current, int planned)
+    public void ShowPlanned(string name, int current, int planned) =>
+        ShowPlanned(name, current, planned, value => value.ToString());
+
+    public void ShowPlanned(string name, int current, int planned, Func<int, string> format)
     {
-        Show(name, current.ToString());
+        Show(name, format(current));
         if (planned == current)
         {
             return;
         }
 
         GetNode<CanvasItem>("Planned").Visible = true;
-        GetNode<Label>("Planned/Shown").Text = planned.ToString();
-        GetNode<Label>("Planned/Difference").Text = $" {planned - current:+0;-0}";
+        GetNode<Label>("Planned/Shown").Text = format(planned);
+        GetNode<Label>("Planned/Difference").Text = planned > current
+            ? " +" + format(planned - current)
+            : " -" + format(current - planned);
     }
 }

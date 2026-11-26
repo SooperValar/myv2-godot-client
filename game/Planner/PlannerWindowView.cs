@@ -22,10 +22,8 @@ public partial class PlannerWindowView : Panel, IHudContextUser
     private const int PreviewSkillRows = 12;
     private const int MathLineHeight = 14;
 
-    private const string FistsTooltip = "Fists of the Heavens uses your best weapon skill";
-
     private static readonly string[] StatRowNames =
-        ["Braveness", "Willpower", "Intuition", "Agility", "Strength", "Hitpoints", "Mana"];
+        ["Braveness", "Willpower", "Intuition", "Agility", "Strength", "Hitpoints", "Endurance", "Mana"];
 
     private static readonly string[] CombatRowNames = ["HitScore", "ParryScore", "WeaponValue", "ArmorValue"];
 
@@ -187,6 +185,8 @@ public partial class PlannerWindowView : Panel, IHudContextUser
     {
         var combatRows = CombatRowNames.Select(name => GetNode<PlannerValueRow>("Left/" + name)).ToArray();
         var multiplier = GetNode<PlannerValueRow>("Left/SpellMultiplier");
+        var hitDamage = GetNode<PlannerValueRow>("Left/HitDamage");
+        var actionSpeed = GetNode<PlannerValueRow>("Left/ActionSpeed");
         var aptitude = GetNode<PlannerValueRow>("Left/SpellAptitude");
         var heading = GetNode<Label>("Left/CombatHeading/Label");
         multiplier.Show(PlannerSheet.SpellMultiplier, sheet.MetaText(PlannerSheet.SpellMultiplier));
@@ -203,6 +203,9 @@ public partial class PlannerWindowView : Panel, IHudContextUser
                 row.AllowFocus(false);
             }
 
+            hitDamage.Show(PlannerSheet.HitDamage, sheet.MetaText(PlannerSheet.HitDamage));
+            actionSpeed.Show(PlannerSheet.ActionSpeed, sheet.MetaText(PlannerSheet.ActionSpeed));
+
             aptitude.Show(PlannerSheet.SpellAptitude, sheet.MetaText(PlannerSheet.SpellAptitude));
             return;
         }
@@ -211,8 +214,6 @@ public partial class PlannerWindowView : Panel, IHudContextUser
         GetNode<CanvasItem>("Left/Equipment").Visible = true;
         WeaponChoice.Select((int)combat.Weapon);
         OffhandChoice.Select((int)combat.Offhand);
-        WeaponChoice.Disabled = combat.BestWeaponSkill;
-        WeaponChoice.TooltipText = combat.BestWeaponSkill ? FistsTooltip : "";
         var server = new CombatValues(combat.ServerHit, combat.ServerParry, sheet.ServerWeapon, sheet.ServerArmor);
         foreach (var stat in Enum.GetValues<CombatStat>())
         {
@@ -220,8 +221,21 @@ public partial class PlannerWindowView : Panel, IHudContextUser
             combatRows[(int)stat].AllowFocus(true);
         }
 
+        if (sheet.Melee is { } melee)
+        {
+            hitDamage.ShowPlanned(PlannerSheet.HitDamage, melee.ServerHitDamage, melee.HitDamage, Hundredths);
+            actionSpeed.ShowPlanned(PlannerSheet.ActionSpeed, melee.ServerSpeed, melee.Speed, Hundredths);
+        }
+        else
+        {
+            hitDamage.Show(PlannerSheet.HitDamage, sheet.MetaText(PlannerSheet.HitDamage));
+            actionSpeed.Show(PlannerSheet.ActionSpeed, sheet.MetaText(PlannerSheet.ActionSpeed));
+        }
+
         aptitude.ShowPlanned(PlannerSheet.SpellAptitude, input.SpellAptitude, planned.SpellAptitude);
     }
+
+    private static string Hundredths(int value) => PlannerSheet.FormatMeta(value, new MetaFormat(true, ""));
 
     private void ShowMathLines(IReadOnlyList<string> lines)
     {

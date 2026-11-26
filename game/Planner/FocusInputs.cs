@@ -317,7 +317,7 @@ public static class FocusInputs
         CombatStat stat)
     {
         var attributePool = FoolReversed(model);
-        var affecting = CombatModel.SkillsAffecting(combat, stat, FocusSearch.MostPoints);
+        var affecting = CombatModel.SkillsAffecting(combat, stat);
         var skills = Enum.GetValues<CombatSkill>().Where(affecting.Contains).ToArray();
         foreach (var skill in skills)
         {
@@ -339,6 +339,7 @@ public static class FocusInputs
         if (stat == CombatStat.Armor)
         {
             AddSpell(candidates, model, BuffKind.Protect, attributePool);
+            AddSpell(candidates, model, BuffKind.MagicShield, attributePool);
         }
 
         if (SpellBonusFeeds(model, stat))
@@ -395,7 +396,7 @@ public static class FocusInputs
             }
         }
 
-        public void AddAptitude() => AddAttributes([AttributeSlot.Willpower, AttributeSlot.Intuition]);
+        public void AddAptitude() => AddAttributes(Enum.GetValues<AttributeSlot>());
 
         // The pool's nth point costs what buying n points cheapest-first costs over buying n - 1.
         public void AddAttributePool()

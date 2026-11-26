@@ -50,7 +50,7 @@ public class AdvancedSheetTests
         game.BuffReadings[(int)BuffKind.Bless] = new BuffReading { Known = true, Power = 90 };
 
         AssertThat(Sheet().Spells.Single().Warning)
-            .IsEqual("Your Bless (57) won't replace the active one (90)");
+            .IsEqual("Your Bless (55) won't replace the active one (90)");
     }
 
     [TestCase]

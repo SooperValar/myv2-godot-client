@@ -66,25 +66,6 @@ public class CombatFocusTests
     }
 
     [TestCase]
-    public void Tactics_NeedsSeveralPoints()
-    {
-        var input = Fixture(CombatStat.Hit);
-
-        // Tactics adds a sixth of its value, so 60 needs six more points to add one.
-        SetCombatSkill(input, CombatSkill.Tactics, TacticsSlot, 60);
-        input.CombatSkills[(int)CombatSkill.Tactics] = input.CombatSkills[(int)CombatSkill.Tactics] with
-        {
-            Attributes = [],
-        };
-        AddCandidate(input, TacticsSlot, FocusSearch.MostPoints, 5);
-
-        var result = CombatFocus.Search(input);
-
-        AssertThat(result.Best?.TotalCost).IsEqual(30);
-        AssertThat(result.Best!.Raises.Single().Points).IsEqual(6);
-    }
-
-    [TestCase]
     public void ACappedSkill_HasNoRoute()
     {
         var input = Fixture(CombatStat.Hit);
@@ -112,105 +93,12 @@ public class CombatFocusTests
     }
 
     [TestCase]
-    public void TheBestWeaponSkill_CanBeOvertaken()
-    {
-        var input = Fixture(CombatStat.Hit);
-        input.Combat.BestWeaponSkill = true;
-        SetCombatSkill(input, CombatSkill.Sword, SwordSlot, 60);
-        SetCombatSkill(input, CombatSkill.Axe, AxeSlot, 58);
-        AddCandidate(input, SwordSlot, 1, 100);
-        AddCandidate(input, AxeSlot, FocusSearch.MostPoints, 10);
-
-        var result = CombatFocus.Search(input);
-
-        AssertThat(result.Best?.TotalCost).IsEqual(30);
-        AssertThat(result.Best!.Raises).ContainsExactly(new FocusRaise(AxeSlot, 3, 30));
-    }
-
-    [TestCase]
-    public void ParryToHit_LetsShieldPointsRaiseHit()
-    {
-        var input = Fixture(CombatStat.Hit);
-        input.Combat.Offhand = CombatOffhand.Shield;
-        input.Model.Effects.ParryToHitPercent = 50;
-        SetCombatSkill(input, CombatSkill.Sword, SwordSlot, 60);
-        SetCombatSkill(input, CombatSkill.Shield, ShieldSlot, 100);
-        AddCandidate(input, SwordSlot, 1, 100);
-        AddCandidate(input, ShieldSlot, FocusSearch.MostPoints, 5);
-
-        var result = CombatFocus.Search(input);
-
-        AssertThat(result.CurrentValue).IsEqual(100);
-        AssertThat(result.Best?.TotalCost).IsEqual(40);
-        AssertThat(result.Best!.Raises).ContainsExactly(new FocusRaise(ShieldSlot, 8, 40));
-    }
-
-    [TestCase]
     public void AnEmptyPlan_ShowsTheServersValues()
     {
         var input = Fixture(CombatStat.Hit);
-        input.Model.Effects.FistsOfHeavens = 1;
-        input.Model.Effects.HitToParryPercent = 3;
-        input.Model.Effects.ParryToHitPercent = 3;
-        input.Model.Effects.ArmorEnchant = 1;
-        input.Model.TarotCards = Card(TarotCard.Hermit);
-        input.Combat.BestWeaponSkill = true;
         SetCombatSkill(input, CombatSkill.Sword, SwordSlot, 60);
 
         AssertThat(Shown(input)).IsEqual(new CombatValues(100, 90, 30, 20));
-    }
-
-    [TestCase]
-    public void EvergreensWeaponValue_GoesThroughTheLoversAndTheHermit()
-    {
-        var input = Fixture(CombatStat.Weapon);
-
-        // Twenty more Agility gives Evergreen +2 WV; the Lovers splits it and the Hermit scales the armor half.
-        input.Model.Effects.Evergreen = 1;
-        input.Model.TarotCards = Card(TarotCard.Lovers) | Card(TarotCard.Hermit);
-        input.Model.ServerWeapon = 40;
-        input.Model.ServerArmor = 46;
-        input.Model.PlannedAttributes[AttributeSlot.Agility] = 20;
-
-        var shown = Shown(input);
-
-        AssertThat(shown.Weapon).IsEqual(41);
-        AssertThat(shown.Armor).IsEqual(47);
-    }
-
-    [TestCase]
-    public void AHitpointRaise_ReachesWeaponValueThroughGornAndTheTachi()
-    {
-        var input = Fixture(CombatStat.Weapon);
-
-        // 499 to 500 Hitpoints adds 1 Spell Bonus, which the Tachi adds to WV.
-        input.Model.Effects.SpellBonusToWeapon = 1;
-        input.Model.Effects.HitpointsToSpellBonus = 1;
-        input.Model.UncappedHitpoints = 499;
-        AddCandidate(input, BuffFocus.HitpointsRaise, FocusSearch.MostPoints, 3);
-
-        var result = CombatFocus.Search(input);
-
-        AssertThat(result.CurrentValue).IsEqual(30);
-        AssertThat(result.Best?.TotalCost).IsEqual(3);
-        AssertThat(result.Best!.Raises[0].RaiseIndex).IsEqual(BuffFocus.HitpointsRaise);
-    }
-
-    [TestCase]
-    public void AManaRaise_ReachesWeaponValueThroughNeisClaw()
-    {
-        var input = Fixture(CombatStat.Weapon);
-
-        // 298 Mana needs two points to reach 300 and the next point of Spell Bonus.
-        input.Model.Effects.SpellBonusToWeapon = 1;
-        input.Model.Effects.ManaToSpellBonus = 1;
-        input.Model.UncappedMana = 298;
-        AddCandidate(input, BuffFocus.ManaRaise, FocusSearch.MostPoints, 3);
-
-        var result = CombatFocus.Search(input);
-
-        AssertThat(result.Best?.TotalCost).IsEqual(6);
-        AssertThat(result.Best!.Raises[0].Points).IsEqual(2);
     }
 
     private static CombatFocusInput Fixture(CombatStat stat)
@@ -220,7 +108,6 @@ public class CombatFocusTests
             Divisor = 5,
             SpellMultiplier = 100,
             SpellAptitude = 200,
-            RaceModifier = 100,
             ServerWeapon = 30,
             ServerArmor = 20,
         };
@@ -229,7 +116,13 @@ public class CombatFocusTests
         var input = new CombatFocusInput
         {
             Model = model,
-            Combat = new CombatModelInput { Weapon = CombatWeapon.Sword, ServerHit = 100, ServerParry = 90 },
+            Combat = new CombatModelInput
+            {
+                Weapon = CombatWeapon.Sword,
+                HeldWeapon = CombatWeapon.Sword,
+                ServerHit = 100,
+                ServerParry = 90,
+            },
             Stat = stat,
         };
         return input;

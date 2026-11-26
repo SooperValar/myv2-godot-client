@@ -43,6 +43,8 @@ public sealed class PlannerGame
 
     public int[] HitPoints { get; } = new int[StatValueCount];
 
+    public int[] Endurance { get; } = new int[StatValueCount];
+
     public int[] Mana { get; } = new int[StatValueCount];
 
     public PlannerSkillText[] SkillTexts { get; set; } = [];
@@ -71,7 +73,7 @@ public sealed class PlannerGame
         Terminology terminology,
         StatPlan plan,
         PlannerChoices choices,
-        BuffWatch buffs,
+        BuffTimers buffs,
         bool hardMode)
     {
         var game = new PlannerGame
@@ -100,6 +102,7 @@ public sealed class PlannerGame
         CopyValues(player.Attributes, game.Attributes);
         CopyValues(player.Skills, game.Skills);
         player.HitPoints.CopyTo(game.HitPoints, 0);
+        player.Endurance.CopyTo(game.Endurance, 0);
         player.Mana.CopyTo(game.Mana, 0);
         foreach (var meta in terminology.MetaStats)
         {
@@ -115,10 +118,14 @@ public sealed class PlannerGame
             game.TreeNodeNames[node] = classTree[node].Name;
         }
 
-        foreach (var kind in Enum.GetValues<BuffKind>())
+        for (var slot = 0; slot < PlayerState.BuffSlots && slot < BuffTimers.Slots; slot++)
         {
-            game.BuffActive[(int)kind] = buffs.IsActive(kind);
-            game.BuffReadings[(int)kind] = buffs.Reading(kind);
+            if (BuffList.SpriteKind(player.Buffs[slot].Sprite) is { } kind)
+            {
+                var power = buffs.Timers[slot].Power;
+                game.BuffActive[(int)kind] = true;
+                game.BuffReadings[(int)kind] = power > 0 ? new BuffReading { Known = true, Power = power } : null;
+            }
         }
 
         return game;
@@ -128,6 +135,7 @@ public sealed class PlannerGame
     {
         < PlayerState.AttributeCount => Attributes[slot],
         StatSlots.HitPoints => HitPoints,
+        StatSlots.Endurance => Endurance,
         StatSlots.Mana => Mana,
         _ => Skills[slot - StatSlots.FirstSkill],
     };

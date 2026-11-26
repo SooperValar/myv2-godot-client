@@ -78,11 +78,13 @@ mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="CardsGap" type="Control" parent="Body/Sections" unique_id=1028123016]
+visible = false
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 mouse_filter = 2
 
 [node name="CardsHeading" type="Label" parent="Body/Sections" unique_id=254703441]
+visible = false
 custom_minimum_size = Vector2(0, 19)
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
@@ -90,6 +92,7 @@ text = "Tarot cards"
 vertical_alignment = 1
 
 [node name="Cards" type="HBoxContainer" parent="Body/Sections" unique_id=1893127068]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
@@ -124,11 +127,13 @@ mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="CorruptorsGap" type="Control" parent="Body/Sections" unique_id=1885135526]
+visible = false
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 mouse_filter = 2
 
 [node name="CorruptorsHeading" type="Label" parent="Body/Sections" unique_id=635564191]
+visible = false
 custom_minimum_size = Vector2(0, 19)
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
@@ -136,16 +141,19 @@ text = "Corruptors"
 vertical_alignment = 1
 
 [node name="Corruptors" type="VBoxContainer" parent="Body/Sections" unique_id=1803813678]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="EnchantsGap" type="Control" parent="Body/Sections" unique_id=247052564]
+visible = false
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 mouse_filter = 2
 
 [node name="EnchantsHeading" type="Label" parent="Body/Sections" unique_id=1129836942]
+visible = false
 custom_minimum_size = Vector2(0, 19)
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
@@ -153,16 +161,19 @@ text = "Enchantments"
 vertical_alignment = 1
 
 [node name="Enchants" type="VBoxContainer" parent="Body/Sections" unique_id=1733238196]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0
 
 [node name="GearGap" type="Control" parent="Body/Sections" unique_id=1411373736]
+visible = false
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 mouse_filter = 2
 
 [node name="GearHeading" type="Label" parent="Body/Sections" unique_id=1108065990]
+visible = false
 custom_minimum_size = Vector2(0, 19)
 layout_mode = 2
 theme_type_variation = &"HeadingLabel"
@@ -170,6 +181,7 @@ text = "Gear"
 vertical_alignment = 1
 
 [node name="Gear" type="VBoxContainer" parent="Body/Sections" unique_id=1014640166]
+visible = false
 layout_mode = 2
 mouse_filter = 2
 theme_override_constants/separation = 0

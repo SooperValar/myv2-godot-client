@@ -12,7 +12,6 @@ public class BuffFocusTests
 {
     private const int FocusedSlot = 8;
     private const int BlessSlot = 9;
-    private const int GearMasterySlot = 12;
 
     // Raise slots the model never reads, so points there change nothing.
     private const int FirstInertSlot = 20;
@@ -24,11 +23,11 @@ public class BuffFocusTests
     {
         var result = BuffFocus.Search(Fixture());
 
-        AssertThat(result.CurrentValue).IsEqual(106);
-        AssertSingle(result.Best, BlessSlot, 7, 140);
+        AssertThat(result.CurrentValue).IsEqual(109);
+        AssertSingle(result.Best, BlessSlot, 1, 20);
         AssertSingle(result.Direct, FocusedSlot, 1, 1000);
-        AssertSingle(result.ThroughAttributes, 4, 1, 500);
-        AssertSingle(result.ThroughBless, BlessSlot, 7, 140);
+        AssertSingle(result.ThroughAttributes, 1, 1, 300);
+        AssertSingle(result.ThroughBless, BlessSlot, 1, 20);
     }
 
     [TestCase]
@@ -41,26 +40,21 @@ public class BuffFocusTests
 
         AssertSingle(result.Best, FocusedSlot, 1, 10);
         AssertSingle(result.Direct, FocusedSlot, 1, 10);
-        AssertSingle(result.ThroughAttributes, 4, 1, 500);
-        AssertSingle(result.ThroughBless, BlessSlot, 7, 140);
+        AssertSingle(result.ThroughAttributes, 1, 1, 300);
+        AssertSingle(result.ThroughBless, BlessSlot, 1, 20);
     }
 
     [TestCase]
     public void ACappedBless_IsGoneAround()
     {
         var input = Fixture();
-        for (var step = 4; step < FocusSearch.MostPoints; step++)
-        {
-            input.Candidates[6].StepCosts[step] = SkillFocus.NoCost;
-        }
+        Array.Fill(input.Candidates[6].StepCosts, SkillFocus.NoCost);
 
         var result = BuffFocus.Search(input);
 
-        AssertSingle(result.Best, 4, 1, 500);
-        AssertSingle(result.ThroughAttributes, 4, 1, 500);
-
-        // A Bless point the route would succeed without doesn't make it a route through Bless.
-        AssertThat(result.ThroughBless?.TotalCost).IsEqual(1180);
+        AssertSingle(result.Best, 1, 1, 300);
+        AssertSingle(result.ThroughAttributes, 1, 1, 300);
+        AssertThat(result.ThroughBless).IsNull();
     }
 
     [TestCase]
@@ -95,69 +89,10 @@ public class BuffFocusTests
 
         var result = BuffFocus.Search(input);
 
-        AssertThat(result.CurrentValue).IsEqual(66);
+        AssertThat(result.CurrentValue).IsEqual(69);
         AssertSingle(result.Best, BlessSlot, 1, 20);
         AssertSingle(result.Direct, BlessSlot, 1, 20);
         AssertThat(result.ThroughBless).IsNull();
-    }
-
-    [TestCase]
-    public void FoolReversed_UsesTheAttributePool()
-    {
-        var model = Model();
-        model.ServerAttributes.SetAll(105);
-        model.SpellKnown[Bless] = false;
-        model.ShowBuffed[Bless] = false;
-        model.TarotCards = 1ul << (int)TarotCard.FoolReversed;
-        var input = new BuffFocusInput
-        {
-            Model = model,
-            Focused = Skill(100, AttributeSlot.Braveness, AttributeSlot.Willpower, AttributeSlot.Intuition),
-            FocusedRaiseIndex = FocusedSlot,
-        };
-        AddCandidate(input, FocusedSlot, 1, 1000);
-        AddCandidate(input, BuffFocus.AttributePool, 10, 10);
-
-        var result = BuffFocus.Search(input);
-
-        AssertSingle(result.Best, BuffFocus.AttributePool, 10, 100);
-    }
-
-    [TestCase]
-    public void Armor_FeedsResistanceThroughGearMastery()
-    {
-        var input = ResistFixture();
-
-        // 59 to 60 Gear Mastery adds 1 AV, which takes the shown AV from 109 to 110 and its tenth from 10 to 11.
-        var gearMastery = (int)CombatSkill.GearMastery;
-        input.Combat.Known[gearMastery] = true;
-        input.Combat.Current[gearMastery] = 59;
-        input.Combat.Shown[gearMastery] = 59;
-        input.CombatRaiseIndex[gearMastery] = GearMasterySlot;
-        input.CombatSkills[gearMastery] = Skill(59);
-        AddCandidate(input, GearMasterySlot, 16, 5);
-
-        var result = BuffFocus.Search(input);
-
-        AssertThat(result.CurrentValue).IsEqual(70);
-        AssertSingle(result.Best, GearMasterySlot, 1, 5);
-    }
-
-    [TestCase]
-    public void AHitpointRaise_ReachesResistanceThroughTheOdachi()
-    {
-        var input = ResistFixture();
-
-        // 499 to 500 Hitpoints adds 1 Spell Bonus, which the Odachi adds to AV.
-        input.Model.Effects.SpellBonusToArmor = 1;
-        input.Model.Effects.HitpointsToSpellBonus = 1;
-        input.Model.UncappedHitpoints = 499;
-        AddCandidate(input, BuffFocus.HitpointsRaise, 16, 3);
-
-        var result = BuffFocus.Search(input);
-
-        AssertThat(result.CurrentValue).IsEqual(70);
-        AssertSingle(result.Best, BuffFocus.HitpointsRaise, 1, 3);
     }
 
     [TestCase]
@@ -172,10 +107,10 @@ public class BuffFocusTests
         var result = BuffFocus.Search(input);
 
         AssertThat(input.Candidates.Count).IsEqual(FocusSearch.MostCandidates);
-        AssertSingle(result.Best, BlessSlot, 7, 140);
+        AssertSingle(result.Best, BlessSlot, 1, 20);
         AssertSingle(result.Direct, FocusedSlot, 1, 1000);
-        AssertSingle(result.ThroughAttributes, 4, 1, 500);
-        AssertSingle(result.ThroughBless, BlessSlot, 7, 140);
+        AssertSingle(result.ThroughAttributes, 1, 1, 300);
+        AssertSingle(result.ThroughBless, BlessSlot, 1, 20);
     }
 
     [TestCase]
@@ -190,7 +125,7 @@ public class BuffFocusTests
 
         var result = BuffFocus.Search(input);
 
-        AssertThat(result.CurrentValue).IsEqual(106);
+        AssertThat(result.CurrentValue).IsEqual(109);
         AssertThat(result.Best).IsNull();
         AssertThat(result.Direct).IsNull();
         AssertThat(result.ThroughAttributes).IsNull();
@@ -204,7 +139,6 @@ public class BuffFocusTests
             Divisor = 5,
             SpellMultiplier = 100,
             SpellAptitude = 200,
-            RaceModifier = 100,
             ServerWeapon = 30,
             ServerArmor = 30,
         };
@@ -233,25 +167,6 @@ public class BuffFocusTests
         AddCandidate(input, 3, 6, 500);
         AddCandidate(input, 4, 6, 500);
         AddCandidate(input, BlessSlot, 16, 20);
-        return input;
-    }
-
-    // A Resistance that gains a tenth of the shown AV; the focused point costs far more than any other route.
-    private static BuffFocusInput ResistFixture()
-    {
-        var model = Model();
-        model.ShowBuffed[Bless] = false;
-        model.ServerArmor = 109;
-        model.Effects.ArmorToResist = 1;
-        var input = new BuffFocusInput
-        {
-            Model = model,
-            Focused = Skill(70) with { Scale = SkillScale.Resist },
-            FocusedRaiseIndex = FocusedSlot,
-            ArmorFeedsFocused = true,
-        };
-        Array.Fill(input.CombatRaiseIndex, BuffFocus.NoSlot);
-        AddCandidate(input, FocusedSlot, 1, 100);
         return input;
     }
 

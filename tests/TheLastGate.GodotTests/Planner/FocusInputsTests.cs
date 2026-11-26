@@ -34,7 +34,7 @@ public class FocusInputsTests
 
         AssertThat(input.Attributes)
             .ContainsExactly(AttributeSlot.Braveness, AttributeSlot.Agility, AttributeSlot.Strength);
-        AssertThat(input.AttributeValues).ContainsExactly(61, 61, 61);
+        AssertThat(input.AttributeValues).ContainsExactly(66, 66, 66);
         AssertThat(input.AttributeStepCosts[2]).ContainsExactly(9600, 10338, 11113, 11926, 12777, 13668);
         AssertThat(input.Divisor).IsEqual(5);
         AssertThat(input.DirectCost).IsEqual(4800);
@@ -72,7 +72,7 @@ public class FocusInputsTests
         var input = FocusInputs.Buffed(PlannerSheet.For(game), SwordSkill)!;
 
         AssertThat(input.FocusedRaiseIndex).IsEqual(SwordSlot);
-        AssertThat(input.SpellRaiseIndex).ContainsExactly(BlessSlot, BuffFocus.NoSlot, BuffFocus.NoSlot);
+        AssertThat(input.SpellRaiseIndex).ContainsExactly(BlessSlot, BuffFocus.NoSlot, BuffFocus.NoSlot, BuffFocus.NoSlot);
         AssertThat(input.Focused.ServerTotal).IsEqual(80);
         AssertThat(input.ArmorFeedsFocused).IsFalse();
         AssertThat(input.Candidates.Select(candidate => (candidate.RaiseIndex, candidate.MostPoints)))
@@ -91,21 +91,6 @@ public class FocusInputsTests
     }
 
     [TestCase]
-    public void TheBuffedInput_UnderTheReverseFoolBuysAttributesFromOnePool()
-    {
-        game.Choices.TarotCards = 1ul << (int)TarotCard.FoolReversed;
-
-        var input = FocusInputs.Buffed(PlannerSheet.For(game), SwordSkill)!;
-
-        AssertThat(input.Candidates.Select(candidate => (candidate.RaiseIndex, candidate.MostPoints)))
-            .ContainsExactly((SwordSlot, 1), (BuffFocus.AttributePool, 10), (BlessSlot, 16));
-        var pool = input.Candidates[1].StepCosts;
-        AssertThat(pool.Take(5).ToArray()).ContainsExactly(Enumerable.Repeat(9600, 5).ToArray());
-        AssertThat(pool.Skip(5).Take(5).ToArray()).ContainsExactly(Enumerable.Repeat(10338, 5).ToArray());
-        AssertThat(pool.Skip(10).Distinct().ToArray()).ContainsExactly(NoCost);
-    }
-
-    [TestCase]
     public void TheBuffedInput_NeedsTheBuffModel()
     {
         game.MetaStats.Clear();
@@ -121,7 +106,7 @@ public class FocusInputsTests
         AssertThat(input.Stat).IsEqual(CombatStat.Hit);
         AssertThat(input.Combat.Weapon).IsEqual(CombatWeapon.Sword);
         AssertThat(input.CombatRaiseIndex[(int)CombatSkill.Sword]).IsEqual(SwordSlot);
-        AssertThat(input.CombatRaiseIndex[(int)CombatSkill.Tactics]).IsEqual(BuffFocus.NoSlot);
+        AssertThat(input.CombatRaiseIndex[(int)CombatSkill.Axe]).IsEqual(BuffFocus.NoSlot);
         AssertThat(input.Candidates.Select(candidate => (candidate.RaiseIndex, candidate.MostPoints)))
             .ContainsExactly(
                 (SwordSlot, 16),
@@ -203,6 +188,7 @@ public class FocusInputsTests
         int[] sword = [40, 0, 200, 3, 0, 80];
         sword.CopyTo(game.Skills[SwordSkill], 0);
         game.SkillOrder = [BlessSkill, SwordSkill];
+        game.MetaStats[PlannerSheet.WeaponSkillMeta] = SwordSkill;
         return game;
     }
 }

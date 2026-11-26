@@ -9,6 +9,7 @@ public enum BuffKind
     Bless,
     Enhance,
     Protect,
+    MagicShield,
 }
 
 // One buff as the server's buff list describes it: its power, and with spell knowledge the exact bonuses it gives.

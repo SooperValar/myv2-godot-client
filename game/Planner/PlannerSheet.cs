@@ -1,10 +1,13 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using TheLastGate.Buffs;
 using TheLastGate.Rules;
 using TheLastGate.State;
 
 namespace TheLastGate.Planner;
+
+public sealed record MeleeValues(int ServerHitDamage, int HitDamage, int ServerSpeed, int Speed);
 
 // One row of the planner: an attribute, Hitpoints, Mana or a skill, by its stat plan slot.
 public sealed record PlannerRow(
@@ -31,47 +34,24 @@ public sealed class PlannerSheet
 {
     public const string HitScore = "Hit Score";
     public const string ParryScore = "Parry Score";
-    public const string SpellMultiplier = "Spell Multiplier";
-    public const string SpellAptitude = "Spell Aptitude";
-    public const string SpellBonus = "Spell Bonus";
+    public const string SpellMultiplier = "Spell Bonus";
+    public const string SpellAptitude = "Compatibility";
+    public const string WeaponSkillMeta = "Weapon Skill Number";
+    public const string SpeedStepMeta = "Speed Step";
+    public const string HitDamage = "Est. Melee Hit Dmg";
+    public const string ActionSpeed = "Action Speed";
+    public const string CriticalChance = "Critical Chance";
 
     private const int UncappedValue = 4;
     private const int TotalValue = 5;
     private const int ShownSkill = 1;
-    private const int RampartNode = 10;
-    private const int DefaultSpellRacePercent = 100;
     private const int MetaHundredths = 100;
 
-    private const int TacticsSkill = 12;
-    private const int ResistSkill = 23;
-    private const int ImmunitySkill = 32;
-
-    private const uint Mercenary = 1u << 0;
-    private const uint SeyanDu = 1u << 1;
-    private const uint Templar = 1u << 4;
-    private const uint ArchTemplar = 1u << 5;
-    private const uint Harakim = 1u << 6;
-    private const uint ArchHarakim = 1u << 9;
-    private const uint Warrior = 1u << 10;
-    private const uint Sorcerer = 1u << 11;
-    private const uint Skald = 1u << 12;
-    private const uint Summoner = 1u << 13;
-    private const uint Braver = 1u << 14;
-    private const uint Lycanth = 1u << 16;
-
-    // In BuffKind order.
-    internal static readonly int[] SpellSkillNumbers = [21, 18, 17];
+    // In BuffKind order: Bless, Enhance Weapon, Protection, Magic Shield.
+    internal static readonly int[] SpellSkillNumbers = [21, 18, 17, 11];
 
     // In CombatSkill order.
-    internal static readonly int[] CombatSkillNumbers = [0, 2, 3, 4, 5, 6, 36, 16, TacticsSkill, 38, 53];
-
-    // The first class that matches gives the percent.
-    private static readonly (uint Class, int Percent)[] SpellRacePercents =
-    [
-        (Templar, 75), (Mercenary, 100), (Harakim, 105), (SeyanDu, 95), (ArchTemplar, 80), (Skald, 80),
-        (Warrior, 105), (Sorcerer, 105), (Summoner, 110), (ArchHarakim, 110), (Braver, 115),
-        (Lycanth, DefaultSpellRacePercent),
-    ];
+    internal static IReadOnlyList<int> CombatSkillNumbers => CombatModel.SkillNumbers;
 
     private int plannedArmor;
     private BuffModelResult? unplanned;
@@ -102,6 +82,10 @@ public sealed class PlannerSheet
     // Hit, Parry, Weapon and Armor Value with the plan and the buffs shown; missing until Hit and Parry have arrived.
     public CombatValues? CombatShown { get; private set; }
 
+    // Est. Melee Hit Dmg and Action Speed, the server's and with the plan and buffs shown, in hundredths; missing until
+    // their meta stats have arrived.
+    public MeleeValues? Melee { get; private set; }
+
     // The plan or the buffs change a combat number or the spell aptitude.
     public bool CombatChanged { get; private set; }
 
@@ -125,6 +109,7 @@ public sealed class PlannerSheet
         sheet.Vitals =
         [
             sheet.VitalRow("Hitpoints", game.HitPoints, StatSlots.HitPoints),
+            sheet.VitalRow("Endurance", game.Endurance, StatSlots.Endurance),
             sheet.VitalRow("Mana", game.Mana, StatSlots.Mana),
         ];
         sheet.Skills = game.SkillOrder
@@ -145,36 +130,6 @@ public sealed class PlannerSheet
         format.Decimal
             ? $"{value / MetaHundredths}.{value % MetaHundredths:00}{format.Affix}"
             : $"{value}{format.Affix}";
-
-    public static int SpellRaceModifier(uint kindred)
-    {
-        foreach (var (characterClass, percent) in SpellRacePercents)
-        {
-            if ((kindred & characterClass) != 0)
-            {
-                return percent;
-            }
-        }
-
-        return DefaultSpellRacePercent;
-    }
-
-    // Ferocity grows with the gear slots left empty; the charms and the off-hand don't count.
-    public static int EmptyGearSlots(IReadOnlyList<int> wornSprites)
-    {
-        var emptySlots = 0;
-        for (var slot = WornSlot.Head; slot <= WornSlot.SecondCharm; slot++)
-        {
-            if (slot is not (WornSlot.Charm or WornSlot.SecondCharm or WornSlot.OffHand) && wornSprites[(int)slot] == 0)
-            {
-                emptySlots++;
-            }
-        }
-
-        return emptySlots;
-    }
-
-    private bool Is(uint characterClass) => (Game.Kindred & characterClass) != 0;
 
     private int? Meta(string name) => Game.MetaStats.TryGetValue(name, out var value) ? value : null;
 
@@ -206,7 +161,36 @@ public sealed class PlannerSheet
                 || Planned.SpellAptitude != PlannedInput.SpellAptitude;
             plannedArmor = shown.Armor;
             unplannedArmor = BuffModel.CombatShown(unplannedInput, unplanned, Combat, CombatSkills(false)).Armor;
+            Melee = MeleeShown(shown);
+            CombatChanged |= Melee is { } melee
+                && (melee.HitDamage != melee.ServerHitDamage || melee.Speed != melee.ServerSpeed);
         }
+    }
+
+    private MeleeValues? MeleeShown(CombatValues shown)
+    {
+        if (Meta(HitDamage) is not { } hitDamage || Meta(SpeedStepMeta) is not { } speedStep || Planned == null)
+        {
+            return null;
+        }
+
+        var input = new MeleeModelInput
+        {
+            ServerHitDamage = hitDamage,
+            ServerCritical = Meta(CriticalChance) ?? 0,
+            ServerWeapon = Game.Weapon,
+            ShownWeapon = shown.Weapon,
+            ServerStrength = PlannerGame.Score(Game.Attributes[(int)AttributeSlot.Strength]),
+            ShownStrength = Planned.Attributes[AttributeSlot.Strength],
+            ServerAgility = PlannerGame.Score(Game.Attributes[(int)AttributeSlot.Agility]),
+            ShownAgility = Planned.Attributes[AttributeSlot.Agility],
+            ServerSpeedStep = speedStep,
+        };
+        return new MeleeValues(
+            hitDamage,
+            MeleeModel.PlannedHitDamage(input),
+            MeleeModel.ActionSpeed(speedStep),
+            MeleeModel.ActionSpeed(MeleeModel.PlannedSpeedStep(input)));
     }
 
     private BuffModelInput? BuffInput()
@@ -221,14 +205,9 @@ public sealed class PlannerSheet
         {
             Divisor = SkillPreview.AttributeDivisor(Game.HardMode),
             SpellMultiplier = multiplier,
-            SpellBonus = Meta(SpellBonus) ?? 0,
             SpellAptitude = aptitude,
-            RaceModifier = SpellRaceModifier(Game.Kindred),
-            ReducedItemBuffs = Is(SeyanDu) || Is(Braver),
             ServerWeapon = Game.Weapon,
             ServerArmor = Game.Armor,
-            TarotCards = choices.TarotCards,
-            Effects = ItemEffects.Compute(TreeInput(), ItemInput()),
             UncappedHitpoints = Game.HitPoints[UncappedValue],
             PlannedHitpoints = Game.Plan.Raised(StatSlots.HitPoints),
             UncappedMana = Game.Mana[UncappedValue],
@@ -275,51 +254,22 @@ public sealed class PlannerSheet
             var number = SpellSkillNumbers[kind];
             if (Known(number) && ((choices.SpellToggles >> kind) & 1) != 0)
             {
-                yield return Game.SkillTexts[number].Name;
+                yield return SpellLine(kind, Game.SkillTexts[number].Name);
             }
         }
+    }
 
-        foreach (var card in TarotMath.ModelledCards)
+    // Magic Shield is the one spell Compatibility doesn't hold back.
+    private string SpellLine(int kind, string name)
+    {
+        if (PlannedInput == null || Planned == null)
         {
-            if (TarotMath.Has(choices.TarotCards, card))
-            {
-                yield return TarotMath.CardNames[(int)card];
-            }
+            return name;
         }
 
-        foreach (var node in TreeLines())
-        {
-            yield return $"{node} (skill tree)";
-        }
-
-        for (var corruptor = 0; corruptor < TreeEffects.CorruptorCount; corruptor++)
-        {
-            var count = choices.CorruptorCounts[corruptor];
-            if ((choices.CorruptorTicks & (1u << corruptor)) != 0 && count != 0)
-            {
-                yield return $"{TreeEffects.Corruptors[corruptor].Name} x{count}";
-            }
-        }
-
-        var items = ItemInput();
-        foreach (var enchant in Enum.GetValues<Enchant>())
-        {
-            var copies = ItemEffects.EnchantCopies(items, enchant);
-            var info = ItemEffects.Enchants[(int)enchant];
-            if (copies != 0)
-            {
-                yield return info.Counted ? $"{info.Name} x{copies}" : info.Name;
-            }
-        }
-
-        for (var gear = 0; gear < ItemEffects.GearCount; gear++)
-        {
-            var info = ItemEffects.Gears[gear];
-            if ((choices.GearTicks & (1u << gear)) != 0)
-            {
-                yield return info.Modelled ? info.Name : $"{info.Name} (not modelled)";
-            }
-        }
+        var skill = BuffModel.SkillValue(PlannedInput, PlannedInput.SpellSkills[kind], Planned.Attributes);
+        var capped = kind != (int)BuffKind.MagicShield && skill > Planned.SpellAptitude;
+        return $"{name} {Planned.EffectivePower[kind]}{(capped ? " (capped)" : "")}";
     }
 
     // A learned node counts under its own name while it is in the math, or as its corruptor once corrupted.
@@ -377,62 +327,39 @@ public sealed class PlannerSheet
             return null;
         }
 
-        var effects = plannedInput.Effects;
         var input = new CombatModelInput
         {
             ServerHit = hit,
             ServerParry = parry,
-            GearClass = GearClass(),
-            Rampart = Is(ArchTemplar) && TreeEffects.NodeLearned(Game.TreePoints, RampartNode),
-            Lycanth = Is(Lycanth),
-            EmptySlots = EmptyGearSlots(Game.WornSprites),
             BaseWeapon = planned.Weapon,
             BaseArmor = planned.Armor,
-            BestWeaponSkill = effects.FistsOfHeavens != 0,
-            HitFeedsParry = effects.HitToParryPercent != 0,
-            ParryFeedsHit = effects.ParryToHitPercent != 0,
+            HeldWeapon = CombatModel.WeaponForSkill(Meta(WeaponSkillMeta) ?? 0),
+            Offhand = CombatOffhand.None,
         };
         for (var skill = 0; skill < CombatModel.SkillCount; skill++)
         {
             var number = CombatSkillNumbers[skill];
             input.Known[skill] = Known(number);
             input.Current[skill] = PlannerGame.Score(Game.Skills[number]);
-            input.Shown[skill] = input.Known[skill]
+            input.Shown[skill] = InTable(number)
                 ? BuffModel.SkillValue(plannedInput, ModelSkill(number, true), planned.Attributes)
                 : input.Current[skill];
         }
 
         var choices = Game.Choices;
-        if (choices.Weapon == null || choices.Offhand == null)
+        if (choices.Weapon == null)
         {
-            choices.Weapon ??= CombatModel.DefaultWeapon(input.Known, input.Current);
-            choices.Offhand ??= CombatModel.DefaultOffhand(input.Known, input.Current);
+            choices.Weapon = input.HeldWeapon;
             ChoicesChanged = true;
         }
 
         input.Weapon = choices.Weapon.Value;
-        input.Offhand = choices.Offhand.Value;
         return input;
-    }
-
-    private CombatGearClass GearClass()
-    {
-        if (Is(Skald))
-        {
-            return CombatGearClass.Skald;
-        }
-
-        if (Is(ArchTemplar))
-        {
-            return CombatGearClass.ArchTemplar;
-        }
-
-        return Is(Templar) || Is(Braver) ? CombatGearClass.TemplarOrBraver : CombatGearClass.Other;
     }
 
     internal BuffModelSkill[] CombatSkills(bool withPlan) =>
         CombatSkillNumbers
-            .Select(number => Known(number) ? ModelSkill(number, withPlan) : new BuffModelSkill())
+            .Select(number => InTable(number) ? ModelSkill(number, withPlan) : new BuffModelSkill())
             .ToArray();
 
     private bool InTable(int number) => number < Game.SkillTexts.Length;
@@ -444,13 +371,7 @@ public sealed class PlannerSheet
         ServerTotal = PlannerGame.Score(Game.Skills[number]),
         Planned = withPlan ? Game.Plan.Raised(StatSlots.Skill(number)) : 0,
         Attributes = SkillAttributes(number).Select(attribute => (AttributeSlot)attribute).ToArray(),
-        Scale = number switch
-        {
-            ResistSkill => SkillScale.Resist,
-            ImmunitySkill => SkillScale.Immunity,
-            TacticsSkill => SkillScale.Tactics,
-            _ => SkillScale.None,
-        },
+        Scale = SkillScale.None,
         Groups = SkillGroupTable.Of(number),
     };
 

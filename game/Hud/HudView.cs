@@ -2052,7 +2052,7 @@ public partial class HudView : Control
             state.Terminology,
             statPlan,
             PlannerChoices.Choices,
-            state.BuffWatch,
+            state.BuffTimers,
             hardMode);
         var sheet = Planner.PlannerSheet.For(game);
         if (sheet.ChoicesChanged)

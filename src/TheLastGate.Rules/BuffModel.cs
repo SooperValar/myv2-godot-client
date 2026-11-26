@@ -40,7 +40,7 @@ public sealed record BuffModelSkill
 // Equal to another input with the same numbers.
 public sealed class BuffModelInput : IEquatable<BuffModelInput>
 {
-    public const int BuffCount = 3;
+    public const int BuffCount = 4;
 
     // The totals the server sends.
     public AttributeAmounts ServerAttributes { get; } = new();
@@ -53,18 +53,13 @@ public sealed class BuffModelInput : IEquatable<BuffModelInput>
     // 5, or 6 in hard mode.
     public int Divisor { get; set; } = 5;
 
-    // In hundredths: 100 is 1.00x.
+    // In hundredths: 100 is 1.00x. MyV2's Spell Bonus, the race and the moon.
     public int SpellMultiplier { get; set; }
 
     public int SpellBonus { get; set; }
 
+    // MyV2's Compatibility: the sum of the five base attributes.
     public int SpellAptitude { get; set; }
-
-    // A percent.
-    public int RaceModifier { get; set; }
-
-    // Enhance and Protect give power / 6 + 3 instead of power / 4 + 4.
-    public bool ReducedItemBuffs { get; set; }
 
     public int ServerWeapon { get; set; }
 
@@ -72,10 +67,10 @@ public sealed class BuffModelInput : IEquatable<BuffModelInput>
 
     public bool[] SpellKnown { get; } = new bool[BuffCount];
 
-    public BuffModelSkill[] SpellSkills { get; } = [new(), new(), new()];
+    public BuffModelSkill[] SpellSkills { get; } = [new(), new(), new(), new()];
 
     // A buff not on the player isn't Known.
-    public BuffReading[] Active { get; } = [new(), new(), new()];
+    public BuffReading[] Active { get; } = [new(), new(), new(), new()];
 
     public bool[] ShowBuffed { get; } = new bool[BuffCount];
 
@@ -96,9 +91,8 @@ public sealed class BuffModelInput : IEquatable<BuffModelInput>
         && ServerAttributes.Equals(other.ServerAttributes)
         && BaseAttributes.Equals(other.BaseAttributes)
         && PlannedAttributes.Equals(other.PlannedAttributes)
-        && (Divisor, SpellMultiplier, SpellBonus, SpellAptitude, RaceModifier, ReducedItemBuffs, ServerWeapon)
-        == (other.Divisor, other.SpellMultiplier, other.SpellBonus, other.SpellAptitude, other.RaceModifier,
-            other.ReducedItemBuffs, other.ServerWeapon)
+        && (Divisor, SpellMultiplier, SpellBonus, SpellAptitude, ServerWeapon)
+        == (other.Divisor, other.SpellMultiplier, other.SpellBonus, other.SpellAptitude, other.ServerWeapon)
         && (ServerArmor, TarotCards, UncappedHitpoints, PlannedHitpoints, UncappedMana, PlannedMana)
         == (other.ServerArmor, other.TarotCards, other.UncappedHitpoints, other.PlannedHitpoints, other.UncappedMana,
             other.PlannedMana)
@@ -118,8 +112,6 @@ public sealed class BuffModelInput : IEquatable<BuffModelInput>
             SpellMultiplier = SpellMultiplier,
             SpellBonus = SpellBonus,
             SpellAptitude = SpellAptitude,
-            RaceModifier = RaceModifier,
-            ReducedItemBuffs = ReducedItemBuffs,
             ServerWeapon = ServerWeapon,
             ServerArmor = ServerArmor,
             TarotCards = TarotCards,
@@ -157,7 +149,7 @@ public sealed class BuffModelResult
     // The values the planner shows, plan included.
     public AttributeAmounts Attributes { get; internal set; } = new();
 
-    // Aptitude with the planned base Willpower and Intuition.
+    // Compatibility with the planned base attributes.
     public int SpellAptitude { get; set; }
 
     // Spell Bonus with the shown attributes and planned aptitude.
@@ -174,22 +166,20 @@ public sealed class BuffModelResult
     public int Armor { get; set; }
 }
 
-// What the planner shows with its buffs on or off. Bless is cast twice: first from the unbuffed (planned) stats, then
-// from the stats the first cast gave, which raises the Bless skill through its own attributes. Spell power is
-// (skill + Spell Bonus) x Spell Multiplier, capped at twice the Spell Aptitude, and aptitude only follows base Willpower
-// and Intuition, so the attribute percents never reach it. Buffs already on the player are taken out of the server's
-// totals first, using the power the buff list gave.
+// What the planner shows with the player's own buffs on or off, by MyV2's skill_driver.c. Bless is recast from the
+// stats the last cast gave, which raises the Bless skill through its own attributes, until it settles. Spell power is
+// the skill held to Compatibility (the sum of the base attributes, which only the plan raises), times the Spell Bonus;
+// Magic Shield has no cap. Buffs already on the player are taken out of the server's totals first, using the power
+// SV_SPELLTIME gave. The tarot, tree and item effects are The Last Gate's and stay at zero for MyV2.
 public static class BuffModel
 {
     private const int PercentBase = 100;
     private const int ItemBonusCap = 127;
     private const int BlessBonusDivisor = 5;
     private const int ItemBonusDivisor = 4;
-    private const int ReducedItemBonusDivisor = 6;
     private const int MoonManaPerPercent = 50;
     private const int HermitResistNumerator = 4;
     private const int HermitResistDenominator = 5;
-    private const int AptitudeAttributeFactor = 5;
     private const int IntrospectionAptitudeDivisor = 50;
     private const int GuardianAngelDivisor = 20;
     private const int MaxBlessRecasts = 20;
@@ -208,21 +198,16 @@ public static class BuffModel
     private const int Bless = (int)BuffKind.Bless;
     private const int Enhance = (int)BuffKind.Enhance;
     private const int Protect = (int)BuffKind.Protect;
+    private const int MagicShield = (int)BuffKind.MagicShield;
 
     private static readonly AttributeSlot[] Slots = Enum.GetValues<AttributeSlot>();
 
-    public static int BlessBonus(int power, AttributeSlot attribute) =>
-        power <= 0 ? 0 : Math.Min(ItemBonusCap, (power * 2 / 3 - (int)attribute) / BlessBonusDivisor + 3);
+    public static int BlessBonus(int power) => power <= 0 ? 0 : Math.Min(ItemBonusCap, power / BlessBonusDivisor + 3);
 
-    public static int ItemBonus(int power, bool reduced)
-    {
-        if (power <= 0)
-        {
-            return 0;
-        }
+    public static int ItemBonus(int power) => power <= 0 ? 0 : Math.Min(ItemBonusCap, power / ItemBonusDivisor + 4);
 
-        return Math.Min(ItemBonusCap, reduced ? power / ReducedItemBonusDivisor + 3 : power / ItemBonusDivisor + 4);
-    }
+    // The shield starts at its power x 256 ticks and gives a point of armor for every 1024 of them, plus one.
+    public static int ShieldBonus(int power) => power <= 0 ? 0 : power / ItemBonusDivisor + 1;
 
     // The skill's value with these attribute values, its own planned points included.
     public static int SkillValue(BuffModelInput input, BuffModelSkill skill, AttributeAmounts attributes) =>
@@ -273,11 +258,12 @@ public static class BuffModel
         }
 
         var unbuffed = AttributesWithChanges(input, unbuffedChanges);
-        result.SpellAptitude = PlannedAptitude(input, unbuffed);
+        result.SpellAptitude = PlannedAptitude(input);
         ComputeBless(input, result, unbuffedChanges, unbuffed);
         result.SpellBonus = PlannedSpellBonus(input, result.Attributes, result.SpellAptitude);
         result.Weapon = ComputeItemBuff(input, result, Enhance, input.ServerWeapon, input.Active[Enhance].WeaponBonus);
         result.Armor = ComputeItemBuff(input, result, Protect, input.ServerArmor, input.Active[Protect].ArmorBonus);
+        result.Armor = ComputeShield(input, result, result.Armor);
 
         var determination = AttributeSumBonusChange(
             input,
@@ -486,34 +472,8 @@ public static class BuffModel
         return attributes;
     }
 
-    private static int AptitudeTerm(BuffModelInput input, int willpower, int intuition) =>
-        (willpower + intuition) * AptitudeAttributeFactor / input.Divisor * input.RaceModifier / PercentBase;
-
-    // The Magician gives Intuition's effects Strength's base when Strength's total is higher.
-    private static int AptitudeIntuition(BuffModelInput input, AttributeAmounts totals, bool withPlan)
-    {
-        var source = TarotMath.Has(input.TarotCards, TarotCard.Magician)
-            && totals[AttributeSlot.Strength] > totals[AttributeSlot.Intuition]
-                ? AttributeSlot.Strength
-                : AttributeSlot.Intuition;
-        return input.BaseAttributes[source] + (withPlan ? input.PlannedAttributes[source] : 0);
-    }
-
-    private static int PlannedAptitude(BuffModelInput input, AttributeAmounts unbuffed)
-    {
-        var baseWillpower = input.BaseAttributes[AttributeSlot.Willpower];
-        var change = AptitudeTerm(
-                input,
-                baseWillpower + input.PlannedAttributes[AttributeSlot.Willpower],
-                AptitudeIntuition(input, unbuffed, true))
-            - AptitudeTerm(input, baseWillpower, AptitudeIntuition(input, input.ServerAttributes, false));
-        ScaleStep[] steps =
-        [
-            ScaleStep.Percent(input.Effects.AptitudePercent),
-            ScaleStep.Optional(input.Effects.Superbia != 0, PercentBase - SuperbiaPercentCut, PercentBase),
-        ];
-        return SteppedValue(input.SpellAptitude, change, steps);
-    }
+    private static int PlannedAptitude(BuffModelInput input) =>
+        input.SpellAptitude + Slots.Sum(slot => input.PlannedAttributes[slot]);
 
     // What the WV, AV and Spell Bonus effects read: the Traveler's Guide lets the higher of Braveness and Agility stand
     // in for the lower one, and the Magician does the same with Strength and Intuition. Skills still read the
@@ -594,23 +554,14 @@ public static class BuffModel
         return SteppedValue(input.SpellBonus, change, steps);
     }
 
-    // The Star Reversed takes the Spell Bonus out of the cast power.
-    private static int CastPower(BuffModelInput input, int skillValue, int aptitude, int plannedBonus)
-    {
-        var spellBonus = TarotMath.Has(input.TarotCards, TarotCard.StarReversed) ? 0 : plannedBonus;
-        var power = Math.Min((skillValue + spellBonus) * input.SpellMultiplier / PercentBase, 2 * aptitude);
-        return Math.Max(0, power);
-    }
+    private static int CastPower(BuffModelInput input, int skillValue, int aptitude) =>
+        Math.Max(0, Math.Min(skillValue, aptitude) * input.SpellMultiplier / PercentBase);
 
     // Each Bless cast reads the Spell Bonus and Braveness its attributes give; Guardian Angel comes after the cap.
     private static int BlessCastPower(BuffModelInput input, int aptitude, AttributeAmounts attributes)
     {
         var scale = PercentBase * GuardianAngelDivisor;
-        var power = CastPower(
-            input,
-            SkillValue(input, input.SpellSkills[Bless], attributes),
-            aptitude,
-            PlannedSpellBonus(input, attributes, aptitude));
+        var power = CastPower(input, SkillValue(input, input.SpellSkills[Bless], attributes), aptitude);
         return power * (scale + attributes[AttributeSlot.Braveness] * input.Effects.GuardianAngel) / scale;
     }
 
@@ -621,17 +572,17 @@ public static class BuffModel
             return 0;
         }
 
-        return active.HasExact ? active.AttributeBonus[slot] : BlessBonus(active.Power, slot);
+        return active.HasExact ? active.AttributeBonus[slot] : BlessBonus(active.Power);
     }
 
-    private static int ActiveItemBonus(BuffReading active, int exactBonus, bool reduced)
+    private static int ActiveBonus(BuffReading active, int exactBonus, Func<int, int> bonus)
     {
         if (!active.Known)
         {
             return 0;
         }
 
-        return active.HasExact ? exactBonus : ItemBonus(active.Power, reduced);
+        return active.HasExact ? exactBonus : bonus(active.Power);
     }
 
     private static int ShownPower(BuffModelInput input, BuffModelResult result, int kind)
@@ -648,7 +599,7 @@ public static class BuffModel
         var changes = new AttributeAmounts();
         foreach (var slot in Slots)
         {
-            changes[slot] = unbuffedChanges[slot] + BlessBonus(power, slot);
+            changes[slot] = unbuffedChanges[slot] + BlessBonus(power);
         }
 
         return AttributesWithChanges(input, changes);
@@ -707,13 +658,26 @@ public static class BuffModel
             result.CastPower[kind] = CastPower(
                 input,
                 SkillValue(input, input.SpellSkills[kind], result.Attributes),
-                result.SpellAptitude,
-                result.SpellBonus);
+                result.SpellAptitude);
         }
 
         result.EffectivePower[kind] = ShownPower(input, result, kind);
-        return serverValue - ActiveItemBonus(input.Active[kind], exactBonus, input.ReducedItemBuffs)
-            + ItemBonus(result.EffectivePower[kind], input.ReducedItemBuffs);
+        return serverValue - ActiveBonus(input.Active[kind], exactBonus, ItemBonus)
+            + ItemBonus(result.EffectivePower[kind]);
+    }
+
+    private static int ComputeShield(BuffModelInput input, BuffModelResult result, int armor)
+    {
+        result.CastPower[MagicShield] = 0;
+        if (input.SpellKnown[MagicShield])
+        {
+            var skill = SkillValue(input, input.SpellSkills[MagicShield], result.Attributes);
+            result.CastPower[MagicShield] = Math.Max(0, skill * input.SpellMultiplier / PercentBase);
+        }
+
+        result.EffectivePower[MagicShield] = ShownPower(input, result, MagicShield);
+        return armor - ActiveBonus(input.Active[MagicShield], input.Active[MagicShield].ArmorBonus, ShieldBonus)
+            + ShieldBonus(result.EffectivePower[MagicShield]);
     }
 
     private static int EvergreenChange(BuffModelInput input, AttributeAmounts attributes, AttributeSlot slot)

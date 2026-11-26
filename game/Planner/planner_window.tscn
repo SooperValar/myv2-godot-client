@@ -114,6 +114,9 @@ layout_mode = 2
 [node name="Hitpoints" parent="Left" unique_id=2111122110 instance=ExtResource("3_row")]
 layout_mode = 2
 
+[node name="Endurance" parent="Left" unique_id=1729402213 instance=ExtResource("3_row")]
+layout_mode = 2
+
 [node name="Mana" parent="Left" unique_id=1598631709 instance=ExtResource("3_row")]
 layout_mode = 2
 
@@ -159,6 +162,7 @@ theme = ExtResource("5_dropdown")
 clip_text = true
 
 [node name="OffhandLabel" type="Label" parent="Left/Equipment" unique_id=364234993]
+visible = false
 layout_mode = 0
 offset_left = 146.0
 offset_right = 198.0
@@ -167,6 +171,7 @@ text = "Off-hand"
 vertical_alignment = 1
 
 [node name="Offhand" type="OptionButton" parent="Left/Equipment" unique_id=1071212714]
+visible = false
 layout_mode = 0
 offset_left = 198.0
 offset_right = 290.0
@@ -185,6 +190,12 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="ArmorValue" parent="Left" unique_id=626536839 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="HitDamage" parent="Left" unique_id=1388206571 instance=ExtResource("4_value")]
+layout_mode = 2
+
+[node name="ActionSpeed" parent="Left" unique_id=297514860 instance=ExtResource("4_value")]
 layout_mode = 2
 
 [node name="SpellMultiplier" parent="Left" unique_id=964078843 instance=ExtResource("4_value")]

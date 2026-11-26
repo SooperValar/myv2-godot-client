@@ -41,9 +41,9 @@ public class PlannerSheetTests
         var sheet = PlannerSheet.For(game);
 
         AssertThat(sheet.BuffsAvailable).IsTrue();
-        AssertThat(sheet.Planned!.CastPower[(int)BuffKind.Bless]).IsEqual(66);
+        AssertThat(sheet.Planned!.CastPower[(int)BuffKind.Bless]).IsEqual(69);
         AssertThat(sheet.Attributes.Select(row => (row.Preview, row.BuffShift)).Distinct().ToArray())
-            .ContainsExactly((61, 11));
+            .ContainsExactly((66, 16));
     }
 
     [TestCase]
@@ -136,60 +136,33 @@ public class PlannerSheetTests
     }
 
     [TestCase]
-    public void TheVitalRows_AreHitpointsAndMana()
+    public void TheVitalRows_AreHitpointsEnduranceAndMana()
     {
         game.HitPoints[0] = 120;
         game.HitPoints[5] = 300;
+        game.Endurance[0] = 60;
+        game.Endurance[5] = 100;
         game.Mana[0] = 80;
         game.Mana[5] = 150;
 
         var vitals = PlannerSheet.For(game).Vitals;
 
         AssertThat(vitals.Select(row => (row.Name, row.Slot, row.Base, row.Current)))
-            .ContainsExactly(("Hitpoints", StatSlots.HitPoints, 120, 300), ("Mana", StatSlots.Mana, 80, 150));
-    }
-
-    [TestCase(1u << 4, 75)]
-    [TestCase(1u << 0, 100)]
-    [TestCase(1u << 6, 105)]
-    [TestCase(1u << 1, 95)]
-    [TestCase(1u << 5, 80)]
-    [TestCase(1u << 12, 80)]
-    [TestCase(1u << 10, 105)]
-    [TestCase(1u << 11, 105)]
-    [TestCase(1u << 13, 110)]
-    [TestCase(1u << 9, 110)]
-    [TestCase(1u << 14, 115)]
-    [TestCase(1u << 16, 100)]
-    [TestCase(0u, 100)]
-    public void SpellRaceModifier_IsTheClasssPercent(uint kindred, int percent)
-    {
-        AssertThat(PlannerSheet.SpellRaceModifier(kindred)).IsEqual(percent);
+            .ContainsExactly(
+                ("Hitpoints", StatSlots.HitPoints, 120, 300),
+                ("Endurance", StatSlots.Endurance, 60, 100),
+                ("Mana", StatSlots.Mana, 80, 150));
     }
 
     [TestCase]
-    public void EmptyGearSlots_LeaveOutTheCharmsAndTheOffhand()
+    public void AFirstLook_PicksTheWeaponInHand()
     {
-        var worn = new int[PlayerState.WornSlots];
-        AssertThat(PlannerSheet.EmptyGearSlots(worn)).IsEqual(10);
-
-        worn[0] = 100;
-        worn[5] = 100;
-        worn[7] = 100;
-        AssertThat(PlannerSheet.EmptyGearSlots(worn)).IsEqual(9);
-    }
-
-    [TestCase]
-    public void AFirstLook_PicksTheWeaponAndOffhandFromTheBestSkills()
-    {
-        game.Skills[SwordSkill][0] = 40;
-        game.Skills[SwordSkill][5] = 80;
+        game.MetaStats[PlannerSheet.WeaponSkillMeta] = SwordSkill;
 
         var sheet = PlannerSheet.For(game);
 
         AssertThat(sheet.ChoicesChanged).IsTrue();
         AssertThat(game.Choices.Weapon).IsEqual(CombatWeapon.Sword);
-        AssertThat(game.Choices.Offhand).IsEqual(CombatOffhand.None);
         AssertThat(sheet.Combat?.Weapon).IsEqual(CombatWeapon.Sword);
         AssertThat(PlannerSheet.For(game).ChoicesChanged).IsFalse();
     }
@@ -203,18 +176,13 @@ public class PlannerSheetTests
     }
 
     [TestCase]
-    public void TheCombatModel_ReadsTheClassAndGear()
+    public void TheCombatModel_ReadsTheWeaponInHand()
     {
-        game.Kindred = (1u << 5) | (1u << 16);
-        game.TreePoints = 1 << (12 - 10 + 4);
-        game.WornSprites[0] = 100;
+        game.MetaStats[PlannerSheet.WeaponSkillMeta] = 36;
 
         var combat = PlannerSheet.For(game).Combat!;
 
-        AssertThat(combat.GearClass).IsEqual(CombatGearClass.ArchTemplar);
-        AssertThat(combat.Rampart).IsTrue();
-        AssertThat(combat.Lycanth).IsTrue();
-        AssertThat(combat.EmptySlots).IsEqual(9);
+        AssertThat(combat.HeldWeapon).IsEqual(CombatWeapon.Greataxe);
         AssertThat((combat.ServerHit, combat.ServerParry)).IsEqual((100, 90));
     }
 
@@ -233,6 +201,7 @@ public class PlannerSheetTests
     public void RaisingTheWeaponSkill_RaisesHit()
     {
         game.Choices.SpellToggles = 0;
+        game.MetaStats[PlannerSheet.WeaponSkillMeta] = SwordSkill;
         game.SkillTexts[SwordSkill] = new PlannerSkillText("Sword", [Braveness, Agility, Strength], 1);
         int[] sword = [40, 0, 200, 3, 0, 80];
         sword.CopyTo(game.Skills[SwordSkill], 0);
@@ -244,6 +213,20 @@ public class PlannerSheetTests
         AssertThat(sheet.Combat?.Weapon).IsEqual(CombatWeapon.Sword);
         AssertThat(sheet.CombatShown?.Hit > 100).IsTrue();
         AssertThat(sheet.CombatChanged).IsTrue();
+    }
+
+    [TestCase]
+    public void PlannedStrength_RaisesTheHitDamageAndActionSpeed()
+    {
+        game.Choices.SpellToggles = 0;
+        game.MetaStats[PlannerSheet.HitDamage] = 1402;
+        game.MetaStats[PlannerSheet.SpeedStepMeta] = 6;
+        var slot = (int)AttributeSlot.Strength;
+        game.Plan.Raise(slot, game.ValuesFor(slot), game.Points, 4);
+
+        var melee = PlannerSheet.For(game).Melee;
+
+        AssertThat(melee).IsEqual(new MeleeValues(1402, 1502, 157, 157));
     }
 
     [TestCase]
@@ -276,40 +259,19 @@ public class PlannerSheetTests
     }
 
     [TestCase]
-    public void MathLines_ListWhatFeedsTheNumbers()
+    public void MathLines_ListTheShownSpellsWithTheirPower()
     {
-        const uint seyan = 1u << 1;
         game.HardMode = true;
-        game.Kindred = seyan;
-        game.TreePoints = TreeBit(5) | TreeBit(6) | TreeBit(7) | TreeBit(8);
-        game.TreeNodeNames[4] = "Node Five";
-        game.TreeNodes[5] = 20;
-        game.TreeNodes[6] = 66;
-        game.TreeNodes[7] = 250;
-        game.Choices.TarotCards = 1ul << (int)TarotCard.Magician;
-        game.Choices.CorruptorTicks = 1u << (int)Corruptor.FalseAgility;
-        game.Choices.CorruptorCounts[(int)Corruptor.FalseAgility] = 2;
-        game.Choices.CorruptorTicks |= 1u << (int)Corruptor.FalseStrength;
-        game.Choices.EnchantTicks = 1u << (int)Enchant.MoreBraveness;
-        game.Choices.EnchantCounts[(int)Enchant.MoreBraveness] = 3;
-        var uncounted = FirstIndex(ItemEffects.Enchants, enchant => !enchant.Counted);
-        game.Choices.EnchantTicks |= 1u << uncounted;
-        game.Choices.EnchantCounts[uncounted] = 5;
-        var unmodelled = FirstIndex(ItemEffects.Gears, gear => !gear.Modelled);
-        game.Choices.GearTicks = 1u << unmodelled;
 
-        AssertThat(PlannerSheet.For(game).MathLines)
-            .ContainsExactly(
-                "Hard Mode",
-                "Bless",
-                "The Magician",
-                "Node Five (skill tree)",
-                "False Strength (skill tree)",
-                "False Tactician (not modelled) (skill tree)",
-                "False Agility x2",
-                "More Braveness x3",
-                ItemEffects.Enchants[uncounted].Name,
-                $"{ItemEffects.Gears[unmodelled].Name} (not modelled)");
+        AssertThat(PlannerSheet.For(game).MathLines).ContainsExactly("Hard Mode", "Bless 68");
+    }
+
+    [TestCase]
+    public void MathLines_SayWhenCompatibilityHoldsASpellBack()
+    {
+        game.MetaStats[PlannerSheet.SpellAptitude] = 40;
+
+        AssertThat(PlannerSheet.For(game).MathLines).ContainsExactly("Bless 40 (capped)");
     }
 
     [TestCase]
@@ -350,21 +312,18 @@ public class PlannerSheetTests
             new Terminology(),
             new StatPlan(),
             new PlannerChoices(),
-            new BuffWatch(player),
+            new BuffTimers(),
             false);
 
         AssertThat(copied.Attributes[Strength][0]).IsEqual(40);
         AssertThat(copied.Skills[SwordSkill][0]).IsEqual(12);
         AssertThat(copied.SkillOrder.Count).IsEqual(Terminology.SkillCount);
-        AssertThat(copied.MetaStats).IsEmpty();
-        AssertThat(copied.MetaFormats).IsEmpty();
+        AssertThat(copied.MetaStats[PlannerSheet.HitScore]).IsEqual(0);
+        AssertThat(copied.MetaFormats[PlannerSheet.SpellMultiplier]).IsEqual(new MetaFormat(true, "x"));
         AssertThat(copied.TreeNodeNames[0]).IsEqual("p01");
     }
 
     private static int TreeBit(int node) => 1 << (12 - node + 4);
-
-    private static int FirstIndex<TEntry>(IReadOnlyList<TEntry> entries, Func<TEntry, bool> matches) =>
-        entries.Select((entry, index) => (entry, index)).First(pair => matches(pair.entry)).index;
 
     internal static PlannerGame Game()
     {
@@ -380,9 +339,8 @@ public class PlannerSheetTests
             game.MetaStats[name] = name == "Hit Score" ? 100 : 90;
         }
 
-        game.MetaStats["Spell Multiplier"] = 100;
-        game.MetaStats["Spell Aptitude"] = 200;
-        game.MetaStats["Spell Bonus"] = 0;
+        game.MetaStats[PlannerSheet.SpellMultiplier] = 100;
+        game.MetaStats[PlannerSheet.SpellAptitude] = 200;
         game.Weapon = 30;
         game.Armor = 30;
         game.SkillTexts = Enumerable.Range(0, Terminology.SkillCount)

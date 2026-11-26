@@ -11,12 +11,14 @@ public static class BuffList
     public const int ProtectSprite = 86;
     public const int EnhanceSprite = 87;
     public const int BlessSprite = 88;
+    public const int MagicShieldSprite = 95;
 
     public static BuffKind? SpriteKind(int sprite) => sprite switch
     {
         BlessSprite => BuffKind.Bless,
         EnhanceSprite => BuffKind.Enhance,
         ProtectSprite => BuffKind.Protect,
+        MagicShieldSprite => BuffKind.MagicShield,
         _ => null,
     };
 
