@@ -101,7 +101,7 @@ public class StatLinesTests
     [TestCase]
     public void Skill_ShowsOnlyTheScoreInRedForAShowFour()
     {
-        var line = StatLines.Skill(Dagger, "Immunity", 4, [10, 0, 50, 2, 1, 2], new StatPlan(), Plenty);
+        var line = StatLines.Skill(Dagger, "Immunity", 4, [10, 0, 50, 2, 1, 258], new StatPlan(), Plenty);
 
         AssertThat(line).IsEqual(new StatLine("Immunity", TextColour.Red, null, 258, false, null));
     }

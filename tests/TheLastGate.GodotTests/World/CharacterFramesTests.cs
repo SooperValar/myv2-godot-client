@@ -15,13 +15,12 @@ public class CharacterFramesTests
     private const int TileIndex = 1000;
     private const int Sprite = 2000;
     private const int SpecialIdleSprite = 22480;
-    private const int OneStepEveryTick = 100;
+    private const int Fastest = 0;
     private const int Attack = 0;
     private const int Pickup = 1;
     private const int Cast = 9;
     private const int UnknownAction = 10;
     private const int ActionPastTheTable = 11;
-    private const int PlayerTextColour = 5;
 
     [TestCase]
     public void Idle_ShowsTheFrameForItsDirection()
@@ -113,23 +112,11 @@ public class CharacterFramesTests
     }
 
     [TestCase]
-    public void Action_MovesOnAtTheActionsSpeed()
+    public void Action_MovesOnAFrameEachTickItsSpeedAllows()
     {
-        var tile = Run(Character(163, action: Attack, speed: 250, attackSpeed: 150), 50, 1);
+        var tile = Run(Character(163, action: Attack), 50, 1);
 
         AssertThat(tile.Sprite).IsEqual(Sprite + 196);
-    }
-
-    [TestCase]
-    public void Action_CanSpillIntoTheNextDirectionLikeTheCurrentClient()
-    {
-        var (tile, reports) = RunWithReports(
-            Character(167, action: Cast, speed: 50, castSpeed: 50, textColour: PlayerTextColour),
-            1,
-            1);
-
-        AssertThat(tile.Sprite).IsEqual(Sprite + 169 + 32 + (7 << 5));
-        AssertThat(reports).HasSize(1);
     }
 
     [TestCase]
@@ -183,10 +170,7 @@ public class CharacterFramesTests
         int sprite = Sprite,
         int action = Attack,
         MapFlags flags = MapFlags.None,
-        int speed = OneStepEveryTick,
-        int attackSpeed = 0,
-        int castSpeed = 0,
-        int textColour = 0) =>
+        int speed = Fastest) =>
         TestCommand.Of(AbsoluteSetMap)
             .Byte(FlagsAndCharacter)
             .UInt16(TileIndex)
@@ -195,12 +179,8 @@ public class CharacterFramesTests
             .Bytes((byte)status, (byte)action)
             .UInt16(77)
             .UInt16(88)
-            .UInt16((ushort)speed)
-            .Byte(100)
-            .UInt16((ushort)castSpeed)
-            .UInt16((ushort)attackSpeed)
-            .UInt16(0)
-            .Byte((byte)textColour);
+            .Byte((byte)speed)
+            .Byte(100);
 
     private static TestCommand Tick(int serverTick) => TestCommand.Of(ServerCommand.Tick).Byte((byte)serverTick);
 

@@ -136,7 +136,7 @@ public class MinimapOverlayTests
     [TestCase]
     public void Paint_DrawsOnlyTheVisiblePartOfALongRow()
     {
-        AssertThat(PaintMatchesReference(new PathSegment(10, 0, 10, 2000), 0, 0, 1)).IsTrue();
+        AssertThat(PaintMatchesReference(new PathSegment(10, 0, 10, 1000), 0, 0, 1)).IsTrue();
         for (var column = 0; column < Size; column++)
         {
             AssertThat(IsPainted(10, column)).IsEqual(column % 2 == 0);
@@ -148,7 +148,7 @@ public class MinimapOverlayTests
     [TestCase]
     public void Paint_DrawsOnlyTheVisiblePartOfALongColumn()
     {
-        AssertThat(PaintMatchesReference(new PathSegment(0, 10, 2000, 10), 0, 0, 1)).IsTrue();
+        AssertThat(PaintMatchesReference(new PathSegment(0, 10, 1000, 10), 0, 0, 1)).IsTrue();
         for (var row = 0; row < Size; row++)
         {
             AssertThat(IsPainted(row, 10)).IsEqual(row % 2 == 0);

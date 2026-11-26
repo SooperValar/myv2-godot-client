@@ -328,15 +328,13 @@ public class GameSessionTests
         Process(
             TestCommand.Of(ServerCommand.SetCharacterHeldItem)
                 .UInt16((ushort)sprite)
-                .UInt16((ushort)properties)
-                .Byte(1));
+                .UInt16((ushort)properties));
 
     private static TestCommand InventoryItem(int slot, int sprite, int properties) =>
         TestCommand.Of(ServerCommand.SetCharacterItem)
             .UInt32((uint)slot)
             .UInt16((ushort)sprite)
-            .UInt16((ushort)properties)
-            .Bytes(1, 0);
+            .UInt16((ushort)properties);
 
     private static TestCommand SetTarget(int action, int x, int y) =>
         TestCommand.Of(ServerCommand.SetTarget)

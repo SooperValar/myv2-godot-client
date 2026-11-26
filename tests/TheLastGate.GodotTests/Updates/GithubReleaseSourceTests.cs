@@ -26,7 +26,7 @@ public class GithubReleaseSourceTests
 
         AssertThat(downloader.Urls)
             .ContainsExactly(
-                "https://github.com/jamesblack/thelastgate-godot/releases/latest/download/releases.win.json");
+                "https://github.com/SooperValar/myv2-godot-client/releases/latest/download/releases.win.json");
         AssertThat(feed.Assets).HasSize(1);
         AssertThat(feed.Assets[0].FileName).IsEqual("TheLastGateGodot-1.2.0-full.nupkg");
     }
@@ -45,8 +45,8 @@ public class GithubReleaseSourceTests
 
         AssertThat(downloader.Urls)
             .ContainsExactly(
-                "https://api.github.com/repos/jamesblack/thelastgate-godot/releases?per_page=100",
-                "https://github.com/jamesblack/thelastgate-godot/releases/download/updater-test-v0.1.1/releases.test-win.json");
+                "https://api.github.com/repos/SooperValar/myv2-godot-client/releases?per_page=100",
+                "https://github.com/SooperValar/myv2-godot-client/releases/download/updater-test-v0.1.1/releases.test-win.json");
     }
 
     [TestCase]
@@ -65,7 +65,7 @@ public class GithubReleaseSourceTests
 
         AssertThat(downloader.Urls[^1])
             .IsEqual(
-                "https://github.com/jamesblack/thelastgate-godot/releases/download/v1.2.0/TheLastGateGodot-1.2.0-full.nupkg");
+                "https://github.com/SooperValar/myv2-godot-client/releases/download/v1.2.0/TheLastGateGodot-1.2.0-full.nupkg");
     }
 
     [TestCase]

@@ -14,13 +14,13 @@ public class WorldMapViewTests
     private WorldMapView view = new();
 
     [BeforeTest]
-    public void CentreTheView() => view = new WorldMapView { CentreTileX = 512, CentreTileY = 1024, PixelsPerTile = 4 };
+    public void CentreTheView() => view = new WorldMapView { CentreTileX = 512, CentreTileY = 512, PixelsPerTile = 4 };
 
     [TestCase]
     public void MapY_RunsAcrossTheScreenAndMapXDown()
     {
-        var across = view.TileToPanel(Width, Height, 512, 1034);
-        var down = view.TileToPanel(Width, Height, 522, 1024);
+        var across = view.TileToPanel(Width, Height, 512, 522);
+        var down = view.TileToPanel(Width, Height, 522, 512);
 
         AssertThat(Math.Round(across.X, Precision)).IsEqual(440.0);
         AssertThat(Math.Round(across.Y, Precision)).IsEqual(300.0);
@@ -87,14 +87,14 @@ public class WorldMapViewTests
         view.ZoomAt(Width, Height, 100, 50, 2);
         AssertThat(Math.Round(view.PixelsPerTile, Precision))
             .IsEqual(Math.Round(WorldMapView.MaxPixelsPerTile, Precision));
-        AssertThat((view.CentreTileX, view.CentreTileY)).IsEqual((512.0, 1024.0));
+        AssertThat((view.CentreTileX, view.CentreTileY)).IsEqual((512.0, 512.0));
 
         view.PixelsPerTile = WorldMapView.MinPixelsPerTile(Width, Height);
         view.ZoomAt(Width, Height, 100, 50, 0.5);
         AssertThat(Math.Round(view.PixelsPerTile, Precision))
             .IsEqual(Math.Round(WorldMapView.MinPixelsPerTile(Width, Height), Precision));
         AssertThat(Math.Round(view.CentreTileX, Precision)).IsEqual(512.0);
-        AssertThat(Math.Round(view.CentreTileY, Precision)).IsEqual(1024.0);
+        AssertThat(Math.Round(view.CentreTileY, Precision)).IsEqual(512.0);
     }
 
     [TestCase]
@@ -115,7 +115,7 @@ public class WorldMapViewTests
     {
         view.Pan(Width, Height, 40, 20);
 
-        AssertThat(Math.Round(view.CentreTileY, Precision)).IsEqual(1014.0);
+        AssertThat(Math.Round(view.CentreTileY, Precision)).IsEqual(502.0);
         AssertThat(Math.Round(view.CentreTileX, Precision)).IsEqual(507.0);
     }
 
@@ -138,8 +138,8 @@ public class WorldMapViewTests
     [TestCase]
     public void TileUnder_FindsTheTileUnderAPanelPoint()
     {
-        AssertThat(view.TileUnder(Width, Height, 400, 300)).IsEqual((512, 1024));
-        AssertThat(view.TileUnder(Width, Height, 399, 299)).IsEqual((511, 1023));
+        AssertThat(view.TileUnder(Width, Height, 400, 300)).IsEqual((512, 512));
+        AssertThat(view.TileUnder(Width, Height, 399, 299)).IsEqual((511, 511));
     }
 
     [TestCase]

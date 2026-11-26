@@ -1,4 +1,5 @@
 using GdUnit4;
+using TheLastGate.Assets;
 using TheLastGate.Net;
 using TheLastGate.State;
 using TheLastGate.Windows;
@@ -273,9 +274,9 @@ public class TextWindowsTests
         AssertThat(TutorialPages.Text(1, 1).Count).IsEqual(TutorialPages.LinesPerPage);
         AssertThat(TutorialPages.Text(1, 1)[0]).IsEqual("The diamond-shaped space in the middle of");
         AssertThat(TutorialPages.Text(6, 3)[11]).IsEqual("ours, and mayest thou pass The Last Gate!");
-        AssertThat(TutorialPages.Picture(1, 1)).IsEqual(18010);
-        AssertThat(TutorialPages.Picture(2, 1)).IsEqual(18013);
-        AssertThat(TutorialPages.Picture(6, 3)).IsEqual(18027);
+        AssertThat(TutorialPages.Picture(1, 1)).IsEqual(SpriteNumbers.ClientArtBase + 18010);
+        AssertThat(TutorialPages.Picture(2, 1)).IsEqual(SpriteNumbers.ClientArtBase + 18013);
+        AssertThat(TutorialPages.Picture(6, 3)).IsEqual(SpriteNumbers.ClientArtBase + 18027);
     }
 
     private static WindowRequest Tutorial(int number) => new(WindowKind.Tutorial, number);

@@ -8,14 +8,14 @@ namespace TheLastGate.GodotTests.Stats;
 public class SkillScrollTests
 {
     [TestCase]
-    public void LastRow_LeavesTenOfTheFiftyFiveSkillsInView()
+    public void LastRow_LeavesTenOfTheThirtySevenListedSkillsInView()
     {
-        AssertThat(SkillScroll.LastRow).IsEqual(45);
+        AssertThat(SkillScroll.LastRow).IsEqual(27);
     }
 
     [TestCase(-5, 0)]
     [TestCase(3, 3)]
-    [TestCase(60, 45)]
+    [TestCase(60, 27)]
     public void ScrollTo_StaysWithinTheList(int row, int shownRow)
     {
         var scroll = new SkillScroll();

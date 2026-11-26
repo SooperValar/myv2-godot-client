@@ -19,7 +19,7 @@ public class WorldMapHitTests
     public void CentreTheView()
     {
         notes = new NoteSet();
-        view = new WorldMapView { CentreTileX = 512, CentreTileY = 1024, PixelsPerTile = 4 };
+        view = new WorldMapView { CentreTileX = 512, CentreTileY = 512, PixelsPerTile = 4 };
     }
 
     [TestCase]
@@ -27,9 +27,9 @@ public class WorldMapHitTests
     {
         var category = notes.AddCategory("Mixed", 0);
         AddRoad(category);
-        var pin = notes.AddPoint(category, NoteKind.Pin, 500, 1015, "pin");
+        var pin = notes.AddPoint(category, NoteKind.Pin, 500, 503, "pin");
 
-        AssertThat(HitAt(500, 1015)).IsEqual(new NoteHit(pin, -1));
+        AssertThat(HitAt(500, 503)).IsEqual(new NoteHit(pin, -1));
     }
 
     [TestCase]
@@ -37,9 +37,9 @@ public class WorldMapHitTests
     {
         var category = notes.AddCategory("Mixed", 0);
         AddRoad(category);
-        var text = notes.AddPoint(category, NoteKind.Text, 500, 1015, "note");
+        var text = notes.AddPoint(category, NoteKind.Text, 500, 503, "note");
 
-        AssertThat(HitAt(500, 1015)?.NoteId).IsEqual(text);
+        AssertThat(HitAt(500, 503)?.NoteId).IsEqual(text);
     }
 
     [TestCase]
@@ -47,14 +47,14 @@ public class WorldMapHitTests
     {
         var road = AddRoad(notes.AddCategory("Roads", 0));
 
-        AssertThat(HitAt(500, 1015, offsetY: 2)).IsEqual(new NoteHit(road, 1));
+        AssertThat(HitAt(500, 503, offsetY: 2)).IsEqual(new NoteHit(road, 1));
     }
 
     [TestCase]
     public void HitSegment_FindsTheSegmentOfOnePathOrNone()
     {
         var road = notes.FindNote(AddRoad(notes.AddCategory("Roads", 0)))!;
-        var (panelX, panelY) = view.TileToPanel(Width, Height, 500.5, 1015.5);
+        var (panelX, panelY) = view.TileToPanel(Width, Height, 500.5, 503.5);
 
         AssertThat(view.HitSegment(road, Width, Height, panelX, panelY, Radius)).IsEqual(1);
         AssertThat(view.HitSegment(road, Width, Height, panelX, panelY + 100, Radius)).IsEqual(-1);
@@ -64,10 +64,10 @@ public class WorldMapHitTests
     public void HitTest_SkipsAHiddenCategory()
     {
         var category = notes.AddCategory("Hidden", 0);
-        notes.AddPoint(category, NoteKind.Pin, 500, 1015, "pin");
+        notes.AddPoint(category, NoteKind.Pin, 500, 503, "pin");
         notes.FindCategory(category)!.Visible = false;
 
-        AssertThat(HitAt(500, 1015)).IsNull();
+        AssertThat(HitAt(500, 503)).IsNull();
     }
 
     [TestCase]
@@ -75,26 +75,26 @@ public class WorldMapHitTests
     {
         var parent = notes.AddCategory("Parent", 0);
         var child = notes.AddCategory("Child", 0, parent);
-        notes.AddPoint(child, NoteKind.Pin, 500, 1015, "pin");
+        notes.AddPoint(child, NoteKind.Pin, 500, 503, "pin");
         notes.FindCategory(parent)!.Visible = false;
 
-        AssertThat(HitAt(500, 1015)).IsNull();
+        AssertThat(HitAt(500, 503)).IsNull();
     }
 
     [TestCase]
     public void HitTest_MissesBeyondTheRadius()
     {
-        notes.AddPoint(notes.AddCategory("Pins", 0), NoteKind.Pin, 500, 1015, "pin");
+        notes.AddPoint(notes.AddCategory("Pins", 0), NoteKind.Pin, 500, 503, "pin");
 
-        AssertThat(HitAt(500, 1015, 20)).IsNull();
+        AssertThat(HitAt(500, 503, 20)).IsNull();
     }
 
     private int AddRoad(int categoryId) =>
         notes.AddPath(
             categoryId,
             [
-                new PathSegment(500, 1000, 500, 1010), new PathSegment(500, 1010, 500, 1020),
-                new PathSegment(500, 1020, 500, 1030),
+                new PathSegment(500, 488, 500, 498), new PathSegment(500, 498, 500, 508),
+                new PathSegment(500, 508, 500, 518),
             ],
             "road");
 

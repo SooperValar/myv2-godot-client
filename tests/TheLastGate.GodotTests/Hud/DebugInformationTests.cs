@@ -28,7 +28,7 @@ public class DebugInformationTests
             .ContainsExactly(
                 " ",
                 "Client Version 1.4.2",
-                "Networking Version 0.15.00",
+                "Networking Version 3.00.00",
                 "Server Version 1.02.03",
                 "Godot Version 4.7.2-stable (official)",
                 "Renderer: NVIDIA GeForce RTX 4090 (NVIDIA)",

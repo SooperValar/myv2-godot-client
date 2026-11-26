@@ -91,7 +91,7 @@ public class MapMarkersTests
                     .Bytes(0, 0)
                     .UInt16((ushort)number)
                     .UInt16(Id)
-                    .UInt16(100)));
+                    .Byte(0)));
         return state.Map.Tiles[Column + Row * WorldMap.Size];
     }
 }

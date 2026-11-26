@@ -135,8 +135,9 @@ public class StatPlanTests
 
         AssertThat(plan.Commit())
             .ContainsExactly(
-                ClientPackets.ShortAndInt(ClientCommand.Stat, StatSlots.Skill(Dagger), 135),
-                ClientPackets.ShortAndInt(ClientCommand.Stat, StatSlots.Skill(Dagger), 65));
+                ClientPackets.ShortAndInt(ClientCommand.Stat, StatSlots.Skill(Dagger), 99),
+                ClientPackets.ShortAndInt(ClientCommand.Stat, StatSlots.Skill(Dagger), 99),
+                ClientPackets.ShortAndInt(ClientCommand.Stat, StatSlots.Skill(Dagger), 2));
     }
 
     [TestCase]

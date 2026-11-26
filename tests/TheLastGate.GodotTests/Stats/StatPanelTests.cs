@@ -97,7 +97,7 @@ public class StatPanelTests
         panel.Choose(StatListMode.Skills);
 
         AssertThat(panel.Row).IsEqual(5);
-        AssertThat(panel.LastRow).IsEqual(45);
+        AssertThat(panel.LastRow).IsEqual(27);
     }
 
     [TestCase]

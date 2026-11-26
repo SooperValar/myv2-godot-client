@@ -18,13 +18,13 @@ public class WorldMapLabelsTests
     public void StartWithNoNotes()
     {
         notes = new NoteSet();
-        view = new WorldMapView { CentreTileX = 512, CentreTileY = 1024, PixelsPerTile = 4 };
+        view = new WorldMapView { CentreTileX = 512, CentreTileY = 512, PixelsPerTile = 4 };
     }
 
     [TestCase]
     public void PinCentre_IsTheMiddleOfItsTileOnWholePixels()
     {
-        var pin = AddPin(512, 1024, "pin");
+        var pin = AddPin(512, 512, "pin");
 
         AssertThat(WorldMapLabels.PinCentre(view, Width, Height, pin)).IsEqual((402f, 302f));
     }
@@ -32,7 +32,7 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_PutsAPinsNameToTheRightOfItsMarker()
     {
-        var pin = AddPin(512, 1024, "pin");
+        var pin = AddPin(512, 512, "pin");
 
         var placed = Place();
 
@@ -42,9 +42,9 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_PutsAnEditedPinsNameBesideWhereItIsBeingMoved()
     {
-        var pin = AddPin(512, 1024, "pin");
+        var pin = AddPin(512, 512, "pin");
 
-        var placed = WorldMapLabels.Place(notes, view, Width, Height, Measure, edited: pin with { TileY = 1034 });
+        var placed = WorldMapLabels.Place(notes, view, Width, Height, Measure, edited: pin with { TileY = 522 });
 
         AssertThat(placed[pin.Id]).IsEqual(new LabelRect(450, 295, 491, 308));
     }
@@ -52,7 +52,7 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_ShowsNoNamesWhenZoomedFarOut()
     {
-        AddPin(512, 1024, "pin");
+        AddPin(512, 512, "pin");
         view.PixelsPerTile = 2.6;
 
         AssertThat(Place()).IsEmpty();
@@ -62,8 +62,8 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_KeepsNamesOffOtherPinsMarkers()
     {
-        var first = AddPin(512, 1024, "first");
-        AddPin(512, 1027, "second");
+        var first = AddPin(512, 512, "first");
+        AddPin(512, 515, "second");
 
         AssertThat(Place()[first.Id].Left).IsEqual(353);
     }
@@ -71,8 +71,8 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_KeepsNamesOffTextLabels()
     {
-        var pin = AddPin(512, 1024, "pin");
-        var text = notes.FindNote(notes.AddPoint(notes.Categories[0].Id, NoteKind.Text, 512, 1026, "note"))!;
+        var pin = AddPin(512, 512, "pin");
+        var text = notes.FindNote(notes.AddPoint(notes.Categories[0].Id, NoteKind.Text, 512, 514, "note"))!;
         var (plate, _, _) = WorldMapLabels.TextPlate(view, Width, Height, text, Measure(text.Label));
 
         var placed = Place();
@@ -83,8 +83,8 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_GivesTheSelectedPinTheFirstChoiceOfSpot()
     {
-        var first = AddPin(512, 1024, "first");
-        var second = AddPin(512, 1024, "second");
+        var first = AddPin(512, 512, "first");
+        var second = AddPin(512, 512, "second");
 
         AssertThat(Place()[first.Id].Left).IsEqual(410);
         AssertThat(Place(second.Id)[second.Id].Left).IsEqual(410);
@@ -94,10 +94,10 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Place_SkipsPinsWithoutNamesOrWithNamesTurnedOff()
     {
-        AddPin(512, 1024, "");
+        AddPin(512, 512, "");
         var parent = notes.Categories[0].Id;
         var child = notes.AddCategory("Child", 0, parent);
-        notes.AddPoint(child, NoteKind.Pin, 512, 1030, "hidden name");
+        notes.AddPoint(child, NoteKind.Pin, 512, 518, "hidden name");
         notes.FindCategory(parent)!.ShowLabels = false;
 
         AssertThat(Place()).IsEmpty();
@@ -107,10 +107,10 @@ public class WorldMapLabelsTests
     public void Place_SkipsHiddenCategoriesButNotPinsFarOffThePanel()
     {
         var shown = notes.AddCategory("Shown", 0);
-        var far = notes.AddPoint(shown, NoteKind.Pin, 512, 1024 + 200, "far");
-        var nearby = notes.AddPoint(shown, NoteKind.Pin, 512, 1024 + 150, "nearby");
+        var far = notes.AddPoint(shown, NoteKind.Pin, 512, 512 + 200, "far");
+        var nearby = notes.AddPoint(shown, NoteKind.Pin, 512, 512 + 150, "nearby");
         var hidden = notes.AddCategory("Hidden", 0);
-        notes.AddPoint(hidden, NoteKind.Pin, 512, 1024, "hidden");
+        notes.AddPoint(hidden, NoteKind.Pin, 512, 512, "hidden");
         notes.FindCategory(hidden)!.Visible = false;
 
         AssertThat(Place().Keys.Order()).ContainsExactly(far, nearby);
@@ -123,8 +123,8 @@ public class WorldMapLabelsTests
     [TestCase(0.6)]
     public void Panning_LeavesEveryNameWhereItWasBesideItsPin(double panTiles)
     {
-        var edge = AddPin(512, 1024 + 160, "edge");
-        AddPin(512, 1024 + 166, "beyond");
+        var edge = AddPin(512, 512 + 160, "edge");
+        AddPin(512, 512 + 166, "beyond");
         view.CentreTileY += panTiles;
 
         var name = Place()[edge.Id];
@@ -136,7 +136,7 @@ public class WorldMapLabelsTests
     [TestCase]
     public void Layout_PlacesNamesAroundTheirPinsWithoutThePanel()
     {
-        var pin = AddPin(512, 1024, "pin");
+        var pin = AddPin(512, 512, "pin");
 
         var layout = WorldMapLabels.Layout(notes, view.PixelsPerTile, Measure);
 
@@ -146,7 +146,7 @@ public class WorldMapLabelsTests
     [TestCase]
     public void TextPlate_CentresTheTextOnItsTileWithPadding()
     {
-        var text = notes.FindNote(notes.AddPoint(notes.AddCategory("Text", 0), NoteKind.Text, 512, 1026, "note"))!;
+        var text = notes.FindNote(notes.AddPoint(notes.AddCategory("Text", 0), NoteKind.Text, 512, 514, "note"))!;
 
         var (plate, textX, textY) = WorldMapLabels.TextPlate(view, Width, Height, text, (40, 12));
 
