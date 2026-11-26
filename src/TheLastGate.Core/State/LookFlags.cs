@@ -9,4 +9,5 @@ public enum LookFlags
     Shop = 1,
     Shadow = 2,
     Bloody = 4,
+    Grave = 8,
 }

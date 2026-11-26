@@ -1,6 +1,7 @@
 using GdUnit4;
 using TheLastGate.Items;
 using TheLastGate.State;
+using TheLastGate.Windows;
 using static GdUnit4.Assertions;
 
 namespace TheLastGate.GodotTests.Items;
@@ -22,11 +23,11 @@ public class ItemMarkTests
     }
 
     [TestCase]
-    public void Worn_CountsFromTheFortiethCarriedSlot()
+    public void Worn_CountsFromTheSixtiethCarriedSlot()
     {
         var tiers = new ItemTiers();
-        tiers.CarriedTiers[42] = 4;
-        tiers.CarriedMarks[85] = NoNumber;
+        tiers.CarriedTiers[62] = 4;
+        tiers.CarriedMarks[125] = NoNumber;
 
         AssertThat(ItemMark.Worn(tiers, 2)).IsEqual(new ItemMark(4, '\0', null));
     }
@@ -43,6 +44,6 @@ public class ItemMarkTests
     [TestCase]
     public void SlotsPastTheListHaveNoMark()
     {
-        AssertThat(ItemMark.Shop(new ItemTiers(), 62)).IsEqual(default(ItemMark));
+        AssertThat(ItemMark.Shop(new ItemTiers(), GravePages.NoSlot)).IsEqual(default(ItemMark));
     }
 }

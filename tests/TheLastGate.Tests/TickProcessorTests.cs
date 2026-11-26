@@ -7,7 +7,7 @@ public class TickProcessorTests
 {
     private const int FirstSetMapId = 0x80;
     private const byte EmptyIgnoreLength = 5;
-    private const int LongestCommand = 126;
+    private const int LongestCommand = 166;
 
     public static TheoryData<ServerCommand> TickCommands()
     {

@@ -32,7 +32,7 @@ internal static class ServerInfoCommands
                 break;
             case ServerCommand.Tiers:
                 var tiersFor = reader.ReadByte();
-                reader.ReadBytes(tiersFor == CarriedList ? ItemTiers.CarriedSlots : ItemTiers.ShopSlots)
+                reader.ReadBytes(ItemTiers.Slots)
                     .CopyTo(tiersFor == CarriedList ? state.ItemTiers.CarriedTiers : state.ItemTiers.ShopTiers);
                 break;
             case ServerCommand.ItemMarks:

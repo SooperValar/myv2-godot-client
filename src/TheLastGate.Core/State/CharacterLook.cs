@@ -7,7 +7,9 @@ public sealed class CharacterLook
 {
     public const int WornSlots = 20;
     public const int NameLength = 16;
-    public const int ShopSlots = 62;
+    // A grave's window: the 60 backpack slots, the 20 worn ones, the held item and the gold. A merchant's uses the
+    // first 62.
+    public const int ShopSlots = 82;
     public const int DepotPages = 8;
     public const int DepotSlotsPerPage = 64;
 

@@ -31,6 +31,14 @@ public class ShopPacketsTests
     }
 
     [Fact]
+    public void DescribeInGrave_SendsTheSlotPast100()
+    {
+        byte[] expected = [25, 177, 4, 150, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+        Assert.Equal(expected, ShopPackets.DescribeInGrave(ShopNumber, 50));
+    }
+
+    [Fact]
     public void PutInTrash_SendsTheBackpackSlotPast1000()
     {
         byte[] expected = [25, 12, 64, 0xEF, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];

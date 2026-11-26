@@ -14,6 +14,8 @@ internal static class LookCommands
     private const uint SoulstoneBit = 1u << 30;
     private const uint EnchantedBit = 1u << 31;
     private const uint PriceMask = SoulstoneBit - 1;
+    private const int MerchantHeldSlot = 60;
+    private const int GraveHeldSlot = CharacterLook.ShopSlots - ShopItemsPerCommand;
 
     public static void Apply(GameState state, ReadOnlySpan<byte> command)
     {
@@ -51,6 +53,7 @@ internal static class LookCommands
                 look.Worn[1] = reader.ReadUInt16();
                 look.Worn[4] = reader.ReadUInt16();
                 look.Flags = (LookFlags)reader.ReadByte();
+                Array.Clear(look.ShopItems);
                 look.HeldItemPrice = (int)reader.ReadUInt32();
                 look.Worn[11] = reader.ReadUInt16();
                 look.Worn[12] = reader.ReadUInt16();
@@ -107,10 +110,14 @@ internal static class LookCommands
                 catalysts[offset]);
         }
 
-        // The server sends the shop's kind in the first catalyst byte of the pair that reaches the last slot.
-        if (firstSlot is >= CharacterLook.ShopSlots - ShopItemsPerCommand and <= CharacterLook.ShopSlots)
+        // The window opens with its last pair: the held item and the gold.
+        var grave = look.Flags.HasFlag(LookFlags.Grave);
+        if (firstSlot == (grave ? GraveHeldSlot : MerchantHeldSlot))
         {
-            OpenShop(state, MyV2WindowKind(look.Number) ?? ShopKindOf(catalysts[0]), look.Copy());
+            OpenShop(
+                state,
+                grave ? ShopKind.Grave : MyV2WindowKind(look.Number) ?? ShopKindOf(catalysts[0]),
+                look.Copy());
         }
     }
 

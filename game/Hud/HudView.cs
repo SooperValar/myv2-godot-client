@@ -68,6 +68,7 @@ public partial class HudView : Control
     private static readonly Vector2 OffScreen = new(-1, -1);
 
     private readonly DepotPage depotPage = new();
+    private readonly GravePage gravePage = new();
     private readonly ExitSequence exit = new();
     private readonly TrashButton trashButton = new();
     private readonly TrashWatch trashWatch = new();
@@ -292,15 +293,16 @@ public partial class HudView : Control
         var shopWindow = GetNode<ShopWindowView>("%ShopWindow");
         shopWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
         shopWindow.GetNode<ClickArea>("TrashButton").Released += ClickTrashButton;
+        shopWindow.GetNode<ClickArea>("PageButton").Released += ClickGravePageButton;
         foreach (var node in shopWindow.GetNode("Grid").GetChildren())
         {
             var shopCell = (ItemSlotView)node;
             var cell = shopCell.GetIndex();
             shopCell.Released += button => ClickShop(cell, button);
-            shopCell.TooltipRequest = () => ShopTooltip(ShopClicks.SlotFor(cell));
+            shopCell.TooltipRequest = () => ShopTooltip(ShopSlot(cell));
             shopCell.MouseEntered += () => hoveredShopCell = cell;
             shopCell.MouseExited += () => hoveredShopCell = null;
-            WatchCursor(shopCell, () => ShopCursor(ShopClicks.SlotFor(cell)));
+            WatchCursor(shopCell, () => ShopCursor(ShopSlot(cell)));
         }
 
         var depotWindow = GetNode<DepotWindowView>("%DepotWindow");
@@ -482,7 +484,7 @@ public partial class HudView : Control
 
         ShowTextWindows();
         RefreshSessionStats();
-        GetNode<ShopWindowView>("%ShopWindow").ShowItems(state);
+        GetNode<ShopWindowView>("%ShopWindow").ShowItems(state, GravePageNow());
         GetNode<DepotWindowView>("%DepotWindow").ShowItems(state, depotPage);
         GetNode<SmithWindowView>("%SmithWindow").ShowItems(state);
         ShowWaypoints();
@@ -632,7 +634,7 @@ public partial class HudView : Control
         }
 
         GetNode<ShopWindowView>("%ShopWindow")
-            .ShowText(state, hoveredShopCell, buyingTen, trashButton.IsArmed(UiClock()));
+            .ShowText(state, hoveredShopCell, GravePageNow(), buyingTen, trashButton.IsArmed(UiClock()));
         if (hoveredSlot is not { } hover)
         {
             return;
@@ -1242,18 +1244,36 @@ public partial class HudView : Control
             return;
         }
 
-        var slot = ShopClicks.SlotFor(cell);
+        var slot = ShopSlot(cell);
         var keys = HeldKeys.Current();
         var packet = state.OpenShop switch
         {
             ShopKind.Trash => ShopClicks.TrashPacket(button, keys, state.Shop.Number, slot),
             ShopKind.Bank => ShopClicks.BankPacket(button, keys, state.Shop.Number, slot),
+            ShopKind.Grave => GravePages.Packet(button, keys, state.Shop.Number, slot),
             _ => ShopClicks.Packet(button, keys, state.Shop.Number, slot),
         };
         if (packet != null)
         {
             sendCommand(packet);
         }
+    }
+
+    private int GravePageNow() => state?.OpenShop == ShopKind.Grave ? gravePage.For(state.Shop.Number) : 0;
+
+    private int ShopSlot(int cell) => ShopWindowView.SlotFor(state?.OpenShop, GravePageNow(), cell);
+
+    private void ClickGravePageButton(MapButton button)
+    {
+        if (state?.OpenShop != ShopKind.Grave || button != MapButton.Left)
+        {
+            return;
+        }
+
+        GravePageNow();
+        gravePage.Turn();
+        PlayClick();
+        GetNode<ShopWindowView>("%ShopWindow").ShowItems(state, gravePage.Current);
     }
 
     private void ClickTrashButton(MapButton button)

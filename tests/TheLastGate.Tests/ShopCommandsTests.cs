@@ -95,12 +95,38 @@ public class ShopCommandsTests
         Assert.Equal(kind, state.OpenShop);
     }
 
-    private static TestCommand[] ShopLookCommands(ushort shopNumber = ShopNumber) =>
+    [Fact]
+    public void Grave_OpensWithItsHeldItemAndGoldAfterAllEightyTwoSlots()
+    {
+        var state = new GameState();
+        var opened = new List<ShopKind>();
+        state.ShopOpened += opened.Add;
+
+        Process(state, [.. ShopLookCommands(flags: LookFlags.Shop | LookFlags.Grave), .. ShopItemCommands(0)]);
+
+        Assert.Equal([ShopKind.Grave], opened);
+        Assert.Equal(1059, state.Shop.ShopItems[59].Sprite);
+        Assert.Equal(1081, state.Shop.ShopItems[81].Sprite);
+    }
+
+    [Fact]
+    public void Shop_AfterAGrave_ShowsNothingInTheGravesExtraSlots()
+    {
+        var state = new GameState();
+        Process(state, [.. ShopLookCommands(flags: LookFlags.Shop | LookFlags.Grave), .. ShopItemCommands(0)]);
+
+        Process(state, [.. ShopLookCommands(), .. ShopItemCommands(0)[..31]]);
+
+        Assert.Equal(ShopKind.Merchant, state.OpenShop);
+        Assert.Equal(0, state.Shop.ShopItems[70].Sprite);
+    }
+
+    private static TestCommand[] ShopLookCommands(ushort shopNumber = ShopNumber, LookFlags flags = LookFlags.Shop) =>
     [
         TestCommand.Of(ServerCommand.Look1),
         TestCommand.Of(ServerCommand.Look2),
         TestCommand.Of(ServerCommand.Look3).UInt16(0).UInt16(0).UInt16(0).UInt16(shopNumber).UInt16(7),
-        TestCommand.Of(ServerCommand.Look4).UInt16(0).UInt16(0).Byte((byte)LookFlags.Shop).UInt32(250),
+        TestCommand.Of(ServerCommand.Look4).UInt16(0).UInt16(0).Byte((byte)flags).UInt32(250),
         TestCommand.Of(ServerCommand.Look5).Text("Merchant", 15),
     ];
 

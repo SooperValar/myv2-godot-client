@@ -7,7 +7,7 @@ using TheLastGate.Windows;
 
 namespace TheLastGate.Hud;
 
-// A merchant's or a reward shop's 62 items, a corpse's loot, or what waits in the trash window.
+// A merchant's or a reward shop's 62 items, a grave's loot in two pages, or what waits in the trash window.
 public partial class ShopWindowView : Control
 {
     private static readonly StyleBoxFlat ArmedButtonStyle = new()
@@ -22,9 +22,12 @@ public partial class ShopWindowView : Control
 
     public static bool Shows(ShopKind? kind) =>
         kind is ShopKind.Merchant or ShopKind.BlackStronghold or ShopKind.Casino or ShopKind.Contract
-            or ShopKind.Experience or ShopKind.Trash or ShopKind.Bank;
+            or ShopKind.Experience or ShopKind.Trash or ShopKind.Bank or ShopKind.Grave;
 
-    public void ShowItems(GameState state)
+    public static int SlotFor(ShopKind? kind, int gravePage, int cell) =>
+        kind == ShopKind.Grave ? GravePages.SlotFor(gravePage, cell) : ShopClicks.SlotFor(cell);
+
+    public void ShowItems(GameState state, int gravePage)
     {
         Visible = Shows(state.OpenShop);
         if (!Visible)
@@ -34,17 +37,34 @@ public partial class ShopWindowView : Control
 
         GetNode<CanvasItem>("TrashButton").Visible = state.OpenShop == ShopKind.Trash;
         var items = state.Shop.ShopItems;
+        ShowPageButton(state.OpenShop == ShopKind.Grave, gravePage, GravePages.SecondPageCount(items));
         var grid = GetNode("Grid");
         for (var cell = 0; cell < ShopClicks.Cells; cell++)
         {
-            var item = cell < items.Length ? items[cell] : default;
+            var slot = SlotFor(state.OpenShop, gravePage, cell);
+            var item = slot < items.Length ? items[slot] : default;
             grid.GetChild<ItemSlotView>(cell)
-                .Show(new ItemSlot(item.Sprite, 0, 0, 0), [], false, ItemMark.Shop(state.ItemTiers, cell));
+                .Show(new ItemSlot(item.Sprite, 0, 0, 0), [], false, ItemMark.Shop(state.ItemTiers, slot));
         }
     }
 
+    // On the backpack page the button is lit only when the second page holds something.
+    private void ShowPageButton(bool shown, int page, int secondPageCount)
+    {
+        var button = GetNode<Control>("PageButton");
+        button.Visible = shown;
+        if (!shown)
+        {
+            return;
+        }
+
+        var text = button.GetNode<HudLabel>("Text");
+        text.Text = GravePages.ButtonText(page, secondPageCount);
+        text.Colour = page == 0 && secondPageCount == 0 ? TextColour.Dim : TextColour.Yellow;
+    }
+
     // The price follows the mouse and the held keys, so it is updated every frame.
-    public void ShowText(GameState state, int? hoveredCell, bool buyingTen, bool trashArmed)
+    public void ShowText(GameState state, int? hoveredCell, int gravePage, bool buyingTen, bool trashArmed)
     {
         if (!Visible || state.OpenShop is not { } kind)
         {
@@ -67,7 +87,7 @@ public partial class ShopWindowView : Control
         {
             price = ShopText.Sell(kind, state.Shop.HeldItemPrice);
         }
-        else if (hoveredCell is { } cell && ShopClicks.SlotFor(cell) is var slot && slot < items.Length)
+        else if (hoveredCell is { } cell && SlotFor(kind, gravePage, cell) is var slot && slot < items.Length)
         {
             price = ShopText.Price(kind, items[slot].Price, buyingTen);
         }
