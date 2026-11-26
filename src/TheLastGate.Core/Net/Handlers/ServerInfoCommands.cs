@@ -8,6 +8,7 @@ namespace TheLastGate.Net.Handlers;
 internal static class ServerInfoCommands
 {
     private const int BuffNameLength = 15;
+    private const int SpellTimeSpareBytes = 2;
     private const int ItemInfoTextLength = 58;
     private const byte ItemInfoComplete = 255;
     private const byte CarriedList = 0;
@@ -56,9 +57,11 @@ internal static class ServerInfoCommands
         var secondsLeft = reader.ReadUInt16();
         var isHarmful = reader.ReadByte() != 0;
         var name = NulTerminatedText.Read(reader.ReadBytes(BuffNameLength));
+        var power = reader.ReadUInt16();
+        reader.ReadBytes(SpellTimeSpareBytes);
         if (slot < BuffTimers.Slots)
         {
-            timers.Set(slot, new BuffTimer(secondsLeft, isHarmful, name));
+            timers.Set(slot, new BuffTimer(secondsLeft, isHarmful, name, power));
         }
     }
 

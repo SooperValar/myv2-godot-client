@@ -31,7 +31,6 @@ public class BindingActionsTests
         ["item_tooltip_hotkey"] = "Alt",
         ["fightback_hotkey"] = null,
         ["swap_gear_hotkey"] = "Insert",
-        ["swap_position_hotkey"] = null,
         ["who_hotkey"] = null,
         ["area_use_hotkey"] = null,
         ["display_debug_information_hotkey"] = "F11",
@@ -45,6 +44,7 @@ public class BindingActionsTests
         ["gc_move_hotkey"] = null,
         ["gc_buffs_hotkey"] = null,
         ["gc_transfer_hotkey"] = null,
+        ["gc_attack_hotkey"] = null,
     };
 
     [AfterTest]

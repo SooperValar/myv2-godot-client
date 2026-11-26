@@ -39,7 +39,7 @@ public class ServerCommandLengthTests
     [InlineData(ServerCommand.PlaySound, 13)]
     [InlineData(ServerCommand.Load, 5)]
     [InlineData(ServerCommand.Unique, 9)]
-    [InlineData(ServerCommand.SpellTime, 20)]
+    [InlineData(ServerCommand.SpellTime, 24)]
     [InlineData(ServerCommand.ItemInfo, 64)]
     [InlineData(ServerCommand.TileGlow, 4)]
     [InlineData(ServerCommand.Tiers, 64)]

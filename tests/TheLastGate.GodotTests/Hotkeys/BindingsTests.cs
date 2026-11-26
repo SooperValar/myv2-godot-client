@@ -40,6 +40,7 @@ public class BindingsTests
     [TestCase("display_debug_information_hotkey", "Display Debug Info", BindingCategory.General)]
     [TestCase("exit_hotkey", "Exit", BindingCategory.General)]
     [TestCase("gc_transfer_hotkey", "Transfer", BindingCategory.GuildCommands)]
+    [TestCase("gc_attack_hotkey", "GC Attack", BindingCategory.GuildCommands)]
     public void All_MatchesTheCurrentClientsNames(string id, string name, BindingCategory category)
     {
         var binding = Bindings.All.Single(binding => binding.Id == id);

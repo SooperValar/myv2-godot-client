@@ -72,7 +72,7 @@ public static class ServerCommandLength
             ServerCommand.Load => 5,
             ServerCommand.Unique => 9,
             ServerCommand.Ignore => IgnoreLength(reader.ReadUInt32()),
-            ServerCommand.SpellTime => 20,
+            ServerCommand.SpellTime => 24,
             ServerCommand.ItemInfo => 64,
             ServerCommand.TileGlow => 4,
             ServerCommand.Tiers => 64,

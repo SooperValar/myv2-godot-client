@@ -1,7 +1,12 @@
 namespace TheLastGate.Hud;
 
-// Name and SecondsLeft come from the server's buff timers; a slot it sent no timer for has neither.
-public readonly record struct BuffIcon(int Sprite, float Brightness, string Name = "", int? SecondsLeft = null)
+// Name, SecondsLeft and Power come from the server's buff timers; a slot it sent no timer for has none of them.
+public readonly record struct BuffIcon(
+    int Sprite,
+    float Brightness,
+    string Name = "",
+    int? SecondsLeft = null,
+    int Power = 0)
 {
     public const int WarningSeconds = 10;
 

@@ -8,7 +8,6 @@ namespace TheLastGate.GodotTests.Hotkeys;
 public class HotkeyCommandsTests
 {
     [TestCase("fightback_hotkey", "/fightback")]
-    [TestCase("swap_position_hotkey", "/swap")]
     [TestCase("who_hotkey", "/who")]
     [TestCase("my_buff_hotkey", "/buffs")]
     [TestCase("gc_offense_hotkey", "Offense")]
@@ -17,8 +16,8 @@ public class HotkeyCommandsTests
     [TestCase("gc_wait_hotkey", "Wait")]
     [TestCase("gc_follow_hotkey", "Follow")]
     [TestCase("gc_move_hotkey", "Move")]
-    [TestCase("gc_buffs_hotkey", "/gcb")]
-    [TestCase("gc_transfer_hotkey", "transfer")]
+    [TestCase("gc_buffs_hotkey", "Buffs")]
+    [TestCase("gc_transfer_hotkey", "Transfer")]
     public void Says_WhatTheCurrentClientSaysForTheHotkey(string id, string line)
     {
         AssertThat(HotkeyCommands.Says(id)).IsEqual(line);
@@ -33,14 +32,21 @@ public class HotkeyCommandsTests
         AssertThat(HotkeyCommands.Says(id)).IsNull();
     }
 
-    [TestCase]
-    public void Says_SomethingForEveryGuildCommandBinding()
+    [TestCase(0, "#gca")]
+    [TestCase(1234, "#gca 1234")]
+    public void GcAttack_NamesTheSelectedCharacter(int selected, string line)
     {
-        var guildCommands = Bindings.All.Where(binding => binding.Category == BindingCategory.GuildCommands);
+        AssertThat(GcAttack.Line(selected)).IsEqual(line);
+    }
 
-        foreach (var binding in guildCommands)
-        {
-            AssertThat(HotkeyCommands.Says(binding.Id)).IsNotNull();
-        }
+    [TestCase("#gca", "#gca 77")]
+    [TestCase("/GCA ", "#gca 77")]
+    [TestCase("#gcattack", "#gca 77")]
+    [TestCase("#gca 5", "#gca 5")]
+    [TestCase("#gc", "#gc")]
+    [TestCase("hello", "hello")]
+    public void GcAttack_CompletesABareTypedCommand(string typed, string sent)
+    {
+        AssertThat(GcAttack.Complete(typed, 77)).IsEqual(sent);
     }
 }

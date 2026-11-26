@@ -34,7 +34,7 @@ public static class BuffIcons
             var timer = TimerFor(timers, slotIndex);
             var harmful = timer?.IsHarmful ?? IsDebuff(slot.Sprite);
             var icon = timer is { } found
-                ? new BuffIcon(slot.Sprite, Brightness(slot.Active), found.Name, timers!.SecondsLeft(slotIndex))
+                ? new BuffIcon(slot.Sprite, Brightness(slot.Active), found.Name, timers!.SecondsLeft(slotIndex), found.Power)
                 : new BuffIcon(slot.Sprite, Brightness(slot.Active));
             (harmful ? debuffs : buffs).Add(icon);
         }

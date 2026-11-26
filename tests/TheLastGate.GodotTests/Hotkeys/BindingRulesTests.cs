@@ -34,10 +34,10 @@ public class BindingRulesTests
     {
         var altM = new KeyChord("M", MapKeys.Alt);
 
-        var reassignment = BindingRules.Assign(Defaults, "gc_move_hotkey", altM);
+        var reassignment = BindingRules.Assign(Defaults, "gc_attack_hotkey", altM);
 
         AssertThat(reassignment.DisplacedId).IsNull();
-        AssertThat(reassignment.Changes).ContainsExactly(new BindingChange("gc_move_hotkey", altM));
+        AssertThat(reassignment.Changes).ContainsExactly(new BindingChange("gc_attack_hotkey", altM));
     }
 
     [TestCase]
@@ -54,7 +54,7 @@ public class BindingRulesTests
     {
         var reassignment = BindingRules.Assign(
             Defaults,
-            "gc_move_hotkey",
+            "gc_attack_hotkey",
             new KeyChord("1", MapKeys.Ctrl | MapKeys.Shift));
 
         AssertThat(reassignment.DisplacedId).IsNull();
@@ -119,10 +119,10 @@ public class BindingRulesTests
     [TestCase]
     public void Saved_WritesABindingThatHasAKeyWhereTheDefaultHasNone()
     {
-        var current = Snapshot(("gc_move_hotkey", new KeyChord("M", MapKeys.Alt)));
+        var current = Snapshot(("gc_attack_hotkey", new KeyChord("M", MapKeys.Alt)));
 
-        AssertThat(BindingRules.Saved(Snapshot(("gc_move_hotkey", null)), current))
-            .IsEqual(new Dictionary<string, string> { ["gc_move_hotkey"] = "Alt+M" });
+        AssertThat(BindingRules.Saved(Snapshot(("gc_attack_hotkey", null)), current))
+            .IsEqual(new Dictionary<string, string> { ["gc_attack_hotkey"] = "Alt+M" });
     }
 
     [TestCase]

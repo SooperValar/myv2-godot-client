@@ -26,4 +26,4 @@ public sealed class BuffTimers
     internal void EndOfTick() => tick++;
 }
 
-public readonly record struct BuffTimer(int SecondsLeft, bool IsHarmful, string Name);
+public readonly record struct BuffTimer(int SecondsLeft, bool IsHarmful, string Name, int Power);

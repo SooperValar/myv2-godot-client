@@ -7,6 +7,7 @@ public class BuffTimersTests
 {
     private const int TicksPerSecond = 18;
     private const int Slot = 3;
+    private const int Power = 45;
 
     [Fact]
     public void SpellTime_SetsTheSlotsTimer()
@@ -15,7 +16,7 @@ public class BuffTimersTests
 
         new TickProcessor(state).Process(TestCommand.Payload(SpellTime(Slot, 90, true, "Curse")));
 
-        Assert.Equal(new BuffTimer(90, true, "Curse"), state.BuffTimers.Timers[Slot]);
+        Assert.Equal(new BuffTimer(90, true, "Curse", Power), state.BuffTimers.Timers[Slot]);
         Assert.Equal(90, state.BuffTimers.SecondsLeft(Slot));
     }
 
@@ -58,7 +59,7 @@ public class BuffTimersTests
 
     private static TestCommand SpellTime(byte slot, ushort seconds, bool harmful, string name) =>
         TestCommand.Of(ServerCommand.SpellTime).Byte(slot).UInt16(seconds).Byte(harmful ? (byte)1 : (byte)0)
-            .Text(name, 15);
+            .Text(name, 15).UInt16(Power).UInt16(0);
 
     private static void RunTicks(TickProcessor processor, int ticks)
     {

@@ -49,7 +49,6 @@ public static class Bindings
         new("item_tooltip_hotkey", "Item Tooltip (hold)", BindingCategory.Window) { Hold = true },
         new("fightback_hotkey", "Toggle Fightback", BindingCategory.General),
         new("swap_gear_hotkey", "Swap Gearset", BindingCategory.General),
-        new("swap_position_hotkey", "Swap Position", BindingCategory.General),
         new("who_hotkey", "Who's Online", BindingCategory.General),
         new("area_use_hotkey", "Area Use", BindingCategory.General),
         new("display_debug_information_hotkey", "Display Debug Info", BindingCategory.General),
@@ -63,6 +62,7 @@ public static class Bindings
         new("gc_move_hotkey", "Move", BindingCategory.GuildCommands),
         new("gc_buffs_hotkey", "Buffs", BindingCategory.GuildCommands),
         new("gc_transfer_hotkey", "Transfer", BindingCategory.GuildCommands),
+        new("gc_attack_hotkey", "GC Attack", BindingCategory.GuildCommands),
     ];
 
     public static string CategoryName(BindingCategory category) => category switch

@@ -10,6 +10,7 @@ public partial class BuffCellView : Control
     private const int NameFont = 3;
     private const int HarmfulNameFont = 0;
     private const int TimeFont = 1;
+    private const int PowerFont = 2;
     private const int ShadowOffset = 1;
     private const int TimeGap = 2;
 
@@ -83,7 +84,11 @@ public partial class BuffCellView : Control
         if (tooltip == null || tooltipFor != icon with { Brightness = tooltipFor.Brightness })
         {
             List<LogLine> lines =
-                [new(icon.Name, harmful ? HarmfulNameFont : NameFont), new(icon.LongTime, TimeFont)];
+            [
+                new(icon.Name, harmful ? HarmfulNameFont : NameFont),
+                new($"Power {icon.Power}", PowerFont),
+                new(icon.LongTime, TimeFont),
+            ];
             tooltip = new ItemTooltipRequest(lines, []);
             tooltipFor = icon;
         }

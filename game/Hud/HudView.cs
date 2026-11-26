@@ -288,7 +288,7 @@ public partial class HudView : Control
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
         var chatLine = GetNode<ChatLine>("%ChatLine");
-        chatLine.LineSent += Say;
+        chatLine.LineSent += line => Say(GcAttack.Complete(line, selectedCharacter));
         chatLine.EscapePressed += PressEscape;
         var shopWindow = GetNode<ShopWindowView>("%ShopWindow");
         shopWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
@@ -834,6 +834,12 @@ public partial class HudView : Control
         if (id == "display_debug_information_hotkey")
         {
             ShowDebugInformation();
+            return true;
+        }
+
+        if (id == "gc_attack_hotkey")
+        {
+            Say(GcAttack.Line(selectedCharacter));
             return true;
         }
 
