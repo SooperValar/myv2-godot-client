@@ -109,7 +109,8 @@ public sealed class UseQueue(TextLog chat)
     {
         if ((ClientCommand)packet[0] is ClientCommand.Move or ClientCommand.Turn or ClientCommand.PickUp
             or ClientCommand.Drop or ClientCommand.Use or ClientCommand.LookItem or ClientCommand.Shop
-            or ClientCommand.Smith or ClientCommand.Mode or ClientCommand.Reset or ClientCommand.Stat)
+            or ClientCommand.Smith or ClientCommand.Mode or ClientCommand.Reset or ClientCommand.Stat
+            or ClientCommand.Attack)
         {
             queued.Clear();
         }
