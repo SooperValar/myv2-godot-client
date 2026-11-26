@@ -1,11 +1,12 @@
 #!/usr/bin/env bash
 # Exports the game for one platform and packs it with Velopack into a releases folder.
-# Usage: tools/package-release.sh <win|linux> <version> <channel> <notes-file> <releases-dir>
+# Usage: tools/package-release.sh <win|linux> <version> <channel> <notes-file> <releases-dir> <myv2-art-dir>
 # GODOT overrides the Godot console executable; vpk 1.2.161 must be on PATH.
+# The art folder holds MyV2's gx00.dat/.idx, pnglib.dat/.idx, GFX/ and sfx/; the game reads them beside its executable.
 set -euo pipefail
 
-if [ $# -ne 5 ]; then
-    echo "usage: $0 <win|linux> <version> <channel> <notes-file> <releases-dir>" >&2
+if [ $# -ne 6 ]; then
+    echo "usage: $0 <win|linux> <version> <channel> <notes-file> <releases-dir> <myv2-art-dir>" >&2
     exit 2
 fi
 
@@ -14,6 +15,7 @@ version=$2
 channel=$3
 notes=$4
 releases=$5
+art=$6
 
 repo=$(cd "$(dirname "$0")/.." && pwd)
 app="$repo/build/app-$platform"
@@ -59,13 +61,20 @@ if ! ls -d "$app"/data_TheLastGate_* > /dev/null 2>&1; then
 fi
 
 cp -r "$repo/data" "$app/data"
+for art_file in gx00.dat gx00.idx pnglib.dat pnglib.idx GFX sfx; do
+    if [ ! -e "$art/$art_file" ]; then
+        echo "the MyV2 art folder has no $art_file" >&2
+        exit 1
+    fi
+    cp -r "$art/$art_file" "$app/"
+done
 
 dotnet publish "$repo/src/TheLastGate.Starter" -c Release -r "$runtime" -o "$starter_out"
 cp "$starter_out/$starter" "$app/"
 
 vpk pack \
-    --packId TheLastGateGodot \
-    --packTitle "The Last Gate" \
+    --packId MercenariesOfAsgardV2 \
+    --packTitle "Mercenaries of Asgard v2" \
     --packVersion "$version" \
     --channel "$channel" \
     --runtime "$runtime" \
