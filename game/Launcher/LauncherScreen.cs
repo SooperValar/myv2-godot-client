@@ -22,6 +22,8 @@ public partial class LauncherScreen : Control
     private const int DialogButtonGap = 10;
 
     private static readonly Color LockedRowColour = new(1, 1, 1, 0.6f);
+    private const string OutOfDateMessage = "Your client is out of date. Click Update to get the newest version.";
+
     private static readonly Vector2 PreviousCharacterButtonSize = new(240, 24);
     private static readonly Vector2 RemoveCharacterButtonSize = new(24, 24);
 
@@ -430,6 +432,11 @@ public partial class LauncherScreen : Control
             EndStarting();
             session.Connection.Dispose();
             LetMessageClose(true);
+            if (session.Handshake.ExitReason == ExitReasons.VersionTooOld)
+            {
+                messageText.Text = OutOfDateMessage;
+                GetNode<UpdateButtonView>("%UpdateButton").CheckAgain();
+            }
         }
     }
 

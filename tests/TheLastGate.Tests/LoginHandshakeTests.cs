@@ -123,6 +123,17 @@ public class LoginHandshakeTests
     }
 
     [Fact]
+    public void Handle_RemembersWhyTheServerSentTheClientAway()
+    {
+        var handshake = AnsweredHandshake(Key);
+        Assert.Null(handshake.ExitReason);
+
+        handshake.Handle(Packet(ServerCommand.Exit, (uint)ExitReasons.VersionTooOld));
+
+        Assert.Equal((uint)ExitReasons.VersionTooOld, handshake.ExitReason);
+    }
+
+    [Fact]
     public void Handle_ShowsThePlaceInTheQueueWhileTheServerIsFull()
     {
         var handshake = AnsweredHandshake(Key);

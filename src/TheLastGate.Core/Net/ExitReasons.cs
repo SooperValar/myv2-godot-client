@@ -3,6 +3,7 @@ namespace TheLastGate.Net;
 public static class ExitReasons
 {
     public const int EnteredTavern = 10;
+    public const int VersionTooOld = 11;
     public const int UserRequest = 12;
 
     private static readonly string[] Reasons =

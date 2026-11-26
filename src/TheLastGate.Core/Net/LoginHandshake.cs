@@ -32,6 +32,8 @@ public sealed class LoginHandshake
 
     public string Status { get; private set; } = "Waiting for server response...";
 
+    public uint? ExitReason { get; private set; }
+
     public uint ServerVersion { get; private set; }
 
     public LoginKey? CreatedKey { get; private set; }
@@ -106,7 +108,8 @@ public sealed class LoginHandshake
 
             case ServerCommand.Exit:
                 Stage = LoginStage.Failed;
-                Status = $"Server demands exit: {ExitReasons.Describe(reader.ReadUInt32())}";
+                ExitReason = reader.ReadUInt32();
+                Status = $"Server demands exit: {ExitReasons.Describe(ExitReason.Value)}";
                 return [];
 
             case ServerCommand.Cap:

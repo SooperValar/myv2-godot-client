@@ -12,6 +12,7 @@ public partial class UpdateButtonView : Button
     private const int TooltipGap = 4;
 
     private UpdateCatalog? catalog;
+    private bool checkRunning;
     private bool ctrlHeld;
     private Version? current;
     private UpdateButtonLook look = UpdateButtonLook.For(UpdateCheckState.Checking, false, false, null);
@@ -43,18 +44,29 @@ public partial class UpdateButtonView : Button
         }
     }
 
-    public async void Start(IUpdater chosenUpdater, UpdateWindowView changelogWindow, RollbackWindowView earlierWindow)
+    public void Start(IUpdater chosenUpdater, UpdateWindowView changelogWindow, RollbackWindowView earlierWindow)
     {
         updater = chosenUpdater;
         updateWindow = changelogWindow;
         rollbackWindow = earlierWindow;
         current = chosenUpdater.CurrentVersion;
-        if (!chosenUpdater.IsInstalled || current is null)
+        CheckAgain();
+    }
+
+    public async void CheckAgain()
+    {
+        if (updater is not { } chosenUpdater || !chosenUpdater.IsInstalled || current is null)
         {
             ShowState(UpdateCheckState.NotInstalled);
             return;
         }
 
+        if (checkRunning)
+        {
+            return;
+        }
+
+        checkRunning = true;
         ShowState(UpdateCheckState.Checking);
         try
         {
@@ -66,6 +78,10 @@ public partial class UpdateButtonView : Button
         {
             GD.PushWarning($"Update check failed: {exception.Message}");
             ShowState(UpdateCheckState.Failed);
+        }
+        finally
+        {
+            checkRunning = false;
         }
     }
 
