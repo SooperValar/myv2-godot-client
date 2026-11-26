@@ -83,8 +83,8 @@ public class ExitSequenceTests
         AssertThat(ExitSequence.WarningLines)
             .ContainsExactly(
                 " ",
-                "(F12) Leaving the game without entering a tavern will cause you to take damage, and possibly lose your life. Click again if you need to leave immediately.",
-                "A tavern will be located near where you entered the game.");
+                "(F12) Leaving the game without entering a tavern will make you lose money and possibly life. Click again if you still want to leave the hard way.",
+                "A tavern is located west of the Temple of Skua (the starting point).");
         AssertThat(ExitSequence.RequestLines)
             .ContainsExactly(" ", "(F12) Exit request acknowledged. Please wait a moment...");
     }

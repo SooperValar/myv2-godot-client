@@ -10,7 +10,7 @@ internal static class MapCommands
     private const int SetMapTileOffsetMask = 0x7F;
     private const int LowLightMask = 0x0F;
     private const int HighLightShift = 4;
-    private const int LightTileMask = 2047;
+    private const int LightTileMask = 4095;
     private const int TileLightShift = 12;
 
     public static void Apply(WorldMap map, ReadOnlySpan<byte> command)

@@ -122,6 +122,17 @@ public class MapCommandsTests
     }
 
     [Fact]
+    public void SetMapLight_ReachesTilesPastTheEleventhBit()
+    {
+        const int tilePast2047 = 2100;
+
+        var map = Process(TestCommand.Of(ServerCommand.SetMap4).UInt16(tilePast2047 | (9 << 12)));
+
+        Assert.Equal(9, map.Tiles[tilePast2047].Light);
+        Assert.Equal(0, map.Tiles[tilePast2047 - 2048].Light);
+    }
+
+    [Fact]
     public void SetMapLight_RejectsATileOutsideTheMap()
     {
         Assert.Throws<ProtocolDesyncException>(() =>

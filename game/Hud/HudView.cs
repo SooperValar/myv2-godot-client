@@ -971,11 +971,6 @@ public partial class HudView : Control
         switch (exit.Click())
         {
             case ExitStep.Warn:
-                foreach (var packet in ChatPackets.Say(ExitSequence.TavernCommand))
-                {
-                    sendCommand(packet);
-                }
-
                 AddWarnings(ExitSequence.WarningLines);
                 break;
             case ExitStep.RequestExit:

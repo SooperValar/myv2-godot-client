@@ -6,7 +6,6 @@ namespace TheLastGate.Hud;
 
 public sealed class ExitSequence
 {
-    public const string TavernCommand = "/tavern";
 
     public static readonly TimeSpan LeaveAfter = TimeSpan.FromSeconds(5);
 
@@ -18,8 +17,8 @@ public sealed class ExitSequence
     public static IReadOnlyList<string> WarningLines { get; } =
     [
         " ",
-        "(F12) Leaving the game without entering a tavern will cause you to take damage, and possibly lose your life. Click again if you need to leave immediately.",
-        "A tavern will be located near where you entered the game.",
+        "(F12) Leaving the game without entering a tavern will make you lose money and possibly life. Click again if you still want to leave the hard way.",
+        "A tavern is located west of the Temple of Skua (the starting point).",
     ];
 
     public static IReadOnlyList<string> RequestLines { get; } =
