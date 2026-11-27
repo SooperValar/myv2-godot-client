@@ -15,7 +15,7 @@ public class CharacterFramesTests
     private const int TileIndex = 1000;
     private const int Sprite = 2000;
     private const int SpecialIdleSprite = 22480;
-    private const int Fastest = 0;
+    private const int Fastest = 10;
     private const int Attack = 0;
     private const int Pickup = 1;
     private const int Cast = 9;

@@ -11,13 +11,13 @@ public class StatPanelTests
     [TestCase]
     public void LastMetaRow_InOffenses_LeavesTheLastTenRowsInView()
     {
-        AssertThat(PanelIn(StatListMode.Offenses).LastMetaRow).IsEqual(13);
+        AssertThat(PanelIn(StatListMode.Offenses).LastMetaRow).IsEqual(14);
     }
 
     [TestCase]
-    public void LastMetaRow_InDefenses_DoesNotScrollAListThatFits()
+    public void LastMetaRow_InDefenses_LeavesTheLastTenRowsInView()
     {
-        AssertThat(PanelIn(StatListMode.Defenses).LastMetaRow).IsEqual(0);
+        AssertThat(PanelIn(StatListMode.Defenses).LastMetaRow).IsEqual(1);
     }
 
     [TestCase]
@@ -82,8 +82,8 @@ public class StatPanelTests
         panel.Choose(StatListMode.Offenses);
         panel.ScrollTo(50);
 
-        AssertThat(panel.Row).IsEqual(13);
-        AssertThat(panel.LastRow).IsEqual(13);
+        AssertThat(panel.Row).IsEqual(14);
+        AssertThat(panel.LastRow).IsEqual(14);
         AssertThat(panel.Skills.Row).IsEqual(5);
     }
 
@@ -149,10 +149,10 @@ public class StatPanelTests
         var offenses = PanelIn(StatListMode.Offenses);
         offenses.ScrollTo(offenses.LastMetaRow);
         var defenses = PanelIn(StatListMode.Defenses);
+        defenses.ScrollTo(defenses.LastMetaRow);
 
-        AssertThat(offenses.BottomMeta(9)).IsEqual(29);
-        AssertThat(defenses.BottomMeta(8)).IsEqual(56);
-        AssertThat(defenses.BottomMeta(9)).IsEqual(StatPanel.BlankMeta);
+        AssertThat(offenses.BottomMeta(9)).IsEqual(30);
+        AssertThat(defenses.BottomMeta(9)).IsEqual(58);
     }
 
     [TestCase]
