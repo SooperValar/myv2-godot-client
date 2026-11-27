@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
@@ -15,6 +16,8 @@ public partial class DataTable : VBoxContainer
 
     private readonly List<Control> rows = [];
     private IReadOnlyList<TableColumn> columns = [];
+
+    public event Action<int>? RowClicked;
 
     public override void _Ready() => ThemeTypeVariation = "DataTable";
 
@@ -136,7 +139,7 @@ public partial class DataTable : VBoxContainer
         row.AddChild(cells);
         for (var column = 0; column < columns.Count; column++)
         {
-            var header = CellLabel(column == 0, columns[column].Width);
+            var header = CellLabel(column == 0 || columns[column].LeftAligned, columns[column].Width);
             header.Text = columns[column].Header;
             header.ThemeTypeVariation = "TableHeader";
             cells.AddChild(header);
@@ -150,6 +153,13 @@ public partial class DataTable : VBoxContainer
         var row = new PanelContainer { ThemeTypeVariation = RowStyle, MouseFilter = MouseFilterEnum.Pass };
         row.MouseEntered += () => row.ThemeTypeVariation = HoverRowStyle;
         row.MouseExited += () => row.ThemeTypeVariation = RowStyle;
+        row.GuiInput += inputEvent =>
+        {
+            if (inputEvent is InputEventMouseButton { Pressed: true, ButtonIndex: MouseButton.Left })
+            {
+                RowClicked?.Invoke(rows.IndexOf(row));
+            }
+        };
         var cells = new HBoxContainer { ThemeTypeVariation = "TableCells" };
         row.AddChild(cells);
 
@@ -168,7 +178,7 @@ public partial class DataTable : VBoxContainer
         cells.AddChild(nameCell);
         foreach (var column in columns.Skip(1))
         {
-            cells.AddChild(CellLabel(false, column.Width));
+            cells.AddChild(CellLabel(column.LeftAligned, column.Width));
         }
 
         return row;

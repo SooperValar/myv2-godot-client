@@ -127,8 +127,13 @@ public class OptionButtonsTests
         AssertThat(OptionButtons.Help(button)).IsEqual(help);
     }
 
+    [TestCase(OptionButton.Help, "HELP: Commands, quests and more. /help opens it too.")]
+    public void Help_DescribesTheHelpButton(OptionButton button, string help)
+    {
+        AssertThat(OptionButtons.Help(button)).IsEqual(help);
+    }
+
     [TestCase(OptionButton.Options)]
-    [TestCase(OptionButton.FirstBlank)]
     [TestCase(OptionButton.SecondBlank)]
     public void Help_HasNothingForTheOtherButtons(OptionButton button)
     {

@@ -62,6 +62,7 @@ public static class OptionButtons
                 "F8/BARS: Toggle whether the current health of all characters is displayed as bars.",
             OptionButton.Exit =>
                 "F12/EXIT: Leave the game immediately. Will cost you 50% health and can result in death.",
+            OptionButton.Help => "HELP: Commands, quests and more. /help opens it too.",
             _ => null,
         };
 

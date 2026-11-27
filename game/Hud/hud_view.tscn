@@ -1576,7 +1576,7 @@ layout_mode = 2
 script = ExtResource("11_option")
 Kind = 8
 
-[node name="FirstBlank" type="Control" parent="OptionButtons" unique_id=250013383]
+[node name="Help" type="Control" parent="OptionButtons" unique_id=250013383]
 custom_minimum_size = Vector2(48, 15)
 layout_mode = 2
 script = ExtResource("11_option")

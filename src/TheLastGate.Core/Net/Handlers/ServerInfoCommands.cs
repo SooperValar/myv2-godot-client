@@ -18,6 +18,7 @@ internal static class ServerInfoCommands
     private const int WaypointNameLength = 31;
     private const int WaypointLineLength = 39;
     private const int WaypointLineOffset = 40;
+    private const int HelpTextLength = 56;
 
     public static void Apply(GameState state, ReadOnlySpan<byte> command)
     {
@@ -49,9 +50,24 @@ internal static class ServerInfoCommands
             case ServerCommand.Meta:
                 ReadMeta(state.Terminology.MetaStats, ref reader);
                 break;
+            case ServerCommand.Help:
+                ReadHelp(state.HelpPages, ref reader);
+                break;
             default:
                 throw new UnreachableException();
         }
+    }
+
+    private static void ReadHelp(HelpPages pages, ref PacketReader reader)
+    {
+        var page = reader.ReadByte();
+        var kind = (HelpPieceKind)reader.ReadByte();
+        var row = reader.ReadUInt16();
+        var column = reader.ReadByte();
+        var font = reader.ReadByte();
+        var part = reader.ReadByte();
+        var text = NulTerminatedText.Read(reader.ReadBytes(HelpTextLength));
+        pages.Receive(page, kind, row, column, font, part, text);
     }
 
     private static void ReadMeta(MetaStat[] stats, ref PacketReader reader)

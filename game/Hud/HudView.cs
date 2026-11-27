@@ -41,6 +41,7 @@ public partial class HudView : Control
     private const string WorldMapWindowScenePath = "res://Map/world_map_window.tscn";
     private const string PlannerWindowScenePath = "res://Planner/planner_window.tscn";
     private const string SessionStatsScenePath = "res://Hud/session_stats_window.tscn";
+    private const string HelpScenePath = "res://Hud/help_window.tscn";
     private const string PlannerAdvancedScenePath = "res://Planner/planner_advanced_window.tscn";
     private const string TimingsScenePath = "res://Profiling/timings_view.tscn";
     private const int HintFont = 1;
@@ -99,6 +100,7 @@ public partial class HudView : Control
     private int selectedCharacter;
     private Action<byte[]> sendCommand = _ => { };
     private SessionStatsWindowView? sessionStatsWindow;
+    private HelpWindowView? helpWindow;
     private SpriteLoader? sprites;
     private StatPlan statPlan = new();
     private GameState? state;
@@ -209,6 +211,7 @@ public partial class HudView : Control
     public void Show(GameState shownState, GameSession shownSession, IFontSet fontSet, Action<byte[]> sendToServer)
     {
         state = shownState;
+        state.HelpPages.PageArrived += ShowHelpPage;
         gameSession = shownSession;
         statPlan = shownSession.StatPlan;
         sendCommand = sendToServer;
@@ -289,7 +292,7 @@ public partial class HudView : Control
         Fonts = fontSet;
         GetNode<ChatLog>("%ChatLog").Show(state.Chat, fontSet);
         var chatLine = GetNode<ChatLine>("%ChatLine");
-        chatLine.LineSent += line => Say(GcAttack.Complete(line, selectedCharacter));
+        chatLine.LineSent += SendChatLine;
         chatLine.EscapePressed += PressEscape;
         var shopWindow = GetNode<ShopWindowView>("%ShopWindow");
         shopWindow.GetNode<ClickArea>("CloseButton").Released += ClickCloseShop;
@@ -390,6 +393,10 @@ public partial class HudView : Control
         sessionStatsWindow.ResetPressed += ResetSessionStats;
         sessionStatsWindow.ClosePressed += () => ShowSessionStats(false);
         ShowSessionStats(false);
+        helpWindow = GD.Load<PackedScene>(HelpScenePath).Instantiate<HelpWindowView>();
+        AddChild(helpWindow);
+        helpWindow.ClosePressed += () => helpWindow.Visible = false;
+        helpWindow.PageRequested += (page, argument) => sendCommand(HelpPackets.For(page, argument));
         GetNode<ClickArea>("%PlannerButton").Released += ClickPlannerButton;
         var optionsWindow = GetNode<OptionsWindowView>("%OptionsWindow");
         optionsWindow.TabChosen += ChooseOptionsTab;
@@ -960,6 +967,12 @@ public partial class HudView : Control
             return;
         }
 
+        if (option == OptionButton.Help)
+        {
+            ToggleHelp();
+            return;
+        }
+
         if (OptionButtons.Packet(option) is { } packet)
         {
             sendCommand(packet);
@@ -1481,6 +1494,51 @@ public partial class HudView : Control
         }
 
         Refresh(selectedCharacter);
+    }
+
+    private void SendChatLine(string line)
+    {
+        if (HelpChat.Request(line) is { } request)
+        {
+            OpenHelp(request);
+            return;
+        }
+
+        Say(GcAttack.Complete(line, selectedCharacter));
+    }
+
+    private void ToggleHelp()
+    {
+        if (helpWindow is { Visible: true })
+        {
+            helpWindow.Visible = false;
+            return;
+        }
+
+        OpenHelp(new HelpRequest(HelpPageNumber.Commands));
+    }
+
+    private void OpenHelp(HelpRequest request)
+    {
+        if (helpWindow == null)
+        {
+            return;
+        }
+
+        helpWindow.ShowAllQuests(request.AllQuests);
+        helpWindow.Open(request.Tab);
+        if (request.Quest is { } quest)
+        {
+            helpWindow.OpenQuest(quest - 1);
+        }
+    }
+
+    private void ShowHelpPage(HelpPageNumber number)
+    {
+        if (state?.HelpPages.Page(number) is { } page)
+        {
+            helpWindow?.ShowPage(number, page);
+        }
     }
 
     private void ToggleOptions()

@@ -37,6 +37,8 @@ public sealed class GameState
     public ItemInfoCache ItemInfo { get; } = new();
 
     public WaypointList WaypointList { get; } = new();
+
+    public HelpPages HelpPages { get; } = new();
     public CharacterLook? Look { get; internal set; }
     public CharacterLook Shop { get; internal set; } = new();
     public ShopKind? OpenShop { get; internal set; }

@@ -46,5 +46,6 @@ public enum ClientCommand : byte
     QuickShop = 38,
     Tree = 39,
     Meta = 40,
+    Help = 41,
     TickReport = 255,
 }

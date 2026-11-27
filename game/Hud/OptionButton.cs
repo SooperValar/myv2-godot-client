@@ -11,7 +11,7 @@ public enum OptionButton
     Names,
     HealthBars,
     Options,
-    FirstBlank,
+    Help,
     SecondBlank,
     Exit,
 }

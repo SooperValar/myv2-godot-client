@@ -80,6 +80,7 @@ public static class ServerCommandLength
             ServerCommand.WaypointRow => 80,
             ServerCommand.Zone => 41,
             ServerCommand.Meta => 7,
+            ServerCommand.Help => 64,
             _ => throw new ProtocolDesyncException($"Server command id {commandId} isn't one a tick can contain."),
         };
     }

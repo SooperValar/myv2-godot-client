@@ -12,7 +12,7 @@ public enum CellTone
     Zero,
 }
 
-public sealed record TableColumn(string Header, float Width = 1, string? Group = null);
+public sealed record TableColumn(string Header, float Width = 1, string? Group = null, bool LeftAligned = false);
 
 public sealed record TableCell(string Text, CellTone Tone = CellTone.Normal);
 
