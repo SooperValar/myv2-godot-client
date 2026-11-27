@@ -1,5 +1,20 @@
 # Changelog
 
+## [3.2.0](https://github.com/SooperValar/myv2-godot-client/compare/v3.1.0...v3.2.0) (2026-11-27)
+
+
+### Features
+
+* Help button in the HUD frame art (under Hide) ([b64a4e0](https://github.com/SooperValar/myv2-godot-client/commit/b64a4e006779cba3212fb835ac913dcec44df341))
+* Help window with Commands and Quests tabs, opened by the Help button or /help ([bc280c9](https://github.com/SooperValar/myv2-godot-client/commit/bc280c991c0b8b0f778b731993db97a598ddef1a))
+
+
+### Bug Fixes
+
+* equipment frame art for the MyV2 slots (Back, Belt, Legs) ([85151b1](https://github.com/SooperValar/myv2-godot-client/commit/85151b1e6ac911841ae9dcd7a18c0a7a89c8616c))
+* equipment slots as MyV2 uses them (Back, Belt, Legs) ([70a5367](https://github.com/SooperValar/myv2-godot-client/commit/70a5367c8558d48aa8f6e9cecae627922839146c))
+* hide MyV2's new walls, arches and trees when walls are lowered ([ab48aed](https://github.com/SooperValar/myv2-godot-client/commit/ab48aede15d119f7fec4f18feb6f724f912a9739))
+
 ## [3.1.0](https://github.com/SooperValar/myv2-godot-client/compare/v3.0.0...v3.1.0) (2026-11-27)
 
 
