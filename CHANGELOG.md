@@ -1,5 +1,12 @@
 # Changelog
 
+## [3.0.0](https://github.com/SooperValar/myv2-godot-client/compare/v1.3.0...v3.0.0) (2026-11-27)
+
+
+### Features
+
+* the Mercenaries of Asgard v2 client for Windows, with automatic updates ([23dafa8](https://github.com/SooperValar/myv2-godot-client/commit/23dafa8c40b8e11bba4d192da1086c776b0ef79c))
+
 ## [1.3.0](https://github.com/jamesblack/thelastgate-godot/compare/v1.2.0...v1.3.0) (2026-11-21)
 
 
