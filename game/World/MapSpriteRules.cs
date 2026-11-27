@@ -18,6 +18,19 @@ public static class MapSpriteRules
     private const int ShimmeringFloor = 16980;
     private const int FlickerTicks = 10;
     private const int FlickerCycle = 666;
+    private const int FirstTreeStump = 18190;
+    private const int FirstNewWall = 36000;
+    private const int AfterNewWalls = 36080;
+    private const int NewWallsPerMaterial = 10;
+    private const int PlainLowNewWall = 8;
+    private const int FirstGrainNewWall = 4;
+    private const int FirstNewArch = 36400;
+    private const int AfterNewArches = 36410;
+    private const int FirstNewTree = 38100;
+    private const int FirstNewTreeStump = 38164;
+    private const int NewTreeStumps = 4;
+
+    private static readonly int[] TreesWithStumps = [320, 356, 358, 360, 362, 880, 882, 884, 1112, 1114, 1116, 1238, 1240];
 
     private static readonly int[] LowMineWalls = [457, 456, 455, 466, 459, 458, 468, 467, 467];
 
@@ -55,7 +68,7 @@ public static class MapSpriteRules
         var hidesHere = hideWalls && !IsInFrontOfPlayer(column, row);
         if (hidesHere && !((MapFlags)tile.Flags).HasFlag(MapFlags.IsItem))
         {
-            return itemSprite + 1;
+            return LowSprite(itemSprite);
         }
 
         if (hidesHere && !IsFacedByPlayer(column, row, player.Direction)
@@ -109,6 +122,32 @@ public static class MapSpriteRules
         FacingDown => column == Centre && row == Centre + 1,
         _ => false,
     };
+
+    // A hidden wall or tree draws the next sprite, except where that isn't its low version: MyV2's trees become stumps,
+    // its new walls their material's low block, and its arches stay whole (the same as merc.exe's hide_sprite).
+    public static int LowSprite(int sprite)
+    {
+        var tree = Array.FindIndex(TreesWithStumps, stump => sprite == stump || sprite == stump + 1);
+        if (tree >= 0)
+        {
+            return FirstTreeStump + tree;
+        }
+
+        var wallVariant = sprite % NewWallsPerMaterial;
+        if (sprite is >= FirstNewWall and < AfterNewWalls && wallVariant < PlainLowNewWall)
+        {
+            return sprite - wallVariant + PlainLowNewWall + (wallVariant >= FirstGrainNewWall ? 1 : 0);
+        }
+
+        if (sprite is >= FirstNewArch and < AfterNewArches)
+        {
+            return sprite;
+        }
+
+        return sprite is >= FirstNewTree and < FirstNewTreeStump
+            ? FirstNewTreeStump + sprite % NewTreeStumps
+            : sprite + 1;
+    }
 
     // The last wall in each group of eight has no low version.
     private static int? LowMineWall(int wall)

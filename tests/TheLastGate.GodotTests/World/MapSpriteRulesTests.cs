@@ -86,6 +86,27 @@ public class MapSpriteRulesTests
         AssertThat(ObjectAt(BehindThePlayer, Wall)).IsEqual(Wall + 1);
     }
 
+    [TestCase(320, 18190)]
+    [TestCase(321, 18190)]
+    [TestCase(1240, 18202)]
+    [TestCase(36003, 36008)]
+    [TestCase(36075, 36079)]
+    [TestCase(36008, 36009)]
+    [TestCase(36405, 36405)]
+    [TestCase(38101, 38165)]
+    [TestCase(38163, 38167)]
+    [TestCase(Wall, Wall + 1)]
+    public void LowSprite_IsTheLowVersionOfAWall(int wall, int low)
+    {
+        AssertThat(MapSpriteRules.LowSprite(wall)).IsEqual(low);
+    }
+
+    [TestCase]
+    public void ObjectSprite_ShowsANewWallsLowBlockBehindThePlayer()
+    {
+        AssertThat(ObjectAt(BehindThePlayer, 36013)).IsEqual(36018);
+    }
+
     [TestCase]
     public void ObjectSprite_ShowsTheWholeWallWhenWallsArentHidden()
     {
