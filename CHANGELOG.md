@@ -1,5 +1,13 @@
 # Changelog
 
+## [3.1.0](https://github.com/SooperValar/myv2-godot-client/compare/v3.0.0...v3.1.0) (2026-11-27)
+
+
+### Features
+
+* 30-row speed table, Cast Speed and Move Speed (protocol 3.1.0) ([de059b2](https://github.com/SooperValar/myv2-godot-client/commit/de059b22281e76bd684e3dd049a6e2efa23aaf06))
+* Attack Speed, Walk Speed and Speed stats (MyV2 speed split) ([fa20765](https://github.com/SooperValar/myv2-godot-client/commit/fa207650195a189169ca15f1960442b027accddb))
+
 ## [3.0.0](https://github.com/SooperValar/myv2-godot-client/compare/v1.3.0...v3.0.0) (2026-11-27)
 
 
