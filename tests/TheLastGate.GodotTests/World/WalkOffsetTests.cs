@@ -7,8 +7,8 @@ namespace TheLastGate.GodotTests.World;
 [TestSuite]
 public class WalkOffsetTests
 {
-    private const int OneStepEveryTick = 0;
-    private const int OneStepEveryOtherTick = 10;
+    private const int OneStepEveryTick = 10;
+    private const int OneStepEveryOtherTick = 20;
 
     [TestCase]
     public void WalkOffset_GoesUpInEvenStepsWhenEveryTickMovesAFrame()

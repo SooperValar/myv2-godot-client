@@ -9,8 +9,9 @@ public class CharacterStatusesTests
     private const byte FlagsAndCharacter = 0b1110_0010;
     private const int TileIndex = 1000;
     private const int Sprite = 2000;
-    private const int OneStepEveryTick = 0;
-    private const int SlowestSpeed = 19;
+    private const int OneStepEveryTick = 10;
+    private const int TwoFramesOnSomeTicks = 0;
+    private const int SlowestSpeed = 29;
     private const int SlowestSpeedsOnlyTick = 9;
     private const int Attack = 0;
 
@@ -64,6 +65,16 @@ public class CharacterStatusesTests
     public void Stunned_HoldsTheStatus()
     {
         Assert.Equal(19, Run(Character(19, MapFlags.Stunned), 50, 2).Status);
+    }
+
+    [Fact]
+    public void FastMoves_TakeTwoFramesOnATwoTick()
+    {
+        // MyV2's row 0 moves two frames on tick 0: from the step's last frame the server finishes the step and the
+        // next one starts a frame in (svr_act.c plr_act).
+        Assert.Equal(18, Run(Character(16, speed: TwoFramesOnSomeTicks), 0).Status);
+        Assert.Equal(17, Run(Character(23, speed: TwoFramesOnSomeTicks), 0).Status);
+        Assert.Equal(17, Run(Character(16, speed: TwoFramesOnSomeTicks), 1).Status);
     }
 
     [Fact]

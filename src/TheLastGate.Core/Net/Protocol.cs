@@ -3,7 +3,7 @@ namespace TheLastGate.Net;
 public static class Protocol
 {
     // 3.0.0 and up tells the MyV2 server it may send the messages only this client reads, such as the zone name.
-    public const uint NetworkingVersion = 0x030000;
+    public const uint NetworkingVersion = 0x030100;
     public const int DefaultPort = 5555;
     public const int PacketSize = 16;
 

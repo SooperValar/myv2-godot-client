@@ -24,10 +24,7 @@ public static class WalkOffset
         {
             tick = Previous(tick);
             ticksDone++;
-            if (StatusSpeed.StepsThisTick(speed, tick) != 0)
-            {
-                framesLeft--;
-            }
+            framesLeft -= StatusSpeed.StepsThisTick(speed, tick);
         }
 
         while (true)
@@ -46,10 +43,7 @@ public static class WalkOffset
         var framesToGo = framesInStep - framesDone;
         while (true)
         {
-            if (StatusSpeed.StepsThisTick(speed, tick) != 0)
-            {
-                framesToGo--;
-            }
+            framesToGo -= StatusSpeed.StepsThisTick(speed, tick);
 
             if (framesToGo < 1)
             {
