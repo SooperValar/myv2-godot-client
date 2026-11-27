@@ -27,7 +27,7 @@ public class EquipmentTests
         AssertThat(blocked).NotContains(WornSlot.Head);
     }
 
-    [TestCase(ItemPlacement.Charm, WornSlot.Charm, WornSlot.SecondCharm)]
+    [TestCase(ItemPlacement.Legs, WornSlot.Legs, WornSlot.SecondCharm)]
     [TestCase(ItemPlacement.Ring, WornSlot.LeftRing, WornSlot.RightRing)]
     public void BlockedSlots_OpensBothSlotsOfAPair(ItemPlacement placement, WornSlot first, WornSlot second)
     {

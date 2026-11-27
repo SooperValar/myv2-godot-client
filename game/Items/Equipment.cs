@@ -14,14 +14,14 @@ public static class Equipment
         (WornSlot.Body, ItemPlacement.Body),
         (WornSlot.Arms, ItemPlacement.Arms),
         (WornSlot.Belt, ItemPlacement.Belt),
-        (WornSlot.Charm, ItemPlacement.Charm),
+        (WornSlot.Legs, ItemPlacement.Legs),
         (WornSlot.Feet, ItemPlacement.Feet),
         (WornSlot.OffHand, ItemPlacement.Shield),
         (WornSlot.MainHand, ItemPlacement.Weapon),
         (WornSlot.Cloak, ItemPlacement.Cloak),
         (WornSlot.LeftRing, ItemPlacement.Ring),
         (WornSlot.RightRing, ItemPlacement.Ring),
-        (WornSlot.SecondCharm, ItemPlacement.Charm),
+        (WornSlot.SecondCharm, ItemPlacement.Legs),
     ];
 
     public static IReadOnlySet<WornSlot> BlockedSlots(ItemSlot heldItem, IReadOnlyList<ItemSlot> worn)

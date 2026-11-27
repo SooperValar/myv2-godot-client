@@ -7,7 +7,7 @@ public enum WornSlot
     Body,
     Arms,
     Belt,
-    Charm,
+    Legs,
     Feet,
     OffHand,
     MainHand,

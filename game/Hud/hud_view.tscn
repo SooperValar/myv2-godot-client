@@ -668,17 +668,17 @@ offset_bottom = 89.0
 
 [node name="Belt" parent="." unique_id=162288247 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
+offset_left = 773.0
+offset_top = 57.0
+offset_right = 805.0
+offset_bottom = 89.0
+
+[node name="Legs" parent="." unique_id=1904633855 instance=ExtResource("7_itemslot")]
+unique_name_in_owner = true
 offset_left = 739.0
 offset_top = 74.0
 offset_right = 771.0
 offset_bottom = 106.0
-
-[node name="Charm" parent="." unique_id=1904633855 instance=ExtResource("7_itemslot")]
-unique_name_in_owner = true
-offset_left = 778.0
-offset_top = 18.0
-offset_right = 810.0
-offset_bottom = 50.0
 
 [node name="Feet" parent="." unique_id=1099917037 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
@@ -703,10 +703,10 @@ offset_bottom = 89.0
 
 [node name="Cloak" parent="." unique_id=1493662250 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
-offset_left = 773.0
-offset_top = 57.0
-offset_right = 805.0
-offset_bottom = 89.0
+offset_left = 778.0
+offset_top = 18.0
+offset_right = 810.0
+offset_bottom = 50.0
 
 [node name="LeftRing" parent="." unique_id=211354012 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
@@ -724,6 +724,7 @@ offset_bottom = 127.0
 
 [node name="SecondCharm" parent="." unique_id=343107963 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
+visible = false
 offset_left = 802.0
 offset_top = 18.0
 offset_right = 834.0

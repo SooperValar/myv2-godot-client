@@ -14,7 +14,7 @@ public static class HotbarButtons
 
     private static readonly string[] GearNames =
     [
-        "*Helmet", "*Neckla", "*Armor", "*Gloves", "*Belt", "*Tarot1", "*Boots", "*Offhan", "*Weapon", "*Cloak",
+        "*Helmet", "*Neckla", "*Armor", "*Gloves", "*Belt", "*Legs", "*Boots", "*Offhan", "*Weapon", "*Cloak",
         "*L-Ring", "*R-Ring", "*Tarot2",
     ];
 

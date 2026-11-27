@@ -11,7 +11,7 @@ public enum ItemPlacement
     Body = 4,
     Arms = 8,
     Belt = 32,
-    Charm = 64,
+    Legs = 64,
     Feet = 128,
     Weapon = 256,
     Shield = 512,
