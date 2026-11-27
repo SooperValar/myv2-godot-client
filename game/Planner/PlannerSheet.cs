@@ -39,7 +39,7 @@ public sealed class PlannerSheet
     public const string WeaponSkillMeta = "Weapon Skill Number";
     public const string SpeedStepMeta = "Speed Step";
     public const string HitDamage = "Est. Melee Hit Dmg";
-    public const string ActionSpeed = "Action Speed";
+    public const string ActionSpeed = "Attack Speed";
     public const string CriticalChance = "Critical Chance";
 
     private const int UncappedValue = 4;

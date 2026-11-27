@@ -28,7 +28,18 @@ public class MyV2MetaStatsTests
     {
         Assert.Equal(23, MyV2MetaStats.OffenseSlots.Length);
         Assert.Equal(7, MyV2MetaStats.OffenseSlots[0]);
-        Assert.Equal([48, 49, 50, 51, 52, 53, 54, 55, 56], MyV2MetaStats.DefenseSlots);
+        Assert.Equal([48, 49, 50, 51, 52, 53, 54, 55, 56, 57, 58], MyV2MetaStats.DefenseSlots);
+    }
+
+    [Fact]
+    public void Fill_NamesTheThreeSpeeds()
+    {
+        var stats = new Terminology().MetaStats;
+
+        Assert.Equal("Attack Speed", stats[3].Name);
+        Assert.Equal("Walk Speed", stats[57].Name);
+        Assert.Equal("Speed", stats[58].Name);
+        Assert.Equal("/s", stats[57].Affix);
     }
 
     [Fact]

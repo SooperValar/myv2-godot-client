@@ -26,7 +26,7 @@ public sealed record MeleeModelInput
     public int ServerSpeedStep { get; init; }
 }
 
-// Est. Melee Hit Dmg and Action Speed with the plan, by MyV2's do_attack(), do_update_char() and speedtab[] in
+// Est. Melee Hit Dmg and Attack Speed with the plan, by MyV2's do_attack(), do_update_char() and speedtab[] in
 // svr_act.c. The server's numbers carry what the client can't see (items' speed, the 2H-axe special bonus), so each is
 // the server's number plus what the planned Strength, Agility and Weapon Value change.
 public static class MeleeModel
