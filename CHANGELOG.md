@@ -1,5 +1,21 @@
 # Changelog
 
+## [3.3.0](https://github.com/SooperValar/myv2-godot-client/compare/v3.2.0...v3.3.0) (2026-11-28)
+
+
+### Features
+
+* Areas, Kill quests, Ranks and Who tabs in the Help window ([a30fee9](https://github.com/SooperValar/myv2-godot-client/commit/a30fee961bbd058f8dba3cd3aac8caaf8e255e30))
+* Armor, Weapons, Rings, Belts and Special items tabs in the Help window ([e8e8bee](https://github.com/SooperValar/myv2-godot-client/commit/e8e8bee5ab6f6fe8bf090ee16b63a80ccf5f43f8))
+* Help window sub-tabs and column widths come from the server ([7727c55](https://github.com/SooperValar/myv2-godot-client/commit/7727c55ab429fcb78e4a3e66a2cbec1a04de4533))
+* weapon sub-tabs with special weapons, rings as a grid by stone ([44b0d5c](https://github.com/SooperValar/myv2-godot-client/commit/44b0d5cf8ec1f92a027553a310412ea3e9cc1eb7))
+
+
+### Bug Fixes
+
+* belts sit in the middle of the Belt box ([4e8870a](https://github.com/SooperValar/myv2-godot-client/commit/4e8870a001a2af4b922120ca20765cc1609ac64c))
+* Help window tabs in a tab strip inside the frame, like Options ([2fe6eba](https://github.com/SooperValar/myv2-godot-client/commit/2fe6eba487ff31bedb47428eb01b9cced0df3ce9))
+
 ## [3.2.0](https://github.com/SooperValar/myv2-godot-client/compare/v3.1.0...v3.2.0) (2026-11-27)
 
 
