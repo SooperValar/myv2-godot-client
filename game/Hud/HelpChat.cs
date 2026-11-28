@@ -6,8 +6,8 @@ namespace TheLastGate.Hud;
 
 public sealed record HelpRequest(HelpPageNumber Tab, int? Quest = null, bool AllQuests = false);
 
-// The chat lines MyV2's Help window answers instead of the server: /help, /quest, /areas, /kills and /ranks (# works as
-// well as /). /who stays in chat.
+// The chat lines MyV2's Help window answers instead of the server: /help, /quest and the list commands below (# works
+// as well as /). /who stays in chat.
 public static class HelpChat
 {
     private static readonly Dictionary<string, HelpPageNumber> Tabs = new()
@@ -15,6 +15,18 @@ public static class HelpChat
         ["areas"] = HelpPageNumber.Areas,
         ["kills"] = HelpPageNumber.KillQuests,
         ["ranks"] = HelpPageNumber.Ranks,
+        ["armor"] = HelpPageNumber.Armor,
+        ["moddedarmor"] = HelpPageNumber.Armor,
+        ["weapon"] = HelpPageNumber.Weapons,
+        ["dagger"] = HelpPageNumber.Weapons,
+        ["sword"] = HelpPageNumber.Weapons,
+        ["twohand"] = HelpPageNumber.Weapons,
+        ["axe"] = HelpPageNumber.Weapons,
+        ["greataxe"] = HelpPageNumber.Weapons,
+        ["rings"] = HelpPageNumber.Rings,
+        ["belt"] = HelpPageNumber.Belts,
+        ["specialw"] = HelpPageNumber.SpecialItems,
+        ["specialarmor"] = HelpPageNumber.SpecialItems,
     };
 
     public static HelpRequest? Request(string line)

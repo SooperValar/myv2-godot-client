@@ -24,6 +24,11 @@ public enum HelpPageNumber
     KillQuests = 5,
     Ranks = 6,
     Who = 7,
+    Armor = 8,
+    Weapons = 9,
+    Rings = 10,
+    Belts = 11,
+    SpecialItems = 12,
 }
 
 public sealed record HelpHeading(string Text, bool RightAligned);

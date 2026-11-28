@@ -26,6 +26,11 @@ public class HelpChatTests
     [TestCase("/areas", HelpPageNumber.Areas)]
     [TestCase("#kills", HelpPageNumber.KillQuests)]
     [TestCase("/Ranks", HelpPageNumber.Ranks)]
+    [TestCase("/moddedarmor", HelpPageNumber.Armor)]
+    [TestCase("/greataxe", HelpPageNumber.Weapons)]
+    [TestCase("#rings", HelpPageNumber.Rings)]
+    [TestCase("/belt", HelpPageNumber.Belts)]
+    [TestCase("/specialw", HelpPageNumber.SpecialItems)]
     public void Request_OpensTheTabOfAListCommand(string line, HelpPageNumber tab)
     {
         AssertThat(HelpChat.Request(line)).IsEqual(new HelpRequest(tab));
@@ -33,7 +38,6 @@ public class HelpChatTests
 
     [TestCase("/who")]
     [TestCase("/rank")]
-    [TestCase("/rings")]
     [TestCase("hello there")]
     [TestCase("/help me")]
     public void Request_LeavesOtherLinesToTheServer(string line)

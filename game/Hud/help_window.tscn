@@ -49,7 +49,7 @@ theme_type_variation = &"OptionsTabStrip"
 
 [node name="Tabs" type="HBoxContainer" parent="Window/Frame/Layout/Body/Content/TabStrip" unique_id=1787427184]
 layout_mode = 2
-theme_override_constants/separation = 18
+theme_override_constants/separation = 12
 
 [node name="CommandsTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=617968428]
 unique_name_in_owner = true
@@ -73,7 +73,7 @@ layout_mode = 2
 focus_mode = 0
 theme_type_variation = &"OptionsTab"
 toggle_mode = true
-text = "Areas"
+text = "Area Quests"
 
 [node name="KillQuestsTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=1290534417]
 unique_name_in_owner = true
@@ -98,6 +98,46 @@ focus_mode = 0
 theme_type_variation = &"OptionsTab"
 toggle_mode = true
 text = "Who"
+
+[node name="ArmorTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=1356027811]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"OptionsTab"
+toggle_mode = true
+text = "Armor"
+
+[node name="WeaponsTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=915470262]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"OptionsTab"
+toggle_mode = true
+text = "Weapons"
+
+[node name="RingsTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=1688214509]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"OptionsTab"
+toggle_mode = true
+text = "Rings"
+
+[node name="BeltsTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=470193382]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"OptionsTab"
+toggle_mode = true
+text = "Belts"
+
+[node name="SpecialItemsTab" type="Button" parent="Window/Frame/Layout/Body/Content/TabStrip/Tabs" unique_id=1147720938]
+unique_name_in_owner = true
+layout_mode = 2
+focus_mode = 0
+theme_type_variation = &"OptionsTab"
+toggle_mode = true
+text = "Special items"
 
 [node name="Scroll" type="ScrollContainer" parent="Window/Frame/Layout/Body/Content" unique_id=462874604]
 unique_name_in_owner = true

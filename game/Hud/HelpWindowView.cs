@@ -26,6 +26,11 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         [HelpPageNumber.KillQuests] = [0.25f, 1.9f, 1.0f, 1.1f, 1.3f, 1.1f],
         [HelpPageNumber.Ranks] = [0.3f, 2.2f, 1.5f],
         [HelpPageNumber.Who] = [0.6f, 1.2f, 1.2f, 2.4f],
+        [HelpPageNumber.Armor] = [1.4f, 1f, 1f, 1f, 1f],
+        [HelpPageNumber.Weapons] = [2.2f, 1f, 1f, 1f, 0.8f],
+        [HelpPageNumber.Rings] = [1.4f, 0.6f, 1.4f, 2f],
+        [HelpPageNumber.Belts] = [1.4f, 0.8f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 2.2f],
+        [HelpPageNumber.SpecialItems] = [1.6f, 0.6f, 2.2f, 0.6f, 2.6f],
     };
 
     private static readonly Dictionary<HelpPageNumber, string> TabButtons = new()
@@ -36,6 +41,11 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         [HelpPageNumber.KillQuests] = "%KillQuestsTab",
         [HelpPageNumber.Ranks] = "%RanksTab",
         [HelpPageNumber.Who] = "%WhoTab",
+        [HelpPageNumber.Armor] = "%ArmorTab",
+        [HelpPageNumber.Weapons] = "%WeaponsTab",
+        [HelpPageNumber.Rings] = "%RingsTab",
+        [HelpPageNumber.Belts] = "%BeltsTab",
+        [HelpPageNumber.SpecialItems] = "%SpecialItemsTab",
     };
 
     private HelpPageNumber tab = HelpPageNumber.Commands;
