@@ -23,7 +23,16 @@ public class HelpChatTests
         AssertThat(HelpChat.Request("/quest 3")).IsEqual(new HelpRequest(HelpPageNumber.Quests, 3));
     }
 
+    [TestCase("/areas", HelpPageNumber.Areas)]
+    [TestCase("#kills", HelpPageNumber.KillQuests)]
+    [TestCase("/Ranks", HelpPageNumber.Ranks)]
+    public void Request_OpensTheTabOfAListCommand(string line, HelpPageNumber tab)
+    {
+        AssertThat(HelpChat.Request(line)).IsEqual(new HelpRequest(tab));
+    }
+
     [TestCase("/who")]
+    [TestCase("/rank")]
     [TestCase("/rings")]
     [TestCase("hello there")]
     [TestCase("/help me")]

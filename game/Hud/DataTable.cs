@@ -19,6 +19,8 @@ public partial class DataTable : VBoxContainer
 
     public event Action<int>? RowClicked;
 
+    [Export] public bool WrapsCells { get; set; }
+
     public override void _Ready() => ThemeTypeVariation = "DataTable";
 
     public void SetColumns(IReadOnlyList<TableColumn> shownColumns)
@@ -174,14 +176,26 @@ public partial class DataTable : VBoxContainer
                 CustomMinimumSize = SwatchSize,
                 SizeFlagsVertical = SizeFlags.ShrinkCenter,
             });
-        nameCell.AddChild(CellLabel(true, 1));
+        nameCell.AddChild(BodyLabel(true, 1));
         cells.AddChild(nameCell);
         foreach (var column in columns.Skip(1))
         {
-            cells.AddChild(CellLabel(column.LeftAligned, column.Width));
+            cells.AddChild(BodyLabel(column.LeftAligned, column.Width));
         }
 
         return row;
+    }
+
+    private Label BodyLabel(bool isName, float width)
+    {
+        var label = CellLabel(isName, width);
+        if (WrapsCells)
+        {
+            label.AutowrapMode = TextServer.AutowrapMode.WordSmart;
+            label.TextOverrunBehavior = TextServer.OverrunBehavior.NoTrimming;
+        }
+
+        return label;
     }
 
     // A label that trims instead of growing keeps every row's columns at the same widths.

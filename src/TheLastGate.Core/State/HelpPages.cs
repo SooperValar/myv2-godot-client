@@ -20,6 +20,10 @@ public enum HelpPageNumber
     Commands = 1,
     Quests = 2,
     Quest = 3,
+    Areas = 4,
+    KillQuests = 5,
+    Ranks = 6,
+    Who = 7,
 }
 
 public sealed record HelpHeading(string Text, bool RightAligned);

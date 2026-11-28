@@ -22,6 +22,20 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
     {
         [HelpPageNumber.Commands] = [1.4f, 2.6f],
         [HelpPageNumber.Quests] = [0.3f, 1.3f, 1.5f, 1.6f, 0.6f],
+        [HelpPageNumber.Areas] = [1.6f, 2.4f],
+        [HelpPageNumber.KillQuests] = [0.25f, 1.9f, 1.0f, 1.1f, 1.3f, 1.1f],
+        [HelpPageNumber.Ranks] = [0.3f, 2.2f, 1.5f],
+        [HelpPageNumber.Who] = [0.6f, 1.2f, 1.2f, 2.4f],
+    };
+
+    private static readonly Dictionary<HelpPageNumber, string> TabButtons = new()
+    {
+        [HelpPageNumber.Commands] = "%CommandsTab",
+        [HelpPageNumber.Quests] = "%QuestsTab",
+        [HelpPageNumber.Areas] = "%AreasTab",
+        [HelpPageNumber.KillQuests] = "%KillQuestsTab",
+        [HelpPageNumber.Ranks] = "%RanksTab",
+        [HelpPageNumber.Who] = "%WhoTab",
     };
 
     private HelpPageNumber tab = HelpPageNumber.Commands;
@@ -55,8 +69,11 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         }
 
         GetNode<TextureButton>("Window/Close").Pressed += () => ClosePressed?.Invoke();
-        GetNode<Button>("%CommandsTab").Pressed += () => Open(HelpPageNumber.Commands);
-        GetNode<Button>("%QuestsTab").Pressed += () => Open(HelpPageNumber.Quests);
+        foreach (var (page, button) in TabButtons)
+        {
+            GetNode<Button>(button).Pressed += () => Open(page);
+        }
+
         GetNode<Button>("%Back").Pressed += () => Open(HelpPageNumber.Quests);
         GetNode<Button>("%AllQuests").Toggled += shown =>
         {
@@ -77,8 +94,11 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         tab = page;
         shownQuest = null;
         Visible = true;
-        GetNode<Button>("%CommandsTab").ButtonPressed = page == HelpPageNumber.Commands;
-        GetNode<Button>("%QuestsTab").ButtonPressed = page == HelpPageNumber.Quests;
+        foreach (var (tabPage, button) in TabButtons)
+        {
+            GetNode<Button>(button).ButtonPressed = tabPage == page;
+        }
+
         GetNode<Button>("%AllQuests").Visible = page == HelpPageNumber.Quests;
         GetNode<Button>("%Back").Visible = false;
         PageRequested?.Invoke(page, page == HelpPageNumber.Quests && allQuests ? HelpPages.AllQuests : 0);
