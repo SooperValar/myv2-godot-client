@@ -17,6 +17,7 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
     private const string TintShaderPath = "res://World/sprite_tint.gdshader";
 
     private static readonly Dictionary<int, ShaderMaterial> OutlineMaterials = [];
+    private static readonly Dictionary<int, int> ContentLifts = [];
     private IFontSet? fonts;
 
     private int previewSprite;
@@ -34,9 +35,16 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         }
     }
 
+    // Belt sprites draw the belt along the bottom of their 32-pixel square, so the belt box lifts it to the middle.
+    [Export] public bool CentresItemHeight { get; set; }
+
     public Func<ItemTooltipRequest?>? TooltipRequest { get; set; }
 
-    public void ShowContext(HudContext context) => fonts = context.Fonts;
+    public void ShowContext(HudContext context)
+    {
+        fonts = context.Fonts;
+        CallDeferred(MethodName.CentreItemHeight);
+    }
 
     public override string _GetTooltip(Vector2 atPosition) => TooltipRequest?.Invoke() != null ? "item" : "";
 
@@ -63,6 +71,7 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         var itemSprite = GetNode<ArchiveSprite>("Highlighted/Item");
         itemSprite.SpriteNumber = item.Sprite;
         itemSprite.Material = item.Sprite != 0 ? OutlineMaterial(mark.Tier) : null;
+        CentreItemHeight();
         var letter = GetNode<Label>("MarkLetter");
         letter.Visible = item.Sprite != 0 && mark.Letter != '\0';
         letter.Text = mark.Letter.ToString();
@@ -87,6 +96,35 @@ public partial class ItemSlotView : ClickArea, IHudContextUser
         }
 
         GetNode<CanvasItem>("Blocked").Visible = blocked;
+    }
+
+    private void CentreItemHeight()
+    {
+        if (!CentresItemHeight)
+        {
+            return;
+        }
+
+        var itemSprite = GetNode<ArchiveSprite>("Highlighted/Item");
+        if (itemSprite.Texture is not { } texture)
+        {
+            itemSprite.Position = Vector2.Zero;
+            return;
+        }
+
+        if (!ContentLifts.TryGetValue(itemSprite.SpriteNumber, out var lift))
+        {
+            lift = ContentLift(texture);
+            ContentLifts[itemSprite.SpriteNumber] = lift;
+        }
+
+        itemSprite.Position = new Vector2(0, lift);
+    }
+
+    public static int ContentLift(Texture2D texture)
+    {
+        var content = texture.GetImage().GetUsedRect();
+        return content.Size.Y == 0 ? 0 : (int)MathF.Round(texture.GetHeight() / 2f - (content.Position.Y + content.Size.Y / 2f));
     }
 
     private static ShaderMaterial? OutlineMaterial(int tier)

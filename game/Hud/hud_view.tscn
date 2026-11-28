@@ -668,6 +668,7 @@ offset_bottom = 89.0
 
 [node name="Belt" parent="." unique_id=162288247 instance=ExtResource("7_itemslot")]
 unique_name_in_owner = true
+CentresItemHeight = true
 offset_left = 773.0
 offset_top = 57.0
 offset_right = 805.0
