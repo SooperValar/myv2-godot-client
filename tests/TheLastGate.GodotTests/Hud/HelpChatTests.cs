@@ -27,13 +27,21 @@ public class HelpChatTests
     [TestCase("#kills", HelpPageNumber.KillQuests)]
     [TestCase("/Ranks", HelpPageNumber.Ranks)]
     [TestCase("/moddedarmor", HelpPageNumber.Armor)]
-    [TestCase("/greataxe", HelpPageNumber.Weapons)]
     [TestCase("#rings", HelpPageNumber.Rings)]
     [TestCase("/belt", HelpPageNumber.Belts)]
     [TestCase("/specialw", HelpPageNumber.SpecialItems)]
+    [TestCase("/weapon", HelpPageNumber.Weapons)]
     public void Request_OpensTheTabOfAListCommand(string line, HelpPageNumber tab)
     {
         AssertThat(HelpChat.Request(line)).IsEqual(new HelpRequest(tab));
+    }
+
+    [TestCase("/greataxe", WeaponList.Greataxes)]
+    [TestCase("#sword", WeaponList.Swords)]
+    [TestCase("/twohand", WeaponList.TwoHanded)]
+    public void Request_OpensTheWeaponTypeOfAWeaponCommand(string line, WeaponList weapons)
+    {
+        AssertThat(HelpChat.Request(line)).IsEqual(new HelpRequest(HelpPageNumber.Weapons, Weapons: weapons));
     }
 
     [TestCase("/who")]

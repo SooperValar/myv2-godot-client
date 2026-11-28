@@ -4,29 +4,33 @@ using TheLastGate.State;
 
 namespace TheLastGate.Hud;
 
-public sealed record HelpRequest(HelpPageNumber Tab, int? Quest = null, bool AllQuests = false);
+public sealed record HelpRequest(
+    HelpPageNumber Tab,
+    int? Quest = null,
+    bool AllQuests = false,
+    WeaponList? Weapons = null);
 
 // The chat lines MyV2's Help window answers instead of the server: /help, /quest and the list commands below (# works
 // as well as /). /who stays in chat.
 public static class HelpChat
 {
-    private static readonly Dictionary<string, HelpPageNumber> Tabs = new()
+    private static readonly Dictionary<string, HelpRequest> Tabs = new()
     {
-        ["areas"] = HelpPageNumber.Areas,
-        ["kills"] = HelpPageNumber.KillQuests,
-        ["ranks"] = HelpPageNumber.Ranks,
-        ["armor"] = HelpPageNumber.Armor,
-        ["moddedarmor"] = HelpPageNumber.Armor,
-        ["weapon"] = HelpPageNumber.Weapons,
-        ["dagger"] = HelpPageNumber.Weapons,
-        ["sword"] = HelpPageNumber.Weapons,
-        ["twohand"] = HelpPageNumber.Weapons,
-        ["axe"] = HelpPageNumber.Weapons,
-        ["greataxe"] = HelpPageNumber.Weapons,
-        ["rings"] = HelpPageNumber.Rings,
-        ["belt"] = HelpPageNumber.Belts,
-        ["specialw"] = HelpPageNumber.SpecialItems,
-        ["specialarmor"] = HelpPageNumber.SpecialItems,
+        ["areas"] = new HelpRequest(HelpPageNumber.Areas),
+        ["kills"] = new HelpRequest(HelpPageNumber.KillQuests),
+        ["ranks"] = new HelpRequest(HelpPageNumber.Ranks),
+        ["armor"] = new HelpRequest(HelpPageNumber.Armor),
+        ["moddedarmor"] = new HelpRequest(HelpPageNumber.Armor),
+        ["weapon"] = new HelpRequest(HelpPageNumber.Weapons),
+        ["dagger"] = new HelpRequest(HelpPageNumber.Weapons, Weapons: WeaponList.Daggers),
+        ["sword"] = new HelpRequest(HelpPageNumber.Weapons, Weapons: WeaponList.Swords),
+        ["twohand"] = new HelpRequest(HelpPageNumber.Weapons, Weapons: WeaponList.TwoHanded),
+        ["axe"] = new HelpRequest(HelpPageNumber.Weapons, Weapons: WeaponList.Axes),
+        ["greataxe"] = new HelpRequest(HelpPageNumber.Weapons, Weapons: WeaponList.Greataxes),
+        ["rings"] = new HelpRequest(HelpPageNumber.Rings),
+        ["belt"] = new HelpRequest(HelpPageNumber.Belts),
+        ["specialw"] = new HelpRequest(HelpPageNumber.SpecialItems),
+        ["specialarmor"] = new HelpRequest(HelpPageNumber.SpecialItems),
     };
 
     public static HelpRequest? Request(string line)
@@ -45,7 +49,7 @@ public static class HelpChat
 
         if (words.Length == 1 && Tabs.TryGetValue(command, out var tab))
         {
-            return new HelpRequest(tab);
+            return tab;
         }
 
         if (command != "quest")

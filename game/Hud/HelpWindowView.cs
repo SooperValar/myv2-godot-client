@@ -27,8 +27,8 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         [HelpPageNumber.Ranks] = [0.3f, 2.2f, 1.5f],
         [HelpPageNumber.Who] = [0.6f, 1.2f, 1.2f, 2.4f],
         [HelpPageNumber.Armor] = [1.4f, 1f, 1f, 1f, 1f],
-        [HelpPageNumber.Weapons] = [2.2f, 1f, 1f, 1f, 0.8f],
-        [HelpPageNumber.Rings] = [1.4f, 0.6f, 1.4f, 2f],
+        [HelpPageNumber.Weapons] = [2f, 0.8f, 0.8f, 0.8f, 0.6f, 3f],
+        [HelpPageNumber.Rings] = [0.8f, 1.2f, 1f, 1.1f, 1.1f, 2f],
         [HelpPageNumber.Belts] = [1.4f, 0.8f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 2.2f],
         [HelpPageNumber.SpecialItems] = [1.6f, 0.6f, 2.2f, 0.6f, 2.6f],
     };
@@ -48,7 +48,18 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         [HelpPageNumber.SpecialItems] = "%SpecialItemsTab",
     };
 
+    private static readonly Dictionary<WeaponList, string> WeaponButtons = new()
+    {
+        [WeaponList.Daggers] = "%DaggersTab",
+        [WeaponList.Swords] = "%SwordsTab",
+        [WeaponList.TwoHanded] = "%TwoHandedTab",
+        [WeaponList.Axes] = "%AxesTab",
+        [WeaponList.Greataxes] = "%GreataxesTab",
+        [WeaponList.Staffs] = "%StaffsTab",
+    };
+
     private HelpPageNumber tab = HelpPageNumber.Commands;
+    private WeaponList weapons = WeaponList.Swords;
     private bool allQuests;
     private int? shownQuest;
 
@@ -84,6 +95,15 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
             GetNode<Button>(button).Pressed += () => Open(page);
         }
 
+        foreach (var (list, button) in WeaponButtons)
+        {
+            GetNode<Button>(button).Pressed += () =>
+            {
+                ShowWeapons(list);
+                Open(HelpPageNumber.Weapons);
+            };
+        }
+
         GetNode<Button>("%Back").Pressed += () => Open(HelpPageNumber.Quests);
         GetNode<Button>("%AllQuests").Toggled += shown =>
         {
@@ -99,6 +119,8 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         GetNode<Button>("%AllQuests").SetPressedNoSignal(shown);
     }
 
+    public void ShowWeapons(WeaponList list) => weapons = list;
+
     public void Open(HelpPageNumber page)
     {
         tab = page;
@@ -109,9 +131,15 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
             GetNode<Button>(button).ButtonPressed = tabPage == page;
         }
 
+        GetNode<Control>("%WeaponTabStrip").Visible = page == HelpPageNumber.Weapons;
+        foreach (var (list, button) in WeaponButtons)
+        {
+            GetNode<Button>(button).ButtonPressed = list == weapons;
+        }
+
         GetNode<Button>("%AllQuests").Visible = page == HelpPageNumber.Quests;
         GetNode<Button>("%Back").Visible = false;
-        PageRequested?.Invoke(page, page == HelpPageNumber.Quests && allQuests ? HelpPages.AllQuests : 0);
+        PageRequested?.Invoke(page, PageArgument(page));
     }
 
     public void OpenQuest(int row)
@@ -130,7 +158,7 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
     public void ShowPage(HelpPageNumber number, HelpPage page)
     {
         var wanted = shownQuest != null ? HelpPageNumber.Quest : tab;
-        if (number != wanted || !Visible)
+        if (number != wanted || !Visible || (number == HelpPageNumber.Weapons && page.Argument != PageArgument(number)))
         {
             return;
         }
@@ -168,6 +196,13 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
 
         GetNode<ScrollContainer>("%Scroll").ScrollVertical = 0;
     }
+
+    private int PageArgument(HelpPageNumber page) => page switch
+    {
+        HelpPageNumber.Quests when allQuests => HelpPages.AllQuests,
+        HelpPageNumber.Weapons => (int)weapons,
+        _ => 0,
+    };
 
     private static TableRow Row(HelpRow row, int columns)
     {

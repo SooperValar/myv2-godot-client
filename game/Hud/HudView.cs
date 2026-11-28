@@ -1526,6 +1526,11 @@ public partial class HudView : Control
         }
 
         helpWindow.ShowAllQuests(request.AllQuests);
+        if (request.Weapons is { } weapons)
+        {
+            helpWindow.ShowWeapons(weapons);
+        }
+
         helpWindow.Open(request.Tab);
         if (request.Quest is { } quest)
         {

@@ -31,6 +31,16 @@ public enum HelpPageNumber
     SpecialItems = 12,
 }
 
+public enum WeaponList
+{
+    Daggers = 0,
+    Swords = 1,
+    TwoHanded = 2,
+    Axes = 3,
+    Greataxes = 4,
+    Staffs = 5,
+}
+
 public sealed record HelpHeading(string Text, bool RightAligned);
 
 public sealed record HelpRow(int Font, IReadOnlyList<string> Cells);
