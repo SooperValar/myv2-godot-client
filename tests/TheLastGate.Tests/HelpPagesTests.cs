@@ -18,7 +18,7 @@ public class HelpPagesTests
 
         processor.Process(Piece(HelpPieceKind.Start, 0, 0, 0, 0, ""));
         processor.Process(Piece(HelpPieceKind.Heading, 0, 0, 0, 0, "Command"));
-        processor.Process(Piece(HelpPieceKind.Heading, 0, 1, 1, 0, "Exp"));
+        processor.Process(Piece(HelpPieceKind.Heading, 15, 1, 1, 0, "Exp"));
         processor.Process(Piece(HelpPieceKind.Cell, 0, 0, 2, 0, "#who"));
         processor.Process(Piece(HelpPieceKind.Cell, 0, 1, 2, 0, "who is online"));
         processor.Process(Piece(HelpPieceKind.Line, 0, 0, 3, 0, "Most commands are toggles."));
@@ -27,10 +27,26 @@ public class HelpPagesTests
 
         Assert.Equal(HelpPageNumber.Commands, arrived);
         var page = state.HelpPages.Page(HelpPageNumber.Commands)!;
-        Assert.Equal([new HelpHeading("Command", false), new HelpHeading("Exp", true)], page.Headings);
+        Assert.Equal([new HelpHeading("Command", false, 0), new HelpHeading("Exp", true, 1.5f)], page.Headings);
         Assert.Equal(2, page.Rows[0].Font);
         Assert.Equal(["#who", "who is online"], page.Rows[0].Cells);
         Assert.Equal(new HelpLine(3, "Most commands are toggles."), page.Lines[0]);
+    }
+
+    [Fact]
+    public void Page_HoldsItsSubTabsInTheOrderTheyCame()
+    {
+        var state = new GameState();
+        var processor = new TickProcessor(state);
+
+        processor.Process(Piece(HelpPieceKind.Start, 1, 0, 0, 0, ""));
+        processor.Process(Piece(HelpPieceKind.SubTab, 0, 0, 0, 0, "Attribute Rings"));
+        processor.Process(Piece(HelpPieceKind.SubTab, 1, 0, 0, 0, "Skill Rings"));
+        processor.Process(Piece(HelpPieceKind.End, 0, 0, 0, 0, ""));
+
+        var page = state.HelpPages.Page(HelpPageNumber.Commands)!;
+        Assert.Equal(1, page.Argument);
+        Assert.Equal([new HelpSubTab(0, "Attribute Rings"), new HelpSubTab(1, "Skill Rings")], page.SubTabs);
     }
 
     [Fact]

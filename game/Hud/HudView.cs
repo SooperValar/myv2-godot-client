@@ -1526,9 +1526,9 @@ public partial class HudView : Control
         }
 
         helpWindow.ShowAllQuests(request.AllQuests);
-        if (request.Weapons is { } weapons)
+        if (request.SubTab is { } subTab)
         {
-            helpWindow.ShowWeapons(weapons);
+            helpWindow.ShowSubTab(request.Tab, subTab);
         }
 
         helpWindow.Open(request.Tab);

@@ -18,21 +18,6 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
 
     private static readonly Rect2 CloseRegion = new(283, 0, 14, 14);
 
-    private static readonly Dictionary<HelpPageNumber, float[]> ColumnWidths = new()
-    {
-        [HelpPageNumber.Commands] = [1.4f, 2.6f],
-        [HelpPageNumber.Quests] = [0.3f, 1.3f, 1.5f, 1.6f, 0.6f],
-        [HelpPageNumber.Areas] = [1.6f, 2.4f],
-        [HelpPageNumber.KillQuests] = [0.25f, 1.9f, 1.0f, 1.1f, 1.3f, 1.1f],
-        [HelpPageNumber.Ranks] = [0.3f, 2.2f, 1.5f],
-        [HelpPageNumber.Who] = [0.6f, 1.2f, 1.2f, 2.4f],
-        [HelpPageNumber.Armor] = [1.4f, 1f, 1f, 1f, 1f],
-        [HelpPageNumber.Weapons] = [2f, 0.8f, 0.8f, 0.8f, 0.6f, 3f],
-        [HelpPageNumber.Rings] = [0.8f, 1.2f, 1f, 1.1f, 1.1f, 2f],
-        [HelpPageNumber.Belts] = [1.4f, 0.8f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 0.4f, 2.2f],
-        [HelpPageNumber.SpecialItems] = [1.6f, 0.6f, 2.2f, 0.6f, 2.6f],
-    };
-
     private static readonly Dictionary<HelpPageNumber, string> TabButtons = new()
     {
         [HelpPageNumber.Commands] = "%CommandsTab",
@@ -48,18 +33,8 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         [HelpPageNumber.SpecialItems] = "%SpecialItemsTab",
     };
 
-    private static readonly Dictionary<WeaponList, string> WeaponButtons = new()
-    {
-        [WeaponList.Daggers] = "%DaggersTab",
-        [WeaponList.Swords] = "%SwordsTab",
-        [WeaponList.TwoHanded] = "%TwoHandedTab",
-        [WeaponList.Axes] = "%AxesTab",
-        [WeaponList.Greataxes] = "%GreataxesTab",
-        [WeaponList.Staffs] = "%StaffsTab",
-    };
-
     private HelpPageNumber tab = HelpPageNumber.Commands;
-    private WeaponList weapons = WeaponList.Swords;
+    private readonly Dictionary<HelpPageNumber, int> subTabs = [];
     private bool allQuests;
     private int? shownQuest;
 
@@ -95,15 +70,6 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
             GetNode<Button>(button).Pressed += () => Open(page);
         }
 
-        foreach (var (list, button) in WeaponButtons)
-        {
-            GetNode<Button>(button).Pressed += () =>
-            {
-                ShowWeapons(list);
-                Open(HelpPageNumber.Weapons);
-            };
-        }
-
         GetNode<Button>("%Back").Pressed += () => Open(HelpPageNumber.Quests);
         GetNode<Button>("%AllQuests").Toggled += shown =>
         {
@@ -119,22 +85,21 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         GetNode<Button>("%AllQuests").SetPressedNoSignal(shown);
     }
 
-    public void ShowWeapons(WeaponList list) => weapons = list;
+    public void ShowSubTab(HelpPageNumber page, int subTab) => subTabs[page] = subTab;
 
     public void Open(HelpPageNumber page)
     {
+        if (page != tab)
+        {
+            GetNode<Control>("%SubTabStrip").Visible = false;
+        }
+
         tab = page;
         shownQuest = null;
         Visible = true;
         foreach (var (tabPage, button) in TabButtons)
         {
             GetNode<Button>(button).ButtonPressed = tabPage == page;
-        }
-
-        GetNode<Control>("%WeaponTabStrip").Visible = page == HelpPageNumber.Weapons;
-        foreach (var (list, button) in WeaponButtons)
-        {
-            GetNode<Button>(button).ButtonPressed = list == weapons;
         }
 
         GetNode<Button>("%AllQuests").Visible = page == HelpPageNumber.Quests;
@@ -158,21 +123,22 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
     public void ShowPage(HelpPageNumber number, HelpPage page)
     {
         var wanted = shownQuest != null ? HelpPageNumber.Quest : tab;
-        if (number != wanted || !Visible || (number == HelpPageNumber.Weapons && page.Argument != PageArgument(number)))
+        if (number != wanted || !Visible || (number != HelpPageNumber.Quest && page.Argument != PageArgument(number)))
         {
             return;
         }
+
+        ShowSubTabs(number, page);
 
         var table = number != HelpPageNumber.Quest;
         Table.Visible = table;
         if (table)
         {
-            var widths = ColumnWidths[number];
             Table.SetColumns(
                 page.Headings.Select(
-                        (heading, column) => new TableColumn(
+                        heading => new TableColumn(
                             heading.Text,
-                            column < widths.Length ? widths[column] : 1,
+                            heading.Width > 0 ? heading.Width : 1,
                             LeftAligned: !heading.RightAligned))
                     .ToArray());
             Table.ShowRows(page.Rows.Select(row => Row(row, page.Headings.Count)).ToArray());
@@ -197,11 +163,39 @@ public partial class HelpWindowView : CenterContainer, IHudContextUser
         GetNode<ScrollContainer>("%Scroll").ScrollVertical = 0;
     }
 
+    private void ShowSubTabs(HelpPageNumber number, HelpPage page)
+    {
+        var strip = GetNode<Control>("%SubTabStrip");
+        strip.Visible = page.SubTabs.Count > 0;
+        var buttons = GetNode<HBoxContainer>("%SubTabs");
+        foreach (var child in buttons.GetChildren())
+        {
+            child.QueueFree();
+        }
+
+        foreach (var subTab in page.SubTabs)
+        {
+            var button = new Button
+            {
+                Text = subTab.Name,
+                ToggleMode = true,
+                ButtonPressed = subTab.Argument == page.Argument,
+                FocusMode = FocusModeEnum.None,
+                ThemeTypeVariation = "OptionsTab",
+            };
+            button.Pressed += () =>
+            {
+                ShowSubTab(number, subTab.Argument);
+                Open(number);
+            };
+            buttons.AddChild(button);
+        }
+    }
+
     private int PageArgument(HelpPageNumber page) => page switch
     {
         HelpPageNumber.Quests when allQuests => HelpPages.AllQuests,
-        HelpPageNumber.Weapons => (int)weapons,
-        _ => 0,
+        _ => subTabs.GetValueOrDefault(page),
     };
 
     private static TableRow Row(HelpRow row, int columns)

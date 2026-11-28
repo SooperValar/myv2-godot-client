@@ -139,63 +139,16 @@ theme_type_variation = &"OptionsTab"
 toggle_mode = true
 text = "Special items"
 
-[node name="WeaponTabStrip" type="PanelContainer" parent="Window/Frame/Layout/Body/Content" unique_id=1938402215]
+[node name="SubTabStrip" type="PanelContainer" parent="Window/Frame/Layout/Body/Content" unique_id=1938402215]
 unique_name_in_owner = true
 visible = false
 layout_mode = 2
 theme_type_variation = &"OptionsTabStrip"
 
-[node name="WeaponTabs" type="HBoxContainer" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip" unique_id=652119037]
+[node name="SubTabs" type="HBoxContainer" parent="Window/Frame/Layout/Body/Content/SubTabStrip" unique_id=652119037]
+unique_name_in_owner = true
 layout_mode = 2
 theme_override_constants/separation = 12
-
-[node name="DaggersTab" type="Button" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip/WeaponTabs" unique_id=2013948121]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"OptionsTab"
-toggle_mode = true
-text = "Daggers"
-
-[node name="SwordsTab" type="Button" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip/WeaponTabs" unique_id=1129384756]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"OptionsTab"
-toggle_mode = true
-text = "Swords"
-
-[node name="TwoHandedTab" type="Button" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip/WeaponTabs" unique_id=735028416]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"OptionsTab"
-toggle_mode = true
-text = "Two-handed swords"
-
-[node name="AxesTab" type="Button" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip/WeaponTabs" unique_id=1874420996]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"OptionsTab"
-toggle_mode = true
-text = "Axes"
-
-[node name="GreataxesTab" type="Button" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip/WeaponTabs" unique_id=392017758]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"OptionsTab"
-toggle_mode = true
-text = "Greataxes"
-
-[node name="StaffsTab" type="Button" parent="Window/Frame/Layout/Body/Content/WeaponTabStrip/WeaponTabs" unique_id=1460028337]
-unique_name_in_owner = true
-layout_mode = 2
-focus_mode = 0
-theme_type_variation = &"OptionsTab"
-toggle_mode = true
-text = "Staffs"
 
 [node name="Scroll" type="ScrollContainer" parent="Window/Frame/Layout/Body/Content" unique_id=462874604]
 unique_name_in_owner = true

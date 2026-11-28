@@ -41,7 +41,7 @@ public class HelpChatTests
     [TestCase("/twohand", WeaponList.TwoHanded)]
     public void Request_OpensTheWeaponTypeOfAWeaponCommand(string line, WeaponList weapons)
     {
-        AssertThat(HelpChat.Request(line)).IsEqual(new HelpRequest(HelpPageNumber.Weapons, Weapons: weapons));
+        AssertThat(HelpChat.Request(line)).IsEqual(new HelpRequest(HelpPageNumber.Weapons, SubTab: (int)weapons));
     }
 
     [TestCase("/who")]
